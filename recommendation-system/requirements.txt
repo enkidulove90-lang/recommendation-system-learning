@@ -1,0 +1,30 @@
+# Core dependencies for arXiv Recommendation System Crawler
+# Install: pip install -r requirements.txt
+
+# arXiv API client (official Python wrapper for arXiv API)
+arxiv>=2.1.0
+
+# HTTP client (used by arxiv & for custom requests)
+httpx>=0.27.0
+
+# HTML parsing (fallback HTML scraping if API is unavailable)
+beautifulsoup4>=4.12.0
+lxml>=5.2.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Data handling
+pandas>=2.2.0
+
+# Progress bars for CLI
+tqdm>=4.66.0
+
+# Async support
+aiohttp>=3.9.0
+
+# Date/time parsing
+python-dateutil>=2.9.0
+
+# Structured logging
+loguru>=0.7.0
