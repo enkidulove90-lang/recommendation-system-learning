@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# 项目根目录（即 recommendation-system/）
+# 项目根目录（即 recommendation-system-learning/）
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # 加载 .env 文件（若不存在则静默跳过）
@@ -36,6 +36,27 @@ class Settings:
     def MINERU_API_KEY(self) -> str:
         return os.getenv("MINERU_API_KEY", "")
 
+    @property
+    def MINERU_MODEL_VERSION(self) -> str:
+        return os.getenv("MINERU_MODEL_VERSION", "vlm")
+
+    @property
+    def MINERU_POLL_INTERVAL(self) -> float:
+        return float(os.getenv("MINERU_POLL_INTERVAL", "3.0"))
+
+    @property
+    def MINERU_POLL_MAX_RETRIES(self) -> int:
+        return int(os.getenv("MINERU_POLL_MAX_RETRIES", "100"))
+
+    # ---- DeepSeek ----
+    @property
+    def DEEPSEEK_API_KEY(self) -> str:
+        return os.getenv("DEEPSEEK_API_KEY", "")
+
+    @property
+    def DEEPSEEK_MODEL(self) -> str:
+        return os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
+
     # ---- arXiv API ----
     @property
     def ARXIV_API_BASE(self) -> str:
@@ -50,6 +71,11 @@ class Settings:
     def MAX_RESULTS_PER_QUERY(self) -> int:
         return int(os.getenv("MAX_RESULTS_PER_QUERY", "50"))
 
+    @property
+    def START_YEAR(self) -> int:
+        """只爬取该年份及之后发表的论文。"""
+        return int(os.getenv("START_YEAR", "2024"))
+
     # ---- 输出 ----
     @property
     def OUTPUT_DIR(self) -> Path:
@@ -60,45 +86,101 @@ class Settings:
         return path
 
     @property
+    def DATA_DIR(self) -> Path:
+        raw = os.getenv("DATA_DIR", "./data")
+        path = Path(raw)
+        if not path.is_absolute():
+            path = PROJECT_ROOT / raw
+        return path
+
+    @property
     def LOG_LEVEL(self) -> str:
         return os.getenv("LOG_LEVEL", "INFO")
 
-    # ---- 搜索主题 2024+ ----
+    # ---- 搜索主题（扩展至 6 大方向，覆盖推荐系统前沿） ----
     @property
     def SEARCH_TOPICS(self) -> dict[str, str]:
         """
         返回 {主题名称: arXiv 搜索查询字符串} 的映射。
 
-        四个核心主题:
-        1. Agent 推荐 — Agent 技术与推荐系统的交叉研究
-        2. 多模态推荐 — 利用图像/文本/视频等多模态信号的推荐
-        3. 大模型召回 — LLM 参与候选生成 / 召回阶段
-        4. 大模型排序 — LLM 参与预排序 / 排序 / 重排序阶段
+        六大核心方向，覆盖推荐系统前沿研究:
+        1. LLM Agent 推荐 — Agent 技术与推荐系统的交叉
+        2. 多模态推荐 — 融合图像/文本/视频等多模态信号
+        3. 大模型召回/排序 — LLM 参与候选生成与精排
+        4. 序列/会话推荐 — 用户行为序列建模
+        5. 图神经网络推荐 — GNN 在推荐中的应用
+        6. 可解释/公平推荐 — 推荐系统的可解释性与公平性
         """
         return {
             "agent-recommendation": (
-                'all:"agent" AND all:"recommendation system" '
-                "AND cat:cs.IR"
+                'all:"agent" AND all:"recommendation" '
+                "AND (cat:cs.IR OR cat:cs.AI)"
             ),
             "multimodal-recommendation": (
                 'all:"multimodal" AND all:"recommendation" '
                 "AND cat:cs.IR"
             ),
-            "llm-recall": (
-                'all:"large language model" AND (all:"recall" OR all:"candidate generation") '
-                'AND all:"recommendation" AND cat:cs.IR'
-            ),
-            "llm-ranking": (
+            "llm-ranking-recall": (
                 'all:"large language model" AND '
-                '(all:"ranking" OR all:"re-ranking" OR all:"pre-ranking" OR all:"rerank") '
-                'AND all:"recommendation" AND cat:cs.IR'
+                'all:"recommendation" AND '
+                '(all:"ranking" OR all:"recall" OR all:"rerank" OR all:"candidate") '
+                "AND cat:cs.IR"
+            ),
+            "sequential-session": (
+                'all:"sequential recommendation" OR all:"session-based recommendation" '
+                "AND cat:cs.IR"
+            ),
+            "gnn-recommendation": (
+                'all:"graph neural network" AND all:"recommendation" '
+                "AND cat:cs.IR"
+            ),
+            "explainable-fair": (
+                'all:"explainable recommendation" OR all:"fairness recommendation" '
+                "AND cat:cs.IR"
             ),
         }
 
+    # ---- 论文检索增强关键词 ----
     @property
-    def START_YEAR(self) -> int:
-        """只爬取该年份及之后发表的论文。"""
-        return int(os.getenv("START_YEAR", "2024"))
+    def EXTRA_SEARCH_QUERIES(self) -> list[dict[str, str]]:
+        """
+        额外的专项检索查询，用于补充前沿方向。
+        每个查询获取 3-5 篇，确保总量 20-30 篇。
+        """
+        return [
+            {
+                "name": "llm-recommendation-survey",
+                "query": (
+                    'all:"survey" AND all:"recommendation" AND '
+                    'all:"large language model" AND cat:cs.IR'
+                ),
+                "description": "大模型推荐综述",
+            },
+            {
+                "name": "diffusion-recommendation",
+                "query": (
+                    'all:"diffusion" AND all:"recommendation" AND '
+                    "cat:cs.IR"
+                ),
+                "description": "扩散模型推荐",
+            },
+            {
+                "name": "contrastive-recommendation",
+                "query": (
+                    'all:"contrastive learning" AND all:"recommendation" '
+                    "AND cat:cs.IR"
+                ),
+                "description": "对比学习推荐",
+            },
+            {
+                "name": "reinforcement-recommendation",
+                "query": (
+                    'all:"reinforcement learning" AND all:"recommendation" '
+                    "AND cat:cs.IR"
+                ),
+                "description": "强化学习推荐",
+            },
+        ]
 
 
 # 全局单例

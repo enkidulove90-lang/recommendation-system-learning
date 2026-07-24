@@ -1,23 +1,21 @@
 """
-skills/pdf_parser.py — MinerU PDF 解析技能
+skills/pdf_parser.py — MinerU v4 PDF 精准解析技能
 
-基于 MinerU API 对论文 PDF 进行解析，提取:
-  - 结构化文本（段落、标题层级）
-  - 表格数据
-  - 图片引用
-  - 公式（LaTeX）
+基于 MinerU v4 精准解析 API (/api/v4/extract/task)：
+- 异步提交解析任务 → 轮询状态 → 下载 ZIP 包 → 解压得到 MD + JSON
+- 支持 pipeline / vlm / MinerU-HTML 三种模型版本
+- 文件大小 ≤ 200MB，页数 ≤ 200 页
 
 需要用户在 .env 中配置 MINERU_API_KEY。
-若未配置，本技能将返回未就绪状态，不会报错中断主流程。
-
-接口设计为异步友好，后续可替换为本地 MinerU 部署。
 """
 
 from __future__ import annotations
 
+import json
 import logging
-import base64
+import os
 import time
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -28,59 +26,65 @@ from skills.base_module import BaseSkill, register_skill
 
 logger = logging.getLogger(__name__)
 
-# MinerU API 端点（以官方文档为准）
-MINERU_API_ENDPOINT = "https://mineru.net/api/v1/parse"
+# MinerU v4 API 端点
+MINERU_API_BASE = "https://mineru.net"
+MINERU_TASK_URL = f"{MINERU_API_BASE}/api/v4/extract/task"
 
 
 @register_skill("pdf-parse")
 class PDFParser(BaseSkill):
     """
-    MinerU PDF 解析技能。
+    MinerU v4 精准解析 PDF 技能。
 
-    支持两种输入方式:
-      1. 本地 PDF 路径  -> 读取并上传解析
-      2. PDF URL       -> 由 MinerU 服务端直接拉取
-
-    返回结构化解析结果，包含文本、表格、图片等信息。
+    工作流程:
+      1. POST {url, model_version} → 获取 task_id
+      2. 轮询 GET /api/v4/extract/task/{task_id} → 等待完成
+      3. 下载结果 ZIP → 解压到 data/parsed/{paper_id}/
 
     使用示例:
         parser = PDFParser()
         result = parser.execute(
-            pdf_url="https://arxiv.org/pdf/2503.21460",
-            parse_mode="auto",
+            pdf_url="https://arxiv.org/pdf/2602.21756",
+            arxiv_id="2602.21756",
         )
-        content = result["content"]
+        # → data/parsed/2602.21756/2602.21756.md
+        # → data/parsed/2602.21756/2602.21756.json
     """
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._api_key: str = settings.MINERU_API_KEY or kwargs.get("api_key", "")
+        self._model_version: str = kwargs.get("model_version", settings.MINERU_MODEL_VERSION)
+        self._poll_interval: float = settings.MINERU_POLL_INTERVAL
+        self._poll_max_retries: int = settings.MINERU_POLL_MAX_RETRIES
 
     @property
     def is_ready(self) -> bool:
         """检查 MinerU API 是否已配置。"""
         return bool(self._api_key)
 
+    # ------------------------------------------------------------------
+    # 公共接口
+    # ------------------------------------------------------------------
+
     def execute(self, **kwargs: Any) -> dict[str, Any]:
         """
-        执行 PDF 解析。
+        执行 PDF 精准解析（异步提交 + 轮询 + 下载）。
 
         参数:
-            pdf_url    (str) : PDF 在线地址（与 pdf_path 二选一）
-            pdf_path   (str) : 本地 PDF 文件路径
-            parse_mode (str) : "auto" | "text" | "full" — 解析模式
-            max_retries(int) : 最大重试次数，默认 3
+            pdf_url    (str): PDF 在线地址
+            pdf_path   (str): 本地 PDF 文件路径（暂不支持 v4 API 直接上传）
+            arxiv_id   (str): arXiv ID
+            title      (str): 论文标题，用于命名输出文件夹（会做文件名安全处理）
+            output_dir (str): 输出目录，默认 data/parsed/
 
         返回:
             {
                 "ready": bool,
                 "arxiv_id": str,
-                "content": {  # 仅 ready=True 时有意义
-                    "text": str,
-                    "sections": [...],
-                    "tables": [...],
-                    "figures": [...],
-                },
+                "markdown_path": str | None,   # 本地 .md 文件路径
+                "json_path": str | None,        # 本地 .json 文件路径
+                "content": {"text": str, ...} | None,
                 "error": str | None,
             }
         """
@@ -89,107 +93,307 @@ class PDFParser(BaseSkill):
             return {
                 "ready": False,
                 "arxiv_id": kwargs.get("arxiv_id", ""),
+                "markdown_path": None,
+                "json_path": None,
                 "content": None,
                 "error": "MINERU_API_KEY not set in .env",
             }
 
         pdf_url: str = kwargs.get("pdf_url", "")
         pdf_path: str = kwargs.get("pdf_path", "")
-        parse_mode: str = kwargs.get("parse_mode", "auto")
-        max_retries: int = kwargs.get("max_retries", 3)
+        arxiv_id: str = kwargs.get("arxiv_id", "")
+        title: str = kwargs.get("title", "")
+        output_dir: str = kwargs.get("output_dir", "")
 
-        # ---- 准备请求载荷 ----
-        if pdf_url:
-            payload = {"url": pdf_url, "mode": parse_mode}
-        elif pdf_path:
-            local_path = Path(pdf_path)
-            if not local_path.exists():
-                return {
-                    "ready": True,
-                    "arxiv_id": kwargs.get("arxiv_id", ""),
-                    "content": None,
-                    "error": f"File not found: {pdf_path}",
-                }
-            payload = self._build_file_payload(local_path, parse_mode)
-        else:
+        # ---- 确定输出目录（使用标题命名） ----
+        if not output_dir:
+            folder_name = arxiv_id
+            if title:
+                # 将标题转为安全的文件夹名：保留字母数字和中文，限制长度
+                safe_title = PDFParser._sanitize_folder_name(title, max_len=80)
+                folder_name = f"{arxiv_id}_{safe_title}"
+            output_dir = str(settings.DATA_DIR / "parsed" / folder_name)
+        out_path = Path(output_dir)
+        out_path.mkdir(parents=True, exist_ok=True)
+
+        md_path = out_path / f"{arxiv_id}.md"
+        json_path = out_path / f"{arxiv_id}.json"
+
+        # ---- Step 1: 提交解析任务 ----
+        logger.info("[MinerU] Submitting parse task | url=%s model=%s", pdf_url or pdf_path, self._model_version)
+        task_id = self._submit_task(pdf_url, pdf_path)
+        if not task_id:
             return {
                 "ready": True,
-                "arxiv_id": kwargs.get("arxiv_id", ""),
+                "arxiv_id": arxiv_id,
+                "markdown_path": None,
+                "json_path": None,
                 "content": None,
-                "error": "Either pdf_url or pdf_path must be provided.",
+                "error": "Failed to submit MinerU task.",
+            }
+        logger.info("[MinerU] Task created | task_id=%s", task_id)
+
+        # ---- Step 2: 轮询等待完成 ----
+        download_url = self._poll_task(task_id)
+        if not download_url:
+            return {
+                "ready": True,
+                "arxiv_id": arxiv_id,
+                "markdown_path": None,
+                "json_path": None,
+                "content": None,
+                "error": f"Task {task_id} did not complete in time.",
             }
 
-        # ---- 调用 API（含重试） ----
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Accept": "application/json",
-        }
+        # ---- Step 3: 下载并解压结果 ----
+        logger.info("[MinerU] Downloading result for task %s ...", task_id)
+        success = self._download_and_extract(download_url, out_path, arxiv_id)
+        if not success:
+            return {
+                "ready": True,
+                "arxiv_id": arxiv_id,
+                "markdown_path": None,
+                "json_path": None,
+                "content": None,
+                "error": "Failed to download/extract MinerU result.",
+            }
 
-        for attempt in range(1, max_retries + 1):
+        # ---- Step 4: 读取解析内容 ----
+        content = {}
+        if md_path.exists():
+            content["text"] = md_path.read_text(encoding="utf-8")
+        if json_path.exists():
             try:
-                with httpx.Client(timeout=120.0) as client:
-                    resp = client.post(MINERU_API_ENDPOINT, json=payload, headers=headers)
-                    resp.raise_for_status()
-                    data = resp.json()
-                return {
-                    "ready": True,
-                    "arxiv_id": kwargs.get("arxiv_id", ""),
-                    "content": self._normalize_response(data),
-                    "error": None,
-                }
-            except httpx.HTTPStatusError as exc:
-                logger.error(
-                    "MinerU HTTP %d on attempt %d/%d: %s",
-                    exc.response.status_code, attempt, max_retries, exc,
-                )
-                if attempt < max_retries:
-                    time.sleep(2 ** attempt)
-            except Exception as exc:
-                logger.error("MinerU request error attempt %d/%d: %s", attempt, max_retries, exc)
-                if attempt < max_retries:
-                    time.sleep(2 ** attempt)
+                content["json_data"] = json.loads(json_path.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                content["json_data"] = None
+
+        logger.info(
+            "[MinerU] Parse complete | id=%s text_len=%d",
+            arxiv_id, len(content.get("text", "")),
+        )
 
         return {
             "ready": True,
-            "arxiv_id": kwargs.get("arxiv_id", ""),
-            "content": None,
-            "error": f"Failed after {max_retries} retries.",
+            "arxiv_id": arxiv_id,
+            "markdown_path": str(md_path) if md_path.exists() else None,
+            "json_path": str(json_path) if json_path.exists() else None,
+            "content": content if content else None,
+            "error": None,
         }
 
     # ------------------------------------------------------------------
-    # 内部方法
+    # 工具方法
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _build_file_payload(local_path: Path, mode: str) -> dict[str, Any]:
-        """为本地文件构建 base64 编码载荷。"""
-        with open(local_path, "rb") as fh:
-            raw = fh.read()
-        b64_content = base64.b64encode(raw).decode("ascii")
-        return {
-            "file": b64_content,
-            "filename": local_path.name,
-            "mode": mode,
+    def _sanitize_folder_name(title: str, max_len: int = 80) -> str:
+        """
+        将论文标题转为安全的文件夹名。
+
+        保留: 中文、英文、数字、空格、连字符
+        移除: 特殊字符 / \ : * ? " < > |
+        空格转下划线，限制长度。
+        """
+        import re
+        # 移除不安全字符
+        safe = re.sub(r'[/\\:*?"<>|]', '', title)
+        # 多余空格转下划线
+        safe = re.sub(r'\s+', '_', safe)
+        # 移除首尾特殊字符
+        safe = safe.strip('._-')
+        # 截断
+        if len(safe) > max_len:
+            safe = safe[:max_len].rstrip('._-')
+        return safe
+
+    # ------------------------------------------------------------------
+    # 内部方法: 提交任务
+    # ------------------------------------------------------------------
+
+    def _submit_task(self, pdf_url: str, pdf_path: str) -> str | None:
+        """
+        提交解析任务到 MinerU v4 API。
+
+        返回 task_id，失败返回 None。
+        """
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self._api_key}",
         }
 
-    @staticmethod
-    def _normalize_response(data: dict[str, Any]) -> dict[str, Any]:
-        """
-        将 MinerU 原始响应标准化为统一结构。
+        # 构建请求体
+        if pdf_url:
+            data: dict[str, Any] = {
+                "url": pdf_url,
+                "model_version": self._model_version,
+            }
+        else:
+            # v4 API 的本地文件上传需要不同方式，这里暂用 URL 模式
+            data = {
+                "url": f"file://{pdf_path}",
+                "model_version": self._model_version,
+            }
 
-        目标输出:
-          - text     : 全文纯文本（按阅读顺序）
-          - sections : 按段落/章节分割的结构化文本
-          - tables   : 提取的表格列表
-          - figures  : 图片引用列表
-          - formulas : LaTeX 公式列表
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                resp = client.post(MINERU_TASK_URL, headers=headers, json=data)
+                resp.raise_for_status()
+                result = resp.json()
+        except httpx.HTTPStatusError as exc:
+            logger.error("[MinerU] Submit HTTP %d: %s", exc.response.status_code, exc.response.text[:500])
+            return None
+        except Exception as exc:
+            logger.error("[MinerU] Submit error: %s", exc)
+            return None
+
+        # 解析 task_id（MinerU API 返回格式: {"code": 0, "data": {"task_id": "..."}}）
+        task_data = result.get("data", {})
+        task_id = task_data.get("task_id", "")
+        if not task_id:
+            logger.error("[MinerU] No task_id in response: %s", result)
+            return None
+        return task_id
+
+    # ------------------------------------------------------------------
+    # 内部方法: 轮询任务
+    # ------------------------------------------------------------------
+
+    def _poll_task(self, task_id: str) -> str | None:
         """
-        # 以下字段名需根据实际 MinerU API 响应调整
-        return {
-            "text": data.get("text", data.get("content", "")),
-            "sections": data.get("sections", data.get("paragraphs", [])),
-            "tables": data.get("tables", []),
-            "figures": data.get("figures", data.get("images", [])),
-            "formulas": data.get("formulas", data.get("equations", [])),
-            "raw_response": data,
+        轮询任务状态直到完成。
+
+        返回下载 URL，超时或失败返回 None。
+        """
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
         }
+        poll_url = f"{MINERU_TASK_URL}/{task_id}"
+
+        for attempt in range(1, self._poll_max_retries + 1):
+            try:
+                with httpx.Client(timeout=30.0) as client:
+                    resp = client.get(poll_url, headers=headers)
+                    resp.raise_for_status()
+                    result = resp.json()
+            except Exception as exc:
+                logger.error("[MinerU] Poll attempt %d error: %s", attempt, exc)
+                time.sleep(self._poll_interval)
+                continue
+
+            data = result.get("data", {})
+            state = data.get("state", data.get("status", ""))
+
+            if state in ("done", "success", "completed", "ready"):
+                # 任务完成，获取下载链接
+                # MinerU v4 API 返回 full_zip_url 字段
+                download_url = (
+                    data.get("full_zip_url")
+                    or data.get("download_url")
+                    or data.get("result_url")
+                    or data.get("url")
+                    or ""
+                )
+                if not download_url:
+                    # 某些版本直接在 data 中返回 markdown/json 字段
+                    files = data.get("files", {})
+                    download_url = files.get("zip", files.get("markdown", ""))
+                logger.info("[MinerU] Task completed | task_id=%s state=%s url=%s", task_id, state, download_url[:80] if download_url else "N/A")
+                return download_url if download_url else None
+
+            elif state in ("failed", "error", "cancelled"):
+                err_msg = data.get("error", data.get("message", "Unknown error"))
+                logger.error("[MinerU] Task failed | task_id=%s error=%s", task_id, err_msg)
+                return None
+
+            else:
+                # 处理中: pending / processing / running
+                logger.info(
+                    "[MinerU] Poll %d/%d | task_id=%s state=%s",
+                    attempt, self._poll_max_retries, task_id, state,
+                )
+                time.sleep(self._poll_interval)
+
+        logger.error("[MinerU] Poll timeout | task_id=%s after %d attempts", task_id, self._poll_max_retries)
+        return None
+
+    # ------------------------------------------------------------------
+    # 内部方法: 下载与解压
+    # ------------------------------------------------------------------
+
+    def _download_and_extract(self, download_url: str, output_dir: Path, arxiv_id: str) -> bool:
+        """
+        下载解析结果 ZIP 包并解压到指定目录。
+
+        ZIP 包内通常包含:
+          - {arxiv_id}.md   (或 {name}.md)
+          - {arxiv_id}.json (或 {name}.json)
+        """
+        if not download_url:
+            logger.error("[MinerU] No download URL provided.")
+            return False
+
+        # 构建完整 URL
+        if not download_url.startswith("http"):
+            download_url = f"{MINERU_API_BASE}{download_url}"
+
+        zip_path = output_dir / f"{arxiv_id}_result.zip"
+
+        try:
+            # 下载 ZIP
+            logger.info("[MinerU] Downloading from %s ...", download_url[:120])
+            with httpx.Client(timeout=120.0, follow_redirects=True) as client:
+                resp = client.get(download_url)
+                resp.raise_for_status()
+                zip_path.write_bytes(resp.content)
+            logger.info("[MinerU] Downloaded %d bytes -> %s", len(resp.content), zip_path)
+
+            # 解压
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                file_list = zf.namelist()
+                logger.info("[MinerU] ZIP contains %d files: %s", len(file_list), file_list)
+
+                for member in file_list:
+                    # 跳过目录条目
+                    if member.endswith("/"):
+                        continue
+
+                    # 提取文件，重命名关键文件
+                    basename = Path(member).name
+                    ext = Path(member).suffix.lower()
+
+                    if basename == "full.md":
+                        # 主 Markdown 文件
+                        target = output_dir / f"{arxiv_id}.md"
+                    elif basename.endswith("_content_list_v2.json"):
+                        target = output_dir / f"{arxiv_id}_content.json"
+                    elif basename.endswith("_content_list.json"):
+                        target = output_dir / f"{arxiv_id}_content_full.json"
+                    elif basename.endswith("_model.json"):
+                        target = output_dir / f"{arxiv_id}_model.json"
+                    elif basename == "layout.json":
+                        target = output_dir / f"{arxiv_id}_layout.json"
+                    elif ext == ".json":
+                        target = output_dir / basename
+                    elif "images/" in member:
+                        # 保持 images/ 子目录结构
+                        img_dir = output_dir / "images"
+                        img_dir.mkdir(parents=True, exist_ok=True)
+                        target = img_dir / basename
+                    else:
+                        target = output_dir / basename
+
+                    with zf.open(member) as src:
+                        target.write_bytes(src.read())
+                    logger.info("[MinerU] Extracted: %s", target.name)
+
+            # 清理 ZIP
+            zip_path.unlink(missing_ok=True)
+            return True
+
+        except zipfile.BadZipFile as exc:
+            logger.error("[MinerU] Corrupted ZIP: %s", exc)
+            return False
+        except Exception as exc:
+            logger.error("[MinerU] Download/extract error: %s", exc)
+            return False
