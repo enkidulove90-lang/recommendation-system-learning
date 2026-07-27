@@ -34,3 +34,4 @@ Thumbs.db
 
 # Redbook CLI (installed via pip, cloned for reference only)
 redbook/xhs-cli/
+redbook/mcp/*.exe
