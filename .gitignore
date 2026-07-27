@@ -24,6 +24,7 @@ env/
 output/
 *.json
 !package.json
+!.mcp.json
 
 # OS
 .DS_Store
