@@ -232,6 +232,119 @@ github 🔗：https://github.com/xxx/xxx （如有）
 - 单张图片不超过 20MB
 - 一次最多上传 18 张图片
 
+## 爆款帖子写作指南
+
+参考账号「符号看象限Ai」的高互动帖子（166 赞 / 211 收藏 / 81 分享），关键要素：
+
+### 标题公式
+
+```
+[会议/期刊]+[录取率/排名]｜[核心卖点]+[吸引眼球的关键词]
+```
+
+示例：`ICML26Top2.2%｜VLA隐式思维链先河`、`NeurIPS26Oral(1.8%)｜首个XX框架`
+
+关键词库：`先河` `首次` `突破` `SOTA` `新范式` `开源` `即插即用`
+
+### 正文结构
+
+```
+🎓 [1段：问题背景+痛点，用口语化表达制造冲突]
+   "当前XX模型普遍面临一个尴尬：..."
+   "更关键的是，...根本没法..."
+   "所以...要么不做，要么做得又慢又笨"
+
+✨ [2-3句：核心亮点，用数字说话]
+   "比SOTA强出14%？"
+   "一句话：又准又快"
+
+🧠 [3-5个bullet：方法拆解，技术深度]
+   "隐式CoT：把视觉/点云压缩成隐序列..."
+   "MoT双系统：低频Reason Expert + 高频Action Expert..."
+
+[可选的迁移/扩展方向]
+
+🌐 arXiv：XXXX.XXXXX
+```
+
+### 语言风格对照
+
+| 平庸写法 | 爆款写法 |
+|----------|----------|
+| 提出MMEACR框架，通过双轨记忆架构... | 现有LLM推荐Agent有个尴尬的问题：只读文本不看图。更致命的是... |
+| 在三个数据集上显著超越基线 | 比AgentCF高出45.45%？Fashion域直接拉满 |
+| 采用属性引导的记忆演化机制 | 让Agent学会「做对了就记住，做错了就反思」 |
+| 实现推荐性能提升 | 又准又快，推理时间还降了16% |
+
+### 图片排版
+
+- 图片应为**重新排版的高清大图（2550×3300 竖版）**，而非论文 PDF 截图
+- 每张图配一句话说明，形成「看图说话」的阅读体验
+- 优先使用架构图、对比图、效果展示图
+- 避免公式截图和密集文字截图
+
+## 高质量论文下载源（除 arXiv）
+
+| 源 | 适用 | 方式 |
+|----|------|------|
+| **OpenReview** | ICML/NeurIPS/ICLR | `openreview.net` 直接下载，常有 camera-ready |
+| **CVF Open Access** | CVPR/ICCV/ECCV | `cv-foundation.org` 高质量 PDF |
+| **ACL Anthology** | ACL/EMNLP/NAACL | `aclanthology.org` |
+| **PMLR** | 许多 ML 会议 | `proceedings.mlr.press` |
+| **Papers With Code** | 全领域 | `paperswithcode.com` 聚合多源 |
+| **Semantic Scholar** | 全领域 | `semanticscholar.org` 提供 PDF 直链 |
+| **作者主页** | 任意 | 搜索 `[作者] homepage`，常有 preprint |
+| **直接联系作者** | 任意 | Email/Twitter 索要高清 Figure |
+
+推荐优先级：**作者主页 > OpenReview > CVF > arXiv**（后三者通常 PDF 质量递减）
+
+## 高质量图片提取方案
+
+### 问题诊断
+
+当前 `data/parsed/<paper>/images/` 中的图片由 PDF 解析器自动提取，质量取决于源 PDF 分辨率。arXiv PDF 通常质量一般（150-300 DPI），导致截图模糊。
+
+### 方案对比
+
+| 方案 | 质量 | 自动化 | 适用 |
+|------|------|--------|------|
+| **PyMuPDF (fitz)** | ★★★★ | ✅ | 提取 PDF 内嵌图片，保持原始分辨率 |
+| **pdfimages (poppler)** | ★★★★ | ✅ | 命令行提取，无损原图 |
+| **Ghostscript 渲染** | ★★★★ | ✅ | `gs -r600` 600DPI 渲染整页 |
+| **作者主页 slides/poster** | ★★★★★ | ❌ | 最高清，需手动下载 |
+| **OpenReview camera-ready** | ★★★ | ✅ | 通常比 arXiv 版本新 |
+| **矢量图提取 (PDF/EPS)** | ★★★★★ | ⚠️ | 无限分辨率，需代码解析 |
+
+### 推荐方案：PyMuPDF 高清提取
+
+```python
+import fitz  # pip install PyMuPDF
+
+doc = fitz.open("paper.pdf")
+for page_num in range(len(doc)):
+    page = doc[page_num]
+    # 渲染整页 600 DPI
+    pix = page.get_pixmap(dpi=600)
+    pix.save(f"page_{page_num}_600dpi.png")
+
+    # 提取内嵌图片
+    for img_index, img in enumerate(page.get_images(full=True)):
+        xref = img[0]
+        base_image = doc.extract_image(xref)
+        image_bytes = base_image["image"]
+        ext = base_image["ext"]  # png/jpg
+        with open(f"img_page{page_num}_{img_index}.{ext}", "wb") as f:
+            f.write(image_bytes)
+```
+
+### 图片筛选准则
+
+从提取的图片中筛选帖子配图：
+1. **架构图/流程图**（Figure 1-2）→ 必选，展示方法全貌
+2. **对比表/结果图**（Table/Chart）→ 支撑性能声明
+3. **Case Study** → 展示实际效果
+4. ❌ 跳过：公式密集图、文字密集表、小尺寸图标
+
 ## 发布记录
 
 | 日期 | 帖子 ID | 论文 | 标题 | 备注 |
