@@ -339,6 +339,18 @@ github 🔗：https://github.com/xxx/xxx（如有）
 - 确保 `.0.5_FLAG` 文件存在
 - 参考 `scripts/setup_camoufox.py`
 
+### Q: 话题标签不显示 / 只有最后一个生效
+
+**根因**: xiaohongshu-cli v0.6.4 的 `--topic` 选项不支持 `multiple=True`，传多个 `--topic` 时只有最后一个生效。
+
+**修复** (已应用到本地 site-packages)：
+编辑 `site-packages/xhs_cli/commands/creator.py`：
+1. `@click.option("--topic", multiple=True, ...)` — 添加 `multiple=True`
+2. `topic: tuple[str, ...] | None` — 类型改为 tuple
+3. 循环处理 `for t in topic: topic_data = client.search_topics(t); topics.extend(...)` 
+
+修复后即可 `--topic "推荐系统" --topic "LLM" --topic "Agent" ...` 全部生效。
+
 ### Q: 图片上传失败
 
 - 确保图片路径为绝对路径
@@ -412,6 +424,7 @@ for page_num in range(len(doc)):
 
 | 日期 | 帖子 ID | 论文 | 标题 | 备注 |
 |------|---------|------|------|------|
-| 2026-07-27 | `6a671e10000000001b01fa81` | MixRAGRec (2605.28175) | KDD26｜MixRAGRec多Agent混合专家推荐 | 模板A：PolyU, KDD26, 3架构图, 6 topic |
+| 2026-07-27 | `6a672624000000000f0111fa` | MixRAGRec (2605.28175) | KDD26｜MixRAGRec多Agent混合专家推荐 | v3：修复--topic多值，6话题全绑定真实ID |
+| 2026-07-27 | `6a67203f000000000c015f3e` | MixRAGRec (2605.28175) | KDD26｜MixRAGRec多Agent混合专家推荐 | v2：模板A，仅1个topic(CLI bug) |
 | 2026-07-27 | `6a671181000000001102d253` | MMEACR (2607.07108) | 多模态记忆Agent推荐框架 | v2 优化版：emoji + 链接 + topic |
 | 2026-07-27 | `6a67066c00000000010336f4` | MMEACR (2607.07108) | 多模态记忆Agent推荐框架 | v1 初版：格式待优化 |
