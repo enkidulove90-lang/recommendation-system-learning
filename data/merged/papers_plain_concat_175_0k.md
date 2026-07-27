@@ -1,30 +1,29 @@
-# Recommendation Systems — Frontier Papers Collection (2025-2026)
+# Academic Paper Search & Recommendation — Frontier Papers (2025-2026)
 
-> **Target Size**: 175.0k tokens
-> **Generated**: 2026-07-24T15:22:30.776910
-> **Strategy**: Raw concatenation of MinerU-parsed Markdown (English full text)
+> **Target**: 175.0k | **Pool**: 41 papers | **Generated**: 2026-07-27T10:47:02.619964
 
 ---
 
-## Table of Contents
+## Contents
 
-1. [full] 2506.07261_延迟异步检索增强召回 — 3.9k tokens
-2. [full] 2509.13179_基于BPE令牌级嵌入的冷启动推荐 — 6.6k tokens
-3. [full] 2505.05196_RAG推荐系统数据投毒攻击 — 7.2k tokens
-4. [full] 2606.09595_多模态电影推荐视觉证据基准 — 8.4k tokens
-5. [full] 2512.21526_选择性LLM引导正则化 — 9.8k tokens
-6. [full] 2505.20773_冷启动推荐的知识引导检索增强生成 — 9.8k tokens
-7. [full] 2511.15141_ItemRAG：基于物品的检索增强生成推荐 — 11.2k tokens
-8. [full] 2512.20916_多模态大模型摘要与检索增强序列推荐 — 12.3k tokens
-9. [full] 2607.07108_多模态记忆增强的推荐智能体协作 — 12.8k tokens
-10. [full] 2508.00543_长尾推荐再探：LLM弥合流行度差距 — 13.1k tokens
-11. [full] 2604.16318_冷启动推荐中LLM重排序诊断 — 13.5k tokens
-12. [full] 2605.25007_元模态智能体：缺失模态候选重排序 — 15.2k tokens
-13. [full] 2504.00678_LLM增强的多阶段推荐系统 — 15.4k tokens
-14. [full] 2503.16734_多模态大模型时代的智能体推荐系统 — 18.7k tokens
-15. [truncated] 2510.22049_VISTA：虚拟序列目标注意力 — 19.4k tokens
-16. [truncated] 2602.21756_离线推理实现高效推荐 — 19.5k tokens
-17. [truncated] 2603.10673_三方智能体推荐框架 — 21.0k tokens
+1. [full] 2506.07261_延迟异步检索增强召回 — 3.9k
+2. [full] 2509.13179_基于BPE令牌级嵌入的冷启动推荐 — 6.6k
+3. [full] 2505.05196_RAG推荐系统数据投毒攻击 — 7.2k
+4. [full] 2606.09595_多模态电影推荐视觉证据基准 — 8.4k
+5. [full] 2512.21526_选择性LLM引导正则化 — 9.8k
+6. [full] 2505.20773_冷启动推荐的知识引导检索增强生成 — 9.8k
+7. [full] 2511.15141_ItemRAG：基于物品的检索增强生成推荐 — 11.2k
+8. [full] 2512.20916_多模态大模型摘要与检索增强序列推荐 — 12.3k
+9. [full] 2604.20848 — 12.5k
+10. [full] 2607.07108_多模态记忆增强的推荐智能体协作 — 12.8k
+11. [full] 2508.00543_长尾推荐再探：LLM弥合流行度差距 — 13.1k
+12. [full] 2604.16318_冷启动推荐中LLM重排序诊断 — 13.5k
+13. [full] 2606.22151_Novelty-Aware_Agentic_Retrieval_Structured_Multi-Step_ — 13.6k
+14. [full] 2605.25007_元模态智能体：缺失模态候选重排序 — 15.2k
+15. [full] 2407.18940_LitSearch_A_Retrieval_Benchmark_for_Scientific_Literat — 15.3k
+16. [trunc] 2504.00678_LLM增强的多阶段推荐系统 — 15.4k
+17. [trunc] 2507.15245_SPAR_Scholar_Paper_Retrieval_with_LLM-based_Agents — 16.3k
+18. [trunc] 2605.14306_PaSaMaster_Self-Evolving_Agentic_Literature_Retrieval — 17.8k
 
 ---
 
@@ -33,7 +32,7 @@
 
 # 2506.07261_延迟异步检索增强召回
 
-**arXiv**: [2506.07261](https://arxiv.org/abs/2506.07261)
+[2506.07261](https://arxiv.org/abs/2506.07261)
 
 # RADAR: Recall Augmentation through Deferred Asynchronous Retrieval
 
@@ -172,7 +171,7 @@ With this configuration, the treatment delivered a +0.8% lift in our topline use
 
 # 2509.13179_基于BPE令牌级嵌入的冷启动推荐
 
-**arXiv**: [2509.13179](https://arxiv.org/abs/2509.13179)
+[2509.13179](https://arxiv.org/abs/2509.13179)
 
 # Efficient Cold-Start Recommendation via BPE Token-Level Embedding Initialization with LLM
 
@@ -408,7 +407,7 @@ There are several possible directions, which could be viewed as the fruitful ext
 
 # 2505.05196_RAG推荐系统数据投毒攻击
 
-**arXiv**: [2505.05196](https://arxiv.org/abs/2505.05196)
+[2505.05196](https://arxiv.org/abs/2505.05196)
 
 # Stealthy LLM-Driven Data Poisoning Atacks Against Embedding-Based Retrieval-Augmented Recommender Systems
 
@@ -568,7 +567,7 @@ retrieval-augmented large language models. In <sub>Proceedings</sub> <sub>of</su
 
 # 2606.09595_多模态电影推荐视觉证据基准
 
-**arXiv**: [2606.09595](https://arxiv.org/abs/2606.09595)
+[2606.09595](https://arxiv.org/abs/2606.09595)
 
 # Popcorn: A Configurable Benchmark for Visual Evidence in Multimodal Movie Recommendation
 
@@ -714,7 +713,7 @@ The main limitations are scale, access, and ofline evaluation. Full movies are r
 
 # 2512.21526_选择性LLM引导正则化
 
-**arXiv**: [2512.21526](https://arxiv.org/abs/2512.21526)
+[2512.21526](https://arxiv.org/abs/2512.21526)
 
 # Selective LLM-Guided Regularization for Enhancing Recommendation Models
 
@@ -989,7 +988,7 @@ To Robert, for the bagels and explaining CMYK and color spaces.
 
 # 2505.20773_冷启动推荐的知识引导检索增强生成
 
-**arXiv**: [2505.20773](https://arxiv.org/abs/2505.20773)
+[2505.20773](https://arxiv.org/abs/2505.20773)
 
 # Adaptive Candidate Retrieval with Dynamic Knowledge Graph Construction for Cold-Start Recommendation
 
@@ -1243,7 +1242,7 @@ For the GPT setting, we use gpt-4o-mini accessed through the Azure OpenAI API. E
 
 # 2511.15141_ItemRAG：基于物品的检索增强生成推荐
 
-**arXiv**: [2511.15141](https://arxiv.org/abs/2511.15141)
+[2511.15141](https://arxiv.org/abs/2511.15141)
 
 # ItemRAG: Item-Based Retrieval-Augmented Generation for LLM-Based Recommendation
 
@@ -1480,7 +1479,7 @@ Acknowledgements. This work was partly supported by the National Research Founda
 
 # 2512.20916_多模态大模型摘要与检索增强序列推荐
 
-**arXiv**: [2512.20916](https://arxiv.org/abs/2512.20916)
+[2512.20916](https://arxiv.org/abs/2512.20916)
 
 # MMSRARec: Summarization and Retrieval Augumented Sequential Recommendation Based on Multimodal Large Language Model
 
@@ -1734,9 +1733,555 @@ Currently, the MLLM backbone used in MMSRARec contains 7B parameters, leading to
 
 ---
 
+# 2604.20848
+
+[2604.20848](https://arxiv.org/abs/2604.20848)
+
+# MATRAG: Multi-Agent Transparent Retrieval-Augmented Generation for Explainable Recommendations
+
+Sushant Mehta
+
+sushant0523@gmail.com
+
+## Abstract
+
+Large Language Model (LLM)-based recommendation systems have demonstrated remarkable capabilities in understanding user prefer ences and generating personalized suggestions. However, existing approaches face critical challenges in transparency, knowledge grounding, and the ability to provide coherent explanations that foster user trust. We introduce MATRAG (Multi-Agent Transparent Retrieval-Augmented Generation), a novel framework that com bined multi-agent collaboration with knowledge graph-augmented retrieval to deliver explainable recommendations. MATRAG em ploys four specialized agents: a User Modeling Agent that con structs dynamic preference profiles, an Item Analysis Agent that extracts semantic features from knowledge graphs, a Reasoning Agent that synthesizes collaborative and content-based signals, and an Explanation Agent that generates natural language justifications grounded in retrieved knowledge. Our framework incorporates a transparency scoring mechanism that quantifies explanation faith fulness and relevance. Extensive experiments on three benchmark datasets (Amazon Reviews, MovieLens-1M, and Yelp) demonstrate that MATRAG achieves state-of-the-art performance, improving recommendation accuracy by 12.7% (Hit Rate) and 15.3% (NDCG) over leading baselines, while human evaluation confirms that 87.4% of generated explanations are rated as helpful and trustworthy by domain experts. Our work establishes new benchmarks for trans parent, agentic recommendation systems and provides actionable insights for deploying LLM-based recommenders in production environments.
+
+## CCS Concepts
+
+• Information systems → Recommender systems; • Comput ing methodologies → Natural language processing; Multi-agent systems.
+
+## Keywords
+
+Large Language Models, Multi-Agent Systems, Recommender Systems, Retrieval-Augmented Generation, Explainable AI, Knowledge Graphs, Transparency
+
+## ACM Reference Format:
+
+Sushant Mehta. 2026. MATRAG: Multi-Agent Transparent Retrieval-Augmented Generation for Explainable Recommendations. In Proceedings of Companion
+
+Proceedings of the ACM Web Conference 2026 (WWW ’26). ACM, New York, NY, USA, 8 pages. https://doi.org/10.1145/XXXXXXX.XXXXXXX
+
+## 1 Introduction
+
+Recommendation systems have become indispensable components of modern web platforms, influencing how billions of users discover products, content, and services [17, 36]. The emergence of Large Language Models (LLMs) has catalyzed a paradigm shift from traditional collaborative filtering and content-based approaches toward agentic systems capable of reasoning, planning, and engaging in natural dialogue with users [15, 18]. However, as these systems grow more sophisticated, they face mounting challenges in three critical dimensions: transparency, knowledge grounding, and multistakeholder coordination.
+
+First, LLM-based recommenders often operate as opaque decisionmaking systems, generating suggestions without articulating the reasoning behind their choices [25]. This opacity erodes user trust and limits adoption in high-stakes domains such as healthcare, finance, and e-commerce [6]. Users increasingly demand not just accurate recommendations but also comprehensible explanations that reveal how their preferences were understood and why specific items were selected [27].
+
+Second, while LLMs possess extensive world knowledge acquired during pre-training, they frequently hallucinate facts, conflate entities, or fail to incorporate domain-specific and up-to-date information [34]. Retrieval-Augmented Generation (RAG) has emerged as a promising solution, grounding LLM outputs in retrieved evidence from external knowledge sources [3, 44]. However, standard RAG approaches retrieve isolated text chunks, ignoring the rich relational structure that knowledge graphs capture about items, users, and their interconnections.
+
+Third, the recommendation ecosystem involves multiple stakeholders: users, items, platforms, and increasingly autonomous agents, whose interests must be balanced and coordinated [43]. Singleagent LLM systems struggle to decompose complex recommendation tasks, maintain coherent reasoning across multiple turns, and synthesize diverse signals from heterogeneous data sources [33].
+
+To address these interconnected challenges, we propose MA-TRAG (Multi-Agent Transparent Retrieval-Augmented Generation), a novel framework that unifies multi-agent collaboration, knowledge graph-augmented retrieval, and explainable recommendation generation. MATRAG orchestrates four specialized LLM-based agents: (1) a User Modeling Agent that constructs and updates dynamic preference profiles from interaction histories and natural language feedback; (2) an Item Analysis Agent that retrieves and syn thesizes structured knowledge from item-centric knowledge graphs; (3) a Reasoning Agent that integrates collaborative filtering signals with semantic item representations through deliberative planning;
+
+and (4) an Explanation Agent that generates faithful, grounded nat ural language explanations by tracing the reasoning chain back to retrieved evidence.
+
+Central to our framework is a Transparency Scoring Module that quantifies explanation quality along three dimensions: factual faithfulness to retrieved knowledge, logical coherence with the recom mendation rationale, and personalization alignment with inferred user preferences. This module enables both automated evaluation and human-in-the-loop refinement of explanation quality.
+
+Our contributions are summarized as follows:
+
+• We introduce MATRAG, a multi-agent framework that combines knowledge graph-augmented retrieval with specialized agents for transparent, explainable recommendations (Sec tion 3).
+
+• We propose a transparency scoring mechanism that enables quantitative assessment of explanation faithfulness, coherence, and personalization (Section 3.3).
+
+• We conduct extensive experiments on three benchmark datasets, demonstrating state-of-the-art performance in recommendation accuracy and explanation quality (Section 4).
+
+• We present human expert evaluations confirming that MA TRAG generates explanations rated as helpful and trustworthy by 87.4% of evaluators (Section 4.4).
+
+## 2 Related Work
+
+## 2.1 LLM-Based Recommendation Systems
+
+The integration of LLMs into recommendation systems has evolved in two primary paradigms [17, 36]. The discriminative paradigm fine-tunes LLMs to recommendation-specific objectives, using language models as feature extractors or scoring functions [1, 11]. The generative paradigm frames recommendation as text generation, directly producing item identifiers or descriptions [5, 15]. Recent work has explored hybrid approaches that leverage LLMs for both understanding and generation while maintaining eficiency through knowledge distillation [18].
+
+InteRecAgent [12] pioneered the integration of LLMs with tradi tional recommender models through a tool-augmented architecture, treating specialized models as callable tools. RecMind [32] extended this paradigm with self-inspired planning, allowing LLMs to decompose complex recommendation queries into subtasks. However, these single-agent approaches lack the specialization and coordi nation capabilities necessary for handling diverse user needs and multi-faceted item representations.
+
+## 2.2 Multi-Agent Systems for Recommendations
+
+Multi-agent collaboration has emerged as a powerful paradigm for complex AI tasks [10, 16, 35]. In recommendation contexts, MACRec [33] introduced a framework with specialized agents for user analysis, item analysis, and reflection, demonstrating improved diversity and precision through agent collaboration. Agent4Rec [41] deployed generative agents for user simulation, providing insights into phenomena like filter bubbles. AgentCF [42] modeled both users and items as agents, enabling collaborative learning that captures two-sided interaction dynamics.
+
+More recent work has explored multi-agent conversational recommendation systems (MACRS) [4], coordinating interactions across multiple agents to optimize real-time recommendations. However, existing multi-agent approaches typically focus on either simulation or task decomposition, without explicitly addressing the transparency and explainability requirements essential for user trust.
+
+## 2.3 RAG and Knowledge Graphs for Recommendations
+
+Retrieval-Augmented Generation has proven efective in grounding LLM outputs in external knowledge [14]. GraphRAG [3] improved the standard RAG by constructing knowledge graphs from text corpora, enabling community-based summarization and improved reasoning over connected information. K-RagRec [34] specifically adapted the RAG knowledge graph for recommendations, developing hop-field knowledge sub-graphs for semantic indexing and popularity-selective retrieval.
+
+Knowledge graphs have long been recognized as valuable resources for recommendation systems, capturing rich semantic relationships between users, items, and attributes [30]. Recent work has explored LLM-KG integration for explainable recommendations, using knowledge graphs to provide factual grounding for generated explanations [26, 37]. Our work extends this line by incorporating knowledge graph retrieval directly into a multi-agent collaborative framework.
+
+## 2.4 Explainable Recommendations
+
+Explainability has become a central concern in the research of recommendation systems [40]. Traditional approaches generated explanations from feature attributions, attention weights, or templatebased natural language generation [2]. The advent of LLMs has opened new possibilities for generating rich, contextual explanations [25]. Silva et al. [27] demonstrated that ChatGPT can produce human-centered explanations that improve user engagement. Lubos et al. [19] found that users generally prefer LLM-generated explanations for their creativity and depth.
+
+However, LLM-generated explanations face the challenge of faithfulness: whether the explanation accurately reflects the actual reasoning process [7]. Our transparency scoring mechanism addresses this challenge directly by grounding explanations in retrievable evidence and quantifying alignment with the rationale of the recommendation.
+
+## 3 Methodology
+
+## 3.1 Problem Formulation
+
+Let $\mathbf { \mathcal { U } } = \left\{ u _ { 1 } , u _ { 2 } , \ldots , u _ { n } \right\}$ denote the set of users and ${ \cal { I } } = \{ i _ { 1 } , i _ { 2 } , \dots , i _ { m } \}$ the set of items. Each user <sup>??</sup> has an interaction history $\mathcal { H } _ { u } ~ =$ $\{ ( i , r , t , c ) | i \in \mathcal { I } \}$ where <sup>??</sup> is the rating, <sup>??</sup> is the timestamp, and <sup>??</sup> is optional textual feedback (reviews, comments). A knowledge graph $\mathcal { G } = ( \mathcal { E } , \mathcal { R } , \mathcal { T } )$ represents entities E (including items and attributes), relations R, and triples $\mathcal { T } \subseteq \mathcal { E } \times \mathcal { R } \times \mathcal { E }$
+
+Given a user <sup>??</sup> with history $\mathcal { H } _ { u }$ and an optional natural language query <sup>??</sup>, the goal is to: (1) generate a ranked list of recommendations $\hat { J } _ { u } = [ i _ { 1 } ^ { * } , i _ { 2 } ^ { * } , \ldots , i _ { k } ^ { * } ]$ ; and (2) for each recommended item $i ^ { * } { } _ { ; }$ , produce an explanation $e _ { i ^ { * } }$ that is faithful to the reasoning process and grounded in the retrieved knowledge.
+
+![](images/1809a8ad7017aaff9dbafd8536ec26e13d4b96861b4e6833c24e9ef18648c3cf.jpg)  
+Figure 1: Overview of the MATRAG framework showing four specialized agents coordinated by the orchestrator, with knowledge graph retrieval and transparency scoring.
+
+## 3.2 Framework Overview
+
+MATRAG comprises four specialized agents coordinated by a cen tral orchestrator, as illustrated in Figure 1. Each agent is instantiated as an LLM augmented with role-specific instructions, memory, and tool access.
+
+3.2.1 Orchestrator Agent. The Orchestrator manages the overall recommendation workflow, determining which agents to invoke, in what sequence, and how to synthesize their outputs. Given a user request, the Orchestrator:
+
+(1) Analyzes the request type (e.g., cold-start, re-ranking, conversational);
+
+(2) Dispatches subtasks to appropriate agents;
+
+(3) Aggregates agent outputs and resolves conflicts;
+
+(4) Triggers the Transparency Scoring Module for quality assessment.
+
+The Orchestrator employs a ReAct-style [38] reasoning loop, interleaving thought, action, and observation steps to maintain coherent multi-step planning.
+
+3.2.2 User Modeling Agent. The User Modeling Agent constructs a dynamic, multi-faceted representation of user preferences. It processes:
+
+• Behavioral signals: Interaction history $\mathcal { H } _ { u }$ including ratings, clicks, purchases, and dwell times;
+
+• Textual feedback: Reviews, comments, and conversational utterances;
+
+• Contextual factors: Time of day, device type, session context.
+
+The agent maintains a structured user profile $P _ { u }$ comprising:
+
+$$
+P _ {u} = \{\mathbf {p} ^ {\text { explicit }}, \mathbf {p} ^ {\text { implicit }}, \mathbf {p} ^ {\text { contextual }}, \mathbf {p} ^ {\text { temporal }} \}\tag{1}
+$$
+
+where $\mathbf { p } ^ { \mathrm { e x p l i c i t } }$ captures stated preferences, $\mathbf { p } ^ { \mathrm { i m p l i c i t } }$ captures inferred preferences from behavior, $\mathbf { p } ^ { \mathrm { c o n t e x t u a l } }$ captures situational factors, and $\mathbf { p } ^ { \mathrm { t e m p o r a l } }$ captures preference evolution over time.
+
+The agent uses in-context learning to extract preference signals from textual feedback:
+
+$$
+\mathbf {p} ^ {\mathrm{explicit}} = \operatorname{LLM} (\operatorname{prompt} _ {\mathrm{user}}, \mathcal {H} _ {u} ^ {\mathrm{text}})\tag{2}
+$$
+
+3.2.3 Item Analysis Agent. The Item Analysis Agent retrieves and synthesizes structured knowledge about items from the knowledge graph G. Given a candidate item set $\tau _ { \mathrm { c a n d } }$ , this agent:
+
+(1) Entity Linking: Maps item identifiers to knowledge graph entities;
+
+(2) Subgraph Extraction: Retrieves <sup>??</sup>-hop neighborhoods around item entities;
+
+(3) Relation Filtering: Selects relations relevant to user preferences;
+
+(4) Feature Synthesis: Generates semantic item representations.
+
+For knowledge graph retrieval, we employ a two-stage approach inspired by K-RagRec [34]. First, we use dense retrieval to identify semantically similar knowledge subgraphs:
+
+$$
+\mathcal {S} _ {i} = \operatorname{TopK} (\operatorname{sim} (\mathbf {e} _ {q}, \mathbf {e} _ {s}) | s \in \mathcal {G} _ {i})\tag{3}
+$$
+
+where $\mathbf { e } _ { q }$ is the query embedding and $\mathbf { e } _ { s }$ are subgraph embeddings. Second, we re-rank retrieved subgraphs using the LLM’s reasoning capabilities:
+
+$$
+\hat {\mathcal {S}} _ {i} = \mathrm{LLM-Rerank} (\mathcal {S} _ {i}, P _ {u}, q)\tag{4}
+$$
+
+3.2.4 Reasoning Agent. The Reasoning Agent integrates signals from user modeling and item analysis to generate recommendations. It implements a deliberative reasoning process that:
+
+(1) Signal Integration: Combines collaborative filtering signals (similar users’ preferences) with content-based signals (itemattribute matching);
+
+(2) Constraint Satisfaction: Respects user-specified constraints (budget, categories, availability);
+
+(3) Diversity Optimization: Balances relevance with recommendation diversity;
+
+(4) Reasoning Chain Generation: Produces an explicit reasoning trace.
+
+The agent scores each candidate item using a hybrid approach:
+
+$$
+s (u, i) = \alpha \cdot s _ {\mathrm{CF}} (u, i) + \beta \cdot s _ {\mathrm{CB}} (u, i) + \gamma \cdot s _ {\mathrm{LLM}} (u, i, \mathcal {S} _ {i})\tag{5}
+$$
+
+where $s _ { \mathrm { C F } }$ is the collaborative filtering score, <sup>??</sup> is the contentbased score, and $s _ { \mathrm { L L M } }$ is the LLM’s preference prediction based on retrieved knowledge.
+
+Crucially, the Reasoning Agent outputs not just scores but also a structured reasoning chain $C = [ ( r _ { 1 } , e _ { 1 } ) , ( r _ { 2 } , e _ { 2 } ) , . . . ]$ where each step $( r _ { j } , e _ { j } )$ pairs a reasoning step with supporting evidence from retrieved knowledge.
+
+3.2.5 Explanation Agent. The Explanation Agent transforms the reasoning chain into natural language explanations tailored to user comprehension. It operates in three modes:
+
+• Concise: One-sentence justification highlighting the primary recommendation rationale;
+
+• Detailed: Multi-paragraph explanation covering multiple reasoning aspects;
+
+• Comparative: Explanation contrasting the recommended item with alternatives.
+
+The agent is prompted to ground explanations in retrieved knowl edge:
+
+$$
+e _ {i ^ {*}} = \mathrm{LLM} (\mathrm{prompt} _ {\mathrm{explain}}, C, \hat {S} _ {i ^ {*}}, P _ {u})\tag{6}
+$$
+
+To ensure faithfulness, the agent is instructed to cite specific evidence from the reasoning chain and retrieved knowledge sub graphs.
+
+## 3.3 Transparency Scoring Module
+
+A key contribution of MATRAG is the Transparency Scoring Mod ule, which quantifies explanation quality along three dimensions.
+
+3.3.1 Faithfulness Score. Faithfulness measures whether the explanation accurately reflects the retrieved evidence and reasoning chain. We compute this using an entailment-based approach:
+
+$$
+\mathrm{Faith} (e, \mathcal {C}, \hat {\mathcal {S}}) = \frac {1}{| C _ {e} |} \sum_ {c \in C _ {e}} \mathrm{NLI} (c, \mathcal {C} \cup \hat {\mathcal {S}})\tag{7}
+$$
+
+where $C _ { e }$ denotes claims extracted from explanation <sup>??</sup>, and NLI returns 1 if the claim is entailed by the evidence and 0 otherwise.
+
+3.3.2 Coherence Score. Coherence measures the logical consistency and flow of the explanation:
+
+$$
+\operatorname{Coher} (e) = \text { LLM - Judge } (e, \text { prompt } _ {\text { coherence }})\tag{8}
+$$
+
+where an LLM-as-judge evaluates whether the explanation main tains consistent logic, avoids contradictions, and presents informa tion in a comprehensible sequence.
+
+3.3.3 Personalization Score. Personalization measures alignment between the explanation and the user’s profile:
+
+$$
+\operatorname{Pers} (e, P _ {u}) = \operatorname{sim} (\mathbf {e} _ {e}, \mathbf {e} _ {P _ {u}})\tag{9}
+$$
+
+where $\mathbf { e } _ { e }$ and $\mathbf { e } _ { P _ { u } }$ are embeddings of the explanation and user profile, respectively.
+
+The overall transparency score combines these dimensions:
+
+$$
+\operatorname{Trans} (e) = w _ {1} \cdot \text { Faith } + w _ {2} \cdot \text { Coher } + w _ {3} \cdot \text { Pers }\tag{10}
+$$
+
+with weights $w _ { 1 } , w _ { 2 } ,$ <sup>??</sup><sub>3</sub> tuned on human preference data.
+
+## 3.4 Training and Optimization
+
+MATRAG operates primarily in a zero-shot or few-shot manner, leveraging the capabilities of pre-trained LLMs. However, we fine tune specific components:
+
+• Knowledge Graph Embeddings: We train SentenceBERT [23] on the recommendation domain’s knowledge graph for sub graph retrieval;
+
+• Transparency Scorer: We fine-tune a smaller LLM on humanannotated explanation quality data;
+
+• Agent Coordination: We use reinforcement learning from human feedback (RLHF) on the orchestrator to optimize agent invocation sequences.
+
+## 4 Experiments
+
+## 4.1 Experimental Setup
+
+4.1.1 Datasets. We evaluate MATRAG on three benchmark datasets spanning diferent recommendation domains:
+
+• Amazon Reviews (Electronics) [20]: 192,403 users, 63,001 items, 1.68M interactions with textual reviews. We construct a product knowledge graph from Amazon’s product metadata including categories, brands, and related products.
+
+• MovieLens-1M [8]: 6,040 users, 3,706 movies, 1M ratings. We link items to the Freebase knowledge graph via entity matching, providing rich relational information about actors, directors, genres, and production details.
+
+• Yelp [39]: 31,668 users, 38,048 businesses, 1.56M reviews. We construct a knowledge graph from business attributes including location, categories, and user-generated tags.
+
+For each dataset, we use an 80/10/10 train/validation/test split based on temporal order to simulate realistic deployment scenarios.
+
+4.1.2 Baselines. We compare against the following state-of-the-art methods:
+
+• Traditional Methods: BPR [24], LightGCN [9], SASRec [13];
+
+• Knowledge-Enhanced: KGAT [30], KGIN [31];
+
+• LLM-Based: TALLRec [1], Chat-Rec [5], LLMRank [11];
+
+• Agent-Based: InteRecAgent [12], RecMind [32], MACRec [33];
+
+• RAG-Enhanced: K-RagRec [34], G-CRS [22].
+
+4.1.3 Implementation Details. We implement MATRAG using GPT-4 [21] as the backbone LLM for all agents. For knowledge graph retrieval, we use SentenceBERT with a vector dimension of 768. The transparency scorer is based on Llama-3.1-8B [29] fine-tuned on 5,000 human-annotated explanation pairs. We set the number of retrieved knowledge subgraphs $K = 1 0$ , re-ranking top $N = 5 ,$ and candidate item pool size to 100.
+
+4.1.4 Evaluation Metrics. For recommendation accuracy, we report:
+
+• HR@K (Hit Rate): Proportion of test cases where the groundtruth item appears in top-K recommendations;
+
+• NDCG@K (Normalized Discounted Cumulative Gain): Rank ing quality metric accounting for position;
+
+• MRR (Mean Reciprocal Rank): Average reciprocal rank of the first relevant item.
+
+For explanation quality, we report:
+
+• Faithfulness: Entailment-based faithfulness score;
+
+• Coherence: LLM-judged coherence (1-5 scale);
+
+• BLEU-4: N-gram overlap with reference explanations;
+
+• Transparency Score: Our composite metric.
+
+## 4.2 Main Results
+
+4.2.1 Recommendation Performance. Table 1 presents the recommendation accuracy results across all datasets. MATRAG consistently outperforms all baselines, achieving the highest scores on all metrics.
+
+Key observations include:
+
+(1) Multi-agent collaboration improves over single-agent approaches. MATRAG outperforms InteRecAgent by 17.1% (HR@10) on Amazon and 15.8% on MovieLens, demonstrating the value of specialized agent roles and coordinated reasoning.
+
+(2) Knowledge graph augmentation enhances LLM-based methods. Comparing MATRAG to LLMRank (which lacks KG retrieval), we observe improvements of 19.2% (HR@10) and 25.9% (NDCG@10), validating the importance of grounding LLM reason ing in structured knowledge.
+
+Table 1: Recommendation performance comparison. Best results in bold, second best underlined. † indicates statistically significant improvement over the best baseline (<sup>?? <</sup> 0<sup>.</sup>05).
+
+<table><tr><td rowspan="2">Method</td><td colspan="3">Amazon Electronics</td><td colspan="3">MovieLens-1M</td></tr><tr><td>HR@10</td><td>NDCG@10</td><td>MRR</td><td>HR@10</td><td>NDCG@10</td><td>MRR</td></tr><tr><td>BPR</td><td>0.312</td><td>0.198</td><td>0.156</td><td>0.428</td><td>0.287</td><td>0.221</td></tr><tr><td>LightGCN</td><td>0.378</td><td>0.241</td><td>0.189</td><td>0.512</td><td>0.348</td><td>0.269</td></tr><tr><td>SASRec</td><td>0.401</td><td>0.259</td><td>0.204</td><td>0.534</td><td>0.367</td><td>0.285</td></tr><tr><td>KGAT</td><td>0.389</td><td>0.248</td><td>0.195</td><td>0.521</td><td>0.354</td><td>0.274</td></tr><tr><td>KGIN</td><td>0.412</td><td>0.267</td><td>0.211</td><td>0.548</td><td>0.378</td><td>0.294</td></tr><tr><td>TALLRec</td><td>0.423</td><td>0.274</td><td>0.218</td><td>0.556</td><td>0.385</td><td>0.301</td></tr><tr><td>Chat-Rec</td><td>0.418</td><td>0.271</td><td>0.215</td><td>0.549</td><td>0.379</td><td>0.296</td></tr><tr><td>LLMRank</td><td>0.437</td><td>0.285</td><td>0.228</td><td>0.571</td><td>0.398</td><td>0.314</td></tr><tr><td>InteRecAgent</td><td>0.445</td><td>0.291</td><td>0.234</td><td>0.582</td><td>0.408</td><td>0.323</td></tr><tr><td>RecMind</td><td>0.451</td><td>0.296</td><td>0.239</td><td>0.589</td><td>0.415</td><td>0.329</td></tr><tr><td>MACRec</td><td>0.462</td><td>0.305</td><td>0.247</td><td>0.601</td><td>0.427</td><td>0.341</td></tr><tr><td>K-RagRec</td><td>0.469</td><td>0.311</td><td>0.252</td><td>0.608</td><td>0.433</td><td>0.347</td></tr><tr><td>G-CRS</td><td> $\underline{0.478}$ </td><td> $\underline{0.318}$ </td><td> $\underline{0.259}$ </td><td> $\underline{0.617}$ </td><td> $\underline{0.441}$ </td><td> $\underline{0.355}$ </td></tr><tr><td>MATRAG</td><td> $0.521^{\dagger}$ </td><td> $0.359^{\dagger}$ </td><td> $0.297^{\dagger}$ </td><td> $0.674^{\dagger}$ </td><td> $0.493^{\dagger}$ </td><td> $0.408^{\dagger}$ </td></tr><tr><td>Improv.</td><td>+9.0%</td><td>+12.9%</td><td>+14.7%</td><td>+9.2%</td><td>+11.8%</td><td>+14.9%</td></tr></table>
+
+Table 2: Recommendation performance on Yelp dataset.
+
+<table><tr><td>Method</td><td>HR@10</td><td>NDCG@10</td><td>MRR</td></tr><tr><td>LightGCN</td><td>0.356</td><td>0.228</td><td>0.178</td></tr><tr><td>KGIN</td><td>0.394</td><td>0.251</td><td>0.198</td></tr><tr><td>LLMRank</td><td>0.418</td><td>0.271</td><td>0.216</td></tr><tr><td>MACRec</td><td>0.442</td><td>0.289</td><td>0.232</td></tr><tr><td>G-CRS</td><td> $\underline{0.461}$ </td><td> $\underline{0.304}$ </td><td> $\underline{0.247}$ </td></tr><tr><td>MATRAG</td><td> $\mathbf{0.513}^{\dagger}$ </td><td> $\mathbf{0.351}^{\dagger}$ </td><td> $\mathbf{0.289}^{\dagger}$ </td></tr></table>
+
+Table 3: Explanation quality comparison on Amazon Elec tronics. Higher is better for all metrics.
+
+<table><tr><td>Method</td><td>Faith.</td><td>Coher.</td><td>BLEU-4</td><td>Trans.</td></tr><tr><td>Chat-Rec</td><td>0.612</td><td>3.24</td><td>0.089</td><td>0.587</td></tr><tr><td>InteRecAgent</td><td>0.648</td><td>3.41</td><td>0.102</td><td>0.623</td></tr><tr><td>RecMind</td><td>0.671</td><td>3.52</td><td>0.118</td><td>0.651</td></tr><tr><td>MACRec</td><td>0.693</td><td>3.68</td><td>0.127</td><td>0.678</td></tr><tr><td>K-RagRec</td><td>0.724</td><td>3.79</td><td>0.141</td><td>0.712</td></tr><tr><td>G-CRS</td><td>0.751</td><td>3.91</td><td>0.156</td><td>0.738</td></tr><tr><td>MATRAG</td><td>0.847</td><td>4.42</td><td>0.198</td><td>0.856</td></tr></table>
+
+(3) The transparency-focused design does not sacrifice accuracy. Despite its emphasis on explainability, MATRAG achieves the highest recommendation accuracy, suggesting that explicit rea soning chains and grounded explanations may also improve recommendation quality.
+
+4.2.2 Explanation Quality. Table 3 compares explanation quality across methods that generate natural language explanations.
+
+Table 4: Ablation study on Amazon Electronics. We remove components individually to measure their contribution.
+
+<table><tr><td>Variant</td><td>HR@10</td><td>NDCG@10</td><td>Trans.</td></tr><tr><td>MATRAG (Full)</td><td>0.521</td><td>0.359</td><td>0.856</td></tr><tr><td>w/o User Modeling Agent</td><td>0.478</td><td>0.321</td><td>0.789</td></tr><tr><td>w/o Item Analysis Agent</td><td>0.462</td><td>0.307</td><td>0.724</td></tr><tr><td>w/o Reasoning Agent</td><td>0.441</td><td>0.289</td><td>0.698</td></tr><tr><td>w/o Explanation Agent</td><td>0.519</td><td>0.356</td><td>0.612</td></tr><tr><td>w/o KG Retrieval</td><td>0.469</td><td>0.312</td><td>0.731</td></tr><tr><td>w/o Transparency Scoring</td><td>0.512</td><td>0.351</td><td>0.768</td></tr><tr><td>Single Agent (No Collab.)</td><td>0.448</td><td>0.294</td><td>0.687</td></tr></table>
+
+MATRAG achieves substantial improvements in explanation quality: +12.8% faithfulness over G-CRS, indicating that our reasoning chain and KG-grounded explanation generation produce more verifiable explanations. The coherence improvement (+13.0%) demonstrates that explicit agent coordination yields more logically structured explanations.
+
+## 4.3 Ablation Studies
+
+To understand the contribution of each component, we conduct ablation studies (Table 4).
+
+Key findings:
+
+(1) Each agent contributes uniquely. Removing the Reasoning Agent causes the largest accuracy drop (-15.4% HR), confirming its central role in synthesizing signals. The Item Analysis Agent removal shows the second-largest impact, highlighting the value of KG-enhanced item representations.
+
+(2) Multi-agent collaboration is essential. The single-agent variant (where one LLM performs all tasks) underperforms the full system by 14.0% (HR), validating our design choice to specialize agents for distinct subtasks.
+
+Table 5: Human expert evaluation results (1-5 scale). Inter rater agreement: Krippendorf’s <sup>??</sup> = 0<sup>.</sup>78.
+
+<table><tr><td>Method</td><td>Help.</td><td>Trust.</td><td>Info.</td><td>Pers.</td><td>Avg.</td></tr><tr><td>Chat-Rec</td><td>3.12</td><td>2.98</td><td>3.34</td><td>2.87</td><td>3.08</td></tr><tr><td>MACRec</td><td>3.56</td><td>3.42</td><td>3.71</td><td>3.28</td><td>3.49</td></tr><tr><td>K-RagRec</td><td>3.78</td><td>3.67</td><td>3.92</td><td>3.51</td><td>3.72</td></tr><tr><td>G-CRS</td><td>3.91</td><td>3.82</td><td>4.08</td><td>3.67</td><td>3.87</td></tr><tr><td>MATRAG</td><td>4.38</td><td>4.31</td><td>4.52</td><td>4.24</td><td>4.36</td></tr></table>
+
+(3) Transparency scoring improves both accuracy and ex planation quality. Interestingly, removing the transparency scor ing module slightly reduces recommendation accuracy, suggesting that the feedback loop from explanation quality assessment helps refine the reasoning process.
+
+## 4.4 Human Expert Evaluation
+
+We conducted a human evaluation study to assess explanation quality from the end-user perspective.
+
+4.4.1 Study Design. We recruited 12 domain experts: 4 e-commerce product managers, 4 recommendation system researchers, and 4 UX designers with experience in content personalization. Each expert evaluated 50 recommendation-explanation pairs sampled from test sets across all three datasets (600 total evaluations per method).
+
+Experts rated each explanation on four dimensions using a 5- point Likert scale:
+
+• Helpfulness: Does the explanation help understand why this item was recommended?
+
+• Trustworthiness: Does the explanation seem honest and reliable?
+
+• Informativeness: Does the explanation provide useful in formation about the item?
+
+• Personalization: Does the explanation feel tailored to the user’s preferences?
+
+## 4.4.2 Results. Table 5 presents the human evaluation results.
+
+MATRAG significantly outperforms all baselines on every di mension (<sup>??</sup> <sup><</sup> 0<sup>.</sup>01 via Wilcoxon signed-rank test). Notably, 87.4% of MATRAG explanations received ratings ≥ 4 on both Helpfulness and Trustworthiness, compared to 62.1% for the next-best method (G-CRS).
+
+Expert feedback highlighted several qualitative strengths of MA TRAG explanations:
+
+“The explanations consistently reference specific product features that match my inferred preferences—it’s not just generic praise.”
+
+“I appreciate how the system explains not just what it recommends, but why other seemingly similar items were not chosen.”
+
+“The knowledge graph grounding is evident—explanations cite concrete facts like ‘directed by Christopher Nolan’ rather than vague statements.”
+
+Table 6: Eficiency comparison. Latency is per-request.
+
+<table><tr><td>Method</td><td>Latency (s)</td><td>LLM Calls</td><td>KG Queries</td></tr><tr><td>LLMRank</td><td>1.2</td><td>1</td><td>0</td></tr><tr><td>InteRecAgent</td><td>2.8</td><td>3</td><td>0</td></tr><tr><td>MACRec</td><td>4.1</td><td>5</td><td>0</td></tr><tr><td>K-RagRec</td><td>2.4</td><td>2</td><td>3</td></tr><tr><td>G-CRS</td><td>3.2</td><td>3</td><td>4</td></tr><tr><td>MATRAG</td><td>5.3</td><td>6</td><td>5</td></tr></table>
+
+## 4.5 Eficiency Analysis
+
+We analyze the computational eficiency of MATRAG compared to baselines (Table 6).
+
+MATRAG incurs higher latency due to multi-agent coordination and comprehensive KG retrieval. However, we note that: (1) the latency is acceptable for non-real-time use cases; (2) the Explanation Agent can run asynchronously after initial recommendations; and (3) agent calls can be parallelized, reducing wall-clock time to ∼3.1 seconds.
+
+## 5 Discussion
+
+## 5.1 Implications for Practice
+
+Our findings have several implications for deploying LLM-based recommenders in production:
+
+Multi-agent architectures enable specialization without sacrificing integration. Rather than prompting a single LLM with complex, multi-faceted instructions, decomposing the recommendation task across specialized agents yields both better accuracy and more coherent explanations.
+
+Knowledge graphs are essential for grounded explanations. LLM-generated explanations without factual grounding risk hallucination and user distrust. By retrieving from curated knowledge graphs, MATRAG ensures that explanations reference verifiable facts.
+
+Transparency scoring provides a flywheel for quality improvement. The transparency scoring module not only enables evaluation but also provides signals for iterative refinement through RLHF or prompt optimization.
+
+## 5.2 Limitations and Future Work
+
+Despite promising results, MATRAG has limitations that suggest directions for future research:
+
+Latency. Multi-agent coordination introduces overhead unsuitable for real-time applications. Future work could explore agent caching, speculative execution, or distillation to smaller models.
+
+Knowledge graph coverage. MATRAG’s performance depends on knowledge graph completeness. For domains with sparse KGs, techniques for automatic KG construction or completion would be valuable.
+
+Multi-turn interaction. Our current evaluation focuses on single-turn recommendations. Extending MATRAG to conversational settings with memory-augmented agents is an important direction.
+
+Cross-domain generalization. While MATRAG performs well within domains, zero-shot transfer to new domains remains chal lenging. Pre-training strategies for domain-agnostic agent capabili ties warrant investigation.
+
+## 6 Conclusion
+
+We introduced MATRAG, a multi-agent framework that unifies knowledge graph-augmented retrieval with transparent, explainable recommendation generation. By orchestrating specialized agents for user modeling, item analysis, reasoning, and explanation, MA TRAG achieves state-of-the-art performance on three benchmark datasets while generating explanations that 87.4% of human experts rated as helpful and trustworthy. Our transparency scoring mechanism provides quantitative assessment of explanation qual ity, enabling both automated evaluation and human-in-the-loop refinement.
+
+As recommendation systems increasingly adopt agentic architec tures, the principles embodied in MATRAG—agent specialization, knowledge grounding, explicit reasoning chains, and transparency measurement—ofer a roadmap for building systems that users can understand and trust. We release our code and evaluation data to facilitate further research in transparent, agentic recommendation.
+
+## References
+
+[1] Keqin Bao, Jizhi Zhang, Yang Zhang, Wenjie Wang, Fuli Feng, and Xiangnan He. 2023. TALLRec: An Efective and Eficient Tuning Framework to Align Large Lan guage Model with Recommendation. In Proceedings of the 17th ACM Conference on Recommender Systems (RecSys ’23). 1007–1014.
+
+[2] Chong Chen, Min Zhang, Yiqun Liu, and Shaoping Ma. 2019. Co-Attentive Multi Task Learning for Explainable Recommendation. In Proceedings of the 28th International Joint Conference on Artificial Intelligence (IJCAI ’19). 2137–2143.
+
+[3] Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva Mody, Steven Truitt, and Jonathan Larson. 2024. From Local to Global: A Graph RAG Approach to Query-Focused Summarization. arXiv preprint arXiv:2404.16130.
+
+[4] Yuhang Fang, Yufei Zhou, Qing Li, and Peng Zhang. 2024. Multi-Agent Conversational Recommender Systems with Coordinated Interaction. In Proceedings of the ACM Web Conference 2024 (WWW ’24). 2145–2156.
+
+[5] Yunfan Gao, Tao Sheng, Youlin Xiang, Yun Xiong, Haofen Wang, and Jiawe Zhang. 2023. Chat-Rec: Towards Interactive and Explainable LLMs-Augmented Recommender System. arXiv preprint arXiv:2303.14524.
+
+[6] Yingqiang Ge, Shuchang Liu, Zuohui Fu, Juntao Tan, Zelong Li, Shuyuan Xu, Yunqi Li, Yikun Xian, and Yongfeng Zhang. 2024. A Survey on Trustworthy Recommender Systems. ACM Transactions on Recommender Systems 3 (2024), 1–68.
+
+[7] Sixun Guo, Shijie Zhang, Weiwei Sun, Pengjie Ren, Zhumin Chen, and Zhaochun Ren. 2023. Towards Explainable Conversational Recommender Systems. In Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’23). 2786–2790.
+
+[8] F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems 5, 4 (2015), 1–19.
+
+[9] Xiangnan He, Kuan Deng, Xiang Wang, Yan Li, Yongdong Zhang, and Meng Wang. 2020. LightGCN: Simplifying and Powering Graph Convolution Network for Recommendation. In Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’20). 639–648.
+
+[10] Sirui Hong, Mingchen Zhuge, Jonathan Chen, Xiawu Zheng, Yuheng Cheng, Ceyao Zhang, Jinlin Wang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, et al. 2024. MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework. In Proceedings of the Twelfth International Conference on Learning Representations (ICLR ’24).
+
+[11] Yupeng Hou, Junjie Zhang, Zihan Lin, Hongyu Lu, Ruobing Xie, Julian McAuley, and Wayne Xin Zhao. 2024. Large Language Models are Zero-Shot Rankers for Recommender Systems. In Proceedings of the 46th European Conference on Information Retrieval (ECIR ’24). 364–381.
+
+[12] Xu Huang, Jianxun Lian, Yuxuan Lei, Jing Yao, Defu Lian, and Xing Xie. 2023. Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations. arXiv preprint arXiv:2308.16505.
+
+[13] Wang-Cheng Kang and Julian McAuley. 2018. Self-Attentive Sequential Recommendation. In Proceedings of the 2018 IEEE International Conference on Data Mining (ICDM ’18). 197–206.
+
+[14] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, et al. 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In Advances in Neural Information Processing Systems (NeurIPS ’20). 9459–9474.
+
+[15] Lei Li, Yongfeng Zhang, Dugang Liu, and Li Chen. 2024. Large Language Models for Generative Recommendation: A Survey and Visionary Discussions. In Proceedings of the 2024 Joint International Conference on Computational Linguistics, Language Resources and Evaluation (LREC-COLING ’24). 10146–10159.
+
+[16] Guohao Li, Hasan Abed Al Kader Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. 2024. CAMEL: Communicative Agents for “Mind” Exploration of Large Language Model Society. In Advances in Neural Information Processing Systems (NeurIPS ’24).
+
+[17] Jianghao Lin, Xinyi Dai, Yunjia Xi, Weiwen Liu, Bo Chen, Hao Zhang, Yong Liu, Chuhan Wu, Xiangyang Li, Chenxu Zhu, Huifeng Guo, Yong Yu, Ruiming Tang, and Weinan Zhang. 2024. How Can Recommender Systems Benefit from Large Language Models: A Survey. ACM Transactions on Information Systems (2024).
+
+[18] Qidong Liu, Xiangyu Zhao, Yuhao Wang, Yejing Wang, Zijian Zhang, Yuqi Sun, Xiang Li, Maolin Wang, Pengyue Jia, Chong Chen, Wei Huang, and Feng Tian. 2024. Large Language Model Enhanced Recommender Systems: A Survey. arXiv preprint arXiv:2412.13432.
+
+[19] Petr Lubos, Ladislav Peska, and Patrik Slavík. 2024. User Evaluation of LLM-Generated Explanations for Recommender Systems. In Proceedings of the 29th International Conference on Intelligent User Interfaces (IUI ’24). 597–608.
+
+[20] Jianmo Ni, Jiacheng Li, and Julian McAuley. 2019. Justifying Recommendations using Distantly-Labeled Reviews and Fine-Grained Aspects. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP ’19). 188–197.
+
+[21] OpenAI. 2023. GPT-4 Technical Report. arXiv preprint arXiv:2303.08774.
+
+[22] Zhangchi Qiu, Zehui Wang, Jianan Wang, and Alan Wee-Chung Liew. 2025. Graph Retrieval-Augmented LLM for Conversational Recommendation Systems. arXiv preprint arXiv:2503.06430.
+
+[23] Nils Reimers and Iryna Gurevych. 2019. Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP ’19). 3982–3992.
+
+[24] Stefen Rendle, Christoph Freudenthaler, Zeno Gantner, and Lars Schmidt-Thieme. 2009. BPR: Bayesian Personalized Ranking from Implicit Feedback. In Proceedings of the Twenty-Fifth Conference on Uncertainty in Artificial Intelligence (UAI ’09). 452–461.
+
+[25] Alan Said. 2024. On Explaining Recommendations with Large Language Models: A Review. Frontiers in Big Data 7 (2024), 1505284.
+
+[26] Yutong Shu, Peng Zhang, Yifan Li, and Chuang Zhang. 2024. Knowledge Graph-Enhanced LLM for Multi-hop Link Prediction. arXiv preprint arXiv:2402.12345.
+
+[27] Itallo Silva, Leandro Marinho, Alan Said, and Martijn Willemsen. 2024. Leveraging ChatGPT for Automated Human-Centered Explanations in Recommender Systems. In Proceedings of the 29th International Conference on Intelligent User Interfaces (IUI ’24). 597–608.
+
+[28] Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yas mine Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al. 2023. Llama 2: Open Foundation and Fine-Tuned Chat Models. arXiv preprint arXiv:2307.09288.
+
+[29] Aaron Grattafiori, Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Alex Vaughan, et al. 2024. The Llama 3 Herd of Models. arXiv preprint arXiv:2407.21783.
+
+[30] Xiang Wang, Xiangnan He, Yixin Cao, Meng Liu, and Tat-Seng Chua. 2019. KGAT: Knowledge Graph Attention Network for Recommendation. In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD ’19). 950–958.
+
+[31] Xiang Wang, Tinglin Huang, Dingxian Wang, Yancheng Yuan, Zhenguang Liu, Xiangnan He, and Tat-Seng Chua. 2021. Learning Intents behind Interactions with Knowledge Graph for Recommendation. In Proceedings of the Web Conference 2021 (WWW ’21). 878–887.
+
+[32] Yancheng Wang, Ziyan Jiang, Zheng Chen, Fan Yang, Yingxue Zhou, Eunah Cho, Xing Fan, Xiaojiang Huang, Yanbin Lu, and Yingzhen Yang. 2023. RecMind: Large Language Model Powered Agent for Recommendation. arXiv preprint arXiv:2308.14296.
+
+[33] Zhefan Wang, Yuanqing Yu, Wendi Yu, Weizhi Ma, and Min Zhang. 2024. MACRec: A Multi-Agent Collaboration Framework for Recommendation. arXiv preprint arXiv:2402.15235.
+
+[34] Shijie Wang, Hangyu Guo, Zhibo Cai, Yongwei Zhao, Yubin Bao, and Ge Yu. 2025. Knowledge Graph Retrieval-Augmented Generation for LLM-based Recommendation. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (ACL ’25).
+
+[35] Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Zhu, Li Jiang, Xiaoyun Zhang, Shaokun Zhang, Jiale Liu, et al. 2023. AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation. arXiv preprint
+
+arXiv:2308.08155.
+
+[36] Likang Wu, Zhi Zheng, Zhaopeng Qiu, Hao Wang, Hongchao Gu, Tingjia Shen, Chuan Qin, Chen Zhu, Hengshu Zhu, Qi Liu, Hui Xiong, and Enhong Chen. 2023. A Survey on Large Language Models for Recommendation. arXiv preprint arXiv:2305.19860.
+
+[37] Xie Liu, Chen Zhang, Xiangnan He, and Fuli Feng. 2024. Enabling Explainable Recommendation in E-commerce with LLM-powered Product Knowledge Graph. In IJCAI Workshop on Knowledge Graphs and LLMs.
+
+[38] Shunyu Yao, Jefrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. 2023. ReAct: Synergizing Reasoning and Acting in Language Models. In Proceedings of the Eleventh International Conference on Learning Representations (ICLR ’23).
+
+[39] Yelp. 2023. Yelp Open Dataset. https://www.yelp.com/dataset.
+
+[40] Yongfeng Zhang, Xu Chen, Qingyao Ai, Liu Yang, and W. Bruce Croft. 2020. Towards Conversational Recommendation over Multi-Type Dialogs. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics (ACL ’20). 1036–1049.
+
+[41] An Zhang, Yuxin Chen, Leheng Sheng, Xiang Wang, and Tat-Seng Chua. 2024. On Generative Agents in Recommendation. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’24). 1807–1817.
+
+[42] Junjie Zhang, Yupeng Hou, Ruobing Xie, Wenqi Sun, Julian McAuley, Wayne Xin Zhao, Leyu Lin, and Ji-Rong Wen. 2024. AgentCF: Collaborative Learning with Autonomous Language Agents for Recommender Systems. In Proceedings of the ACM Web Conference 2024 (WWW ’24). 3876–3887.
+
+[43] Xi Zhu, Yu Wang, Hang Gao, Wujiang Xu, Chen Wang, Zhiwei Liu, Kun Wang, Mingyu Jin, Linsey Pang, Qingsong Wen, Philip Yu, and Yongfeng Zhang. 2024. Recommender Systems Meet Large Language Model Agents: A Survey. arXiv preprint arXiv:2411.00114.
+
+[44] Xiangrong Zhu, Yuexiang Xie, Yi Liu, Yaliang Li, and Wei Hu. 2025. Knowledge Graph-Guided Retrieval Augmented Generation. arXiv preprint arXiv:2502.06864.
+
+## A Prompt Templates
+
+We provide the key prompt templates used by MATRAG agents.
+
+3. Is honest about recommendation rationale
+
+4. Uses natural, accessible language
+
+## A.1 User Modeling Agent Prompt
+
+## B Additional Experimental Results
+
+## C Reproducibility
+
+Table 7 shows MATRAG’s performance across users with diferent activity levels.
+
+You are a User Modeling Agent. Analyze the user's interaction history and extract structured preference signals.
+
+## B.1 Performance by User Activity Level
+
+User History:
+
+{interaction\_history}
+
+Table 7: HR@10 by user activity level on Amazon Electronics.
+
+<table><tr><td>Method</td><td>Low</td><td>Medium</td><td>High</td></tr><tr><td>LLMRank</td><td>0.298</td><td>0.451</td><td>0.562</td></tr><tr><td>MACRec</td><td>0.341</td><td>0.478</td><td>0.589</td></tr><tr><td>MATRAG</td><td>0.412</td><td>0.534</td><td>0.628</td></tr></table>
+
+Extract:
+
+1. Explicit preferences (stated likes/dislikes)
+
+2. Implicit preferences (inferred from behavior)
+
+We will release code, data splits, and model checkpoints upon publication to ensure reproducibility.
+
+MATRAG shows the largest improvements for low-activity users (+38.3% over LLMRank), demonstrating that knowledge graph augmentation efectively addresses cold-start challenges.
+
+Recommended Item: {item} User Profile: {user\_profile} Reasoning Chain: {reasoning\_chain} Retrieved Knowledge: {kg\_subgraph}
+
+3. Contextual factors (time, device, session)
+
+Generate an explanation that:
+
+4. Preference evolution (temporal patterns)
+
+1. Cites specific evidence from knowledge
+
+Output as structured JSON.
+
+2. Connects to user preferences explicitly
+
+You are an Explanation Agent. Generate a transparent, grounded explanation for the recommendation.
+
+## A.2 Explanation Agent Prompt
+
+
+---
+
 # 2607.07108_多模态记忆增强的推荐智能体协作
 
-**arXiv**: [2607.07108](https://arxiv.org/abs/2607.07108)
+[2607.07108](https://arxiv.org/abs/2607.07108)
 
 # Seeing and Reflecting: Multimodal Memory-Enhanced Agent Collaboration for Recommendation
 
@@ -2116,7 +2661,7 @@ Figure 11: The structured prompt template for preference correction and self-int
 
 # 2508.00543_长尾推荐再探：LLM弥合流行度差距
 
-**arXiv**: [2508.00543](https://arxiv.org/abs/2508.00543)
+[2508.00543](https://arxiv.org/abs/2508.00543)
 
 Research Article
 
@@ -2501,7 +3046,7 @@ tion, and systems engineering. He has led numerous national and European researc
 
 # 2604.16318_冷启动推荐中LLM重排序诊断
 
-**arXiv**: [2604.16318](https://arxiv.org/abs/2604.16318)
+[2604.16318](https://arxiv.org/abs/2604.16318)
 
 # Diagnosing LLM-based Rerankers in Cold-Start Recommender Systems: Coverage, Exposure and Practical Mitigations
 
@@ -3189,9 +3734,362 @@ Complete documentation is available in the repository README.md file.
 
 ---
 
+# 2606.22151_Novelty-Aware_Agentic_Retrieval_Structured_Multi-Step_Reasoning
+
+[2606.22151](https://arxiv.org/abs/2606.22151)
+
+# Novelty-Aware Agentic Retrieval: Comparing Research Contributions Through Structured Multi-Step Reasoning
+
+Shou-Tzu Han
+
+Department of Computer Science
+
+University of South Dakota
+
+Vermillion, South Dakota, USA
+
+shoutzu.han@coyotes.usd.edu
+
+## Abstract
+
+Scientific literature search is an information retrieval (IR) task in which ranked lists are insuficient: a researcher entering a new area needs to know not only which papers are relevant, but how they relate: where they overlap, how they difer, and what problem– method combinations are absent. Standard retrieval-augmented generation (RAG) summarizes documents independently, discard ing exactly this comparative signal. We present the Novelty-Aware Research Agent, a prototype agentic retrieval system that layers structured multi-step reasoning on a RAG pipeline through six typed-contract components: query analysis, a ReAct-style retrieval loop, relevance ranking, schema-guided contribution extraction, a three-pass comparison agent, and answer generation. Beyond returning relevant papers, it produces structured comparison ar tifacts: per-paper contribution records, paper-level overlaps, and a problem × method gap matrix. On a 100-paper corpus, our cen tral result is that the system supports five structured comparison capabilities that a standard RAG baseline supports none of, while remaining query-sensitive. Across the three main queries, no pa per appears in all three top-5 sets and the mean pairwise Jaccard similarity is 0.12; in an extended seven-query evaluation, the same pattern holds across ten total queries, with mean pairwise Jaccard similarity of 0.115 and 18 of 29 distinct retrieved papers appearing in only one query. Under author-assigned graded relevance, the ranker attains mean Precision@5 of 1.000 and nDCG@5 of 0.752 on the three main queries, ahead of BM25, dense, and hybrid retrieval; over all ten queries, Precision@5 remains high but non-saturated at 0.980, with nDCG@5 of 0.739. Schema compliance is 86.7% on the main queries and 84.0% over the ten-query set, and a validation of 20 sampled empty gap-matrix cells yields gap precision of 0.600. We discuss the latency–structure trade-of inherent to agentic retrieval and identify corpus scale, author-assigned relevance labels, and limited independent evaluation as the primary limitations of the prototype.
+
+## CCS Concepts
+
+• Information systems → Information retrieval; Retrieval models and ranking; • Computing methodologies → Artificial intelligence.
+
+## Keywords
+
+agentic information retrieval, retrieval-augmented generation, Re-Act, constrained decoding, scientific literature search, contribution comparison, corpus-level gap analysis, LLM agents
+
+## 1 Introduction
+
+The integration of large language model (LLM) agents into information retrieval has reshaped how users find and consume information. Agentic retrieval systems, those combining tool use, memory, reasoning, and planning, can decompose queries, retrieve evidence, and synthesize responses in ways that go beyond returning a ranked list of documents. Yet for one common and important IR task, scientific literature search, even agentic systems tend to fall back on a familiar pattern: retrieve relevant documents, then summarize each one independently.
+
+This pattern is inadequate for the underlying user need. A researcher entering a new area does not primarily want a list of papers or a set of disconnected summaries. They want to understand the structure of a body of work: which papers address the same problem, which propose genuinely diferent methods, and crucially, what problem–method combinations have not yet been explored. These are comparative and corpus-level questions. A retrieval system that summarizes documents independently discards exactly the signal needed to answer them. Concretely, the payof of answering them is that a researcher can see, in one structured view, which retrieved papers converge and which problem–method combinations remain open, rather than reconstructing that map by reading and cross-referencing a ranked list by hand.
+
+We frame this as a novelty-aware retrieval problem and present the Novelty-Aware Research Agent, a prototype agentic retrieval system that layers structured comparison reasoning on top of a retrieval-augmented generation (RAG) pipeline. Rather than asking “what does this paper say?” the system asks “what does this retrieved set collectively cover, where does it converge, and what is absent?”
+
+The system retrieves papers from a domain corpus, ranks them by query relevance, extracts a structured contribution record for each, and then runs a dedicated comparison stage that identifies overlaps, diferentiating aspects, and a problem × method gap matrix. The final output is not a single prose summary but a set of typed, auditable artifacts that a user (or a downstream system) can inspect and act on.
+
+Contributions.
+
+(1) A six-component agentic retrieval pipeline with typed intercomponent contracts, combining a ReAct-style retrieval loop, relevance ranking, schema-guided extraction, and a multi-pass comparison stage.
+
+(2) A three-pass Comparison Agent that operates on structured contribution records rather than raw retrieved text, producing paper-level overlaps, per-paper diferentiation, and a deterministic problem × method gap matrix.
+
+(3) An evaluation on a 100-paper agentic AI and retrieval corpus, including query-sensitivity analysis, graded-relevance retrieval metrics (Precision@5, nDCG@5, Recall@5, MRR), schema-compliance failure analysis, a ReAct sparse-query stress test, deterministic gap-matrix construction, a base line comparison, BM25/dense/hybrid retriever comparison, component ablation, deterministic gap validation, gap error analysis, a qualitative case study, an indicative single-rater external usefulness assessment collected on an earlier sys tem version, and an extended seven-query evaluation.
+
+(4) A working open-source prototype implementation with a web interface that streams the six-stage retrieval process in real time.<sup>1</sup>
+
+We position this as a prototype system paper. The contribution is the retrieval architecture and the comparison artifacts it produces, not a large-scale benchmark; we are explicit throughout about the scale and evaluation limitations of the current corpus.
+
+## 2 Related Work
+
+Agentic IR and RAG. LLM agents extend retrieval beyond single shot ranking through query decomposition, iterative search, and tool use. Multi-agent frameworks such as AutoGen [4] and MetaGPT [5] coordinate agents for complex tasks, AgentBench [8] evaluates agent behavior across environments, and a recent survey [12] reviews agent architectures. These establish the agentic paradigm but do not target the IR task of comparing retrieved documents at the level of their contributions. Our system builds on retrievalaugmented generation (RAG) [1], including its adaptive and self critical variants Self-RAG [10] and corrective retrieval [11], using FAISS exact nearest-neighbor search as a substrate. It departs from typical RAG output: where standard RAG concatenates passages into one response, our system retains each retrieved paper as a dis tinct unit, extracts a structured record, and reasons across records.
+
+Reformulation, structured extraction, and comparison. Ef fective retrieval often depends on reformulating the query. ReAct [2] interleaves reasoning and action in a Thought → Action → Observation loop; we apply this at the retrieval stage, placing refor mulation under explicit agent control rather than a single fixed embedding. JSON schema-guided decoding [3] constrains genera tion to structurally valid output; we use it to extract a fixed four-field contribution record per paper, so downstream comparison operates over uniform inputs. Chain-of-thought prompting [13] and deploy ment platforms such as OpenAgents [14] are adjacent reasoning and agent-deployment work covered by our corpus. We are not aware of prior agentic retrieval systems that combine structured contribution extraction, cross-paper comparison, and deterministic problem–method gap-matrix construction in a single literaturecomparison pipeline. Table 1 positions our system relative to repre sentative prior work across five capability dimensions.
+
+Automated literature review and gap analysis. A parallel line of work automates systematic literature reviews (SLRs) with LLM agents. Sami et al. [21] propose a multi-agent system that automates the full SLR workflow, including agents that retrieve, fil ter, and summarize papers and surface trends and gaps, and Moses et al. [22] introduce a gap-aware agentic workflow that combines structured synthesis, knowledge-graph modeling, and perspectiveguided questioning to identify gaps in coverage, reasoning, or evidence through graph traversal and contrastive retrieval. Our system shares the multi-agent and gap-surfacing motivation but difers in target and mechanism: rather than generating a written review narrative, it treats the retrieved set as structured data and constructs a deterministic problem × method gap matrix over typed contribution records, so that the gap decision is a reproducible structural computation rather than generated text.
+
+```txt
+Algorithm 1 Novelty-Aware Agentic Retrieval
+Require: query q, corpus C, min-papers k, top-n N
+Ensure: structured comparison report R
+1: Q ← QUERYANALYZER(q) ▷ T=0.3
+2: iter ← 0
+3: while iter < 3 do
+4:    P ← FAISS.SEARCH(Q.queries iter],C)
+5:    if |UNIQUE(P)| ≥ k then
+6:    break ▷ ReAct STOP
+7:    end if
+8:    q' ← LLM.REASON(q,P) ▷ ReAct REFINE
+9:    Q.queries.APPEND(q');iter++
+10: end while
+11: Pn ← RANKER(P,q,N) ▷ T=0.1
+12: E ← EXTRACTOR(Pn) ▷ schema; T=0.1
+13: O ← OVERLAPPASS(E) ▷ T=0.2
+14: D ← DIFFERENTIATIONPASS(E) ▷ T=0.2
+15: G ← GAPMATRIX(E) ▷ deterministic
+16: R ← ANSWERGENERATOR(q,E,O,D,G) ▷ T=0.7
+17: return R
+```
+
+## 3 System Architecture
+
+The system comprises six components arranged in a sequential agentic retrieval pipeline with defined input/output contracts. Figure 1 shows the data flow and Algorithm 1 formalizes the procedure. Lines 3–10 implement the ReAct retrieval loop; lines 13–15 implement the three comparison passes.
+
+## 3.1 Query Analyzer
+
+The entry point decomposes the user query into focused retrieval intents and 2–4 reformulated queries, operating at temperature <sup>??</sup> =0<sup>.</sup>3 under JSON schema constraints. Reformulation is included to support sparse or underspecified retrieval settings, with a modest measurable benefit on the present 100-paper corpus (Section 5).
+
+## 3.2 Retriever (ReAct Loop)
+
+The retriever performs FAISS IndexFlatL2 search over sentencetransformer embeddings with ReAct-style refinement. If fewer than three unique papers meet an L2 <sup><</sup> 400 distance threshold, the agent emits a Thought explaining the shortfall and an Action query reformulation, retrying up to three iterations. In the main broadquery experiments retrieval succeeded in one iteration on every run. We therefore additionally conduct a sparse-query stress test (Section 5.7), in which the loop activates on three of five strictthreshold queries and recovers suficient coverage in one of the three triggered cases.
+
+Table 1: Positioning of the proposed system relative to representative prior work.
+
+<table><tr><td>System / Work</td><td>RAG</td><td>Agent Loop</td><td>Structured Extraction</td><td>Cross-Paper Comparison</td><td>Problem-Method Gap Matrix</td></tr><tr><td>RAG [1]</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td>ReAct [2]</td><td>Tool-dep.</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr><tr><td>Self-RAG [10]</td><td>Yes</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr><tr><td>AutoGen [4]</td><td>No</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr><tr><td>MetaGPT [5]</td><td>No</td><td>Yes</td><td>No</td><td>No</td><td>No</td></tr><tr><td>AgentBench [8]</td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td>SLR multi-agent systems [21]</td><td>Yes</td><td>Yes</td><td>Partial</td><td>Yes</td><td>No</td></tr><tr><td>Gap-aware workflows [22]</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Partial</td></tr><tr><td>Novelty-Aware Research Agent (ours)</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr></table>
+
+![](images/4bf4dfdf915f70ed14a1afb471a156f7f7acf5cc5f1c631f05dc56b1289e65fd.jpg)  
+Figure 1: End-to-end agentic retrieval pipeline. A user query is decomposed and reformulated, candidate papers are retrieved and ranked, structured contribution records are extracted under a schema, three comparison passes produce overlaps / diferentiation / a gap matrix, and a final citation-grounded report is generated.
+
+## 3.3 Ranker
+
+The ranker scores each retrieved candidate for query relevance at <sup>??</sup> =0<sup>.</sup>1 and returns the top-<sup>??</sup> . Low temperature yields consis tent, near-deterministic scoring. As Section 5 shows, the ranker selects substantially diferent paper sets across queries, evidence that scoring is query-sensitive rather than returning a fixed corpus ordering.
+
+## 3.4 Contribution Extractor
+
+For each top-ranked paper, schema-guided decoding enforces a four field record: Problem Statement, Proposed Method, Key Contribution, and Claimed Novelty, at <sup>??</sup> =0<sup>.</sup>1. We define schema compliance as the fraction of papers for which all four fields are non-empty and non-placeholder. Structural validity is guaranteed by decoding; field completeness depends on the input paper, which is why compliance can fall below 100% for atypically structured papers.
+
+## 3.5 Comparison Agent
+
+The comparison agent is the core contribution and operates on structured records rather than raw retrieved text, which bounds the reasoning space and makes outputs auditable. It runs three sequential passes:
+
+• Overlap Pass. Identifies papers sharing the same problem formulation, dataset, or method family, returning paper identifiers with a shared-element label.
+
+• Diferentiation Pass. Identifies what each paper does distinctly in method, scope, or claimed contribution.
+
+• Gap Pass. Maps retrieved paper identifiers to canonical problem and method labels using a fixed taxonomy; the final problem × method matrix is constructed deterministically, and empty cells are reported as candidate corpus-level gaps within the retrieved paper slice (Section 5.8).
+
+## 3.6 Answer Generator
+
+The final stage synthesizes a report at <sup>??</sup> =0<sup>.</sup>7, producing per-paper summaries, a synthesis paragraph, and a citation-grounded refer ence list. Higher temperature here favors readable natural-language synthesis, in contrast to the precision-oriented extraction and ranking stages.
+
+## 4 Implementation
+
+## 4.1 Technology Stack
+
+The system is implemented in Python 3.9 using the OpenAI API [15], with GPT-4o as the primary backbone for the main experiments and GPT-4o-mini and GPT-4.1 used in the cross-model robustness analysis (Section 5.14). The system uses FAISS IndexFlatL2 for exact nearest-neighbor retrieval, Sentence-Transformers (all-MiniLM-L6- v2, 384-dimensional embeddings) for encoding, and Pydantic v2 for typed inter-component contracts. A FastAPI backend streams the six-stage retrieval process to a web interface using server-sent events, allowing users to observe each stage complete in real time.
+
+## 4.2 Corpus
+
+The evaluation corpus contains 100 papers spanning the agentic AI and retrieval domain: multi-agent frameworks, reasoning tech niques, tool-use systems, agent deployment platforms, evaluation and survey work, and a substantial set of retrieval-augmented gen eration papers. Representative papers include Self-RAG [10], Reflexion [7], CAMEL [6], Generative Agents [9], AgentVerse [16], ReWOO [17], and MetaAgents [18]. Each paper is chunked into ab stract, introduction, and conclusion sections, producing 300 FAISS vectors. The corpus defines the system’s entire search space; the system does not retrieve from the open web.
+
+## 4.3 Temperature Configuration
+
+Temperature is assigned per component following standard practice: low values for precision-critical stages (ranking and extraction at <sup>??</sup> =0<sup>.</sup>1, comparison at <sup>??</sup> =0<sup>.</sup>2), moderate values for query analysis and ReAct reasoning (<sup>??</sup> =0<sup>.</sup>3), deterministic construction for the gap matrix, and a higher value (<sup>??</sup> =0<sup>.</sup>7) for natural-language synthesis.
+
+## 5 Experiments and Results
+
+We evaluate using (a) automated retrieval and compliance metrics, (b) graded-relevance retrieval quality (Precision@5, nDCG@5, Re call@5, MRR), (c) schema failure analysis, (d) query-sensitivity anal ysis, (e) a ReAct sparse-query stress test, (f) deterministic gap-matrix construction, (g) a baseline comparison, (h) BM25/dense/hybrid re triever comparison, (i) component ablation, (j) deterministic gap validation, (k) gap error analysis, (l) a qualitative case study, (m) an indicative single-rater external usefulness assessment collected on an earlier system version, and (n) an extended seven-query evaluation. Three main runs were executed with distinct broad comparison queries on the expanded 100-paper corpus:
+
+• R1: “Compare multi-agent LLM frameworks for collaborative reasoning”
+
+• R2: “What evaluation methods exist for LLM reasoning agents?”
+
+Table 2: Automated metrics across three runs (100-paper corpus).
+
+<table><tr><td>Metric</td><td>R1</td><td>R2</td><td>R3</td><td>Avg</td></tr><tr><td>Corpus size</td><td>100</td><td>100</td><td>100</td><td>100</td></tr><tr><td>Candidates retrieved</td><td>9</td><td>10</td><td>9</td><td>9.3</td></tr><tr><td>ReAct iterations</td><td>1</td><td>1</td><td>1</td><td>1.0</td></tr><tr><td>Schema compliance</td><td>80%</td><td>80%</td><td>100%</td><td>86.7%</td></tr><tr><td>Overlaps detected</td><td>3</td><td>3</td><td>2</td><td>2.7</td></tr><tr><td>Differences</td><td>5</td><td>5</td><td>5</td><td>5.0</td></tr><tr><td>Gaps identified</td><td>5</td><td>4</td><td>5</td><td>4.7</td></tr><tr><td>Runtime (s)</td><td>22.3</td><td>23.5</td><td>22.9</td><td>22.9</td></tr></table>
+
+• R3: “Compare verbal reinforcement and role-playing approaches in LLM agents”
+
+Unless otherwise stated, the main tables report these three primary runs. We additionally report an extended seven-query evaluation (R4–R10) in Section 5.15 to test whether the retrieval behavior remains stable across a wider query set.
+
+## 5.1 Automated Metrics
+
+Table 2 reports automated metrics. Retrieval returns nine to ten candidates per query in these runs; the ranker reduces them to a top-5 set. Schema compliance averages 86.7%, and the comparison agent produces 2–3 overlaps and 4–5 report-level gaps per run. End-to-end latency averages 23 seconds.
+
+## 5.2 Query-Sensitive Retrieval
+
+The central retrieval result is that the ranker selects substantially diferent paper sets across queries (Table 3). No paper appears in all three top-5 result sets. Across the 15 ranked slots the system retrieves 12 distinct papers, 9 of which (75%) are query-exclusive, appearing in only a single run. The mean pairwise Jaccard similarity across the three top-5 sets is 0.12, indicating the retrieved sets are roughly 88% distinct on average; runs R2 and R3 share no papers at all. This indicates the ranking stage responds to query semantics rather than returning a fixed corpus ordering, a necessary property for an agentic retrieval system whose value depends on tailoring the retrieved set to the user’s specific comparative question. Notably, several papers added in the corpus expansion (OpenAgents, ART [19], and RAP [20]) are selected into top-5 sets, confirming that the enlarged corpus actively changes retrieval rather than being ignored. The query-sensitivity statistics indicate that the enlarged corpus does not collapse the system into a fixed retrieval pattern.
+
+## 5.3 Retrieval Quality
+
+Query-sensitivity shows the retrieved sets difer across queries, but not whether they are good. To assess ranking quality directly, we labeled the relevance of corpus papers for each of the three main queries on a four-point graded scale (3 = highly relevant, 2 = relevant, 1 = marginal, 0 = not relevant) and computed Precision@5, nDCG@5, Recall@5, and mean reciprocal rank (MRR). Relevance labels are author-assigned; we report this as a limitation in Section 7, and treat the labels as a small-scale, single-annotator gold standard rather than a benchmark-grade resource.
+
+Table 3: Top-5 papers selected per run on the 100-paper corpus. No paper appears in all three runs.
+
+<table><tr><td>R1: Multi-agent</td><td>R2: Evaluation</td><td>R3: Verbal RL</td></tr><tr><td>AgentVerse</td><td>AgentBench</td><td>Reflexion</td></tr><tr><td>AutoGen</td><td>AgentSurvey</td><td>CAMEL</td></tr><tr><td>AgentSurvey</td><td>ART</td><td>AgentVerse</td></tr><tr><td>AgentBench</td><td>Chain-of-Thought</td><td>Gen. Agents</td></tr><tr><td>OpenAgents</td><td>RAP</td><td>Inner Monologue</td></tr></table>
+
+Table 4: Retrieval quality on the three main queries (authorassigned graded relevance). Precision@5 and MRR are saturated; nDCG@5 and Recall@5 are the more discriminative measures.
+
+<table><tr><td>Query</td><td>P@5</td><td>nDCG@5</td><td>Recall@5</td><td>MRR</td></tr><tr><td>R1 (multi-agent)</td><td>1.000</td><td>0.719</td><td>0.455</td><td>1.000</td></tr><tr><td>R2 (evaluation)</td><td>1.000</td><td>0.588</td><td>0.500</td><td>1.000</td></tr><tr><td>R3 (verbal RL)</td><td>1.000</td><td>0.950</td><td>0.625</td><td>1.000</td></tr><tr><td>Mean</td><td>1.000</td><td>0.752</td><td>0.527</td><td>1.000</td></tr></table>
+
+Table 4 reports the results. Precision@5 is 1.0 on all three queries: every paper the ranker placed in the top-5 was judged at least marginally relevant. We read this cautiously: perfect precision on author-assigned labels reflects that the ranker avoids clearly of topic papers rather than that retrieval is solved. The more informa tive signals are nDCG@5 and Recall@5. Mean nDCG@5 is 0.752, with the evaluation query (R2) lowest at 0.588: although all five retrieved papers were relevant, their ordering did not match the ideal graded ranking, indicating the ranker captures relevance bet ter than fine-grained priority. Mean Recall@5 is 0.527, meaning a top-5 cutof recovers roughly half of the papers labeled relevant in the corpus, expected given that several queries have more than five relevant papers, and a useful characterization of the precision– recall trade-of at this cutof. MRR is 1.0 throughout: the top-ranked paper was always relevant.
+
+## 5.4 Retriever Comparison
+
+To compare the ranker against simpler retrieval alternatives, we evaluated BM25, dense retrieval, hybrid retrieval, and the full ranker using the same author-assigned graded relevance labels. Table 5 reports mean performance across the three main queries.
+
+The full ranker achieves the highest Precision@5 and nDCG@5, improving mean Precision@5 to 1.000 (versus 0.733 for BM25 and 0.667 for both dense and hybrid retrieval) and improving mean nDCG@5 to 0.752 (versus 0.640 for BM25, 0.595 for dense retrieval, and 0.685 for hybrid retrieval). On the larger corpus BM25 is a stronger baseline than before, narrowing but not closing the preci sion gap. Because the full ranker outputs five selected papers, we compare it to the other retrievers primarily at @5; @10 metrics are not defined for the capped full-ranker output.
+
+Table 5: Retriever comparison across BM25, dense retrieval, hybrid retrieval, and the full ranker. Metrics are averaged over the three main queries using author-assigned graded relevance.
+
+<table><tr><td>System</td><td>P@5</td><td>P@10</td><td>nDCG@5</td><td>nDCG@10</td><td>R@5</td><td>R@10</td></tr><tr><td>BM25</td><td>0.733</td><td>0.433</td><td>0.640</td><td>0.587</td><td>0.396</td><td>0.457</td></tr><tr><td>Dense</td><td>0.667</td><td>0.333</td><td>0.595</td><td>0.525</td><td>0.343</td><td>0.343</td></tr><tr><td>Hybrid</td><td>0.667</td><td>0.500</td><td>0.685</td><td>0.658</td><td>0.343</td><td>0.520</td></tr><tr><td>Full ranker</td><td>1.000</td><td>-</td><td>0.752</td><td>-</td><td>0.527</td><td>-</td></tr></table>
+
+## 5.5 Reformulation Ablation
+
+We tested whether the number of reformulated queries afects retrieval by re-running each main query with one, two, and four reformulations and measuring Recall@5. Mean Recall@5 was 0.493 with one reformulation, 0.527 with two, and 0.493 with four, a small benefit at two reformulations driven by the evaluation query (R2: 0.400 to 0.500), with the other two queries flat. The efect is modest: on a focused corpus the base query already retrieves much of the relevant neighborhood, so additional reformulations add little. We retain reformulation as an architectural feature whose value is more likely to appear at larger corpus scales and under the sparseretrieval conditions where the ReAct loop activates (Section 5.7).
+
+## 5.6 Schema Compliance and Failure Analysis
+
+Two runs achieved 80% compliance (4/5) and one achieved 100% (5/5), for a mean of 86.7%. Failures occurred on papers with surveylike structure, merged contribution and novelty fields, or broader framework papers whose contribution statements did not map cleanly to the four-field schema. Structural validity of the JSON is always guaranteed by constrained decoding; the failures are field-completeness failures on atypically structured papers. The recommended fix is a fallback extraction prompt targeting such papers.
+
+## 5.7 ReAct Loop Activation Under Sparse Retrieval
+
+In the main broad-query experiments the ReAct refinement loop did not activate, because the 100-paper corpus returns suficient candidates for any broad query on the first iteration. To test the loop directly, we constructed a sparse-retrieval stress test: five narrow queries evaluated under a strict relevance threshold that forces first-pass retrieval below the minimum-papers requirement.
+
+Table 6 reports the result. Under the default threshold the loop remains dormant on all five queries. Under the strict threshold the loop activates on three of five queries, issuing one to two refinement iterations, and recovers to suficient coverage (≥ 3 papers) on one of the three activations; for example, increasing retrieval from one paper to six for the paged-memory query. This demonstrates that the refinement mechanism is functional and beneficial when retrieval is sparse, while remaining correctly inactive when the corpus already supplies enough candidates.
+
+Table 6: ReAct loop activation under a sparse-retrieval stress test. The loop fires on 3/5 queries and recovers coverage on 1/3 activations. “Iters” counts total iterations (initial pass plus refinements), so the number of refinement steps is Iters − 1.
+
+<table><tr><td>Query (sparse)</td><td>Iter-1</td><td>Refine</td><td>Iters</td><td>Final</td></tr><tr><td>verbal self-reflection memory</td><td>3</td><td>no</td><td>1</td><td>3</td></tr><tr><td>chunked cross-attention retr.</td><td>6</td><td>no</td><td>1</td><td>6</td></tr><tr><td>zero-ablation attribution</td><td>0</td><td>yes</td><td>3</td><td>0</td></tr><tr><td>OS-style paged memory</td><td>1</td><td>yes</td><td>2</td><td>6</td></tr><tr><td>dialectic multi-robot collab.</td><td>2</td><td>yes</td><td>3</td><td>2</td></tr></table>
+
+Table 7: Deterministic gap-matrix statistics. Empty cells are candidate structural gaps computed programmatically, not LLM-generated.
+
+<table><tr><td>Quantity</td><td>Value</td></tr><tr><td>Distinct papers placed</td><td>12</td></tr><tr><td>Problem classes (rows)</td><td>7</td></tr><tr><td>Method families (columns)</td><td>10</td></tr><tr><td>Total cells</td><td>70</td></tr><tr><td>Filled cells</td><td>10</td></tr><tr><td>Empty cells (gaps)</td><td>60</td></tr><tr><td>Matrix density</td><td>0.143</td></tr></table>
+
+## 5.8 Deterministic Gap Matrix Construction
+
+The earlier LLM-inferred gap descriptions sometimes produced cross-application observations rather than clean within-corpus absence signals. We therefore construct the final gap matrix determin istically using a fixed paper-id taxonomy derived from retrieved paper metadata and contribution records. The problem × method matrix is then populated programmatically, and empty cells are reported as candidate corpus-level gaps within the retrieved paper slice. Crucially, the gap decision itself is structural: the system does not ask the LLM to directly generate the final set of gaps.
+
+The “gaps identified” row in Table 2 refers to report-level summarized gaps, while the deterministic matrix analysis counts all 60 empty problem–method cells across the union of retrieved papers; the two are distinct metrics and are not directly comparable.
+
+Applied to the union of papers retrieved across the three main queries, the deterministic construction yields a 7 × 10 matrix (7 problem classes, 10 method families) with 10 of 70 cells filled, giving a matrix density of 0.143 (Table 7). The 60 empty cells are candidate structural gaps by construction rather than generated text, making the gap set reproducible and removing the cross-application noise present in directly LLM-inferred gaps.
+
+## 5.9 Gap-Matrix Validation
+
+To assess whether deterministic empty cells correspond to plau sible research gaps, we sampled 20 empty cells from the problem × method matrix and manually labeled each as plausible, too broad, indirect, or meaningless. As shown in Table 8, 12 of 20 sampled empty cells were judged plausible, yielding a gap precision of 0.600.
+
+Table 8: Validation of sampled deterministic gap-matrix empty cells.
+
+<table><tr><td>Metric</td><td>Value</td></tr><tr><td>Sampled empty cells</td><td>20</td></tr><tr><td>Labeled cells</td><td>20</td></tr><tr><td>Plausible cells</td><td>12</td></tr><tr><td>Gap precision</td><td>0.600</td></tr></table>
+
+Among the 20 sampled cells, the 8 non-plausible cases broke down as 4 indirect (only indirectly supported by the retrieved corpus), 3 too broad to be actionable, and 1 meaningless. This suggests that the deterministic matrix is useful as a corpus-level absence signal, but individual empty cells should be interpreted cautiously rather than as definitive claims about the broader literature.
+
+## 5.10 Qualitative Case Study
+
+To illustrate the type of structured output produced by the system, Table 9 shows a representative qualitative case study from the multi-agent framework query. Unlike a standard RAG summary, the system separates shared coverage, paper-specific diferentiation, and corpus-level absence signals.
+
+## 5.11 Baseline RAG Comparison
+
+We implemented a baseline RAG system (retrieval followed by direct GPT-4o summarization, with no ranker, no structured extraction, and no comparison agent) and ran it on all three main queries. The baseline produces a coherent multi-paragraph summary per query in 3–4 seconds but emits no structured records, associates no overlaps with specific paper identifiers, and builds no gap matrix. The proposed system takes roughly 23 seconds (an increase of about sevenfold) but produces typed extraction records, paper-level overlaps, a structured gap matrix, and an auditable six-stage trace. Counting structured capabilities (structured contribution records, paper-level overlap IDs, per-paper diferentiation, a problem × method gap matrix, and an auditable multi-stage trace), the full system supports all five while the baseline supports none.
+
+Beyond this capability diference, we compare retrieval quality directly. Because the baseline retrieves by raw similarity order while the full system applies the ranking stage, this comparison isolates the value of ranking. Using the same author-assigned relevance labels, Table 10 reports the head-to-head: the ranker improves mean Precision@5 from 0.733 to 1.000, mean nDCG@5 from 0.548 to 0.752, and mean Recall@5 from 0.368 to 0.527. We note that the baseline’s raw-similarity retrieval is not identical to the dense retriever in Table 5: the baseline retrieves the top-15 chunks and deduplicates to papers by first (best-ranked) occurrence before truncating to five, whereas the dense retriever in Table 5 ranks at the paper level. The two therefore select diferent top-5 sets, which is why their @5 metrics difer. The ranking stage thus contributes measurable retrieval-quality gains on top of the shared embedding retrieval, in addition to the structured artifacts the baseline cannot produce. The latency increase is the direct cost of structure, and is acceptable for a literature-review setting where the alternative is hours of manual reading.
+
+Table 9: Qualitative case study of structured comparison output for the query “Compare multi-agent LLM frameworks for collaborative reasoning.”
+
+<table><tr><td>Query</td><td>Overlap Example</td><td>Difference Example</td><td>Gap Example</td></tr><tr><td>Multi-agent LLM frameworks for collaborative reasoning</td><td>AgentVerse and AutoGen both address multi-agent coordination through structured multi-agent collaboration, while AgentBench and AgentSurvey emphasize evaluation and conceptual framing.</td><td>AgentVerse focuses on emergent multi-agent collaboration; AutoGen emphasizes scalable multi-agent conversation; OpenAgents focuses on deployment infrastructure for agents in real-world settings.</td><td>Within the retrieved set, multi-agent collaboration frameworks are not paired with explicit benchmarking or deployment-oriented evaluation, suggesting an absent problem-method combination in this corpus slice.</td></tr></table>
+
+Table 10: Retrieval-quality head-to-head: full system (with ranker) versus the baseline RAG system (raw similarity or der), mean over the three main queries, author-assigned graded relevance.
+
+<table><tr><td>System</td><td>P@5</td><td>nDCG@5</td><td>Recall@5</td><td>MRR</td></tr><tr><td>Baseline RAG (no ranker)</td><td>0.733</td><td>0.548</td><td>0.368</td><td>1.000</td></tr><tr><td>Full system (ours)</td><td>1.000</td><td>0.752</td><td>0.527</td><td>1.000</td></tr></table>
+
+Table 11: Component ablation of structured comparison capabilities.
+
+<table><tr><td>System Variant</td><td>Records</td><td>Overlap IDs</td><td>Diff.</td><td>Gap Matrix</td><td>Trace</td></tr><tr><td>Baseline RAG</td><td>No</td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td>+ Extractor</td><td>Yes</td><td>No</td><td>No</td><td>No</td><td>No</td></tr><tr><td>Full system</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td><td>Yes</td></tr></table>
+
+## 5.12 Component Ablation
+
+Isolating each stage’s contribution shows a clear progression: the baseline RAG system yields generic prose with no structure; adding the extractor yields structured four-field records but no cross-paper reasoning; and only the full system, with the comparison agent, produces paper-level overlaps, per-paper diferentiation, and a gap matrix. The comparison agent is thus the component that distin guishes this system from a structured-output RAG pipeline.
+
+## 5.13 External Usefulness Assessment
+
+To obtain evaluation independent of the author, we recruited a sin gle external rater (a graduate student familiar with LLM agents but not involved in building the system) to assess the structured output for the three main queries. The rater scored each output dimension from 1 (poor) to 5 (excellent) without access to the author’s labels, and the rater’s identity is not reported in the paper. These ratings were collected on an earlier 55-paper version of the system outputs. Because this assessment predates the final corpus expansion, we use it only as a qualitative usefulness signal, not as evidence for final-system performance. Table 12 reports the mean scores across the three queries.
+
+Table 12: External usefulness assessment by a single independent rater (mean over the three main queries, 1–5 scale).
+
+<table><tr><td>Dimension</td><td>Mean (1-5)</td></tr><tr><td>Extraction correctness</td><td>4.00</td></tr><tr><td>Overlap correctness</td><td>4.00</td></tr><tr><td>Differentiation specificity</td><td>3.00</td></tr><tr><td>Gap usefulness</td><td>3.00</td></tr><tr><td>Overall usefulness</td><td>3.33</td></tr></table>
+
+The rater scored extraction correctness and overlap correctness highest (4.0 each), with diferentiation specificity, gap usefulness, and overall usefulness lower (3.0, 3.0, and 3.3 respectively). Two consistent critiques accompanied the scores: that per-paper differentiation describes each paper largely in isolation rather than explicitly contrasting it against the other papers in the retrieved set, and that the problem–method gaps would be more useful with deeper methodological analysis rather than high-level labels. We treat both as concrete targets for future work: the first motivating a set-aware diferentiation pass, and the second a richer gap characterization. As a single-rater assessment these scores are indicative rather than conclusive, consistent with the evaluation limitation discussed in Section 7.
+
+## 5.14 Cross-Model Robustness
+
+To test whether the retrieval behavior is specific to a single LLM backbone, we re-ran the three main queries with two additional backbones, GPT-4o-mini and GPT-4.1, holding the corpus, retriever, prompts, ranking procedure, and evaluation labels fixed. Table 13 reports the mean retrieval metrics and schema compliance across the three queries.
+
+The main structural finding is stable across backbones: all three models produce query-sensitive top-5 sets, with low mean pairwise Jaccard similarity (0.12–0.20), and all preserve the architectural capability gap over the baseline RAG system. The additional backbones also improve schema compliance from 86.7% to 100.0%. Retrieval precision and recall are lower under GPT-4o-mini and GPT-4.1. This drop partly reflects the limited coverage of the author-assigned relevance labels: the additional backbones retrieve topically related papers such as AgentTuning (a corpus paper not among the cited references) and OpenAgents that were not included in the original graded-relevance set. We therefore treat the cross-model experi ment as preliminary robustness evidence for query-sensitivity and schema compliance, not as a definitive model-ranking benchmark.
+
+Table 13: Cross-model robustness across three LLM back bones. Metrics are averaged over the three main queries using the same author-assigned graded relevance labels.
+
+<table><tr><td>Backbone</td><td>P@5</td><td>nDCG@5</td><td>R@5</td><td>Schema</td><td>Jaccard</td></tr><tr><td>GPT-4o</td><td>1.000</td><td>0.752</td><td>0.527</td><td>86.7%</td><td>0.12</td></tr><tr><td>GPT-4o-mini</td><td>0.800</td><td>0.624</td><td>0.410</td><td>100.0%</td><td>0.20</td></tr><tr><td>GPT-4.1</td><td>0.800</td><td>0.707</td><td>0.418</td><td>100.0%</td><td>0.18</td></tr></table>
+
+Table 14: Extended evaluation on seven additional queries (R4–R10), author-assigned graded relevance. Means for the full ten-query set (R1–R10) are shown for reference.
+
+<table><tr><td>Query</td><td>P@5</td><td>nDCG@5</td><td>Recall@5</td><td>MRR</td></tr><tr><td>R4 (tool use)</td><td>1.000</td><td>0.665</td><td>0.417</td><td>1.000</td></tr><tr><td>R5 (memory)</td><td>1.000</td><td>0.771</td><td>0.500</td><td>1.000</td></tr><tr><td>R6 (planning)</td><td>0.800</td><td>0.453</td><td>0.333</td><td>1.000</td></tr><tr><td>R7 (RAG factuality)</td><td>1.000</td><td>0.948</td><td>0.500</td><td>1.000</td></tr><tr><td>R8 (single vs multi)</td><td>1.000</td><td>0.804</td><td>0.500</td><td>1.000</td></tr><tr><td>R9 (hallucination)</td><td>1.000</td><td>0.700</td><td>0.500</td><td>1.000</td></tr><tr><td>R10 (reflection)</td><td>1.000</td><td>0.791</td><td>0.556</td><td>1.000</td></tr><tr><td>Mean (R4–R10)</td><td>0.971</td><td>0.733</td><td>0.472</td><td>1.000</td></tr><tr><td>Mean (R1–R10)</td><td>0.980</td><td>0.739</td><td>0.489</td><td>1.000</td></tr></table>
+
+## 5.15 Extended Evaluation: Seven Additional Queries
+
+The three main queries (R1–R3) are deliberately broad comparison queries. To probe whether the retrieval behavior holds on a wider and more varied query set, we ran seven additional queries (R4–R10) spanning tool use, agent memory, planning, RAG fac tuality evaluation, single- versus multi-agent architectures, hal lucination reduction, and reflection. These queries use the same corpus, pipeline, and author-assigned graded-relevance protocol as the main experiments; they extend rather than replace the main results, which remain as reported above. Table 14 reports per-query retrieval metrics for R4–R10.
+
+Two observations follow. First, query-sensitivity strengthens at the larger query set: across all ten queries no paper appears in every top-5 set, the mean pairwise Jaccard similarity is 0.115 (versus 0.12 across the three main queries), and of the 29 distinct papers selected across the 50 ranked slots, 18 are query-exclusive. The most frequently selected paper appears in only six of ten queries. This is consistent with the main finding that the ranker responds to query semantics rather than returning a fixed ordering.
+
+Second, Precision@5 is no longer saturated on the wider set: the mean over the seven new queries is 0.971, and over all ten queries 0.980. The single sub-perfect case is R6 (planning), where an agent evaluation benchmark was ranked into the top-5 and judged not relevant to a planning-method query under the author labels. We read this as evidence that the graded-relevance labels are discriminative rather than uniformly permissive: the same labeling protocol that yields Precision@5 of 1.000 on the main queries also penalizes a topically adjacent but of-target retrieval. Schema compliance over the ten queries averages 84.0%, close to the 86.7% reported on the three main queries. As with the main evaluation, these are single-run, author-labeled results on a 100-paper corpus and carry the same limitations discussed in Section 7.
+
+## 6 Discussion
+
+## 6.1 The Latency–Structure Trade-of
+
+The defining design tension in agentic retrieval is between latency and structure. A single-call RAG baseline answers in under four seconds; our system takes roughly seven times longer. The return on that cost is a set of typed, inspectable artifacts (per-paper records, paper-level overlaps, and a gap matrix) that a downstream user or system can act on programmatically. For interactive web search this trade-of would be unacceptable; for literature review, where the user would otherwise spend hours reading and manually tracking relationships, under thirty seconds is negligible. The right operating point depends on the retrieval task, and agentic retrieval systems should make this trade-of explicit rather than defaulting to one extreme.
+
+## 6.2 Query-Sensitivity as a Retrieval Property
+
+The clearest empirical signal in this prototype evaluation is that the ranked set changes substantially with the query. Across the three main runs, no paper appears in all three top-5 sets and the mean pairwise Jaccard similarity is only 0.12. The extended sevenquery evaluation strengthens this pattern: across all ten queries, no paper appears in every top-5 set, mean pairwise Jaccard similarity remains low at 0.115, and 18 of 29 distinct retrieved papers are query-exclusive. For an agentic retrieval system this is the property that justifies the architecture: if the ranked set did not vary with the query, the comparison stage would simply re-describe a fixed set of papers. Query-sensitive ranking ensures that the structured comparison is computed over a set tailored to the user’s specific question.
+
+## 6.3 Structured Records as Retrieval Output
+
+A broader implication is that retrieval output need not be passages or prose. By enforcing a schema at extraction time, the system turns each retrieved document into a typed record. This reframes retrieval as producing structured data rather than text, which in turn enables comparison operations (overlap detection, deterministic gap-matrix construction) that are awkward or impossible over free text. We see this as a useful direction for agentic IR: treat the retrieved set as a small structured database rather than a context window to be summarized.
+
+## 7 Limitations
+
+As a prototype, the system has two scope limits that frame its future work. First, the 100-paper corpus, though substantially larger and more diverse than the initial set, remains modest relative to large-scale IR benchmarks. Second, evaluation uses author-assigned relevance labels and manually labeled gap-validation judgments, with usefulness assessed by a single external rater whose ratings were collected on an earlier 55-paper version of the outputs; addi tional independent raters and a broader multi-rater human study on the final outputs would further strengthen the conclusions. Scaling the corpus and expanding external evaluation are the natural next steps toward archival-grade benchmarking.
+
+## 8 Conclusion
+
+We presented the Novelty-Aware Research Agent, a prototype agen tic retrieval system that layers structured multi-step reasoning on a RAG pipeline to compare research contributions across a retrieved corpus. The six-component pipeline combines query reformulation, a ReAct retrieval loop, relevance ranking, schema-guided extraction, a three-pass comparison stage with deterministic problem–method matrix construction, and answer generation. On a 100-paper cor pus the system demonstrates query-sensitive retrieval: no paper appears in all three main top-5 sets, and an extended ten-query evaluation preserves this pattern with mean pairwise Jaccard sim ilarity of 0.115 and 18 query-exclusive papers among 29 distinct retrieved papers. The system achieves 86.7% schema compliance on the three main queries and 84.0% over the ten-query set, while supporting 5/5 structured comparison capabilities versus 0/5 for a baseline RAG system. Within the three-query author-assigned eval uation, the ranker attains mean Precision@5 1.000, nDCG@5 0.752, and Recall@5 0.527, ahead of BM25, dense, and hybrid retrieval; over all ten queries, Precision@5 remains high but non-saturated at 0.980, with nDCG@5 of 0.739 and Recall@5 of 0.489. Gap-matrix validation over 20 sampled empty cells yields gap precision of 0.600. Across GPT-4o-mini and GPT-4.1, query-sensitivity remains sta ble and schema compliance improves, while retrieval precision is lower under the fixed labels. These results support treating retrieval output as structured data for contribution-level comparison: the payof is a single inspectable map of what a retrieved set covers and what it leaves open, in place of a ranked list the researcher would otherwise cross-reference by hand. We leave large-scale evaluation and independent human assessment as future work.
+
+## References
+
+[1] Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, Sebastian Riedel, and Douwe Kiela. Retrieval-augmented genera tion for knowledge-intensive NLP tasks. arXiv preprint arXiv:2005.11401, 2020. https://arxiv.org/abs/2005.11401
+
+[2] Shunyu Yao, Jefrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. ReAct: Synergizing reasoning and acting in language models. arXiv preprint arXiv:2210.03629, 2023. https://arxiv.org/abs/2210.03629
+
+[3] Brandon T. Willard and Rémi Louf. Eficient guided generation for large language models. arXiv preprint arXiv:2307.09702, 2023. https://arxiv.org/abs/2307.09702
+
+[4] Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Zhu, Li Jiang, Xiaoyun Zhang, Shaokun Zhang, Jiale Liu, Ahmed Hassan Awadallah, Ryen W. White, Doug Burger, and Chi Wang. AutoGen: Enabling next-gen LLM applications via multi-agent conversation. arXiv preprint arXiv:2308.08155, 2023. https://arxiv.org/abs/2308.08155
+
+[5] Sirui Hong, Mingchen Zhuge, Jiaqi Chen, Xiawu Zheng, Yuheng Cheng, Ceyao Zhang, Jinlin Wang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, Liyang Zhou, Chenyu Ran, Lingfeng Xiao, Chenglin Wu, and Jürgen Schmidhuber. MetaGPT: Meta programming for a multi-agent collaborative framework. arXiv preprint arXiv:2308.00352, 2024. https://arxiv.org/abs/2308.00352
+
+[6] Guohao Li, Hasan Abed Al Kader Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. CAMEL: Communicative agents for “mind” exploration of large language model society. arXiv preprint arXiv:2303.17760, 2023. https: //arxiv.org/abs/2303.17760
+
+[7] Noah Shinn, Federico Cassano, Edward Berman, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: Language agents with verbal reinforcement learning. arXiv preprint arXiv:2303.11366, 2023. https://arxiv.org/abs/2303. 11366
+
+[8] Xiao Liu, Hao Yu, Hanchen Zhang, Yifan Xu, Xuanyu Lei, Hanyu Lai, Yu Gu, Hangliang Ding, Kaiwen Men, Kejuan Yang, Shudan Zhang, Xiang Deng, Aohan Zeng, Zhengxiao Du, Chenhui Zhang, Sheng Shen, Tianjun Zhang, Yu Su, Huan Sun, Minlie Huang, Yuxiao Dong, and Jie Tang. AgentBench: Evaluating LLMs as agents. arXiv preprint arXiv:2308.03688, 2023. https://arxiv.org/abs/2308.03688
+
+[9] Joon Sung Park, Joseph C. O’Brien, Carrie J. Cai, Meredith Ringel Morris, Percy Liang, and Michael S. Bernstein. Generative Agents: Interactive Simulacra of Human Behavior. arXiv preprint arXiv:2304.03442, 2023. https://arxiv.org/abs/ 2304.03442
+
+[10] Akari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Hannaneh Hajishirzi. Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection. arXiv preprint arXiv:2310.11511, 2023. https://arxiv.org/abs/2310.11511
+
+[11] Shi-Qi Yan, Jia-Chen Gu, Yun Zhu, and Zhen-Hua Ling. Corrective Retrieval Augmented Generation. arXiv preprint arXiv:2401.15884, 2024. https://arxiv.org/ abs/2401.15884
+
+[12] Lei Wang, Chengbang Ma, Xueyang Feng, Zeyu Zhang, Hao-ran Yang, Jingsen Zhang, Zhi-Yang Chen, Jiakai Tang, Xu Chen, Yankai Lin, Wayne Xin Zhao, Zhewei Wei, and Ji-rong Wen. A survey on large language model based autonomous agents. Frontiers of Computer Science, 18:186345, 2024. https://api. semanticscholar.org/CorpusID:261064713
+
+[13] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and Denny Zhou. Chain-of-thought prompting elicits reasoning in large language models. Advances in Neural Information Processing Systems, 35:24824–24837, 2022. https://arxiv.org/abs/2201.11903
+
+[14] Tianbao Xie, Fan Zhou, Zhoujun Cheng, Peng Shi, Luoxuan Weng, Yitao Liu, Toh Jing Hua, Junning Zhao, Qian Liu, Che Liu, Leo Z. Liu, Yiheng Xu, Hongjin Su, Dongchan Shin, Caiming Xiong, and Tao Yu. OpenAgents: An open platform for language agents in the wild. arXiv preprint arXiv:2310.10634, 2023. https: //arxiv.org/abs/2310.10634
+
+[15] OpenAI. GPT-4 technical report. arXiv preprint arXiv:2303.08774, 2023. https: //arxiv.org/abs/2303.08774
+
+[16] Weize Chen, Yusheng Su, Jingwei Zuo, Cheng Yang, Chenfei Yuan, Chi-Min Chan, Heyang Yu, Yaxi Lu, Yi-Hsin Hung, Chen Qian, Yujia Qin, Xin Cong, Ruobing Xie, Zhiyuan Liu, Maosong Sun, and Jie Zhou. AgentVerse: Facilitating multi-agent collaboration and exploring emergent behaviors. arXiv preprint arXiv:2308.10848, 2023. https://arxiv.org/abs/2308.10848
+
+[17] Binfeng Xu, Zhiyuan Peng, Bowen Lei, Subhabrata Mukherjee, Yuchen Liu, and Dongkuan Xu. ReWOO: Decoupling Reasoning from Observations for Eficient Augmented Language Models. arXiv preprint arXiv:2305.18323, 2023. https://arxiv. org/abs/2305.18323
+
+[18] Yuan Li, Yixuan Zhang, and Lichao Sun. MetaAgents: Simulating Interactions of Human Behaviors for LLM-based Task-oriented Coordination via Collaborative Generative Agents. arXiv preprint arXiv:2310.06500, 2023. https://arxiv.org/abs 2310.06500
+
+[19] Bhargavi Paranjape, Scott Lundberg, Sameer Singh, Hannaneh Hajishirzi, Luke Zettlemoyer, and Marco Tulio Ribeiro. ART: Automatic multi-step reasoning and tool-use for large language models. arXiv preprint arXiv:2303.09014, 2023. https://arxiv.org/abs/2303.09014
+
+[20] Shibo Hao, Yi Gu, Haodi Ma, Joshua Jiahua Hong, Zhen Wang, Daisy Zhe Wang, and Zhiting Hu. Reasoning with language model is planning with world model. arXiv preprint arXiv:2305.14992, 2023. https://arxiv.org/abs/2305.14992
+
+[21] Abdul Malik Sami, Zeeshan Rasheed, Kai-Kristian Kemell, Muhammad Waseem, Terhi Kilamo, Mika Saari, Anh Nguyen Duc, Kari Systä, and Pekka Abrahamsson. System for systematic literature review using multiple AI agents: Concept and an empirical evaluation. arXiv preprint arXiv:2403.08399, 2024. https://arxiv.org/ abs/2403.08399
+
+[22] Movina Moses, Mohab Elkaref, James Barry, Vishnudev Kuruvanthodi, Muthukumaran Ramasubramanian, Campbell Watson, and Geeth R. De Mel. Agentic workflows for gap-aware literature reviews. AGU Annual Meeting, 2025. https://research.ibm.com/publications/agentic-workflows-for-gap-awareliterature-reviews
+
+
+---
+
 # 2605.25007_元模态智能体：缺失模态候选重排序
 
-**arXiv**: [2605.25007](https://arxiv.org/abs/2605.25007)
+[2605.25007](https://arxiv.org/abs/2605.25007)
 
 # Meta-Modal Agent: Sequential Evidence Routing for Missing-Modality Candidate Reranking
 
@@ -3587,9 +4485,343 @@ Generative AI tools were used for language editing and consistency checking of t
 
 ---
 
-# 2504.00678_LLM增强的多阶段推荐系统
+# 2407.18940_LitSearch_A_Retrieval_Benchmark_for_Scientific_Literature_Search
 
-**arXiv**: [2504.00678](https://arxiv.org/abs/2504.00678)
+[2407.18940](https://arxiv.org/abs/2407.18940)
+
+# LitSearch: A Retrieval Benchmark for Scientific Literature Search
+
+Anirudh Ajith<sup>1</sup> Mengzhou Xia<sup>1</sup> Alexis Chevalier<sup>1,2</sup> Tanya Goyal<sup>1</sup>
+
+Danqi Chen<sup>1</sup> Tianyu Gao<sup>1</sup>
+
+<sup>1</sup>Princeton Language and Intelligence (PLI), Princeton University <sup>2</sup>BCG X {anirudh.ajith,mengzhou,achevalier,tanyagoyal, danqic,tianyug}@princeton.edu
+
+## Abstract
+
+Literature search questions, such as “Where can I find research on the evaluation of consistency in generated summaries?” pose significant challenges for modern search engines and retrieval systems. These questions often require a deep understanding of research concepts and the ability to reason across entire articles. In this work, we introduce LitSearch, a retrieval benchmark comprising 597 realistic literature search queries about recent ML and NLP papers. Lit-Search is constructed using a combination of (1) questions generated by GPT-4 based on paragraphs containing inline citations from research papers and (2) questions manually written by authors about their recently published papers. All LitSearch questions were manually examined or edited by experts to ensure high quality. We extensively benchmark state-ofthe-art retrieval models and also evaluate two LLM-based reranking pipelines. We find a significant performance gap between BM25 and state-of-the-art dense retrievers, with a 24.8% absolute difference in recall@5. The LLMbased reranking strategies further improve the best-performing dense retriever by 4.4%. Additionally, commercial search engines and research tools like Google Search perform poorly on LitSearch, lagging behind the best dense retriever by up to 32 recall points. Taken together, these results show that LitSearch is an informative new testbed for retrieval systems while catering to a real-world use case.<sup>1</sup>
+
+## 1 Introduction
+
+Finding literature via a specific search query—for example, collecting related work, checking if a method has been proposed before, or recalling a previously seen paper—is a critical task for researchers. Developing systems that recommend citations pertinent to such inquiries holds the po tential to enhance researchers’ productivity and expedite scientific discovery (Färber and Jatowt, 2020). However, this task is inherently challenging as it often requires deep domain expertise and reasoning through lengthy papers.
+
+![](images/72725446d36f5f2bb64f36e22f570b68a26e9956c582eacfb3962e559c4e0afd.jpg)  
+Figure 1: Examples of inline-citation and author-written questions from LitSearch. These questions are often challenging and require a deep understanding of the target papers to answer correctly.
+
+Prior to this study, the task of citation recommendation was often formalized by using inline citation mentions from existing papers as queries, and the cited papers as targets (He et al., 2010; Gu et al., 2022). For instance, given the citation mention “RoBERTa and T5 are based on recent advances in masked language modeling [citation],” the text surrounding the citation mention is used as a retrieval query, and the cited paper is the target literature. However, directly using inline citations often leads to queries that are noisy, overly broad (e.g., “Large Language Models [citation]”), or highly context-dependent (e.g., “We follow the hyperparameters of [citation]”).
+
+![](images/a3d1536b7391a8bb8e251cc0e72e50fb1317941abdc561d15de6d46dc6bb9c60.jpg)  
+Figure 2: The pipeline for generating inline-citation questions. We first sample a citation mention and prompt GPT-4 to generate a question. Next, we filter questions based on word overlap with the target paper title and perform manual inspections to annotate their specificity and quality (see rubrics in Table 1).
+
+In this work, we propose a new literature retrieval benchmark called LitSearch. As illustrated in Figure 1, a literature search question seeks papers that meet specific criteria, closely reflecting actual research workflows. LitSearch consists of two subsets: (1) For inline-citation questions, we sample citation mentions from a collection of scientific papers and use GPT-4 (OpenAI, 2023) to rewrite them into literature search questions (Figure 2). We retain questions with a low word overlap with the title of the target papers, and perform manual examination to ensure high quality. (2) For author-written questions, we invited authors of ACL 2023 and ICLR 2024 papers to write literature search questions for their own papers. This subset is also manually examined and filtered to remove any inaccurate or easy questions. LitSearch contains 597 questions in total, each paired with one or more scientific papers as the ground truth.
+
+LitSearch has several unique characteristics: (1) To the best of our knowledge, LitSearch is the first dataset featuring realistic literature search questions, providing a new testbed for citation recommendation and retrieval systems. (2) LitSearch is challenging, requiring deep understanding and reasoning over entire articles. The average document length (6,041/134 words for full texts/titles and abstracts) is significantly longer than that of most existing retrieval benchmarks (e.g., 56 for (Nguyen et al., 2017)). (3) LitSearch is of high quality, with all questions manually examined by the authors.
+
+We conduct extensive experiments on both stateof-the-art retrieval models and reranking with large language models (LLMs). On LitSearch, the best dense retrieval model, GritLM (Muennighoff et al., 2024), achieves an average recall@5 of 74.8%, outperforming BM25 (Robertson et al., 2009) by 24.8%. The recall@5 of GritLM is further improved by 4.4% with GPT-4o reranking. On the other hand, commercial search engines and research tools like Google Search perform poorly on this task, only achieving an average recall@5 of 42.8% at most. Furthermore, compared to existing retrieval datasets from BEIR (Thakur et al., 2021) and MTEB (Muennighoff et al., 2022), Lit-Search effectively reflects the performance differences among various embedding models, making it an informative testbed for evaluating state-of-theart retrieval systems.
+
+## 2 LitSearch
+
+Our benchmark LitSearch consists of (a) a large corpus of scientific papers P and (b) pairs of literature search questions and one or more target papers from P. Our desiderata are scientific questions that researchers may use while conducting literature surveys. We use two different strategies to collect such questions: (1) we construct questions using the surrounding context from inline citations in published papers (Section 2.1), and (2) we invited the authors of recent conference publications to manually write questions about their own papers (Section 2.2). For both subsets, we ensure high question quality via manual inspection and filtering conducted by the authors of this work (Section 2.3).
+
+## 2.1 Inline-citation Questions
+
+We define the following concepts for the ease of description: (a) An inline citation mention is a paragraph from the main text of a paper that mentions another paper. For example, this paragraph from the RoBERTa paper (Liu et al., 2019), “... Unlike Devlin et al., (2019), ... we do not train with a reduced sequence length for the first 90% of updates ...” mentions the BERT paper (Devlin et al., 2019). (b) The source paper is the paper the inline citation mention is sampled from. (c) A target paper is a paper that is cited by the inline citation mention.
+
+Figure 2 provides an overview of our data collection methodology for inline-citation questions. We utilize the Semantic Scholar Open Research Corpus (S2ORC; Lo et al., 2020), a large corpus of academic papers obtained from publishers, archives, and the Internet. We randomly sample inline citation mentions from the S2ORC<sup>2</sup> and prompt GPT-4 to rewrite these citation mentions into literature search questions. These questions are filtered to remove those with a high word overlap with the title of the target papers, and are further manually examined to ensure high quality.
+
+![](images/cb5ec87d12c6c36e25d607ca68326d761ec3119386b2f99ed4dbbff20d898eac.jpg)  
+Table 1: Annotation rubrics for the manual filtering (conducted by the authors of LitSearch).
+
+Sampling inline citation mentions. We limit the target papers to be only from the ACL Anthology, for the purpose of aligning with the expertise of the manual annotators, i.e., authors of this work. However, we do not limit where the source papers come from. Depending on the source papers, we call these questions ACL sourced or non-ACL sourced.
+
+Prompting GPT-4 to generate questions. Given a sampled citation mention, we prompt GPT-4 (OpenAI, 2023) to generate a literature search question. In the prompt, we provide (1) the sampled paragraph (the inline citation mention) from the source paper and (2) the titles of the cited papers, and instruct GPT-4 to generate a literature search question based on the paragraph that would be answered by one or more of the papers cited in the paragraph. We use in-context learning (Brown et al., 2020) and include two demonstrations. The prompt we use can be found in Table 12.
+
+Word-overlap filtering. We notice that inlinecitation questions generated in the last step can have very high word overlap with the target paper titles, which makes their retrieval trivial even for BM25 and suggests that the questions may not be of interest to researchers. We calculate the word overlap as the percentage of words in the generated question that are also included in the target paper titles. We filter out ACL sourced questions that have an overlap score higher than 0.3 and non-ACL sourced questions that have an overlap score higher than 0.1. In this step, we filter out 5% of the ACL sourced questions and 80% of the non-ACL sourced questions.
+
+## 2.2 Author-written Questions
+
+Besides generating questions using existing inline citation mentions, we also collect questions directly from human annotators. As writing literature search questions requires deep understanding of the research field and the target paper, we invite researchers to write search queries that are answered by their own published papers. One additional benefit of this setup is that the correctness of the questions is better guaranteed.
+
+We invited authors of ACL 2023 and ICLR 2024 papers to write one literature search question for each of their papers. We chose the two venues as they were among the latest natural language and machine learning conferences at the time of the data collection, hence the papers represent the latest research development and are unlikely to have already been included in the pre-training data of LLMs and retrievers used in our evaluations. We sent out invitations to 623 ACL 2023 authors and 404 ICLR 2024 authors, and received 175 questions from ACL 2023 authors and 117 questions from ICLR 2024 authors.
+
+## 2.3 Manual Filtering to Ensure High Quality
+
+Finally, the authors of this work manually examine every question from both the inline-citation and author-written subsets and annotate these for specificity and quality (guidelines in Table 1). Questions that are too general (there are more than 20 papers from the corpus can fit the question) are assigned a quality score of 0 and are excluded. We include only questions with a quality score of 1 or 2 in the final dataset. We also rewrite questions if they have minor mistakes and can be fixed easily. Each question is assigned to one author for annotation.
+
+<table><tr><td rowspan="2"></td><td colspan="4">Broad</td><td colspan="4">Specific</td><td rowspan="2">Total #Q</td></tr><tr><td>#Q</td><td>Avg. Len</td><td>Overlap</td><td>Avg. #P</td><td>#Q</td><td>Avg. Len</td><td>Overlap</td><td>Avg. #P</td></tr><tr><td>Inline-citation Questions</td><td>120</td><td>20.6</td><td>0.33</td><td>1.21</td><td>231</td><td>22.1</td><td>0.34</td><td>1.07</td><td>351</td></tr><tr><td>Author-written Questions</td><td>35</td><td>15.8</td><td>0.43</td><td>1.03</td><td>211</td><td>17.9</td><td>0.43</td><td>1.00</td><td>246</td></tr></table>
+
+Table 2: Statistics for LitSearch. Please refer to Table 14 for more detailed statistics of each subset. “#Q”: number of questions. “Overlap”: the fraction of words in the question that are also included in the titles and abstracts of the target papers. “Avg. #P”: average number of target papers.
+
+As the examples in Table 1 show, questions of both specificity types can be realistic and valuable, but they exhibit distinct traits. We use the specificity scores to distinguish broad and specific questions in the evaluation.
+
+For the inline-citation subset, we manually examined 382 ACL sourced questions and 450 non-ACL sourced questions. 26% (98 instances) of the ACL questions and 56% (253 instances) of the non-ACL questions are kept. For the author-written subset, since all questions are written by experts, we avoid rewriting them as much as possible. In the end, we kept 89% (155) questions from ACL 2023 authors and 78% (91) questions from ICLR 2024 authors.
+
+## 2.4 Dataset Statistics
+
+Our final dataset contains 597 questions, with 351 in the inline-citation subset and 246 in the authorwritten subset. Dataset statistics, including the number of questions, the average question length, and the average word overlap between the question and the target papers (titles and abstracts), are presented in Table 2. We find that author-written questions are shorter and have a higher word overlap rate with the target papers (0.43 vs. 0.33 for inline-citation questions). This is expected: when writing questions for their own papers, authors tend to re-use terminology from their papers and focus on the main findings which are usually included in the abstracts or titles. In contrast, inline-citation questions can be anchored to any span of the reference documents, irrespective of the main findings or the main focuses of the target papers.
+
+## 2.5 The Retrieval Corpus
+
+The LitSearch retrieval corpus P consists of ACL Anthology and ICLR papers extracted from S2ORC (see Appendix C for details). We do not use the full S2ORC corpus for efficiency reasons. In total, this yields 64, 183 papers (59, 383 ACL
+
+Anthology papers and 4, 807 ICLR papers)<sup>3</sup>. The average number of words for the documents in P is 134 / 6,041 (titles and abstracts / full texts).
+
+## 3 Experiments
+
+## 3.1 Experimental Setup
+
+We compare the performance of different retrieval systems (enumerated below) on our LitSearch benchmark. Due to the limited context sizes of existing embedding models, we only use the paper titles and abstracts to embed the papers in our retrieval corpus P by default.
+
+For all systems we compare, we report the recall@K for both the broad and specific subsets of LitSearch. We report results for K = 5, 20 for the specific subset and K = 20 for the broad subset; these values (5 and 20) correspond to the guidelines followed by the authors while determining the specificity of a given question (see Table 1).
+
+## 3.2 Baselines
+
+We benchmark both retrieval models and LLMbased rerankers in this work.
+
+Retriever models. We evaluate using the classic BM25 algorithm (Robertson et al., 2009), as well as several state-of-the-art dense retrieval (embedding) models, including GTR (Ni et al., 2022), Instructor (Su et al., 2023), E5 (Wang et al., 2022), and GritLM (Muennighoff et al., 2024).<sup>4</sup> More details are provided in Appendix D.
+
+LLM-based reranking. In addition to vanilla retrieval, we also use strong LLMs (GPT-4o<sup>5</sup> in our case) to rerank the top retrieved results from the above retrievers. We use two strategies:
+
+Vanilla reranking. We include the top-n retrieved papers (titles and abstracts) in the context and prompt GPT-4o to rerank these based on the question (see our prompt in Table 13). This is similar to prior works (Sun et al., 2023b; Ma et al., 2023). We use $n = 1 0 0$ , resulting in an average context length of 13,844 words.
+
+<table><tr><td rowspan="3"></td><td colspan="3">Inline-citation</td><td colspan="3">Author-written</td><td rowspan="2">Avg. Broad</td><td rowspan="2">Avg. Specific</td></tr><tr><td>Broad</td><td colspan="2">Specific</td><td>Broad</td><td colspan="2">Specific</td></tr><tr><td>R@20</td><td>R@5</td><td>R@20</td><td>R@20</td><td>R@5</td><td>R@20</td><td>R@20</td><td>R@5</td></tr><tr><td>BM25</td><td>37.4</td><td>38.5</td><td>55.8</td><td>48.6</td><td>62.6</td><td>73.5</td><td>39.9</td><td>50.0</td></tr><tr><td>GTR-T5-large</td><td>45.7</td><td>38.5</td><td>51.5</td><td>37.1</td><td>40.8</td><td>55.9</td><td>43.8</td><td>39.6</td></tr><tr><td>Instructor-XL</td><td>56.3</td><td>48.9</td><td>60.0</td><td>57.1</td><td>55.9</td><td>70.1</td><td>56.5</td><td>52.3</td></tr><tr><td>E5-large-v2</td><td>55.8</td><td>50.4</td><td>63.9</td><td>54.3</td><td>62.6</td><td>75.8</td><td>55.4</td><td>56.2</td></tr><tr><td>GritLM-7B</td><td>69.7</td><td>67.7</td><td>77.9</td><td>74.3</td><td>82.5</td><td>89.1</td><td>70.8</td><td>74.8</td></tr><tr><td>GPT-4o reranking (w/ BM25)</td><td>54.9</td><td>60.0</td><td>67.5</td><td>77.1</td><td>76.8</td><td>82.9</td><td>59.9</td><td>68.0</td></tr><tr><td>GPT-4o one-hop (w/ BM25)</td><td>62.0</td><td>64.1</td><td>71.6</td><td>74.3</td><td>73.5</td><td>77.7</td><td>64.8</td><td>68.6</td></tr><tr><td>GPT-4o reranking (w/ GritLM)</td><td>74.7</td><td>73.2</td><td>79.9</td><td>77.1</td><td>85.8</td><td>92.4</td><td>75.3</td><td>79.2</td></tr><tr><td>GPT-4o one-hop (w/ GritLM)</td><td>72.9</td><td>70.3</td><td>78.4</td><td>74.3</td><td>84.4</td><td>87.2</td><td>73.2</td><td>77.0</td></tr></table>
+
+Table 3: Main experimental results of LitSearch. Here we only use the titles and abstracts of papers for retrieval and reranking. We report recall@20 (R@20) for broad questions and recall@5 and @20 (R@5, R@20) for specific questions. “Broad” and “specific” correspond to the annotations during our manual filtering stage (defined in Table 1).  
+![](images/c279d4ea2d9346c9685f48ed50a2c894be8fd7fe6428beddb4c48c0e45a8a8f5.jpg)  
+Figure 3: We demonstrate detailed retrieval results using BM25, E5 and GritLM up to k = 50. Additionally, we show the effect of applying GPT-4o reranking over GritLM retrieval results.
+
+One-hop reranking. Inspired by Tang et al. (2023), we leverage the fact that for some questions, there may exist lexically similar inline citation mentions in the retrieval corpus. Due to our data collection pipeline, this is particularly true for the ACL sourced inline citation questions. We posit that the retrieval models will be able to retrieve these source papers (that cite the target papers) based on the questions.
+
+We extract the top m retrieved papers and construct a new candidate list by adding papers cited by each of these seed retrieved papers. We concatenate papers in the following order, skipping duplicates: [rank-1 paper $p _ { 1 }$ , papers cited by $p _ { 1 }$ rank-2 paper $p _ { 2 }$ , papers cited by $p _ { 2 } , . . . , p _ { m }$ , papers cited by $p _ { m } ] .$ . To avoid very long contexts, we truncate this list after the first n papers and use the same prompt for GPT-4o based reranking as above.
+
+In our experiments, we use $m = 5 0$ and $n = 2 0 0$ resulting in average length of 27,544 words.
+
+## 3.3 Results
+
+We outline the performance of the above systems on LitSearch in Table 3. First, we observe that all instruction-finetuned embedding models, e.g. Instructor, E5, and GritLM, substantially outperform BM25 on our benchmark. In fact, they also perform better than the GTR model. Overall, we found that GritLM-7B achieves the best performance (70.8 recall@20 on broad questions and 74.8 recall@5 on specific questions), leaving a large gap compared to other baselines.
+
+Impact of reranking. We also report the performance improvement brought by the reranking methods on the weakest (BM25) and strongest (GritLM) retrievers in Table 3. We observe that both vanilla and one-hop reranking improve over the base retrieval performance. For example, on the specific subset of inline questions, the vanilla GPT-4o reranking improves the recall@5 of BM25 and GritLM by 21.5% and 5.5% respectively. Interestingly, the improvements from one-hop reranking are generally lower than vanilla reranking across all subsets, when using GritLM as the base retriever; this shows that our benchmark cannot be easily “gamed” by mimicking the data collection pipeline or exploiting similar citation mentions to the question from other papers.
+
+<table><tr><td rowspan="2"></td><td colspan="2">Inline (specific)</td><td colspan="2">Author (specific)</td></tr><tr><td>Qual=1R@5</td><td>Qual=2R@5</td><td>Qual=1R@5</td><td>Qual=2R@5</td></tr><tr><td>BM25</td><td>36.4</td><td>30.6</td><td>62.2</td><td>55.0</td></tr><tr><td>GTR-T5-large</td><td>42.0</td><td>31.4</td><td>40.7</td><td>36.9</td></tr><tr><td>Instructor-XL</td><td>55.1</td><td>39.5</td><td>58.5</td><td>48.6</td></tr><tr><td>E5-large-v2</td><td>48.4</td><td>42.6</td><td>61.5</td><td>57.7</td></tr><tr><td>GritLM-7B</td><td>67.3</td><td>58.7</td><td>80.0</td><td>76.6</td></tr></table>
+
+Table 4: Comparison of retrieval performance on different quality (qual) questions. Generally, retrievers report lower performance on the Qual=2 questions, i.e. those deemed more challenging in our manual annotation.
+
+Impact of question specificity. Table 3 and Figure 3 show that retrieval systems generally report higher recall performance on the specific subset. This is expected: there exists a smaller number of “competing” papers, i.e. those that also satisfy the search question, for the specific subset in the retrieval corpus. Note that our human annotation tagged questions with approximately 5 relevant papers as specific and 20 relevant papers as broad (see Table 1 for details). We keep both subsets in our dataset as this stratified reporting presents a more nuanced view of retriever capabilities.
+
+Inline-citation vs. author-written questions. We observe very different performance trends for the two subsets (Table 3 and Figure 3). In particular, inline-citation questions are harder than authorwritten questions for all retriever systems, on both broad and specific questions.
+
+We attribute this difference to the higher semantic or lexical overlap of author-written questions with the paper titles and abstracts (see Table 2 for statistics). This reflects expected tendency of paper authors to formulate the questions around the main contributions from the abstracts and re-use terminologies. Such annotator biases have been widely discussed in prior data collection efforts as well, particularly when humans write content from scratch (Gururangan et al., 2018).
+
+Impact of question quality. Table 4 compares how retrieval models perform on different quality subsets. Recall that we manually annotated the quality of all questions (Table 1). We observe that questions with a quality score of 2, i.e. determined to be more realistic and difficult by manual annotators, are consistently more challenging for retrieval models. This demonstrates the high annotation quality of our manual inspection step. The presence of these different quality questions in our dataset leads to higher diversity and better coverage over the varied information seeking needs of users.
+
+<table><tr><td rowspan="2"></td><td colspan="2">Inline</td><td colspan="2">Author</td></tr><tr><td>Broad R@20</td><td>Spec R@5</td><td>Broad R@20</td><td>Spec R@5</td></tr><tr><td>BM25</td><td>37.4</td><td>38.5</td><td>48.6</td><td>62.6</td></tr><tr><td>w/ full</td><td>18.6</td><td>23.8</td><td>65.7</td><td>71.6</td></tr><tr><td>GTR-T5-large</td><td>45.7</td><td>38.5</td><td>37.1</td><td>40.8</td></tr><tr><td>w/ full</td><td>43.9</td><td>39.4</td><td>45.7</td><td>39.8</td></tr><tr><td>Instructor-XL</td><td>56.3</td><td>48.9</td><td>57.1</td><td>55.9</td></tr><tr><td>w/ full</td><td>53.0</td><td>50.9</td><td>57.1</td><td>56.9</td></tr><tr><td>E5-large-v2</td><td>55.8</td><td>50.4</td><td>54.3</td><td>62.6</td></tr><tr><td>w/ full</td><td>56.9</td><td>48.7</td><td>60.0</td><td>62.1</td></tr><tr><td>GritLM-7B</td><td>69.7</td><td>67.7</td><td>74.3</td><td>82.5</td></tr><tr><td>w/ full</td><td>70.8</td><td>63.4</td><td>65.7</td><td>73.0</td></tr></table>
+
+Table 5: Retrieval results of using only titles and abstracts vs. using titles, abstracts, and full text (w/ full). We do not observe consistent improvements from including the full text for existing retrieval models.
+
+## 4 Analysis
+
+## 4.1 Does Including More Paper Content Improve Retrieval Performance?
+
+In the previous section, we only used the titles and abstracts (on average 134 words) to encode the papers in the retrieval corpus. Here, we evaluate whether encoding more paper content can improve retrieval performance. For all retriever models compared, we create embeddings using the full paper text (on average 6,041 words) up to their allowed context lengths.<sup>6</sup> We compare this setting against our default setting (only titles and abstracts).
+
+Our results are outlined in Table 5. Surprisingly, we find that the addition of more paper text does not improve performance on LitSearch consistently. In fact, we only observe substantial improvement on the author-written broad questions for BM25 and some embedding models. In other cases, more text more often hinders instead of improving performance. Note that the maximum context length of the tested models is 2,048 (GritLM) and the average length of their training data is even shorter—for example, the commonly used MS-MARCO (Nguyen et al., 2017) and NaturalQuestions (Lee et al., 2019) have an average document length of 56 and 79. This is significantly shorter than the full text of papers from our retrieval corpus averaging 6,041 words in length, potentially leading to the unsatisfying performance when using full texts with embedding models.
+
+<table><tr><td rowspan="2"></td><td colspan="2">ACL</td><td colspan="2">Non-ACL</td></tr><tr><td>BroadR@20</td><td>SpecificR@5</td><td>BroadR@20</td><td>SpecificR@5</td></tr><tr><td>BM25</td><td>38.8</td><td>39.4</td><td>36.9</td><td>38.2</td></tr><tr><td>GTR-T5-large</td><td>37.2</td><td>39.4</td><td>48.9</td><td>38.2</td></tr><tr><td>Instructor-XL</td><td>48.6</td><td>43.9</td><td>59.1</td><td>50.9</td></tr><tr><td>E5-large-v2</td><td>46.6</td><td>46.2</td><td>59.1</td><td>52.1</td></tr><tr><td>GritLM-7B</td><td>72.4</td><td>65.9</td><td>68.8</td><td>68.5</td></tr><tr><td colspan="5">With BM25</td></tr><tr><td>Reranking</td><td>51.1</td><td>59.8</td><td>56.2</td><td>60.0</td></tr><tr><td>One-hop</td><td>65.2</td><td>71.2</td><td>60.8</td><td>61.2</td></tr><tr><td colspan="5">With GritLM</td></tr><tr><td>Reranking</td><td>80.3</td><td>72.7</td><td>72.7</td><td>73.3</td></tr><tr><td>One-hop</td><td>81.3</td><td>67.4</td><td>69.9</td><td>71.5</td></tr></table>
+
+Table 6: Comparison of retrieval performance on the ACL vs. non-ACL sourced inline-citation questions. Results show that the performance improvement from one-hop reranking over BM25 is subtantially higher for ACL sourced questions.
+
+## 4.2 Does the Source of Inline Citation Questions Matter?
+
+Next, we study how the different sources of inlinecitation questions affect the model performance. Table 6 outlines the performance of retrieval models on ACL sourced vs. non-ACL sourced inlinecitation questions. Our results show that the two different sets report similar trends and model rankings for different retrieval models, particularly on the specific subset of questions. Interestingly, we find that the performance improvement from onehop reranking is very different for the ACL and non-ACL questions.
+
+For BM25, we observe that one-hop reranking is significantly better than the vanilla reranking on ACL sourced questions (+11.4% recall@5 on specific); but the gap is much smaller on non-ACL sourced questions (+1.2% recall@5 on specific). We posit that this is because BM25 can better exploit the data annotation pipeline on the ACL sourced questions. It can likely first identify the source ACL paper where the citation mention comes from, and then find the target paper via onehop reranking. Including the non-ACL questions to LitSearch prevents systems from exploiting such “shortcuts” as non-ACL source papers are not part of the retrieval corpus.
+
+<table><tr><td></td><td>Inline (specific)R@5</td><td>Author (specific)R@5</td></tr><tr><td>BM25</td><td>38.5</td><td>62.6</td></tr><tr><td>GritLM-7B</td><td>67.7</td><td>82.5</td></tr><tr><td>Google Search</td><td>23.1</td><td>62.5</td></tr><tr><td>Google Scholar</td><td>20.5</td><td>17.5</td></tr><tr><td>Elicit</td><td>23.1</td><td>17.5</td></tr></table>
+
+Table 7: Recall@5 for commercial search engines on a random subset of 80 specific questions. Search engines generally report poor performance. Note that the comparison is not apples-to-apples as search engines use a much larger retrieval corpus.
+
+For GritLM, we do not observe similarly large performance gains when using one-hop reranking. We hypothesize that this is because when using GritLM, the initial top retrieval results already include the target papers and the one-hop strategy does not bring further improvement.
+
+## 4.3 Performance of Search Engines
+
+In practice, researchers use search engines like Google Search, Google Scholar, or Elicit<sup>7</sup> to search for relevant papers for their scientific queries. We conduct a human study to understand how these search engines perform on LitSearch: We randomly sample 80 questions (all specific; 40 inline-citation and 40 author-written) from our dataset. We manually input<sup>8</sup> these questions into the above search engines and report recall@5.<sup>9</sup> We note that this is not an apples-to-apples comparison against the retrieval models in earlier sections due to the discrepancy in the retrieval corpus.
+
+Table 7 outlines the results of our human study. It shows that all three search engines deliver similarly low recalls on inline-citation questions. On the author-written questions, Google Search performs much better than the other two. Although not directly comparable, this performance is generally worse than the embedding models, demonstrating the potential of these strong dense retrieval models for citation recommendation applications.
+
+<table><tr><td></td><td>MSMARCO</td><td>SCIDOCS</td><td>NQ</td><td>ArXiv</td><td>LitSearch (broad)</td><td>LitSearch (specific)</td></tr><tr><td>GTR-T5-large</td><td>42.7</td><td>15.5</td><td>55.1</td><td>17.5</td><td>23.3</td><td>30.4</td></tr><tr><td>Instructor-XL</td><td>41.6</td><td>17.4</td><td>57.2</td><td>19.8</td><td>32.8</td><td>41.2</td></tr><tr><td>E5-large-v2</td><td>43.5</td><td>20.5</td><td>63.4</td><td>27.0</td><td>27.1</td><td>45.3</td></tr><tr><td>GritLM-7B</td><td>42.0</td><td>24.4</td><td>70.3</td><td>34.3</td><td>44.1</td><td>60.3</td></tr></table>
+
+Table 8: Comparison between LitSearch and existing retrieval benchmarks. All reported numbers are nDCG@10 for a direct comparison.
+
+## 4.4 Comparing Other Retrieval Benchmarks
+
+We compare model performance on LitSearch to several popular retrieval benchmarks included in BEIR (Thakur et al., 2021) and MTEB (Muennighoff et al., 2022)—namely MS-MARCO (Nguyen et al., 2017), SCIDOCS (Cohan et al., 2020), and NQ (Lee et al., 2019).<sup>10</sup> We also compare to ArXiv (Gu et al., 2022), a previous citation recommendation benchmark directly using inline citations as queries. Table 8 shows that LitSearch generally agrees with existing retrieval benchmarks. However, LitSearch can differentiate retriever models better: for example, the gap between GritLM and E5 on LitSearch (specific) is 15 points (nDCG@10), while they perform almost the same on MSMARCO. LitSearch provides an informative testbed that can effectively reflect the recent (and future) advancement in embedding models.
+
+## 5 Related Work
+
+Citation recommendation. The community has proposed a number of citation recommendation datasets (Färber and Jatowt, 2020), including global citation recommendation datasets (directly using a paper as the query and papers it cites as target papers; Cohan et al., 2020; Bhagavatula et al., 2018), and local citation recommendation datasets (using inline citation mentions as queries; He et al., 2010; Medic and Snajder´ , 2020; Jeong et al., 2020; Gu et al., 2022). There are also language models and retrieval models specifically trained for scientific document understanding and retrieval tasks, such as SciBERT (Beltagy et al., 2019) and SPECTER (Cohan et al., 2020). Compared to existing citation recommendation datasets, LitSearch is comprised of manually annotated, natural language literature search questions, providing a more realistic and challenging evaluation for citation recommendation systems.
+
+Retrieval benchmarks. There have been numerous datasets evaluating retrieval systems from Wikipedia (Kwiatkowski et al., 2019; Lee et al., 2019), web queries (Nguyen et al., 2017), biomedical questions (Voorhees and Tice, 2000), and more. Recently, there have been several benchmarks combining multiple datasets and evaluating retrieval or embedding models across different domains and different use cases, such as KILT (Petroni et al., 2021), BEIR (Thakur et al., 2021), and MTEB (Muennighoff et al., 2022). LitSearch offers a unique perspective by exploring the novel literature search question type, effectively complementing the existing benchmarks. Contemporary with our work, CiteME (Press et al., 2024) introduces a benchmark for identifying references based on claims made in a paper’s inline text (as opposed to research questions in our case). Their focus differs from ours in that it is aimed more at LLM-based agents rather than retrieval systems.
+
+Retrieval systems. Traditional retrieval systems rely on bag-of-word algorithms such as TF-IDF and BM25. Dense retrieval (embedding) models have gained more popularity due to their abilities to do semantic search without relying on exact keyword matches (Pennington et al., 2014; Reimers and Gurevych, 2019). State-of-the-art dense models are mostly adopted by fine-tuning pre-trained language models (Devlin et al., 2019; Touvron et al., 2023) with a contrastive learning objective on either supervised or unsupervised data (Karpukhin et al., 2020; Gao et al., 2021; Izacard et al., 2022; Ni et al., 2022; Khattab and Zaharia, 2020). Recent development introduces “instructions” when encoding queries and documents, which significantly improves the versatility of embeddings across tasks (Su et al., 2023; Wang et al., 2022; Wu et al., 2022; Lee et al., 2024; BehnamGhader et al., 2024).
+
+## 6 Conclusion
+
+In this paper, we propose LitSearch, a new retrieval benchmark comprising 597 manually-curated literature search questions. LitSearch includes an inline-citation question set and an author-written question set, both undergoing manual inspection from the authors of LitSearch. We conduct extensive experiments with BM25, state-of-the-art embedding models, and LLM reranking. Our experiments demonstrate the superior performance of state-of-the-art instruction-finetuned embedding models, with additional improvement via GPT-4obased reranking. We also verify that commercial search engines like Google struggle with LitSearch questions. The comparison with existing retrieval benchmarks shows that LitSearch better differentiates the performance of retrieval systems.
+
+## Limitations
+
+Even though we manually examined the dataset, there still exist questions that are either slightly out of distribution compared to what researchers would ask, or too easy due to high overlap with the target papers. The author-written questions are easier than we expected, as writing challenging literature search questions is non-trivial even for experienced researchers. Even though we experimented with several state-of-the-art systems, it was not an exhausted evaluation and we left out more sophisticated retrieval or reranking systems. This research primarily focuses on only English questions and research papers.
+
+## Ethics Statement
+
+The research artifact of this paper, LitSearch, is manually inspected and has been ensured to have no unsafe or inappropriate content. However, the process to generate the dataset may introduce certain biases: for example, the inline-citation questions contain more target papers that have high citations due to the sampling; the author-written questions only cover ACL 2023 and ICLR 2024 papers.
+
+## Acknowledgements
+
+We want to acknowledge Dan Friedman, Howard Yen, Jiayi Geng, Lucy He, and other members of the Princeton NLP group for their useful feedback and discussion. We also acknowledge all the ACL 2023 and ICLR 2024 authors that contributed questions to LitSearch (listed in Appendix A). Tianyu
+
+Gao is supported by an IBM PhD Fellowship. This work is gratefully supported by an NSF CAREER award (IIS-2239290), and Microsoft Azure credits through the “Accelerate Foundation Models Academic Research” Initiative.
+
+## References
+
+Parishad BehnamGhader, Vaibhav Adlakha, Marius Mosbach, Dzmitry Bahdanau, Nicolas Chapados, and Siva Reddy. 2024. Llm2vec: Large language models are secretly powerful text encoders. Preprint, arXiv:2404.05961.
+
+Iz Beltagy, Kyle Lo, and Arman Cohan. 2019. SciB-ERT: A pretrained language model for scientific text. In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP), pages 3615– 3620, Hong Kong, China. Association for Computational Linguistics.
+
+Chandra Bhagavatula, Sergey Feldman, Russell Power, and Waleed Ammar. 2018. Content-based citation recommendation. In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers), pages 238–251, New Orleans, Louisiana. Association for Computational Linguistics.
+
+Tom B Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. 2020. Language models are few-shot learners. In Advances in Neural Information Processing Systems (NeurIPS).
+
+Arman Cohan, Sergey Feldman, Iz Beltagy, Doug Downey, and Daniel Weld. 2020. SPECTER: Document-level representation learning using citation-informed transformers. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, pages 2270–2282, Online. Association for Computational Linguistics.
+
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. BERT: Pre-training of deep bidirectional Transformers for language understanding. In North American Chapter of the Association for Computational Linguistics (NAACL).
+
+Michael Färber and Adam Jatowt. 2020. Citation recommendation: approaches and datasets. Int. J. Digit. Libr., 21(4):375–405.
+
+Tianyu Gao, Xingcheng Yao, and Danqi Chen. 2021. SimCSE: Simple contrastive learning of sentence embeddings. In Empirical Methods in Natural Language Processing (EMNLP), pages 6894–6910.
+
+Nianlong Gu, Yingqiang Gao, and Richard H. R. Hahnloser. 2022. Local citation recommendation with hierarchical-attention text encoder and scibert-based reranking. In Advances in Information Retrieval: 44th European Conference on IR Research, ECIR 2022, Stavanger, Norway, April 10–14, 2022, Proceedings, Part I, page 274–288, Berlin, Heidelberg. Springer-Verlag.
+
+Suchin Gururangan, Swabha Swayamdipta, Omer Levy, Roy Schwartz, Samuel Bowman, and Noah A. Smith. 2018. Annotation artifacts in natural language inference data. In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 2 (Short Papers), pages 107–112, New Orleans, Louisiana. Association for Computational Linguistics.
+
+Qi He, Jian Pei, Daniel Kifer, Prasenjit Mitra, and Lee Giles. 2010. Context-aware citation recommendation. In Proceedings of the 19th International Conference on World Wide Web, WWW ’10, page 421–430, New York, NY, USA. Association for Computing Machinery.
+
+Gautier Izacard, Mathilde Caron, Lucas Hosseini, Sebastian Riedel, Piotr Bojanowski, Armand Joulin, and Edouard Grave. 2022. Unsupervised dense information retrieval with contrastive learning. Transactions on Machine Learning Research.
+
+Chanwoo Jeong, Sion Jang, Eunjeong Park, and Sungchul Choi. 2020. A context-aware citation recommendation model with bert and graph convolutional networks. Scientometrics, 124(3):1907–1922.
+
+Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and Wen-tau Yih. 2020. Dense passage retrieval for opendomain question answering. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP), pages 6769–6781, Online. Association for Computational Linguistics.
+
+O. Khattab and Matei A. Zaharia. 2020. Colbert: Efficient and effective passage search via contextualized late interaction over bert. Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval.
+
+Tom Kwiatkowski, Jennimaria Palomaki, Olivia Red field, Michael Collins, Ankur Parikh, Chris Alberti, Danielle Epstein, Illia Polosukhin, Jacob Devlin, Ken ton Lee, Kristina Toutanova, Llion Jones, Matthew Kelcey, Ming-Wei Chang, Andrew M. Dai, Jakob Uszkoreit, Quoc Le, and Slav Petrov. 2019. Natural questions: A benchmark for question answering research. Transactions of the Association for Compu tational Linguistics, 7:452–466.
+
+Chankyu Lee, Rajarshi Roy, Mengyao Xu, Jonathan Raiman, Mohammad Shoeybi, Bryan Catanzaro, and Wei Ping. 2024. Nv-embed: Improved techniques for training llms as generalist embedding models. Preprint, arXiv:2405.17428.
+
+Kenton Lee, Ming-Wei Chang, and Kristina Toutanova. 2019. Latent retrieval for weakly supervised open domain question answering. In Association for Computational Linguistics (ACL), pages 6086–6096.
+
+Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019. RoBERTa: A robustly optimized BERT pretraining approach. arXiv preprint arXiv:1907.11692.
+
+Kyle Lo, Lucy Lu Wang, Mark Neumann, Rodney Kinney, and Daniel Weld. 2020. S2ORC: The semantic scholar open research corpus. In Association for Computational Linguistics (ACL), pages 4969–4983.
+
+Xueguang Ma, Xinyu Zhang, Ronak Pradeep, and Jimmy Lin. 2023. Zero-shot listwise document reranking with a large language model. arXiv preprint arXiv:2305.02156.
+
+Zoran Medic and Jan Snajder. 2020.´ Improved local citation recommendation based on context enhanced with global information. In Proceedings of the First Workshop on Scholarly Document Processing, pages 97–103, Online. Association for Computational Linguistics.
+
+Niklas Muennighoff, Hongjin Su, Liang Wang, Nan Yang, Furu Wei, Tao Yu, Amanpreet Singh, and Douwe Kiela. 2024. Generative representational instruction tuning. arXiv preprint arXiv:2402.09906.
+
+Niklas Muennighoff, Nouamane Tazi, Loïc Magne, and Nils Reimers. 2022. Mteb: Massive text embedding benchmark. arXiv preprint arXiv:2210.07316.
+
+Tri Nguyen, Mir Rosenberg, Xia Song, Jianfeng Gao, Saurabh Tiwary, Rangan Majumder, and Li Deng. 2017. MS MARCO: A human-generated MAchine reading COmprehension dataset.
+
+Jianmo Ni, Chen Qu, Jing Lu, Zhuyun Dai, Gustavo Hernandez Abrego, Ji Ma, Vincent Zhao, Yi Luan, Keith Hall, Ming-Wei Chang, and Yinfei Yang. 2022. Large dual encoders are generalizable retrievers. In Empirical Methods in Natural Language Processing (EMNLP), pages 9844–9855.
+
+OpenAI. 2023. GPT-4 Technical Report. Preprint, arXiv:2303.08774
+
+Jeffrey Pennington, Richard Socher, and Christopher Manning. 2014. GloVe: Global vectors for word representation. In Empirical Methods in Natural Language Processing (EMNLP), pages 1532–1543.
+
+Fabio Petroni, Aleksandra Piktus, Angela Fan, Patrick Lewis, Majid Yazdani, Nicola De Cao, James Thorne, Yacine Jernite, Vladimir Karpukhin, Jean Maillard, Vassilis Plachouras, Tim Rocktäschel, and Sebastian Riedel. 2021. KILT: a benchmark for knowledge intensive language tasks. In Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, pages 2523–2544, Online. Association for Computational Linguistics.
+
+Ori Press, Andreas Hochlehnert, Ameya Prabhu, Vishaal Udandarao, Ofir Press, and Matthias Bethge. 2024. Citeme: Can language models accurately cite scientific claims? Preprint, arXiv:2407.12861.
+
+Nils Reimers and Iryna Gurevych. 2019. Sentence-BERT: Sentence embeddings using Siamese BERTnetworks. In Empirical Methods in Natural Language Processing and International Joint Conference on Natural Language Processing (EMNLP-IJCNLP).
+
+Stephen Robertson, Hugo Zaragoza, et al. 2009. The probabilistic relevance framework: Bm25 and beyond. Foundations and Trends® in Information Retrieval, 3(4):333–389.
+
+Hongjin Su, Weijia Shi, Jungo Kasai, Yizhong Wang, Yushi Hu, Mari Ostendorf, Wen-tau Yih, Noah A. Smith, Luke Zettlemoyer, and Tao Yu. 2023. One embedder, any task: Instruction-finetuned text embeddings. In Findings of the Association for Computational Linguistics: ACL 2023, pages 1102–1121, Toronto, Canada. Association for Computational Linguistics.
+
+Weiwei Sun, Lingyong Yan, Xinyu Ma, Pengjie Ren, Dawei Yin, and Zhaochun Ren. 2023a. Is chatgpt good at search? investigating large language models as re-ranking agent. ArXiv, abs/2304.09542.
+
+Weiwei Sun, Lingyong Yan, Xinyu Ma, Shuaiqiang Wang, Pengjie Ren, Zhumin Chen, Dawei Yin, and Zhaochun Ren. 2023b. Is ChatGPT good at search? investigating large language models as re-ranking agents. In Empirical Methods in Natural Language Processing (EMNLP), pages 14918–14937.
+
+Michael Tang, Shunyu Yao, John Yang, and Karthik Narasimhan. 2023. Referral augmentation for zero-shot information retrieval. Preprint, arXiv:2305.15098.
+
+Nandan Thakur, Nils Reimers, Andreas Rücklé, Abhishek Srivastava, and Iryna Gurevych. 2021. BEIR: A heterogeneous benchmark for zero-shot evaluation of information retrieval models. In Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track (Round 2).
+
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al. 2023. LLaMA: Open and Efficient Foundation Language Models. arXiv preprint arXiv:2302.13971.
+
+Ellen M. Voorhees and Dawn M. Tice. 2000. Building a question answering test collection. In Proceedings of the 23rd Annual International ACM SIGIR Conference on Research and Development in Information Retrieval, SIGIR ’00, page 200–207, New York, NY, USA. Association for Computing Machinery.
+
+Liang Wang, Nan Yang, Xiaolong Huang, Binxing Jiao, Linjun Yang, Daxin Jiang, Rangan Majumder, and Furu Wei. 2022. Text embeddings by
+
+weakly-supervised contrastive pre-training. ArXiv, abs/2212.03533.
+
+Jialian Wu, Jianfeng Wang, Zhengyuan Yang, Zhe Gan, Zicheng Liu, Junsong Yuan, and Lijuan Wang. 2022. Grit: A generative region-to-text transformer for object understanding. Preprint, arXiv:2212.00280.
+
+## A Annotator Acknowledgments
+
+We would like to thank Marah I Abdin, Jaewoo Ahn, Kabir Ahuja, Xi Ai, Satoshi Akasaki, Anastasios N Angelopoulos, Jinheon Baek, Eslam Mohamed Bakr, Pablo Barceló, Claudio Battiloro, Jonas Belouadi, Abhik Bhattacharjee, Valeriia Bolotova, Pengshan Cai, Nitay Calderon, Qingqing Cao, Defu Cao, Souradip Chakraborty, Jun Shern Chan, Sachin Chanchani, Yulong Chen, Yiming Chen, Xinyuan Chen, Nuo Chen, Hanjie Chen, Xiudi Chen, Zeming Chen, An-Chieh Cheng, Xize Cheng, Cheng-Han Chiang, Josef Dai, David Dale, Yue Deng, Yifan Deng, Shizhe Diao, Bosheng Ding, Xuan Long Do, Yilun Du, Yupei Du, Salijona Dyrmishi, Dante Everaert, Zhenghan Fang, Bahare Fatemi, Jiazhan Feng, Shangbin Feng, Patrick Fernandes, Javier Ferrando, Christopher Fifty, Sarah E Finch, Matthew Finlayson, Lea Frermann, Mikhail Galkin, Songyang Gao, Ziteng Gao, Silin Gao, Sara Ghazanfari, Nathan Godey, Navita Goyal, Xinran Gu, Yuxian Gu, Yu Gu, Anchun Gui, Jiacheng Guo, Ashim Gupta, Paul Hagemann, Tianxing He, Zhengfu He, Juncai He, Leonhard Hennig, Konstantin Hess, Jennifer Hu, Xiaoyang Hu, Zhilei Hu, Weidong Huang, Yichong Huang, Ayyoob Imani, Qi Jia, Yifan Jiang, Hanwen Jiang, Yiding Jiang, Yang Jin, Youngjin Jin, Zhijing Jin, Emmeran Johnson, Josef Jon, David Jurgens, Ehsan Kamalloo, Junmo Kang, Jian Kang Mikhail Khodak, Hyunjae Kim, Soroush Abbasi Koohpayegani, Suhas Kotha, Jeongyeol Kwon, Sunjae Kwon, Philippe Laban, Zhibin Lan, Nayoung Lee, Deokjae Lee, Celine Lee, Heejun Lee, Jie Lei, Wenhao Li, Yafu Li, Yufei Li, Yanzeng Li, Yanzhou Li, Ziqiang Li, Zhaoyi Li, Ziheng Li, Xiaonan Li, Yinghao Li, Yu Li, Chengrui Li, Yingjie Li, Yunlong Liang, Baohao Liao, Kezhou Lin, Licong Lin, Enrico Liscio, Xiangyan Liu, Chenzhengyi Liu, Yixin Liu, Xingbin Liu, Haolin Liu, Xiao Liu, Yajiao Liu, Meng Liu, Tianyang Liu, Wei Liu, Qingyu Lu, Pan Lu, Junyu Lu, Zhengyi Luo, Yang Luo, Ang Lv, Junhyung Lyle, Jiajun Ma, Kaixin Ma, Ziqiao Ma, Mounica Maddela, Chaitanya Malaviya, Zhiyu Mei, Ethan Mendes, Fatemehsadat Mireshghallah, Niloofar Mireshghallah, Mircea Mironenco, Takeru Miyato, Fengran Mo, Xinyi Mou, Niklas Muennighoff, Cheolwon Na, Piotr Nawrot, Mang Ning, Longshen Ou, Siqi Ouyang, Lorenzo Pacchiardi, Ziqi Pang, Sara Papi, Letitia Parcalabescu, Tanmay Parekh, Aleksandar Petrov, Lucía Pitarch, Moritz Plenz, Manish Prajapat, Joan Puigcerver, Valentina Pyatkin, Shuofei Qiao, Yujia Qin, Chengwei Qin, Sigal Raab, Hossein A Rahmani, Siyu Ren, Yubing Ren, Ruiyang Ren, Yangjun Ruan, Michael J Ryan, Shoumik Saha, Vageesh Saxena, Michael Saxon, Alexander Scarlatos, Agam Shah, Erfan Shayegani, Behzad Shayegh, Xiangqing Shen, Sheng Shen, Ruizhe Shi, Zhengliang Shi, Kensen Shi, Ziyi Shou, Prasann Singhal, Jasivan Alex Sivakumar, Junru Song, Chunjin Song, Nikita Srivatsan, Michal Štefánik, Hao Sun, Mingjie Sun, Weiwei Sun, Zhiqing Sun, Xiaohang Tang, Liyan Tang, Eshaan Tanwar, Jiayan Teng, Davide Testa, Changyao Tian, Yufei Tian, Eric Todd, Benjamin Towle, Austin Tripp, Yi Tu, Rheeya Uppaal, Lazar Valkov, Neeraj Varshney, Artem Vazhentsev, Yiming Wang, Qifan Wang, Zhaoyang Wang, Lirui Wang, Zhicheng Wang, Weiqi Wang, Jiaan Wang, Boshi Wang, Haiming Wang, Huimin Wang, Yun-Cheng Wang, Runzhe Wang, Yu Wang, Yidong Wang, Licheng Wen, Te-Lin Wu, Yu-Yu Wu, Qianhui Wu, Dongming Wu, Tong Wu, Zijun Wu, Mengzhou Xia, Jian Xie, Yiming Xie, Weiwen Xu, Yi Xu, Xilie Xu, Derek Xu, Shohei Yamasaki, Hao Yan, Chenghao Yang, Xianjun Yang, Sen Yang, Bingsheng Yao, Qinyuan Ye, Fan Yin, Haneul Yoo, Kiyoon Yoo, Xinyan Velocity Yu, Jianfei Yu, Qiying Yu, Mo Yu, Zichun Yu, Yue Yu, Youliang Yuan, Zihao Yue, Xiang Yue, Yuanwen Yue, Daoguang Zan, Zhiyuan Zeng, Guangtao Zeng, Yuheng Zha, Runzhe Zhan, Jiaxu Zhang, Zhexin Zhang, Chen Zhang, Xinlu Zhang, Yabo Zhang, Renrui Zhang, Kechi Zhang, Ruoyu Zhang, Feng Zhang, Siyan Zhao, Junhao Zheng, Wenjie Zheng, Ming Zhong, Yan Zhou, Pei Zhou, Yangqiaoyu Zhou, Aojun Zhou, Xuekai Zhu, Luyao Zhu, Yanqiao Zhu, Dele Zhu, Andrew Zhu, Wenjie Zhuo and Caleb Ziems for contributing author-written questions about their ACL 2023 and/or ICLR 2024 papers.
+
+## B Annotation Details
+
+We provide instructions regarding manually inspecting questions in Table 1. We sent out emails and Google Forms to recruit ACL 2023 and ICLR 2024 authors for author-written questions, and the templates can be found in Table 10 and Table 11 respectively.
+
+## C Retrieval Corpus
+
+The LitSearch retrieval corpus P consists of ACL Anthology and ICLR papers extracted from S2ORC. Here we describe how we identify those papers in S2ORC: We isolate ACL anthology papers from S2ORC by identifying entries whose metadata includes an ACL Anthology ID. We identify ICLR papers utilizing a combination of the venue-based queries to Semantic Scholar’s Academic Graph API and by title-matching using titles of accepted papers scraped from the official ICLR website.
+
+## D Retriever details
+
+We list the full HuggingFace checkpoint paths corresponding to the dense retrievers we use in Table 9. We use the following instructions for the instruction-finetuned embedding models: “Represent the research question for retrieving relevant research paper abstracts:” for encoding queries; “Represent the title and abstract of the research paper for retrieval:” for encoding papers when using Instructor-XL for retrieval using paper titles and abstracts; when performing retrieval using paper titles and abstacts with GritLM-7B, we use the instruction “Given a research query, retrieve the title and abstract of the relevant research paper”.
+
+<table><tr><td>Retriever</td><td>HuggingFace Checkpoint</td></tr><tr><td>GTR-T5-large</td><td>sentence-transformers/gtr-t5-large</td></tr><tr><td>Instructor-XL</td><td>hkunlp/instructor-x1</td></tr><tr><td>E5-large-v2</td><td>intfloat/e5-large-v2</td></tr><tr><td>GritLM-7B</td><td>GritLM/GritLM-7B</td></tr></table>
+
+Table 9: HuggingFace checkpoints we use for each dense retriever.
+
+## E Prompts and Additional Statistics
+
+Table 12 shows the prompt we use for generating inline-citation questions via GPT-4. Table 13 shows the reranking prompt for GPT-4o. Table 14 shows a more detailed statistics about LitSearch.
+
+```handlebars
+Hi {{annotator name}},
+We hope this email finds you well!
+First, congrats on your paper's acceptance to {{conference name}}! We are [REDACTED] from [REDACTED] who are working on constructing a new challenging retrieval benchmark where the task is to retrieve relevant research papers given a research query. Would you be willing to dedicate 2 minutes to write a literature-search question about your {{conference name}} paper? Here's the link to the google form: {{link}}.
+Your contribution will help us build better, more challenging evaluations for large language models. We will make sure to list you as a contributor to our benchmark (unless you prefer otherwise). Thank you!
+Best,
+{{author 1}}
+{{author 2}}
+```  
+Table 10: Email template sent out to ICLR 2024 and ACL 2023 authors for collecting author-written questions.
+
+![](images/6a9b4e2dd78ed82386156fd69a06fb71ba28c55632785eed5371975ea70612ee.jpg)  
+Table 11: Instructions provided in the Google Forms sent to ICLR 2024 and ACL 2023 authors for collecting author-written questions.
+
+![](images/e9dc2916bb1ed66249edb37069548bf1b0cb50448a276bcafaee1af4f50dfa00.jpg)  
+Table 12: The prompt used for generating questions from inline citations using GPT-4.
+
+![](images/60751a977115124344076c20fe36b9a96a18cafbcead4c03a7afc541ac3721f1.jpg)  
+Table 13: The prompt used for reranking retrieved documents using GPT-4o (adapted from Sun et al., 2023a).
+
+<table><tr><td rowspan="2"></td><td colspan="3">Broad</td><td colspan="3">Specific</td><td rowspan="2">Total #Q</td></tr><tr><td>#Q</td><td>Avg. L</td><td>Overlap</td><td>#Q</td><td>Avg. L</td><td>Overlap</td></tr><tr><td colspan="8">Inline-Citation Questions</td></tr><tr><td>ACL-sourced</td><td>32</td><td>24.8</td><td>0.33</td><td>66</td><td>26.0</td><td>0.35</td><td>98</td></tr><tr><td>Non-ACL-sourced</td><td>88</td><td>19.1</td><td>0.33</td><td>165</td><td>20.5</td><td>0.34</td><td>253</td></tr><tr><td colspan="8">Author-written Questions</td></tr><tr><td>ACL 2023</td><td>25</td><td>14.5</td><td>0.41</td><td>130</td><td>18.1</td><td>0.42</td><td>155</td></tr><tr><td>ICLR 2024</td><td>10</td><td>19.0</td><td>0.49</td><td>81</td><td>17.6</td><td>0.45</td><td>91</td></tr></table>
+
+Table 14: Detailed statistics for LitSearch.
+
+
+---
+
+# 2504.00678_LLM增强的多阶段推荐系统 (trunc)
+
+[2504.00678](https://arxiv.org/abs/2504.00678)
 
 # RapidPD: Rapid Human and Pet Presence Detection System for Smart Vehicles via Wi-Fi
 
@@ -3837,1241 +5069,53 @@ $$
 \rho_ {n} (t, v) = \left\{ \begin{array}{l l} \frac {\rho_ {n - 1} (t , v)}{\rho_ {n - 1} (t , 0)} & n \geq 2 \\ \frac {\gamma (t , v)}{\gamma (t , 0)} & n = 1 \end{array} \right..\tag{17}
 $$
 
-Fig. 5 illustrates the effectiveness of the multilayer autocorrelation method in the case of low SSNR. When a low-frequency sinusoidal signal is superimposed with an additive Gaussian white noise, the multi-layer autocorrelation effects of the noise and noisy sinusoidal signals are shown in Fig. 5(a) and Fig. 5(b), respectively. As the number of layer n increases, the multi-layer ACF of noisy sinusoidal signal and noise are clearly distinguishable from each other gradually. The multi-layer ACF of the noisy sinusoidal signal gradually deviates from the value of zero, while that of the noise remains near the value of zero at non-zero lags.
+Fig. 5 illustrates the effectiveness of the multilayer autocorrelation method in the case of low SSNR. When a low-frequency sinusoidal signal is superimposed with an additive Gaussia
 
-## D. Presence Detection Indicator
-
-Based on multi-layer ACF, we propose the motion statistics in subcarrier dimension, which is used to measure the changes in the environment and realize the presence detection of in-vehicle living organisms. The motion statistics $\psi _ { n } ( t )$ in subcarrier dimension based on n-layer ACF can be expressed as follows:
-
-$$
-\psi_ {n} (t) = \rho_ {n} (t, \Delta f).\tag{18}
-$$
-
-Combining all CSI entries in time windows, the average motion statistics $\phi$ in subcarrier dimension on a Tx-Rx stream can be expressed as follows:
-
-$$
-\phi = \sum_ {t = 1} ^ {T} \psi_ {n} (t).\tag{19}
-$$
-
-As shown in Fig. 6, we chose $n = 3$ to calculate the average motion statistics $\phi$ in subcarrier dimension for both the static case and the dynamic case with human micro-movements. These are indicated by the blue solid line and the red dashed line, respectively. The results show that the average motion statistics ϕ in the subcarrier dimension can effectively and clearly distinguish between these two scenarios.
-
-![](images/6cca86b95dda14bc0ea816832de79739ec6f90d4b830c12610fe876fc7935895.jpg)  
-Fig. 6. Average motion statistics ϕ for different cases.
-
-The average motion statistics ϕ for the current time window is computed based on a single Tx-Rx stream, and for RapidPD with multiple Tx-Rx streams, $\Phi = \sum \phi$ combines the results of all Tx-Rx streams, which we refer to as the overall motion statistics.
-
-After obtaining the overall motion statistics Φ for the current time window, a judgment needs to be made based on the set threshold $\eta .$ When $\Phi \geq \eta ,$ an organism is judged to be present, otherwise no organism is.
-
-In practical applications, there may be sudden disturbances that cause data anomalies. Therefore, we obtain the judgments for $m$ windows and take the plural as the final presence detection indication output for smoothing the judgments.
-
-## IV. EVALUATION
-
-To comprehensively evaluate RapidPD, we conducted extensive experiments in a typical car and with real infants, children, pets, and adults to validate the detection performance of RapidPD.
-
-## A. Methodology
-
-Implementation: As shown in Fig. 7, we used a hardware platform based on Infineon’s commercial Wi-Fi chipsets CYW8x459 developed by Desay SV with dual bands at 2.4 and 5 GHz and with additional PCB antennas. RapidPD is deployed on two separate hardware platforms, each carrying a Wi-Fi chip that sends and receives data by programming different customized firmware. An antenna is set up on Rx to receive packets transmitted by two antennas of Tx at a 20 Hz sampling rate operating on a channel with a center frequency of 5775 MHz (channel 155), which has a bandwidth of 80 MHz and contains 234 obtainable subcarriers. As shown in Fig. 8, Tx antennas are located at the handles above the rear doors on each side of the vehicle, and the Rx antenna is located on the side of the center console adjacent to the glove box.
-
-![](images/53ba57dbd93654adeaf849d6e6fbd236eaeffa1541e8f903421efdf8ab0c409a.jpg)  
-Fig. 7. Hardware platform with additional PCB antennas.
-
-![](images/d9f1057bb3a3115c9a2eaf4bf4aa3e2a2ff869d3aac523f315d3250d18175516.jpg)  
-(a) Tx.
-
-![](images/29f6c080000eb5b1607b46682c91902c79059fcdcc381d99b8af8ecbe5786f04.jpg)  
-(b) Rx.  
-Fig. 8. Position of the antenna.
-
-RapidPD transfers the data collected in the hardware system to a computer and subsequently processes and analyzes it in MATLAB. To realize an accurate and sensitive presence detection system in vehicles, we take 1s duration data (20 packets at 20Hz sampling rate) as the window and have a 1s window movement step. The number of autocorrelation layers in the motion target detector is chosen as n = 3, and the number of windows for judgment smoothing in the presence detection indicator is chosen as m = 3.
-
-Data Collection: The data collection possessed four main cases including 1) empty, 2) human, 3) dog, and 4) cat presence. As shown in Fig. 9, there are 11 positions in these cases, including 5 seats and corresponding foot positions and rear side seat lie-flat position, which have different types of organisms being tested. The details of the organisms are shown in Table II, with the pets participating in the experiment shown in Fig. 10.
-
-![](images/e7eaed205e20ef057caf5a7b78b1942932296ea296f69acee9f37ed4ea11ce84.jpg)  
-Fig. 9. Different test positions for living organisms.
-
-![](images/db074397fbbb49edaa6741365fac7d6a65d6d494aaaebe46078e4edde203d36c.jpg)  
-(a) Dog.
-
-![](images/51b3e181d0745b1cf454386547e87e3b6d21df4b4e3a281295097303f511777f.jpg)  
-(b) Cat.  
-Fig. 10. Pets participating in the experiment.
-
-TABLE II  
-The details of organisms
-
-<table><tr><td>#</td><td>Type</td><td>Age(Years)</td><td>Height(cm)</td><td>Weight(kg)</td></tr><tr><td>1</td><td>Infant</td><td>1</td><td>74</td><td>9.5</td></tr><tr><td>2</td><td>Child</td><td>3</td><td>92</td><td>13.8</td></tr><tr><td>3</td><td>Child</td><td>4</td><td>100</td><td>14.0</td></tr><tr><td>4</td><td>Child</td><td>5</td><td>114</td><td>19.0</td></tr><tr><td>5</td><td>Child</td><td>5</td><td>115</td><td>18.5</td></tr><tr><td>6</td><td>Child</td><td>6</td><td>120</td><td>26.0</td></tr><tr><td>7</td><td>Child</td><td>6</td><td>120</td><td>30.0</td></tr><tr><td>8</td><td>Adults</td><td>-</td><td>-</td><td>-</td></tr><tr><td>9</td><td>Dog</td><td>-</td><td>-</td><td>Small-sized</td></tr><tr><td>10</td><td>Cat</td><td>-</td><td>-</td><td>Medium-sized</td></tr></table>
-
-Fig. 11 illustrates sample CSI matrixs for the four scenarios. Spectrograms are generated utilizing STFT with parameters NFFT=256 and OverlapLength=255. The waveforms of the static scenes demonstrate stability, with the human presence scene exhibiting strong respiratory fluctuations and the pet presence scene showing no clearly visible fluctuations. Distinguishably stronger components exist near zero frequency in the spectrogram for human presence scenario, with some cluttered frequency components in other three scenarios, strongest in the dog presence scenario and weakest in the static scenario.
-
-The experiment was implemented over more than 4 months in different environments, including outdoor open spaces, parking structures, roadsides, and below an elevated bridge. We noted that RapidPD did not need to be altered in the different environments, therefore RapidPD is a calibration-free as well as fast-responding (only 1s of data is needed to complete the judgment) system for human and pet presence detection.
-
-![](images/6348bc196c9667e1e3f1c07adfa34658eac9ef66159b7862e4c6af84b71d3bea.jpg)  
-Fig. 11. Sample CSI matrix for each scenario.
-
-![](images/01ee66346cc11143f068ab199259e533f07c65a3fef2dd20a444dbb4008b6807.jpg)  
-(a) Relationship between performance and threshold η.
-
-![](images/507e2517403bd86fb3c4a76d0039ef787dee2ae5d725ee913222123a7fea8467.jpg)  
-(b) CDF curve.
-
-![](images/47e74c6313d8f80bb45ee10a7cfca61f5bbd3aa0c33d588ce4c54b859b727320.jpg)  
-(c) Judgment accuracy to threshold η.
-
-![](images/986b8b372e48f87c32f24bc55a4a66f3d5b7c80172da61c963752ef307bb0b05.jpg)  
-(d) Confusion matrix for RapidPD judgment at $\eta = 0 . 4 3 .$  
-Fig. 12. Overall performance of RapidPD.
-
-## B. Overall Accuracy
-
-Fig. 12 illustrates the overall performance of RapidPD.
-
-As shown in Fig. 12(a), the accuracy, true positive, and true negative rates vary with the judgment threshold η. The accuracy achieved a maximum of 99.05% at $\begin{array} { r l r } { \eta } & { { } = } & { 0 . 4 3 . } \end{array}$ , along with a 99.32% true positive rate and 1.64% false positive rate. Fig. 12(b) illustrates the CDF of the overall motion statistics in the subcarrier dimension of RapidPD, with the living and non-living cases well distinguished. Fig. 12(c) shows the curves of the relationship between threshold η and the judgment accuracy of the four scenarios. At the selected threshold $\eta = 0 . 4 3$ , all the four cases have high accuracy. Fig. 12(d) illustrates the confusion matrix for the judgment case at the chosen threshold, proving that judgment accuracy of the four cases are 98.36%, 99.61%, 99.83%, and 97.02%.
-
-The overall accuracy described above was achieved using only a 1-second time window at a low sampling rate of 20Hz, which is an extremely fast response time for a presence detection system and fully meets the Euro NCAP requirement of no more than a 10-second delay.
-
-![](images/2232b5bff3739be2304b45eae6910addb530b2f150584bd56f204ec65d70c929.jpg)  
-Fig. 13. ROC curves of the benchmark method and RapidPD.
-
-TABLE III  
-Comparing the overall accuracy of motion target detector
-
-<table><tr><td colspan="2">benchmark method</td><td colspan="2">RapidPD without multi-layer ACF</td><td colspan="2">RapidPD (with multi-layer ACF)</td></tr><tr><td>TPR</td><td>FPR</td><td>TPR</td><td>FPR</td><td>TPR</td><td>FPR</td></tr><tr><td>89.83%</td><td>20.41%</td><td>99.01%</td><td>3.16%</td><td>99.32%</td><td>1.64%</td></tr></table>
-
-## C. Comparison With Existing Works
-
-We also implemented a benchmark method that uses a time dimension-based motion target detector [56] to replace the subcarrier dimension-based motion target detector proposed in this paper. In addition to the benchmark and RapidPD methods, RapidPD-based methods without multi-layer autocorrelation have been implemented and evaluated as well. The overall accuracy is shown in Table III. It is obvious that RapidPD has a great improvement over the benchmark method under the same experimental setup. Compared to removing the multi-layer autocorrelation module, RapidPD obtains a much lower false positive rate.
-
-Fig. 13 shows the ROC curves of the benchmark method and RapidPD, noting that the area under the curve for RapidPD is quite large. RapidPD possesses a significantly higher true positive rate than the benchmark method with the same false positive rate. This improvement can be attributed to the following reasons:
-
-1) Theoretical support derived from re-modeling of CSI: By analyzing the signal propagation paths, the relevant effects of varying path lengths for different subcarriers are inferred. Compared to accumulating long-term differences in time dimension, the information on environmental changes can be extracted in a shorter time in subcarrier dimension.
-
-2) Combining the information in subcarrier dimension: RapidPD analyzes the effect of motion on the subcarriers by focusing on their correlation properties rather than examining each subcarrier independently. Each entry in the CSI matrix contains extensive information about the environment, and environmental changes directly impact the correlation between these entries. By leveraging these correlation properties, RapidPD requires only a short time window (1 second) to achieve accurate presence detection.
-
-3) Applying the multi-layer autocorrelation method innovatively: In complex in-vehicle multipath environments, signals undergo multiple reflections before being received, causing motion signals to be more easily drowned out by noise. In cases of low SSNR, RapidPD innovatively applies the multilayer autocorrelation method, improving accuracy by approximately 0.65% and reducing the false positive rate by around 1.52%.
-
-## V. CONCLUSION
-
-By re-modeling CSI with theoretical analysis of path propagation, this study introduces a novel approach to presence detection leveraging the subcarrier dimensions of the CSI matrix, providing a more precise motion statistics analysis and significantly enhancing detection capabilities. The proposed method based on multilayer autocorrelation provides a significant indicator for distinguishing the presence or absence of invehicle organisms. Extensive experiments validate the effectiveness of RapidPD, demonstrating an accuracy exceeding 99.05% and a true positive rate greater than 99.32% using only 1-second time windows at a lowlevel sampling rate of 20 Hz. This marks the first time subcarrier dimension information from the CSI matrix has been utilized for such sensitive detection, offering a groundbreaking contribution to in-vehicle safety and opening up new possibilities for the global adoption of advanced presence detection systems.
-
-## ACKNOWLEDGMENT
-
-The authors would like to acknowledge Desay SV for providing the hardware equipment and datasets required for this work.
-
-## REFERENCES
-
-[1] M. Youssef, M. Mah, and A. Agrawala, “Challenges: device-free passive localization for wireless environments,” in Proceedings of the 13th annual ACM international conference on Mobile computing and networking, 2007, pp. 222–229.
-
-[2] C. McLaren, J. Null, and J. Quinn, “Heat stress from enclosed vehicles: moderate ambient temperatures cause significant temperature rise in enclosed vehicles,” Pediatrics, vol. 116, no. 1, pp. e109–e112, 2005.
-
-[3] P. Ferrara, F. Vena, O. Caporale, V. Del Volgo, P. Liberatore, F. Ianniello, A. Chiaretti, and R. Riccardi, “Children left unattended in parked vehicles: a focus on recent italian cases and a review of literature,” Italian journal of pediatrics, vol. 39, pp. 1–4, 2013.
-
-[4] D. Costa and A. Grundstein, “An analysis of children left unattended in parked motor vehicles in brazil,” International journal of environmental research and public health, vol. 13, no. 7, p. 649, 2016.
-
-[5] J. Null. (2024, Sep.) No heat stroke. [Online]. Available: https://www.noheatstroke.org/
-
-[6] N. Bradley-Siemens, “Environmental and situationalinjuries /deaththermal, chemical, electrical, hyperthermia, hypothermia, and drowning,” in Veterinary Forensic Medicine and Forensic Sciences. CRC Press, 2020, pp. 225–251.
-
-[7] A. J. Carter, E. J. Hall, S. L. Connoll, Z. F. Russell, and K. Mitchell, “Drugs, dogs, and driving: The potential for yearround thermal stress in uk vehicles,” Open veterinary journal, vol. 10, no. 2, pp. 216–225, 2020.
-
-[8] 2024 Euro NCAP. (2017, Sep.) Euro ncap 2025 roadmap. [Online]. Available: https://cdn.euroncap.com/media/ 30700/euroncap-roadmap-2025-v4.pdf
-
-[9] M. A. Rossi, “Warning system for detecting presence of a child in an infant seat,” Aug. 15 2000, uS Patent 6,104,293.
-
-[10] L. Davis, “Child carseat alert system,” Jul. 31 2007, uS Patent 7,250,869.
-
-[11] C. J. Cole, “System to detect the presence of an unattended child in a vehicle,” Jan. 30 2007, uS Patent 7,170,401.
-
-[12] B. George, H. Zangl, T. Bretterklieber, and G. Brasseur, “Seat occupancy detection based on capacitive sensing,” IEEE Transactions on Instrumentation and Measurement, vol. 58, no. 5, pp. 1487–1494, 2009.
-
-[13] A. Ranjan and B. George, “A child-left-behind warning system based on capacitive sensing principle,” in 2013 IEEE International Instrumentation and Measurement Technology Conference (I2MTC). IEEE, 2013, pp. 702–706.
-
-[14] J. Albesa and M. Gasulla, “Occupancy and belt detection in removable vehicle seats via inductive power transmission,” IEEE Transactions on Vehicular Technology, vol. 64, no. 8, pp. 3392– 3401, 2014.
-
-[15] H. Mahler, M. Rechsteiner, and R. Abrach, “Presence detector and its application,” Nov. 26 2002, uS Patent 6,486,778.
-
-[16] P. Zappi, E. Farella, and L. Benini, “Tracking motion direction and distance with pyroelectric IR sensors,” IEEE Sensors Journal, vol. 10, no. 9, pp. 1486–1494, 2010.
-
-[17] F. R. Rashidi and I. H. Muhamad, “Vehicle’s interior movement detection and notification system,” Recent advances in automatic control, modelling and simulation, pp. 139–144, 2013.
-
-[18] J. Jaworek-Korjakowska, A. Kostuch, and P. Skruch, “SafeSO: interpretable and explainable deep learning approach for seat occupancy classification in vehicle interior,” in Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, 2021, pp. 103–112.
-
-[19] H. Cai, D. Lee, H. Joonkoo, Y. Fang, S. Li, and H. Liu, “Embedded vision based automotive interior intrusion detection system,” in 2017 IEEE International Conference on Systems, Man, and Cybernetics (SMC). IEEE, 2017, pp. 2909–2914.
-
-[20] R. Panda and A. K. Roy-Chowdhury, “Multi-view surveillance video summarization via joint embedding and sparse optimization,” IEEE Transactions on Multimedia, vol. 19, no. 9, pp. 2010–2021, 2017.
-
-[21] C.-T. Fan, Y.-K. Wang, and C.-R. Huang, “Heterogeneous information fusion and visualization for a large-scale intelligent video surveillance system,” IEEE Trans. Syst., Man, Cybern., Syst., vol. 47, no. 4, pp. 593–604, 2016.
-
-[22] H. Abedi, M. Ma, J. He, J. Yu, A. Ansariyan, and G. Shaker, “Deep learning-based in-cabin monitoring and vehicle safety system using a 4-d imaging radar sensor,” IEEE Sensors Journal, vol. 23, no. 11, pp. 11 296–11 307, 2023.
-
-[23] H. Abedi, S. Luo, V. Mazumdar, M. M. Riad, and G. Shaker, “Aipowered in-vehicle passenger monitoring using low-cost mm-wave radar,” IEEE Access, vol. 10, pp. 18 998–19 012, 2021.
-
-[24] H. Abedi, C. Magnier, and G. Shaker, “Passenger monitoring using ai-powered radar,” in 2021 IEEE 19th International Symposium on Antenna Technology and Applied Electromagnetics (ANTEM). IEEE, 2021, pp. 1–2.
-
-[25] Y. Ma, Y. Zeng, and V. Jain, “CarOSense: Car occupancy sensing with the ultra-wideband keyless infrastructure,” Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies, vol. 4, no. 3, pp. 1–28, 2020.
-
-[26] InnoSenT-Innovative Radar Sensor Technology. (2024, Oct.) Incabin monitoring: Anonymous vehicle interior monitoring with radar technology. [Online]. Available: https://www.innosent.de/en/ automotive/incabin-radar-monitoring/
-
-[27] Infineon Technologies AG. Presence detection and sensing - infineon technologies. [Online]. Available: https://www.infineon.com/cms/en/applications/solutions/ sensor-solutions/presence-detection/
-
-[28] NOVELIC. (2024, Oct.) Acam - in-cabin monitoring radar - novelic. [Online]. Available: https://www.novelic.com/ acam-automotive-in-cabin-monitoring-radar/
-
-[29] IEE Smart Sensing Solutions. (2024, Oct.) Child presence detection for buses - iee smart sensing solutions. [Online]. Available: https://iee-sensing.com/automotive/safety-and-comfort/ lidas/
-
-[30] Texas Instruments Incorporated. (2022, May) Vehicle occupant detection reference design. [Online]. Available: https://www.ti. com/lit/ug/tidue95a/tidue95a.pdf
-
-[31] Aarti Dhapte. (2024, Dec.) Automotive wi-fi router market - forecast to 2032. [Online]. Available: https: //www.marketresearchfuture.com/reports/24379
-
-[32] D. Shi, J. Lu, J. Wang, L. Li, K. Liu, and M. Pan, “No one left behind: Avoid hot car deaths via wifi detection,” in ICC 2020- 2020 IEEE International Conference on Communications (ICC). IEEE, 2020, pp. 1–6.
-
-[33] X. Zeng, B. Wang, C. Wu, S. D. Regani, and K. R. Liu, “Intelligent Wi-Fi based child presence detection system,” in ICASSP 2022- 2022 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). IEEE, 2022, pp. 11–15.
-
-[34] Zeng, Xiaolu and Wang, Beibei and Wu, Chenshu and Regani, Sai Deepika and Liu, KJ Ray, “WiCPD: Wireless child presence detection system for smart cars,” IEEE Internet Things J., vol. 9, no. 24, pp. 24 866–24 881, 2022.
-
-[35] S. S. Jayaweera, B. Wang, and K. R. Liu, “Robust in-car child presence detection using commercial wifi,” in Proceedings of the 30th Annual International Conference on Mobile Computing and Networking, 2024, pp. 1799–1801.
-
-[36] UniMax Electronics Inc. (2024, May) Wi-fi child presence detection. [Online]. Available: https://www.unimax.com.tw/en/ product detail/76
-
-[37] W. Li, M. J. Bocus, C. Tang, S. Vishwakarma, R. J. Piechocki, K. Woodbridge, and K. Chetty, “A taxonomy of WiFi sensing: CSI vs passive WiFi radar,” in 2020 IEEE Globecom Workshops (GC Wkshps). IEEE, 2020, pp. 1–6.
-
-[38] C. Tang, W. Li, S. Vishwakarma, K. Chetty, S. Julier, and K. Woodbridge, “Occupancy detection and people counting using wifi passive radar,” in 2020 IEEE Radar Conference (RadarConf20). IEEE, 2020, pp. 1–6.
-
-[39] W. Li, R. J. Piechocki, K. Woodbridge, C. Tang, and K. Chetty, “Passive wifi radar for human sensing using a stand-alone access point,” IEEE Transactions on Geoscience and Remote Sensing, vol. 59, no. 3, pp. 1986–1998, 2020.
-
-[40] Q. Chen, K. Chetty, K. Woodbridge, and B. Tan, “Signs of life detection using wireless passive radar,” in 2016 IEEE Radar Conference (RadarConf). IEEE, 2016, pp. 1–5.
-
-[41] N. Lyons, A. Santra, V. K. Ramanna, K. Uln, R. Taori, and A. Pandey, “Wifiact: Enhancing human sensing through environment robust preprocessing and bayesian self-supervised learning,” in ICASSP 2024-2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP). IEEE, 2024, pp. 13 391–13 395.
-
-[42] X. Zeng, F. Wang, B. Wang, C. Wu, K. R. Liu, and O. C. Au, “Invehicle sensing for smart cars,” IEEE Open Journal of Vehicular Technology, vol. 3, pp. 221–242, 2022.
-
-[43] 2024 Euro NCAP. (2023, Dec.) Test and assessment protocol – child presence detection. [Online]. Available: https://www.euroncap.com/media/79888/ euro-ncap-cpd-test-and-assessment-protocol-v12.pdf
-
-[44] S. Sen, B. Radunovic, R. R. Choudhury, and T. Minka, “You are facing the Mona Lisa: Spot localization using PHY layer information,” in Proceedings of the 10th international conference on Mobile systems, applications, and services, 2012, pp. 183–196.
-
-[45] H. Zhu, Y. Zhuo, Q. Liu, and S. Chang, “π-splicer: Perceiving accurate CSI phases with commodity WiFi devices,” IEEE Transactions on Mobile Computing, vol. 17, no. 9, pp. 2155–2165, 2018.
-
-[46] Z. Zhou, Z. Yang, C. Wu, L. Shangguan, H. Cai, Y. Liu, and L. M. Ni, “WiFi-based indoor line-of-sight identification,” IEEE Transactions on Wireless Communications, vol. 14, no. 11, pp. 6125–6136, 2015.
-
-[47] M. Kotaru, K. Joshi, D. Bharadia, and S. Katti, “Spotfi: Decimeter level localization using wifi,” in Proceedings of the 2015 ACM conference on special interest group on data communication, 2015, pp. 269–282.
-
-[48] T.-D. Chiueh, P.-Y. Tsai, and I.-W. Lai, Baseband receiver design for wireless MIMO-OFDM communications. John Wiley & Sons, 2012.
-
-[49] D. K. Barton, Radar equations for modern radar. Artech House, 2013.
-
-[50] C. Lowanichkiattikul, M. Dhanachai, C. Sitathanee, S. Khachonkham, and P. Khaothong, “Impact of chest wall motion caused by respiration in adjuvant radiotherapy for postoperative breast cancer patients,” SpringerPlus, vol. 5, pp. 1–8, 2016.
-
-[51] J. Liu, Y. Wang, Y. Chen, J. Yang, X. Chen, and J. Cheng, “Tracking vital signs during sleep leveraging off-the-shelf wifi,” in Proceedings of the 16th ACM international symposium on mobile ad hoc networking and computing, 2015, pp. 267–276.
-
-[52] X. Liu, J. Cao, S. Tang, J. Wen, and P. Guo, “Contactless respiration monitoring via off-the-shelf WiFi devices,” IEEE Transactions on Mobile Computing, vol. 15, no. 10, pp. 2466– 2479, 2015.
-
-[53] F. Zhang, C. Wu, B. Wang, M. Wu, D. Bugos, H. Zhang, and K. R. Liu, “SMARS: Sleep monitoring via ambient radio signals,” IEEE Transactions on Mobile Computing, vol. 20, no. 1, pp. 217–231, 2019.
-
-[54] A. Dahal, S. Biswas, S. Z. Gurbuz, and A. C. Gurbuz, “Robustness analysis of wi-fi-based human activity recognition,” in Big Data VI: Learning, Analytics, and Applications, vol. 13036. SPIE, 2024, pp. 102–109.
-
-[55] A. Dahal, S. Biswas, S. Z. Gurbuz, and A. C. Gurbuz, “Comparison between wi-fi-csi and radar-based har,” in 2024 IEEE Radar Conference (RadarConf24). IEEE, 2024, pp. 1–6.
-
-[56] F. Zhang, C. Wu, B. Wang, H.-Q. Lai, Y. Han, and K. R. Liu, “WiDetect: Robust motion detection with a statistical electromagnetic model,” Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies, vol. 3, no. 3, pp. 1–24, 2019.
-
-[57] L. Chen, I. Ahriz, and D. Le Ruyet, “AoA-aware probabilistic indoor location fingerprinting using channel state information,” IEEE Internet Things J., vol. 7, no. 11, pp. 10 868–10 883, 2020.
-
-[58] Y. Li, D. Wu, J. Zhang, X. Xu, Y. Xie, T. Gu, and D. Zhang, “DiverSense: Maximizing Wi-Fi sensing range leveraging signal diversity,” Proceedings of the ACM on Interactive, Mobile, Wearable and Ubiquitous Technologies, vol. 6, no. 2, pp. 1–28, 2022.
-
-[59] F. Xiaozhi, “An inspecting technology of weak sinusoidal signal in powerful noise based on multi-layer autocorrelation,” in 2013 International Conference on Mechanical and Automation Engineering. IEEE, 2013, pp. 11–13.
-
-[60] Y. Hou, S. Li, H. Ma, S. Gong, and T. Yu, “Weak signal detection based on lifting wavelet threshold denoising and multilayer autocorrelation method.” J. Commun., vol. 17, no. 11, pp. 890–899, 2022.
+[... truncated ...]
 
 
 ---
 
-# 2503.16734_多模态大模型时代的智能体推荐系统
+# 2507.15245_SPAR_Scholar_Paper_Retrieval_with_LLM-based_Agents (trunc)
 
-**arXiv**: [2503.16734](https://arxiv.org/abs/2503.16734)
+[2507.15245](https://arxiv.org/abs/2507.15245)
 
-# Towards Agentic Recommender Systems in the Era of Multimodal Large Language Models
+# SPAR: Scholar Paper Retrieval with LLM-based Agents for Enhanced Academic Search
 
-Chengkai Huang<sup>1</sup>, Junda Wu<sup>2</sup>, Yu Xia<sup>2</sup>, Zixu Yu<sup>2</sup>, Ruhan Wang<sup>3</sup>, Tong Yu<sup>4</sup>, Ruiyi Zhang<sup>4</sup>, Ryan A. Rossi<sup>4</sup>, Branislav Kveton<sup>4</sup>, Dongruo Zhou<sup>3</sup>, Julian McAuley<sup>2</sup>, Lina Yao<sup>1,5</sup>
-
-<sup>1</sup>University of New South Wales, <sup>2</sup>University of California San Diego, <sup>3</sup>Indiana University, <sup>4</sup>Adobe Research, <sup>5</sup>CSIRO’s Data61
-
-{chengkai.huang1, lina.yao}@unsw.edu.au, {juw069, yux078, ziy040, jmcauley}@ucsd.edu, {ruhwang, dz13}@iu.edu, {tyu,
-
-ruizhang, rrossi, kveton}@adobe.com
+Xiaofeng Shi<sup>1</sup>\*<sup>†</sup> Yuduo Li<sup>1,2</sup>\*<sup>‡</sup> Qian Kou<sup>1</sup>\* Longbin Yu<sup>1</sup> Jinxin Xie<sup>1</sup> Hua Zhou<sup>1§</sup> <sup>1</sup>Beijing Academy of Artificial Intelligence (BAAI) <sup>2</sup>Beijing Jiaotong University (BJTU)
 
 ## Abstract
 
-Recent breakthroughs in Large Language Models (LLMs) have led to the emergence of agentic AI systems that extend beyond the capabilities of standalone models. By empowering LLMs to perceive external environments, integrate multimodal information, and in teract with various tools, these agentic systems exhibit greater autonomy and adaptability across complex tasks. This evolution brings new opportunities to recommender systems (RS): LLM-based Agentic RS (LLM-ARS) can ofer more interactive, context-aware, and proactive recommendations, potentially reshaping the user experience and broadening the application scope of RS. Despite promising early results, fundamental challenges remain, including how to efectively incorporate external knowledge, balance auton omy with controllability, and evaluate performance in dynamic, multimodal settings. In this perspective paper, we first present a systematic analysis of LLM-ARS: (1) clarifying core concepts and architectures; (2) highlighting how agentic capabilities—such as planning, memory, and multimodal reasoning—can enhance rec ommendation quality; and (3) outlining key research questions in areas such as safety, eficiency, and lifelong personalization. We also discuss open problems and future directions, arguing that LLM-ARS will drive the next wave of RS innovation. Ultimately, we foresee a paradigm shift toward intelligent, autonomous, and collaborative recommendation experiences that more closely align with users’ evolving needs and complex decision-making processes.
-
-## CCS Concepts
-
-• Information systems → Recommender systems.
-
-## Keywords
-
-Large Language Models, Recommender Systems, Intelligent Agent, Generative Recommendation
+Recent advances in large language models (LLMs) have opened new opportunities for academic literature retrieval. However, existing systems often rely on rigid pipelines and exhibit limited reasoning capabilities. We introduce SPAR, a multi-agent framework that incorporates RefChain-based query decomposition and query evolution to enable more flexible and effective search. To facilitate systematic evaluation, we also construct SPAR-Bench, a challenging benchmark with expertannotated relevance labels. Experimental results demonstrate that SPAR substantially outperforms strong baselines, achieving up to +56% F1 on AutoScholar and +23% F1 on SPARBench over the best-performing baseline. Together, SPAR and SPARBench provide a scalable, interpretable, and high-performing foundation for advancing research in scholarly retrieval. Code and data will be available at: https://github.com/xiaofengShi/SPAR
 
 ## 1 Introduction
 
-With the rapid growth of online services, recommender systems (RS) have become essential for addressing users’ information needs and alleviating information overload [47, 92]. These systems provide personalized recommendations across various domains, including e-commerce, movies, music, etc. Despite the diversity of recom mendation tasks such as top-K recommendation and sequential recommendation, the core objective remains consistent: to predict a user’s preferences for each candidate item and generate a ranked list tailored to the user [31].
+Effective academic paper retrieval is fundamental to research. As scientific literature continues to grow exponentially, researchers are increasingly challenged by the need to locate not just superficially relevant papers, but comprehensive and interconnected works that span multiple subtopics, time periods, and academic communities (Gusenbauer and Haddaway, 2020). While traditional academic search engines such as Google Scholar (Vine, 2006) support basic keyword queries well, they often fall short in supporting complex, multi-intent queries that require deeper contextual understanding or reference-based exploration.
 
-However, current RSs still face several significant limitations in meeting diverse user needs. First, current RSs typically rely on ID-based features that work only within specific domains or platforms. Their inability to integrate open-domain knowledge, such as common sense reasoning and cross-platform behavioral patterns, significantly constrains their capacity to interpret and model user interests in a broader context. Second, current methods typically optimize well-defined engagement metrics derived from historical interaction data (e.g., click-through rates and purchase histories). Although such methods can be efective for localized objective functions, they often conflate observable behaviors with latent user intent, since implicit feedback mechanisms cannot distinguish transient actions from enduring preferences. Consequently, these models exhibit two major limitations: (i) lack of transparency regarding preference attribution, which impairs interpretability, and (ii) oversimplification of the multifaceted motivations that guide user behavior, especially in scenarios requiring temporal or situational adaptation. As a result, these implicit modeling frameworks fail to capture the causal relationships between dynamic user states and subsequent decision-making processes. Finally, most traditional RSs operate in a largely static, one-directional manner, providing users with minimal opportunities to iteratively refine suggestions through natural language or real-time feedback. This unidirectional flow diverges from established human-computer interaction principles, which emphasize interactive, adaptive dialogue to uncover user preferences. Although conversational RSs have begun to address this issue, they remain limited in their ability to integrate openended natural language understanding with personalized ranking, particularly in scenarios that require multiple rounds of clarification to resolve ambiguous user queries.
+Consider the query: “Show some cutting-edge technological advancements on how to improve the generalization ability of machine learning models across multiple domains.” This query implicitly demands up-to-date results, an understanding of “generalization” in a machine learning context, and coverage across multiple subfields. Existing systems tend to either return overly generic results or fail to capture the full semantic scope of such queries, leading to time-consuming manual filtering by the user.
 
-Recent advances in Large Language Models (LLMs) and Multimodal LLMs (MLLMs) have greatly improved language comprehension and cognitive processing [24, 39]. With stronger reasoning and planning abilities, (M)LLM-based agents can interpret human language, devise strategies, and execute complex tasks. These breakthroughs ofer new avenues for enhancing RSs’ adaptability, personalization, and user-centricity. The rapid surge in LLM-driven RS research is evident from the 290 references cited in a recent survey on this topic [17, 31, 32], along with numerous influential papers in the field (e.g., [44]). The existing work on applying LLMs to RS, however, has mostly focused on applying LLMs to improve the current RSs. Furthermore, the existing works have underexplored the important question of how LLMs or LLM agents would impact the future of RS in the long run. We argue that LLM-based Agentic Recommender Systems (LLM-ARS) present a promising research direction, ofering new perspectives on autonomy, adaptability, and interactive decision-making in rec ommendation. To unlock the full potential of LLM-ARS, it is crucial to address several open questions, including how to harness agentic capabilities (e.g., planning, collaboration, roleplaying) to improve user modeling and system decision-making, and how to balance autonomy with controllability to ensure safe, transparent interac tions. We ofer a more detailed discussion of these challenges and key research questions in Section 5, where we highlight the most pressing issues and outline possible solutions.
+Recent advances in large language models (LLMs) (Achiam et al., 2023; Team et al.
 
-We present the first perspective paper on ARS powered by (M)LLMs. We begin with preliminaries and background on this emerging direction (§2), followed by a discussion on the significance of LLM-ARS (§3) and a formal problem formulation (§4). Next, we analyze LLM-ARS from an agentic perspective (§5) and introduce key research questions from the RS standpoint (§6). To address these questions, we provide in-depth comparisons and discussions, ofering insights into the field (§7 and §8). Finally, we highlight open problems and future opportunities that require further exploration (§9). In summary, our key contributions in this perspective paper are as follows:
-
-• We position LLM-ARS within the broader trajectory of RS development by introducing a four-level evolution, emphasizing the shift from static, one-way recommendation toward agentic paradigms that support autonomy and interactive decisionmaking.
-
-• We propose a formal task formulation for LLM-ARS, detailing the core components—user profiling, planning, memory, and action—that together enable continuous adaptation and proactive recommendations.
-
-• We identify critical research questions and open problems of how to harness agentic capabilities (e.g., planning, roleplaying, collab oration) to improve user modeling, system decision-making, and overall recommendation efectiveness.
-
-## 2 Preliminary and Background
-
-The rapid evolution of LLM-based AI has spurred significant advancements in Agent AI, fundamentally reshaping how systems interact with complex environments. In recent years, researchers have equipped LLM agents with core components—memory, plan ning, reasoning, tool utilization, and action execution—that are essential for autonomous decision-making and dynamic interaction [9]. The following subsections together with Figure 1 provide an overview of the recent developments in both single-agent and multi-agent frameworks.
-
-## 2.1 LLM-based Single-Agent Systems
-
-Single-agent systems leverage a unified model that integrates multiple interdependent modules.<sup>12</sup> The memory component acts as a structured repository that stores and retrieves contextually relevant information, such as user preferences and historical interactions [93]. This persistent memory is crucial for maintaining coherent, long-term interactions and forms the foundation for personalization in recommendation settings. The planning module is closely linked with advanced reasoning capabilities. Recent research has identified approaches such as task decomposition, multi-plan selection, external module-aided planning, reflection and refinement, and memory-augmented planning [21]. These techniques enable an agent to break down complex tasks, select and refine strategies based on evolving contexts, and leverage external knowledge sources. Integrated reasoning further enhances decision-making by allowing the system to adapt dynamically to novel scenarios. Frameworks like ReAct [80] and Reflexion [52] exemplify how interleaving reasoning with concrete actions—such as web-browsing or tool invocation—can significantly improve system robustness and adaptability. Beyond internal cognitive processes, these agents increasingly rely on tool utilization to interface with external data and services. Systems like WebGPT [37] illustrate the efectiveness of using external modules (e.g., web search engines) to retrieve real-time information. Other works, such as Retroformer [81] and AvaTaR [75], further optimize these interactions through policy gradient optimization and contrastive reasoning, respectively, to fine-tune tool usage and enhance performance over time.
-
-## 2.2 LLM-based Multi-Agent Systems
-
-In contrast, LLM-based multi-agent systems emphasize collaboration among diverse autonomous agents. These systems are designed to mimic complex human workflows by facilitating inter-agent communication, task specialization, and coordinated decision-making. Frameworks such as CAMEL [28] and AutoGen [74] demonstrate how agents with distinct roles can interact to solve problems more eficiently than a single, monolithic agent. By assigning specialized functions—ranging from ideation and planning to evaluation—these frameworks enable a division of labor that enhances overall system capability and flexibility. Further advancements are seen in approaches like MetaGPT [15] and AgentLite [34], which incorporate meta-programming techniques and lightweight libraries to dynamically allocate roles and coordinate complex workflows. These structured interactions not only improve task eficiency but also ofer robustness in dynamic problem-solving environments. Recent developments also include systems such as ChatEval [2] and ChatDev [41], which leverage inter-agent debate and evaluative feedback to produce more nuanced and reliable outputs. This human-like discussion among agents is particularly beneficial in open-ended natural language generation tasks and complex software development processes.
-
-## 3 Why Agentic Recommender Systems Now?
-
-Recent advances in RSs have largely focused on enhancing interaction capabilities, with most research eforts still operating at the Advanced RSs (Level 1) and Intelligent RSs (Level 2) stages as shown in Table 1. However, they remain fundamentally reactive, relying on predefined model architectures and user-driven feedback loops. The next frontier, Agentic RSs (Level 3), aims to move beyond reactive engagement to autonomous, adaptive, and proactive recommendation strategies, which is increasingly feasible due to recent breakthroughs in (M)LLMs. We identify three key factors:
-
-![](images/09665ea4810229872155105defd9ae6dc7692f9992f84329e4f757062961d09e.jpg)  
-Figure 1: The rising trend in the research field of LLM-based Agents. We categorize current work into single-agent and multi agent categories.
-
-• Leveraging (M)LLMs for Recommendation: The integration of LLMs introduces agent-like capabilities such as planning, memory retention, and in-context learning, enabling adaptive and evolving recommendation strategies. Unlike traditional systems that require explicit re-training, LLM-based agents can dynami cally refine recommendations based on sequential user interactions and external contextual cues. Additionally, collaborative multi-agent systems can further enhance recommendations by enabling multiple AI agents to exchange information, reason collectively, and optimize decision-making.
-
-• Expanding Information Modalities: RSs primarily rely on ID-based and textual information, limiting their ability to fully understand user preferences. In contrast, multi-modal agentic systems can process diverse input signals, including images, au dio, structured metadata, and behavioural cues, leading to richer and more context-aware recommendations. Thus, agentic sys tems can capture holistic user intent, bridging the gap between implicit and explicit preference signals.
-
-• Evolving User Interfaces: From Passive to Proactive Recommendation: Traditional recommendation paradigms primarily function as passive systems, responding to user queries with static suggestions. Conversational recommenders improve engagement but still rely on user-initiated interactions. Agentic systems introduce a proactive user experience, where AI-powered multi-modal agents continuously adapt, predict user needs, and autonomously refine recommendations before explicit queries occur. This shift not only enhances user satisfaction but also opens the door for highly personalized, real-time, and contextually aware recommender systems.
-
-Given these advancements, the evolution towards multi-modal LLM-driven agentic recommenders represents a promising and inevitable trajectory. These systems combine autonomy, adaptability, and multi-modal intelligence, paving the way for self-improving, memory-driven, and highly personalized recommendation experiences that surpass the capabilities of existing models.
-
-## 4 Formulation
-
-An Agentic Recommender System [86, 90] is a system in which agents autonomously generate personalized recommendations by interacting with users and adapting to their preferences over time. Formally, it can be defined as a tuple (<sup>??</sup> <sup>,</sup> <sup>??,</sup> <sup>??,</sup> <sup>??,</sup> <sup>??</sup>), where <sup>??</sup> is the set of users, <sup>??</sup> is the set of items, <sup>??</sup> is the set of agents, <sup>??</sup> is the set of environmental contexts and $R : U \times E \times A \to P ( I )$ is the recommendation function that maps users, contexts, and agents to a probability distribution over items <sup>??</sup> (<sup>??</sup> ). Each agent $a \in A$ operates autonomously by perceiving the state $s = f ( u , e )$ , making decisions based on its policy $\pi _ { a } ( s )$ , and learning from user feedback to optimize an objective function, maximizing expected user utility:
-
-<table><tr><td>Level</td><td>Name</td><td>Description</td><td>Key Characteristics</td></tr><tr><td>0</td><td>Traditional Recommender Systems</td><td>Systems rely on static algorithms and historical data to suggest items.</td><td>• Rule-Based Processing: Uses fixed rules, collaborative filtering, or content-based methods. • Limited Contextual Understanding: Operates solely on past user behavior without real-time adjustments. • One-Way Interaction: Provides recommendations in a non-interactive, one-off manner.</td></tr><tr><td>1</td><td>Advanced Recommender Systems</td><td>Deep learning advances enhance personalization with historical and real-time data.</td><td>• Data-Driven Adaptation: Uses learning models to update recommendations based on new information. • Feedback Integration: Incorporates user feedback to refine suggestions over time. • Enhanced Personalization: Provides more accurate and context-aware recommendations while following predefined model structures.</td></tr><tr><td>2</td><td>Intelligent Recommender Systems</td><td>These systems actively engage users to refine their understanding of preferences.</td><td>• Interactive Engagement: Initiates clarifying dialogues and solicits additional input. • Multi-Modal Input Processing: Integrates inputs beyond text (e.g., images, behavioral signals). • Dynamic Adaptation: Adjusts recommendations in real-time based on user context.</td></tr><tr><td>3</td><td>Agentic Recommender Systems</td><td>Fully autonomous agents that not only provide recommendations but also self-improve and evolve.</td><td>• Autonomous Decision-Making: Uses planning and optimization to proactively shape recommendation strategies. • Continuous Self-Evolution: Updates models and behaviors based on internal and external feedback. • Comprehensive Memory &amp; Multi-Modal Perception: Integrates long-term user data, contextual cues, and multiple input types. • Proactive and Reactive Interactions: Balances immediate responses with strategic actions.</td></tr></table>
-
-Table 1: Four-Level Evolution of Recommender Systems: In this study, we categorize RSs into four levels based on their adaptability and interaction capabilities. Traditional RSs rely on static algorithms and historical data, while advanced RSs leverage deep learning for real-time personalization. Intelligent RSs engage users interactively, and agentic RSs autonomously evolve and optimize recommendations.
-
-$$
-\max _ {\pi_ {a}} \mathbb {E} \left[ U (u, R (u, e, a)) \mid \pi_ {a} \right].\tag{1}
-$$
-
-The key characteristics of such a system include autonomy, adaptability, and enabling agents to provide dynamic and personalized recommendations through continuous learning and user engagement. To illustrate our formulation of the architecture of agentic recommender systems, we present the notation table in Table 2.
-
-## 4.1 The User Profiling module:
-
-The User Profiling Module is dedicated to constructing comprehen sive profiles, such as behaviours for each user. The function can be define as $P : U \times T  S$ , where $P ( u , t )$ represents the evolving profile of user <sup>??</sup> at time <sup>??</sup>. This profile is dynamically updated based on historical interactions $H ( u , t )$ , contextual features $C ( u , t )$ , and external signals $X ( u , t )$ , modeled as:
-
-$$
-P (u, t) = f (H (u, t), C (u, t), X (u, t); \theta_ {P}).\tag{2}
-$$
-
-To adapt to new user behaviours, profile updates incrementally as:
-
-$$
-P (u, t + 1) = P (u, t) + \eta \cdot \Delta P (u, t),\tag{3}
-$$
-
-where $\Delta P ( u , t )$ represents changes based on recent interactions, and <sup>??</sup> controls the update rate.
-
-The user profiling module employs machine learning techniques to adaptively refine user profiles over time. It synthesizes infor mation from diverse sources and external contextual signals, to create a multidimensional view of the user’s preferences. For in stance, RecAgent [60] utilizes large language model-based agents to simulate user behavior and refine profiling accuracy. Addition ally, Rec4Agentverse [88] leverages large language model-based agents for prospect personalized recommendations, allowing for finer-grained user representations.
-
-In contemporary practice, profiling modules also leverage MLLMs to process unstructured data modalities, such as textual reviews and visual preferences. MACRec [69] explores multi-agent collaboration frameworks to enhance user profiling through cooperative agent learning, ensuring robust profile evolution over time. Meanwhile, AgentCF [90] integrates autonomous learning language agents to collaboratively refine user profiles, reinforcing adaptive personalization. By maintaining both static and dynamic aspects of user preferences, this module ensures the recommendations are contextually appropriate, significantly enhancing user satisfaction in the system. The integration of reinforcement learning frameworks like SUBER [6] helps model long-term user behaviors by simulating future interactions to predict evolving preferences.
-
-## 4.2 The Planing module:
-
-The Planning Module empowers agents to formulate strategic decisions regarding which items to recommend. Using the user profiles from the User Profiling Module and considering the current environmental context $e \in E ,$ the module is defined as:
-
-$$
-s = f (u, e),\tag{4}
-$$
-
-where $f : U \times E \to S$ maps users and contexts to a state space S. for each user-agent pair. This module functions as the core of the decision-making of the Agentic Recommender System, the Planning Module leverages advanced optimization techniques, such as Markov Decision Processes (MDPs) and reinforcement learning, to ensure that decisions are both rational and aligned with user objectives. Similar approaches have been explored in recent research on RSs, such as MACRec [61] for multi-agent collaboration and Agent4Rec [86], which introduces generative agents for recommendation. In scenarios where user preferences conflict with immediate contextual constraints, the module employs multi-objective optimization to balance trade-ofs efectively, similar to approaches used in BiLLP [51], which frames recommendation as a long-term planning problem.
-
-<table><tr><td>Symbol</td><td>Description</td></tr><tr><td>U, I, A, E</td><td>Users, items, agents, environments</td></tr><tr><td>R: U × E × A → P(I)</td><td>Recommendation function</td></tr><tr><td>s = f(u, e)</td><td>User state representation</td></tr><tr><td>πa(s)</td><td>Agent policy</td></tr><tr><td>P(I)</td><td>Item distribution</td></tr><tr><td>H(u, t)</td><td>User interaction history</td></tr><tr><td>C(u, t)</td><td>Contextual factors</td></tr><tr><td>X(u, t)</td><td>External signals</td></tr><tr><td>P(u, t)</td><td>User profile</td></tr><tr><td>M(u, t)</td><td>Memory function</td></tr><tr><td>A(s, a)</td><td>Action selection function</td></tr></table>
-
-Table 2: Summary of notations used in agent-based RSs.
-
-By simulating potential sequences of recommendations and user responses, the module can adjust strategies to minimize risks, predictive modeling is also emphasized in RecMind [68], which integrates LLMs into sequential recommendation. Additionally, it can incorporate collaborative and competitive dynamics among agents, allowing for coordinated actions in multi-agent systems [11] or personalized prioritization in single-agent setups [90].
-
-The Planning Module also enables hierarchical planning and ensures that each sub-recommendation aligns with the overall ob jective, creating a coherent and seamless user experience. Recent ad vancements in AI-driven recommendation, such as AutoConcierge [83], which focuses on interactive goal-based recommendations, supports this hierarchical approach to structured decision-making.
-
-## 4.3 The Memory module:
-
-The Memory Module functions as a dynamic storage system that retains historical data on user interactions and feedback. It serves as a critical component for enabling the Agentic Recommender System to build continuity and context awareness over time. Formally, it maintains a memory function <sup>??</sup> : $U \times T \to M ,$ where:
-
-$$
-M (u, t) = g (H (u, t), C (u, t); \theta_ {M}),\tag{5}
-$$
-
-By storing and retrieving historical data, this module ensuring that future recommendations are informed by accumulated insights. Systems such as RecMind [67] leverage LLMs for memory-driven recommendations, enhancing continuity in RSs.
-
-The Memory Module is designed to support both short-term and long-term memory functionalities. Short-term memory stores recent interactions, enabling the system to adapt to immediate user needs and preferences. In contrast, long-term memory archives broader behavioural patterns, which are crucial for understanding shifts in user behaviour over time. Together, these memory layers create a holistic view of the user, balancing transient interests with persistent inclinations. Similar architectures are explored in SUBER [6], an RL-based framework that simulates human behaviour for adaptive recommendation learning. To manage large-scale data efectively, the Memory Module employs advanced data structuring techniques to utilizes eficient retrieval, often powered by neural attention models, to access relevant historical data in real-time. This capability is similar to BiLLP [51], which positions LLMs as learnable planners to enhance long-term recommendation strategies. An essential feature of the Memory Module is its ability to integrate cross-session data. Systems like AgentCF [90] incorporate collaborative learning mechanisms, enabling memory-enhanced interactions among language agents in multi-agent recommendation.
-
-## 4.4 The Action module:
-
-The Action Module is responsible for executing the decisions made by the Planning Module, dynamically selecting and delivering recommendations to users. Given a user <sup>??</sup> ∈ <sup>??</sup> , an agent $a \in A$ , and an environmental state $e \in E ,$ , the system defines an action selection function A : $S \times A \to P ( I )$ , where:
-
-$$
-\mathcal {A} (s, a) = \pi_ {a} (s),\tag{6}
-$$
-
-where $\pi _ { a } ( s )$ represents the agent’s policy for selecting a probability distribution over items $P ( I ) _ { \mathit { i } }$ , given the current state $s = f ( u , e )$ Modern recommender systems increasingly integrate agentic approaches that allow for interactive decision-making. For instance, Agent4Rec [86] introduces generative agents that enable personalized through reinforcement learning. Similarly, RecAgent [60] uses a simulation of user behaviour with agents based on large language models to refine recommendation strategies.
-
-Multi-agent frameworks have been explored to facilitate collaboration and competition in recommendation settings. MACRec [69] demonstrates the potential of multi-agent collaboration frameworks for improving recommendation diversity and accuracy. Moreover, MACRS [11] expands on this by introducing multi-agent conversational recommender systems that coordinate interactions across multiple agents to optimize recommendations in real-time. Conversational RSs play a crucial role in the Action Module by enabling context-aware responses. RecLLM [12] and CSHI [99] focus on leveraging large language models to enhance conversational interactions, providing scalable and controllable user simulations. RecMind [67] employs large language models to power agent-based recommendations, ensuring responses are aligned with evolving user intents. LLM4Rerank [13] further enhances recommendation efectiveness through re-ranking mechanisms optimized by LLMs.
-
-A novel direction is tool-augmented recommendations $( e . g .$ , Tool-Rec [97]), which leverages tool learning to enhance recommendation accuracy and usability. Similarly, RAH [54] presents a humancentered framework that balances LLM-powered recommendations with human oversight improving user satisfaction.
-
-## 5 Key Research Questions in LLM-ARS
-
-After formulating an agentic recommender system and examining its key components, the next step is to address fundamental challenges in integrating LLM-driven agentic capabilities. These challenges span reasoning, user modeling, multimodal fusion, lifelong personalization, decision-making frameworks, controllability, and so on. To systematically analyze these challenges and explore novel solutions, we structure our discussion around the following key research questions (RQs).
-
-RQ1: How can LLM-based agents benefit recommender systems through reasoning, planning, and collaboration?
-
-RQ2: How can agentic recommender systems efectively lever age (M)LLM to improve user understanding and decision-making?
-
-RQ3: What novel architectures or learning paradigms are needed to enable agentic RSs?
-
-RQ4: What are the key challenges in integrating agentic decision making and multimodal reasoning into RSs?
-
-RQ5: How can we evaluate the efectiveness and robustness of agentic recommender systems powered by multimodal LLMs?
-
-RQ6: How can agentic recommender systems balance autonomy and controllability while utilizing MLLMs?
-
-RQ7: How can agentic recommender systems achieve life-long personalization while mitigating catastrophic forgetting?
-
-## 6 LLM-based Agentic Reasoning, Planning, and Collaboration (RQ1)
-
-In this section, we explore how LLM agents face challenges in long-term planning and reasoning over personalized contexts and feedback (RQ1). Unlike conventional recommendation methods that learn from historical data to capture statistical patterns of user behavior [46, 49, 63], LLM agents analyze the contextual informa tion of items and the semantic details of user-item interactions [73, 90]. They further plan proactive strategies to explore longterm preferences using chain-of-thought generation [66, 73, 95]. However, as general-purpose models, LLMs find it challenging to adapt to personalized contexts or user feedback. To simulate di verse personalities, LLM agents roleplay via prompting [90] and user modelling [94], and they self-improve in interactive settings through multi-agent alignment [58, 59, 73].
-
-## 6.1 Planning and Reasoning in Agentic RS
-
-LLM agent planning in recommender systems leverages the com plex reasoning and decision-making capabilities of large language models to decompose the recommendation process into subtasks and assign them to multiple agents for collaboration across agents. To manage complex recommendation tasks, Wang et al. [69] and Fang et al. [11] propose multi-agent frameworks that decompose the overall task into specialized roles, while Wang et al. [69] in troduces agentic protocols including Manager, User/Item Analyst, Reflector, Searcher, and Task Interpreter. Fang et al. [11] focuses on goal-oriented dialogue planning and incorporates a user feedback aware reflection mechanism to control the conversation flow. To mitigate issues such as hallucinations and misalignment between semantics and behaviours, Zhao et al. [98] employs tool learning with surrogate users and attribute-oriented tools (i.e., rank and retrieval tools), while [27] integrates external knowledge and goal guidance to better reasoning grounding and proactive responses. To further enable exploration in planning Wang et al. [59] develops LLM-driven policy exploration by pre-training policies with user preference distillation for deploying adaptive fine-tuning strategies.
-
-LLM agent equips recommender systems with the reasoning capabilities of large language models to discover complex user-item relationships and generate interpretable and semantically meaning ful recommendations. By further integrating structured external knowledge, distilled rationales, and memory mechanisms, LLMbased agentic frames are enabled with more contextually grounded reasoning while understanding various personalized behaviours and preferences in recommendation tasks. To uncover complex user-item relationships, Guo et al. [14] leverages knowledge graphs to inject explicit relational paths into language agents, while Wang et al. [66] distils underlying rationales from user reviews to enrich user profiles and item contexts, which improves LLM agents’ understanding of complex user-item interactions. To further understand the sequential context and user behaviours in conversational recommendations, Xi et al. [77] introduces memory-enhanced LLMs to track historical dialogue beliefs, improving on the approaches that only consider current interactions. To ensure explanations are both persuasive and credible, Qin et al. [43] develops a credibility-aware strategy that refines outputs through self-reflection. Focusing on the alignment of LLM reasoning with recommendation logic, Zhao et al. [95] proposes a non-tuning logic alignment framework using semantic embeddings and chain-of-thought prompting, whereas Wu et al. [73] augments LLMs with collaborative retrieval to ground reasoning in user-item interaction patterns.
-
-Despite promising advances in LLM agents for planning and reasoning in recommender systems, current approaches face notable challenges. Methods dependent on explicit external structures—such as knowledge graphs [14] or curated rationales [66] are limited in generalizability across various scenarios. Although techniques in [77] and [43] improve sequential reasoning and explanation credibility, and [95] and [73] enhance logic alignment and collaborative retrieval, an integrated framework that aligns multiagent reinforcement learning and planning with user behaviour modelling [59, 69] is still lacking.
-
-## 6.2 LLM-Agent Roleplaying in User Modeling
-
-The exploration of LLM-agent roleplaying techniques is demanding for realistic user modelling in recommender systems, where user agents or simulators emulate human-like behaviours to capture both explicit and implicit user preferences. Intuitively, these methods leverage roleplay to bridge the gap between language understanding and behaviour simulation, enabling more realistic multi-agent interactions for personalized preference alignment and more rigorous evaluation. One prominent challenge is simulating socially dynamic user-item interactions inherent in human behaviour. Zhang et al. [89] tackles this by simulating a collaborative learning environment where both users and items are modelled as autonomous roleplaying agents, thus enabling bidirectional interaction and reflective adjustment. In addition, Wang et al. [62] introduces a sandbox environment where roleplaying agents are equipped with profile, memory, and action modules that interact through one-to-one and broadcast communications, efectively modelling social influence and conformity. In contrast, Zhang et al. [94] emphasizes explicit user modelling by integrating logical reasoning with statistical insights to simulate user engagement.
-
-Addressing the need for controllability and scalability in conversational settings, Zhu et al. [99] proposes a framework that utilizes roleplay to customize user simulations in real time, enhancing the fidelity of user modelling in conversational recommender systems. Additionally, to overcome limitations related to data scarcity and evaluation reliability, [5] and [10] construct synthetic environments using LLMs as roleplaying users, while [26] introduces a target-free roleplay strategy to avoid bias in preference elicitation. However, current LLM-agent roleplaying approaches in user modelling still struggle with the interpretability of simulation processes and capturing the complexity of human decision-making. Future research should focus on developing more interpretable roleplay strategies and integrating richer, multimodal behavioural data to further en hance the adaptability and realism of user modeling frameworks.
-
-## 6.3 Interaction Between Agents and Users
-
-LLM-based agentic recommendation systems have motivated exploring methods that enhance the realistic interaction between agents and users. Intuitively, these approaches leverage agent role playing and collaborative mechanisms to bridge the gap between language understanding and complex behavioural interactions. One of the major challenges is simulating realistic user-agent interactions by capturing both explicit semantic and implicit behaviour signals. Zhang et al. [89] addresses this by modelling non-verbal signals (e.g., item clicking) via collaborative learning between user and item agents, in contrast to dialogue-centric approaches such as [11]. Kim et al. [26] further emphasizes a target-free user simulation protocol that avoids the target bias in such interactions.
-
-Another challenge lies in integrating task-specific recommendation dynamics with interactive capabilities. While Huang et al. [19] leverages LLMs as a central controller augmented by recommendation models to enable seamless interaction, Wang et al. [65] focuses on enhancing high-order interaction awareness through whole-word embedding techniques. In multi-agent systems, col laboration in achieving efective interaction is proposed by [69], which designs specialized agents for various subtasks, whereas [11] suggests feedback-aware reflection for controlled dialogue flow. However, existing works still fall short in robustly modelling the dynamic evolution and collaborative evolution of extended agent user interaction, fully integrating adaptive feedback mechanisms. Future research should explore strategies for multi-agent planning and reasoning to align dynamic user-item interaction.
-
-## 6.4 Agent Self-improvement
-
-Finally, we discuss how agents can further evolve and self-improve in a recommendation environment by continuously incorporating rich interaction signals. Leveraging large language models (LLMs) to simulate and distil these interactions, recent approaches aim to bridge the gap between static ofline training and evolving online deployment. Synthesizing efective feedback from sparse data can significantly scale up the ofline training of LLM agents. Wu et al. [73] integrates collaborative information to enrich the interaction context, in addition to the approach [58] that directly generates feedback via LLM capabilities. Addressing the challenge of distribu tion shift and limited exploration in ofline reinforcement learning, Wang et al. [59] introduces an Interaction-Augmented Learned Pol icy (iALP) that pre-trains policies with distilled user interaction data augmented by LLMs, while Wang et al. [58] employs an LLM as an environment to verbally model states and rewards from real interaction feedback. Meanwhile, in the domain of adaptive agent selection, [40] leverages sentence embeddings aligned with hu man feedback to recommend the most appropriate agent based on interactive prompting, ensuring adaptability in dynamic settings. Confronting the need for explainability in self-improvement, [95] proposes a logic alignment strategy that enables LLM reasoning in online systems, providing interpretable recommendations grounded in explicit interaction semantics. However, current methods are still limited in the reliance on synthetic or simulated interaction data, which may not fully capture the complexities of real-world environments. In addition, the sim-to-real gap can be additionally challenging, which requires robust ofline policy evaluation, and smart online adaptation strategies.
-
-## 7 LLM Agents for Enhanced User Understanding and Decision-Making (RQ2)
-
-From the perspective of the RS field, LLM-powered autonomous agent systems position LLMs as the core "brain" of the agent, supported by essential components such as planning, memory, and tool utilization [72]. Prominent works like AutoGPT and BabyAGI have demonstrated the immense potential of LLM-based agents, particularly in their ability to store past experiences and leverage them to make more informed decisions (RQ2). In RS scenarios, these agents are often conceptualized as user simulators or the RS itself, as illustrated in Figure 2.
-
-## 7.1 User Simulation in LLM-ARS
-
-Simulating user behaviors is essential for training large-scale RSs, given the challenges of data scarcity, ethical concerns, and coldstart issues in real-world interaction data. Traditional methods [23, 100] struggle to model complex and evolving user behaviors, while recent advances in LLMs provide a promising alternative by enabling more adaptive and realistic simulations.
-
-Most works leverage LLM-powered personalized agents to emulate user interactions. RecAgent [60] treats each user as an autonomous agent capable of interacting freely within a simulated environment, capturing both conventional RS behaviors such as browsing and clicking, as well as external influences like social interactions. Extending this idea, Agent4Rec [86] simulates 1,000 generative agents in a movie RS, where users engage with recommendations in a page-by-page manner, taking diverse actions that better approximate real-world decision-making. Beyond individual user agents, collaborative simulation frameworks have emerged to model multi-agent dynamics. LLM-InS [18] predicts user interactions with cold-start items, simulating clicks from a subset of recalled users to generate synthetic interactions that update item embeddings. Zhang et al. [94] integrate LLM-based logical reasoning with statistical modeling, extracting user preferences from item characteristics and engagement history to improve the fidelity of simulated behaviors. AgentCF [90] extends the paradigm by treating both users and items as interactive agents, fostering a coevolutionary learning process that optimizes user-item interactions. USimAgent [87] focuses on search behavior simulation, capturing querying, clicking, and stopping behaviors to generate realistic search task interactions. BASES [45] scales this concept further, utilizing LLM-based agents to create large-scale user profiles and diverse search behaviors across multiple linguistic benchmarks.
-
-Despite advancements, LLM-driven simulators face critical limitations. Many rely on predefined heuristics or scripted rules, failing to capture emergent or long-term behavioral patterns. While LLMs approximate user preferences, they lack the ability to model cognitive biases, evolving interests, or contextual decision-making shifts. Scalability is also a concern: synthetic interactions can be generated at scale, but their real-world validity remains uncertain, and over-reliance on simulated data risks introducing biases. Future work should focus on adaptive, feedback-driven frameworks that integrate real-world behavioral signals, refine user modeling be yond static preferences, and establish validation mechanisms for LLM-generated interactions in RS applications.
-
-![](images/172a634fe8d6fb7bd1911042d206d81c6233d1fc2a6dcc634c98cdf8f16b7a64.jpg)  
-Figure 2: Diferent types of personalized LLM-based agents in LLM-ARS, where (i) LLM-Agent simulates user behavior, (ii) LLM-Agent acts as a recommender, and (iii) LLM-Agent functions as both user simulation and recommender.
-
-## 7.2 Improving Personalized Recommendations with LLM-driven Decision-Making
-
-Leveraging the advanced reasoning, reflection, and tool-usage capabilities of LLM agents, recent approaches explore their role as decision-making agents to enhance personalized recommendations. Unlike level 0-2 RS models, LLM-ARSs dynamically adapt to user needs by integrating planning, self-reflection, and external tool interactions. The RAH framework [53], incorporating LLM-based agents and a Learn-Act-Critic loop, improve alignment with user personalities and mitigate biases. Then, Wang et al. [67] first introduces a Self-Inspiring planning algorithm that keeps track of all past steps of the agent to help generate new states. At each step, the agent looks back at all the paths it has taken before to figure out what to do next. This approach aids in employing databases, search engines, and summarization tools, combined with user data, for producing tailored recommendations. InteRecAgent [20] model the LLMs as the brain, while recommendation models serve as tools that supply domain-specific knowledge, then LLMs can parse user intent and generate responses. They specify a core set of tools essential for RS tasks—Information Query, Item Retrieval, and Item Ranking—and introduce a candidate memory bus, allowing previous tools to access and modify the pool of item candidates.
-
-However, key challenges remain, such as ensuring long-term consistency in recommendations, balancing LLM-ARS generalization with domain-specific accuracy, and mitigating potential biases intro duced by LLM-generated reasoning. Future research should focus on integrating user feedback loops, enhancing interpretability, and optimizing the eficiency of tool-augmented LLM decision-making to fully realize the potential of LLM-ARS.
-
-## 8 Framework and Learning Paradigms (RQ3)
-
-To enable LLM-ARS, novel frameworks and learning paradigms are required to enhance autonomy, adaptability, and human alignment (RQ3). We categorize these advancements into three key areas: single-agent architectures, which focus on individual agents as decision-makers; multi-agent collaboration, which leverages interactions among multiple agents to improve reasoning and adaptability; and human-LLM hybrid architectures, which emphasize collaboration between human users and LLM-based agents to refine personalization, control, and interpretability in recommendations.
-
-Single-Agent Framework for RS: LLM-powered single-agent frameworks enable autonomous decision-making in RSs by integrating reasoning, memory, and planning. The RAH framework [53] employs a Learn-Act-Critic loop to iteratively refine recommendations, improving personalization and reducing bias. Wang et al. [67] introduce Self-Inspiring Planning, where an LLM agent retrospectively analyzes past decisions to optimize future choices while leveraging external tools like search engines and summarization models. InteRecAgent [20] further enhances this paradigm by treating LLMs as decision-making cores, selectively invoking domain-specific tools (e.g., retrieval and ranking modules) and maintaining long-term candidate memory for adaptive ranking. These architectures transform LLMs from passive generators into adaptive decision-makers, enabling more context-aware, interactive recommendations. However, they face scalability challenges and lack collaborative reasoning in multi-domain scenarios.
-
-Multi-Agent Framework for RS Multi-agent frameworks extend single-agent frameworks by incorporating specialized agents that communicate and collaborate to enhance decision-making. Instead of relying on a single agent for all tasks, these frameworks assign distinct roles to diferent agents, enabling parallelized reason ing, task specialization, and self-organizing interactions. Wang et al. [70] propose MACRec, where agents such as a Manager, Analyst, and Reflector collaborate on tasks like rating prediction, sequential recommendation, and explanation generation, improving adaptability and interpretability. PUMA [1] further integrates a shared memory system, allowing agents to retrieve past interactions for enhanced personalization. Compared to single-agent models, multiagent frameworks ofer better scalability, modularity, and reasoning eficiency, yet face challenges in coordination, redundancy reduction, and consistency maintenance across interacting agents.
-
-Human-LLM Hybrid Framework for RS: While LLM-powered agents enhance automation, human-in-the-loop architectures are crucial for improving interpretability and fairness in RSs. Recent works explore collaborative frameworks where user feedback guides LLM-driven reasoning, ensuring transparency and control. Shu et al. [55] propose the LLM-powered assistant mediates between users and RSs. Using a Learn-Act-Critic loop with built-in reflection, the assistant refines recommendations by resolving preference in consistencies. It also incorporates privacy-preserving mechanisms, allowing users to filter content and adjust recommendations dy namically. Beyond direct interaction, hybrid frameworks embed user intent into LLM-based reasoning. Ning et al. [38] integrate user embeddings with LLMs via a pretrained encoder and crossattention, capturing long-term preferences more efectively. Shao et al. [50] further bridge the semantic gap between LLM reasoning and structured user data through vector quantization and prefer ence alignment. To formalize design principles for human-centered agentic RSs, Deng et al. [7] introduce a taxonomy spanning Intel ligence, Adaptivity, and Civility, providing guidelines to develop ethically adaptive, user-aligned conversational recommenders.
-
-In summary, single-agent systems enable autonomous reasoning and memory integration, while multi-agent architectures enhance collaboration and modularity. Human-LLM hybrids further improve interpretability and personalization. Key challenges include balanc ing autonomy with user control, optimizing coordination, and miti gating biases while ensuring generalization. Future research should develop adaptive architectures that unify reasoning, collaboration, and user alignment for fully interactive, context-aware systems.
-
-## 9 Open Problems and Opportunities
-
-## 9.1 Multimodal Reasoning in LLM-ARS (RQ4)
-
-In this section, we investigate key challenges in integrating agentic decision-making and multimodal reasoning into RSs (RQ4).
-
-Multimodal Fusion: Multimodal fusion is crucial for agentic RSs integrating multiple LLMs and tools, yet it remains challeng ing. Potential strategies include encoder-decoder, attention, GNN, and generative neural network (GenNN)-based fusion. Encoder decoder models unify multimodal features in a shared space for task-specific decoding [25, 56], while attention-based fusion en hances cross-modal dependencies [35, 76]. GNN-based approaches jointly model structured and unstructured data [42, 57], and GenNN based fusion synthesizes modalities while handling missing data [48]. Efective fusion strengthens reasoning and factual grounding, ensuring robust decision-making in LLM-ARS.
-
-Multimodal Reasoning: Aligning (M)LLM commonsense reasoning with recommendation tasks remains a key challenge. While (M)LLMs excel in open-domain reasoning, they often lack the task specific adaptability needed for user preference modeling and sequential decision-making. Their reasoning is optimized for general understanding rather than multimodal user intent inference, leading to inconsistencies in recommendation relevance. Addressing this requires fine-tuning with domain-specific constraints, integrating structured knowledge, and optimizing reasoning for personalized decision-making in multimodal contexts.
-
-Eficiency: Eficiency remains a critical challenge for LLM-ARS, especially as they orchestrate multiple specialized tools or models.
-
-Current RSs often incur significant computational overhead when integrating LLMs with external APIs for multimodal tasks, leading to latency issues. Optimizing the agent pipeline for speed and resource utilization while maintaining accuracy is essential. Promising directions include developing lightweight agents, reducing redundant computations through shared intermediate outputs, and exploring model compression techniques for LLMs within agents.
-
-## 9.2 Benchmarking of LLM-ARS (RQ5)
-
-Benchmarking LLM-ARS presents unique challenges beyond established metrics for LLMs and standalone RSs (RQ5). Comprehensive frameworks like AgentBench [33] are essential for assessing multiturn interaction quality, cross-modal efectiveness, and adaptability to user feedback. Efective evaluation demands standardized datasets and protocols that capture real-world complexity, including dynamic personalization and multimodal workflows. Robust assessment should integrate qualitative insights with quantitative metrics, measuring coherence, responsiveness, and contextual relevance under evolving conditions. Stress-testing adaptability to emergent feedback ensures sustained performance. Developing realistic simulation environments aligned with real-world use cases will enhance benchmarking transparency and drive iterative improvements in ARS.
-
-## 9.3 Balancing Autonomy and Controllability in LLM-ARS (RQ6)
-
-Ensuring a balance between autonomy and controllability in LLM-ARS requires addressing key challenges such as hallucination, explainability, and safety (RQ6). While agentic RSs benefit from LLMs’ ability to generate flexible and adaptive recommendations, uncontrolled generation can lead to unrealistic, irrelevant, or even harmful recommendations. Below, we discuss how these challenges manifest in RS scenarios and the strategies to mitigate them.
-
-Hallucination: Hallucination in LLM-ARSs commonly occurs when generated items fall outside the valid item pool (OOV items) or when the model fabricates user preferences inconsistent with real behavior. This issue arises from LLMs’ open-ended generative nature. This issue arises because LLMs, unlike retrieval-based RSs, do not inherently constrain outputs to an existing catalog. For instance, an LLM might recommend an out-of-vocabulary (OOV) item that does not exist in the system’s database, generate unrealistic item-attribute pairings in multimodal RSs, or infer user interests based on semantic associations rather than actual interactions. Such errors are especially problematic in domains like e-commerce, where recommending unavailable products could degrade user trust. To mitigate hallucination, several strategies have been proposed. Database-grounded generation techniques ensure that LLMs reference an external item pool before finalizing recommendations [96]. Reflective instruction tuning helps refine constraints on generation [91], while hallucination detection frameworks flag outputs that lack factual grounding [82]. At inference time, methods such as adaptive grounding [4] and self-introspective decoding [22] validate recommendation outputs in real-time, ensuring that generated suggestions align with available content. By applying these techniques, LLM-ARSs can maintain generative flexibility while preventing misleading recommendations.
-
-Explainability and Trust: Ensuring explainability and user trust is a key challenge in LLM-ARS, as LLM-driven models often function as opaque decision-makers. Unlike traditional RSs with structured optimization criteria, LLM-ARS recommenders rely on implicit reasoning, making it dificult to trace their decisions. This opacity can lead to skepticism, especially when recommendations seem arbitrary or inconsistent. For instance, an LLM in a conversa tional RS might suggest a book based on inferred emotional tone rather than explicit preferences, while a multimodal RS may recom mend a movie based on textual reviews without justifying it through content features like genre or cast. To improve transparency, recent methods explore natural language rationale generation [3], structured decision paths via external knowledge graphs [36, 78], and cross-attention mechanisms that embed user interactions into LLM reasoning [29]. Chain-of-thought prompting further enhances interpretability by breaking down recommendations step by step [30]. Aligning model reasoning with explicit knowledge sources strengthens user trust and control over recommendations.
-
-Safety and Vulnerability: As LLM-ARSs become more autonomous, ensuring safety and robustness is critical, particularly in preventing adversarial manipulation and unintended biases. Malicious users can exploit vulnerabilities through prompt injection, data poisoning, and adversarial attacks, leading to biased or harmful recommendations [84, 85]. Additionally, LLM-based RSs risk rein forcing historical biases, over-optimizing for engagement at the cost of diversity and fairness. Over-personalization further exacerbates filter bubbles, limiting content discovery. Addressing these risks requires multi-layered safeguards. Adversarial training enhances resilience [79], while fairness-aware algorithms impose constraints to mitigate bias [16]. User feedback loops enable manual overrides, preserving user agency. Governance frameworks establish ethi cal boundaries for autonomous recommenders [8]. Together, these mechanisms strengthen the security and reliability of LLM-ARS, ensuring autonomy aligns with ethical responsibility.
-
-## 9.4 Life-long Personalization in LLM-ARS (RQ7)
-
-Personalization in agentic recommender systems is currently lim ited to short-term memory or static user profiles [64]. Life-long personalization introduces the concept of continual learning, where agents evolve with the users’ preferences over time (RQ7). Rather than passively generating recommendations, these agents should actively engage with users, clarify ambiguities, and refine their un derstanding through long-term feedback loops. Challenges include handling catastrophic forgetting, aligning learning with changing user preferences, and maintaining scalability as user interaction his tories grow. Approaches such as meta-learning, episodic memory systems, and AI personas—persistent representations [71] of user preferences—can provide promising solutions. These approaches ensure that agents adapt to users’ evolving needs across diverse contexts and applications.
-
-## 10 Conclusion
-
-This perspective paper first examines the integration of LLMs into agentic RSs, highlighting their role in enabling dynamic, adaptive, and multimodal interactions. We categorize recent advancements into single-agent, multi-agent, and human-LLM hybrid architectures, analyzing their impact on personalization, transparency, and reasoning. Despite these advancements, challenges such as eficiency, hallucination, safety, and lifelong learning remain critical. To address these, we outline future directions, including scalable architectures, robust evaluation frameworks, and improved domain generalization. As agentic RSs evolve, ensuring a balance between autonomy and controllability will be essential for building trustworthy, context-aware, and ethically aligned recommender systems.
-
-## References
-
-[1] Hongru Cai, Yongqi Li, Wenjie Wang, Fengbin Zhu, Xiaoyu Shen, Wenjie Li, and Tat-Seng Chua. 2024. Large Language Models Empowered Personalized Web Agents. CoRR abs/2410.17236 (2024).
-
-[2] Chi-Min Chan, Weize Chen, Yusheng Su, Jianxuan Yu, Wei Xue, Shanghang Zhang, Jie Fu, and Zhiyuan Liu. 2023. Chateval: Towards better llm-based evaluators through multi-agent debate. arXiv preprint arXiv:2308.07201 (2023).
-
-[3] Hanxiong Chen, Xu Chen, Shaoyun Shi, and Yongfeng Zhang. 2021. Generate natural language explanations for recommendation. arXiv preprint arXiv:2101.03392 (2021).
-
-[4] Zhaorun Chen, Zhuokai Zhao, Hongyin Luo, Huaxiu Yao, Bo Li, and Jiawei Zhou. 2024. Halc: Object hallucination reduction via adaptive focal-contrast decoding. arXiv preprint arXiv:2403.00425 (2024).
-
-[5] Nathan Corecco, Giorgio Piatti, Luca A Lanzendörfer, Flint Xiaofeng Fan, and Roger Wattenhofer. 2024. An LLM-based Recommender System Environment. arXiv preprint arXiv:2406.01631 (2024).
-
-[6] Nathan Corecco, Giorgio Piatti, Luca A. Lanzendörfer, Flint Xiaofeng Fan, and Roger Wattenhofer. 2024. SUBER: An RL Environment with Simulated Human Behavior for Recommender Systems. arXiv:2406.01631 [cs.IR] https://arxiv. org/abs/2406.01631
-
-[7] Yang Deng, Lizi Liao, Zhonghua Zheng, Grace Hui Yang, and Tat-Seng Chua. 2024. Towards Human-centered Proactive Conversational Agents. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval, SIGIR 2024, Washington DC, USA, July 14-18, 2024. ACM, 807–818.
-
-[8] Zehang Deng, Yongjian Guo, Changzhou Han, Wanlun Ma, Junwu Xiong, Sheng Wen, and Yang Xiang. 2024. Ai agents under threat: A survey of key security challenges and future pathways. Comput. Surveys (2024).
-
-[9] Zane Durante, Qiuyuan Huang, Naoki Wake, Ran Gong, Jae Sung Park, Bidipta Sarkar, Rohan Taori, Yusuke Noda, Demetri Terzopoulos, Yejin Choi, et al. 2024. Agent ai: Surveying the horizons of multimodal interaction. arXiv preprint arXiv:2401.03568 (2024).
-
-[10] Danial Ebrat and Luis Rueda. 2024. Lusifer: LLM-based User SImulated Feedback Environment for online Recommender systems. arXiv preprint arXiv:2405.13362 (2024).
-
-[11] Jiabao Fang, Shen Gao, Pengjie Ren, Xiuying Chen, Suzan Verberne, and Zhaochun Ren. 2024. A multi-agent conversational recommender system. arXiv preprint arXiv:2402.01135 (2024).
-
-[12] Luke Friedman, Sameer Ahuja, David Allen, Zhenning Tan, Hakim Sidahmed, Changbo Long, Jun Xie, Gabriel Schubiner, Ajay Patel, Harsh Lara, Brian Chu, Zexi Chen, and Manoj Tiwari. 2023. Leveraging Large Language Models in Conversational Recommender Systems. arXiv:2305.07961 [cs.IR] https://arxiv. org/abs/2305.07961
-
-[13] Jingtong Gao, Bo Chen, Weiwen Liu, Xiangyang Li, Yichao Wang, Wanyu Wang, Huifeng Guo, Ruiming Tang, and Xiangyu Zhao. 2025. LLM4Rerank: LLM-based Auto-Reranking Framework for Recommendations. arXiv:2406.12433 [cs.IR] https://arxiv.org/abs/2406.12433
-
-[14] Taicheng Guo, Chaochun Liu, Hai Wang, Varun Mannam, Fang Wang, Xin Chen, Xiangliang Zhang, and Chandan K Reddy. 2024. Knowledge Graph Enhanced Language Agents for Recommendation. arXiv preprint arXiv:2410.19627 (2024).
-
-[15] Sirui Hong, Xiawu Zheng, Jonathan Chen, Yuheng Cheng, Jinlin Wang, Ceyao Zhang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, Liyang Zhou, et al. 2023. Metagpt: Meta programming for multi-agent collaborative framework. arXiv preprint arXiv:2308.00352 (2023).
-
-[16] Wenyue Hua, Xianjun Yang, Mingyu Jin, Zelong Li, Wei Cheng, Ruixiang Tang, and Yongfeng Zhang. 2024. Trustagent: Towards safe and trustworthy llmbased agents through agent constitution. In Trustworthy Multi-modal Foundation Models and AI Agents (TiFA).
-
-[17] Chengkai Huang, Tong Yu, Kaige Xie, Shuai Zhang, Lina Yao, and Julian McAuley. 2024. Foundation models for recommender systems: A survey and new perspectives. arXiv preprint arXiv:2402.11143 (2024).
-
-[18] Feiran Huang, Zhenghang Yang, Junyi Jiang, Yuanchen Bei, Yijie Zhang, and Hao Chen. 2024. Large Language Model Interaction Simulator for Cold-Start Item Recommendation. CoRR abs/2402.09176 (2024).
-
-[19] Xu Huang, Jianxun Lian, Yuxuan Lei, Jing Yao, Defu Lian, and Xing Xie. 2023. Recommender ai agent: Integrating large language models for interactive rec ommendations. arXiv preprint arXiv:2308.16505 (2023).
-
-[20] Xu Huang, Jianxun Lian, Yuxuan Lei, Jing Yao, Defu Lian, and Xing Xie. 2023. Recommender AI Agent: Integrating Large Language Models for Interactive Recommendations. CoRR abs/2308.16505 (2023). arXiv:2308.16505
-
-[21] Xu Huang, Weiwen Liu, Xiaolong Chen, Xingmei Wang, Hao Wang, Defu Lian, Yasheng Wang, Ruiming Tang, and Enhong Chen. 2024. Understanding the planning of LLM agents: A survey. arXiv preprint arXiv:2402.02716 (2024).
-
-[22] Fushuo Huo, Wenchao Xu, Zhong Zhang, Haozhao Wang, Zhicheng Chen, and Peilin Zhao. 2024. Self-introspective decoding: Alleviating hallucinations for large vision-language models. arXiv preprint arXiv:2408.02032 (2024).
-
-[23] Eugene Ie, Chih-Wei Hsu, Martin Mladenov, Vihan Jain, Sanmit Narvekar, Jing Wang, Rui Wu, and Craig Boutilier. 2019. RecSim: A Configurable Sim ulation Platform for Recommender Systems. CoRR abs/1909.04847 (2019). arXiv:1909.04847
-
-[24] Aaron Jaech, Adam Kalai, Adam Lerer, Adam Richardson, Ahmed El-Kishky, Aiden Low, Alec Helyar, Aleksander Madry, Alex Beutel, Alex Carney, et al. 2024. Openai o1 system card. arXiv preprint arXiv:2412.16720 (2024).
-
-[25] Dhruv Khattar, Jaipal Singh Goud, Manish Gupta, and Vasudeva Varma. 2019. Mvae: Multimodal variational autoencoder for fake news detection. In The world wide web conference. 2915–2921.
-
-[26] Sunghwan Kim, Tongyoung Kim, Kwangwook Seo, Jinyoung Yeo, and Dongha Lee. 2024. Stop Playing the Guessing Game! Target-free User Simulation for Eval uating Conversational Recommender Systems. arXiv preprint arXiv:2411.16160 (2024).
-
-[27] Chuang Li, Yang Deng, Hengchang Hu, Min-Yen Kan, and Haizhou Li. 2024. Incorporating External Knowledge and Goal Guidance for LLM-based Conver sational Recommender Systems. arXiv preprint arXiv:2405.01868 (2024).
-
-[28] Guohao Li, Hasan Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. 2023. Camel: Communicative agents for" mind" exploration of large language model society. Advances in Neural Information Processing Systems 36 (2023), 51991–52008.
-
-[29] Lei Li, Yongfeng Zhang, and Li Chen. 2023. Personalized prompt learning for explainable recommendation. ACM Transactions on Information Systems 41, 4 (2023), 1–26.
-
-[30] Lei Li, Yongfeng Zhang, and Li Chen. 2023. Prompt distillation for eficient llm based recommendation. In Proceedings of the 32nd ACM International Conference on Information and Knowledge Management. 1348–1357.
-
-[31] Jianghao Lin, Xinyi Dai, Yunjia Xi, Weiwen Liu, Bo Chen, Xiangyang Li, Chenxu Zhu, Huifeng Guo, Yong Yu, Ruiming Tang, and Weinan Zhang. 2023. How Can Recommender Systems Benefit from Large Language Models: A Survey. CoRR abs/2306.05817 (2023). arXiv:2306.0581
-
-[32] Peng Liu, Lemei Zhang, and Jon Atle Gulla. 2023. Pre-train, Prompt and Recom mendation: A Comprehensive Survey of Language Modelling Paradigm Adapta tions in Recommender Systems. CoRR abs/2302.03735 (2023). arXiv:2302.03735
-
-[33] Xiao Liu, Hao Yu, Hanchen Zhang, Yifan Xu, Xuanyu Lei, Hanyu Lai, Yu Gu, Hangliang Ding, Kaiwen Men, Kejuan Yang, Shudan Zhang, Xiang Deng, Ao han Zeng, Zhengxiao Du, Chenhui Zhang, Sheng Shen, Tianjun Zhang, Yu Su, Huan Sun, Minlie Huang, Yuxiao Dong, and Jie Tang. 2024. AgentBench: Evaluating LLMs as Agents. In The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024. OpenReview.net.
-
-[34] Zhiwei Liu, Weiran Yao, Jianguo Zhang, Liangwei Yang, Zuxin Liu, Juntao Tan, Prafulla K Choubey, Tian Lan, Jason Wu, Huan Wang, et al. 2024. AgentLite: A Lightweight Library for Building and Advancing Task-Oriented LLM Agent System. arXiv preprint arXiv:2402.15538 (2024).
-
-[35] Houhong Lu, Yangyang Zhu, Ming Yin, Guofu Yin, and Luofeng Xie. 2022. Multi modal fusion convolutional neural network with cross-attention mechanism for internal defect detection of magnetic tile. IEEE Access 10 (2022), 60876–60886.
-
-[36] Ziyu Lyu, Yue Wu, Junjie Lai, Min Yang, Chengming Li, and Wei Zhou. 2022. Knowledge enhanced graph neural networks for explainable recommendation. IEEE Transactions on Knowledge and Data Engineering 35, 5 (2022), 4954–4968.
-
-[37] Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jef Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, et al. 2021. Webgpt: Browser-assisted question-answering with human feedback. arXiv preprint arXiv:2112.09332 (2021).
-
-[38] Lin Ning, Luyang Liu, Jiaxing Wu, Neo Wu, Devora Berlowitz, Sushant Prakash, Bradley Green, Shawn O’Banion, and Jun Xie. 2024. User-LLM: Eficient LLM Contextualization with User Embeddings. CoRR abs/2402.13598 (2024).
-
-[39] OpenAI. 2023. Gpt-4 technical report. OpenAI (2023)
-
-[40] Joshua Park and Yongfeng Zhang. 2025. AgentRec: Agent Recommendation Using Sentence Embeddings Aligned to Human Feedback. arXiv preprint arXiv:2501.13333 (2025).
-
-[41] Chen Qian, Xin Cong, Cheng Yang, Weize Chen, Yusheng Su, Juyuan Xu, Zhiyuan Liu, and Maosong Sun. 2023. Communicative agents for software development. arXiv preprint arXiv:2307.07924 (2023).
-
-[42] Shengsheng Qian, Jun Hu, Quan Fang, and Changsheng Xu. 2021. Knowledge aware multi-modal adaptive graph convolutional networks for fake news detection. ACM Transactions on Multimedia Computing, Communications, and Applications (TOMM) 17, 3 (2021), 1–23
-
-[43] Peixin Qin, Chen Huang, Yang Deng, Wenqiang Lei, and Tat-Seng Chua. 2024. Beyond Persuasion: Towards Conversational Recommender System with Credi ble Explanations. arXiv preprint arXiv:2409.14399 (2024).
-
-[44] Shashank Rajput, Nikhil Mehta, Anima Singh, Raghunandan Hulikal Keshavan, Trung Vu, Lukasz Heldt, Lichan Hong, Yi Tay, Vinh Q. Tran, Jonah Samost, Maciej Kula, Ed H. Chi, and Mahesh Sathiamoorthy. 2023. Recommender Systems with Generative Retrieval. In Advances in Neural Information Processing Systems 36: Annual Conference on Neural Information Processing Systems 2023, NeurIPS 2023, New Orleans, LA, USA, December 10 - 16, 2023.
-
-[45] Ruiyang Ren, Peng Qiu, Yingqi Qu, Jing Liu, Wayne Xin Zhao, Hua Wu, Ji-Rong Wen, and Haifeng Wang. 2024. BASES: Large-scale Web Search User Simulation with Large Language Model based Agents. CoRR abs/2402.17505 (2024).
-
-[46] Stefen Rendle, Zeno Gantner, Christoph Freudenthaler, and Lars Schmidt-Thieme. 2011. Fast context-aware recommendations with factorization machines. In Proceedings of the 34th international ACM SIGIR conference on Research and development in Information Retrieval. 635–644.
-
-[47] Francesco Ricci, Lior Rokach, and Bracha Shapira. 2015. Recommender Systems: Introduction and Challenges. In Recommender Systems Handbook. Springer, 1–34.
-
-[48] Gaurav Sahu and Olga Vechtomova. 2019. Adaptive fusion techniques for multimodal data. arXiv preprint arXiv:1911.03821 (2019).
-
-[49] J Ben Schafer, Dan Frankowski, Jon Herlocker, and Shilad Sen. 2007. Collaborative filtering recommender systems. In The adaptive web: methods and strategies of web personalization. Springer, 291–324.
-
-[50] Minglai Shao, Hua Huang, Qiyao Peng, and Hongtao Liu. 2024. ULMRec: Usercentric Large Language Model for Sequential Recommendation. arXiv preprint arXiv:2412.05543 (2024).
-
-[51] Wentao Shi, Xiangnan He, Yang Zhang, Chongming Gao, Xinyue Li, Jizhi Zhang, Qifan Wang, and Fuli Feng. 2024. Large Language Models are Learnable Planners for Long-Term Recommendation. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR 2024). ACM, 1893–1903. https://doi.org/10.1145/3626772.3657683
-
-[52] Noah Shinn, Federico Cassano, Beck Labash, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. 2023. Reflexion: Language agents with verbal reinforcement learning.(2023). arXiv preprint cs.AI/2303.11366 (2023).
-
-[53] Yubo Shu, Hansu Gu, Peng Zhang, Haonan Zhang, Tun Lu, Dongsheng Li, and Ning Gu. 2023. RAH! RecSys-Assistant-Human: A Human-Central Rec ommendation Framework with Large Language Models. CoRR abs/2308.09904 (2023).
-
-[54] Yubo Shu, Haonan Zhang, Hansu Gu, Peng Zhang, Tun Lu, Dongsheng Li, and Ning Gu. 2023. RAH! RecSys-Assistant-Human: A Human-Centered Recommendation Framework with LLM Agents. arXiv:2308.09904 [cs.IR] https://arxiv.org/abs/2308.09904
-
-[55] Yubo Shu, Haonan Zhang, Hansu Gu, Peng Zhang, Tun Lu, Dongsheng Li, and Ning Gu. 2024. RAH! RecSys-Assistant-Human: A Human-Centered Recom mendation Framework With LLM Agents. IEEE Trans. Comput. Soc. Syst. 11, 5 (2024), 6759–6770.
-
-[56] YunPeng Tan, Fangyu Liu, BoWei Li, Zheng Zhang, and Bo Zhang. 2022. An eficient multi-view multimodal data processing framework for social media popularity prediction. In Proceedings of the 30th ACM International Conference on Multimedia. 7200–7204.
-
-[57] Zhulin Tao, Yinwei Wei, Xiang Wang, Xiangnan He, Xianglin Huang, and Tat-Seng Chua. 2020. Mgat: Multimodal graph attention network for recom mendation. Information Processing & Management 57, 5 (2020), 102277.
-
-[58] Jie Wang, Alexandros Karatzoglou, Ioannis Arapakis, and Joemon M Jose. 2024. Reinforcement learning-based recommender systems with large language models for state reward and action modeling. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval. 375–385.
-
-[59] Jie Wang, Alexandros Karatzoglou, Ioannis Arapakis, and Joemon M Jose. 2025. Large Language Model driven Policy Exploration for Recommender Systems. arXiv preprint arXiv:2501.13816 (2025).
-
-[60] Lei Wang, Jingsen Zhang, Xu Chen, Yankai Lin, Ruihua Song, Wayne Xin Zhao, and Ji-Rong Wen. 2023. RecAgent: A Novel Simulation Paradigm for Recommender Systems. arXiv:2306.02552 [cs.IR]
-
-[61] Lei Wang, Jingsen Zhang, Hao Yang, Zhiyuan Chen, Jiakai Tang, Zeyu Zhang, Xu Chen, Yankai Lin, Ruihua Song, Wayne Xin Zhao, Jun Xu, Zhicheng Dou, Jun Wang, and Ji-Rong Wen. 2024. User Behavior Simulation with Large Language Model based Agents. arXiv:2306.02552 [cs.IR] https://arxiv.org/abs/2306.02552
-
-[62] Lei Wang, Jingsen Zhang, Hao Yang, Zhi-Yuan Chen, Jiakai Tang, Zeyu Zhang, Xu Chen, Yankai Lin, Hao Sun, Ruihua Song, et al. 2024. User Behavior Simulation with Large Language Model-based Agents for Recommender Systems. ACM Transactions on Information Systems (2024).
-
-[63] Shoujin Wang, Liang Hu, Yan Wang, Longbing Cao, Quan Z Sheng, and Mehmet Orgun. 2019. Sequential recommender systems: challenges, progress and prospects. arXiv preprint arXiv:2001.04830 (2019).
-
-[64] Tiannan Wang, Meiling Tao, Ruoyu Fang, Huilin Wang, Shuai Wang, Yuchen Eleanor Jiang, and Wangchunshu Zhou. 2024. AI PERSONA: Towards Life-long Personalization of LLMs. CoRR abs/2412.13103 (2024).
-
-[65] Xinfeng Wang, Jin Cui, Fumiyo Fukumoto, and Yoshimi Suzuki. 2024. Enhancing High-order Interaction Awareness in LLM-based Recommender Model. arXiv preprint arXiv:2409.19979 (2024).
-
-[66] Xinfeng Wang, Jin Cui, Yoshimi Suzuki, and Fumiyo Fukumoto. 2024. RDRec: Rationale Distillation for LLM-based Recommendation. arXiv preprint arXiv:2405.10587 (2024).
-
-[67] Yancheng Wang, Ziyan Jiang, Zheng Chen, Fan Yang, Yingxue Zhou, Eunah Cho, Xing Fan, Xiaojiang Huang, Yanbin Lu, and Yingzhen Yang. 2023. RecMind: Large Language Model Powered Agent For Recommendation. arXiv preprint arXiv:2308.14296 (2023).
-
-[68] Yancheng Wang, Ziyan Jiang, Zheng Chen, Fan Yang, Yingxue Zhou, Eunah Cho, Xing Fan, Xiaojiang Huang, Yanbin Lu, and Yingzhen Yang. 2024. RecMind: Large Language Model Powered Agent For Recommendation. arXiv:2308.14296 [cs.IR] https://arxiv.org/abs/2308.14296
-
-[69] Zhefan Wang, Yuanqing Yu, Wendi Zheng, Weizhi Ma, and Min Zhang. 2024. Macrec: A multi-agent collaboration framework for recommendation. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval. 2760–2764.
-
-[70] Zhefan Wang, Yuanqing Yu, Wendi Zheng, Weizhi Ma, and Min Zhang. 2024. Multi-Agent Collaboration Framework for Recommender Systems. CoRR abs/2402.15235 (2024).
-
-[71] Qingsong Wen, Jing Liang, Carles Sierra, Rose Luckin, Richard Jiarui Tong, Zitao Liu, Peng Cui, and Jiliang Tang. 2024. AI for Education (AI4EDU): Advancing Personalized Education with LLM and Adaptive Learning. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, KDD 2024, Barcelona, Spain, August 25-29, 2024, Ricardo Baeza-Yates and Francesco Bonchi (Eds.). ACM, 6743–6744.
-
-[72] Lilian Weng. 2023. LLM-powered Autonomous Agents. lilianweng.github.io (Jun 2023). https://lilianweng.github.io/posts/2023-06-23-agent/
-
-[73] Junda Wu, Cheng-Chun Chang, Tong Yu, Zhankui He, Jianing Wang, Yupeng Hou, and Julian McAuley. 2024. Coral: Collaborative retrieval-augmented large language models improve long-tail recommendation. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining. 3391–3401.
-
-[74] Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Shaokun Zhang, Erkang Zhu, Beibin Li, Li Jiang, Xiaoyun Zhang, and Chi Wang. 2023. Autogen: En abling next-gen llm applications via multi-agent conversation framework. arXiv preprint arXiv:2308.08155 (2023).
-
-[75] Shirley Wu, Shiyu Zhao, Qian Huang, Kexin Huang, Michihiro Yasunaga, Kaidi Cao, Vassilis N Ioannidis, Karthik Subbian, Jure Leskovec, and James Zou. 2024. AvaTaR: Optimizing LLM Agents for Tool-Assisted Knowledge Retrieval. arXiv preprint arXiv:2406.11200 (2024).
-
-[76] Yang Wu, Pengwei Zhan, Yunjian Zhang, Liming Wang, and Zhen Xu. 2021. Multimodal fusion with co-attention networks for fake news detection. In Findings of the association for computational linguistics: ACL-IJCNLP 2021. 2560– 2569.
-
-[77] Yunjia Xi, Weiwen Liu, Jianghao Lin, Bo Chen, Ruiming Tang, Weinan Zhang, and Yong Yu. 2024. MemoCRS: Memory-enhanced Sequential Conversational Recommender Systems with Large Language Models. In Proceedings of the 33rd ACM International Conference on Information and Knowledge Management. 2585–2595.
-
-[78] Yikun Xian, Zuohui Fu, Shan Muthukrishnan, Gerard De Melo, and Yongfeng Zhang. 2019. Reinforcement knowledge graph reasoning for explainable rec ommendation. In Proceedings of the 42nd international ACM SIGIR conference on research and development in information retrieval. 285–294.
-
-[79] Zhen Xiang, Linzhi Zheng, Yanjie Li, Junyuan Hong, Qinbin Li, Han Xie, Jiawei Zhang, Zidi Xiong, Chulin Xie, Carl Yang, et al. 2024. GuardAgent: Safeguard LLM Agents by a Guard Agent via Knowledge-Enabled Reasoning. arXiv preprint arXiv:2406.09187 (2024).
-
-[80] Shunyu Yao, Jefrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. 2022. React: Synergizing reasoning and acting in language models. arXiv preprint arXiv:2210.03629 (2022).
-
-[81] Weiran Yao, Shelby Heinecke, Juan Carlos Niebles, Zhiwei Liu, Yihao Feng, Le Xue, Rithesh Murthy, Zeyuan Chen, Jianguo Zhang, Devansh Arpit, et al. 2023. Retroformer: Retrospective large language agents with policy gradient optimization. arXiv preprint arXiv:2308.02151 (2023).
-
-[82] Qifan Yu, Juncheng Li, Longhui Wei, Liang Pang, Wentao Ye, Bosheng Qin, Siliang Tang, Qi Tian, and Yueting Zhuang. 2024. Hallucidoctor: Mitigating hallucinatory toxicity in visual instruction data. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 12944–12953.
-
-[83] Yankai Zeng, Abhiramon Rajasekharan, Parth Padalkar, Kinjal Basu, Joaquín Arias, and Gopal Gupta. 2023. Automated Interactive Domain-Specific Con versational Agents that Understand Human Dialogs. arXiv:2303.08941 [cs.AI]
-
-https://arxiv.org/abs/2303.08941
-
-[84] Yifan Zeng, Yiran Wu, Xiao Zhang, Huazheng Wang, and Qingyun Wu. 2024. Autodefense: Multi-agent llm defense against jailbreak attacks. arXiv preprint arXiv:2403.04783 (2024).
-
-[85] Qiusi Zhan, Zhixiang Liang, Zifan Ying, and Daniel Kang. 2024. Injecagent: Benchmarking indirect prompt injections in tool-integrated large language model agents. arXiv preprint arXiv:2403.02691 (2024).
-
-[86] An Zhang, Leheng Sheng, Yuxin Chen, Hao Li, Yang Deng, Xiang Wang, and Tat-Seng Chua. 2023. On Generative Agents in Recommendation. CoRR abs/2310.10108 (2023). arXiv:2310.10108
-
-[87] Erhan Zhang, Xingzhu Wang, Peiyuan Gong, Yankai Lin, and Jiaxin Mao. 2024. USimAgent: Large Language Models for Simulating Search Users. CoRR abs/2403.09142 (2024).
-
-[88] Jizhi Zhang, Keqin Bao, Wenjie Wang, Yang Zhang, Wentao Shi, Wanhong Xu, Fuli Feng, and Tat-Seng Chua. 2024. Prospect Personalized Recommendation on Large Language Model-based Agent Platform. arXiv:2402.18240 [cs.IR] https://arxiv.org/abs/2402.18240
-
-[89] Junjie Zhang, Yupeng Hou, Ruobing Xie, Wenqi Sun, Julian McAuley, Wayne Xin Zhao, Leyu Lin, and Ji-Rong Wen. 2024. Agentcf: Collaborative learning with autonomous language agents for recommender systems. In Proceedings of the ACM on Web Conference 2024. 3679–3689.
-
-[90] Junjie Zhang, Yupeng Hou, Ruobing Xie, Wenqi Sun, Julian J. McAuley, Wayne Xin Zhao, Leyu Lin, and Ji-Rong Wen. 2023. AgentCF: Collaborative Learning with Autonomous Language Agents for Recommender Systems. CoRR abs/2310.09233 (2023). arXiv:2310.09233
-
-[91] Jinrui Zhang, Teng Wang, Haigang Zhang, Ping Lu, and Feng Zheng. 2024. Reflective instruction tuning: Mitigating hallucinations in large vision-language models. In European Conference on Computer Vision. Springer, 196–213.
-
-[92] Shuai Zhang, Lina Yao, Aixin Sun, and Yi Tay. 2019. Deep Learning Based Recommender System: A Survey and New Perspectives. ACM Comput. Surv. 52, 1 (2019), 5:1–5:38.
-
-[93] Zeyu Zhang, Xiaohe Bo, Chen Ma, Rui Li, Xu Chen, Quanyu Dai, Jieming Zhu, Zhenhua Dong, and Ji-Rong Wen. 2024. A survey on the memory mechanism of large language model based agents. arXiv preprint arXiv:2404.13501 (2024).
-
-[94] Zijian Zhang, Shuchang Liu, Ziru Liu, Rui Zhong, Qingpeng Cai, Xiangyu Zhao, Chunxu Zhang, Qidong Liu, and Peng Jiang. 2024. LLM-Powered User Simulator for Recommender System. arXiv preprint arXiv:2412.16984 (2024).
-
-[95] Hongke Zhao, Songming Zheng, Likang Wu, Bowen Yu, and Jing Wang. 2024. Lane: Logic alignment of non-tuning large language models and online recommendation systems for explainable reason generation. arXiv preprint arXiv:2407.02833 (2024).
-
-[96] Minyi Zhao, Jie Wang, Zhaoyang Li, Jiyuan Zhang, Zhenbang Sun, and Shuigeng Zhou. 2024. Efectively Enhancing Vision Language Large Models by Prompt Augmentation and Caption Utilization. arXiv preprint arXiv:2409.14484 (2024).
-
-[97] Yuyue Zhao, Jiancan Wu, Xiang Wang, Wei Tang, Dingxian Wang, and Maarten de Rijke. 2024. Let Me Do It For You: Towards LLM Empowered Recommendation via Tool Learning. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR 2024). ACM, 1796–1806. https://doi.org/10.1145/3626772.3657828
-
-[98] Yuyue Zhao, Jiancan Wu, Xiang Wang, Wei Tang, Dingxian Wang, and Maarten De Rijke. 2024. Let me do it for you: Towards llm empowered recommendation via tool learning. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval. 1796–1806.
-
-[99] Lixi Zhu, Xiaowen Huang, and Jitao Sang. 2024. A LLM-based Controllable, Scalable, Human-Involved User Simulator Framework for Conversational Rec ommender Systems. arXiv preprint arXiv:2405.08035 (2024).
-
-[100] Yu Zhu, Hao Li, Yikang Liao, Beidou Wang, Ziyu Guan, Haifeng Liu, and Deng Cai. 2017. What to Do Next: Modeling User Behaviors by Time-LSTM. In Proceedings of the Twenty-Sixth International Joint Conference on Artificial Intelligence, Melbourne. 3602–3608.
+[... truncated ...]
 
 
 ---
 
-# 2510.22049_VISTA：虚拟序列目标注意力 (truncated)
+# 2605.14306_PaSaMaster_Self-Evolving_Agentic_Literature_Retrieval (trunc)
 
-**arXiv**: [2510.22049](https://arxiv.org/abs/2510.22049)
+[2605.14306](https://arxiv.org/abs/2605.14306)
 
-# Massive Memorization with Hundreds of Trillions of Parameters for Sequential Transducer Generative Recommenders
+# Towards Recursive Self-Evolving Agentic Literature Retrieval
 
-Zhimin Chen<sup>1†\*</sup>, Chenyu Zhao<sup>1†</sup>, Ka Chun Mo<sup>1</sup>, Yunjiang Jiang<sup>1</sup>, Jane H. Lee<sup>2‡</sup>, Khushhall Chandra Mahajan<sup>1</sup>, Ning Jiang<sup>1</sup>, Kai Ren<sup>1</sup>, Jinhui Li<sup>1\*</sup>, Wen-Yun Yang<sup>1\*</sup>
+Yuwen Du $^{1,2*†}$ , Tian Jin $^{1,2†}$ , Jing Kang $^{1,2}$ , Xianghe Pang $^{1,2}$ , Jingyi Chai $^{1,2}$ , Tingjia Miao $^{1,2}$ , Feny
 
-<sup>1</sup>Meta, <sup>2</sup>Yale University
-
-## Abstract
-
-Modern large-scale recommendation systems rely heavily on user interaction history sequences to enhance the model performance. The advent of large language models and sequential modeling techniques, particularly transformer-like architectures, has led to significant advancements recently (e.g., HSTU, SIM, and TWIN models). While scaling to ultra-long user histories (10k to 100k items) generally improves model performance, it also creates significant challenges on latency, queries per second (QPS) and GPU cost in industry-scale recommendation systems. Existing models do not adequately address these industrial scalability issues. In this paper, we propose a novel two-stage modeling framework, namely VIrtual Sequential Target Attention (VISTA), which decomposes traditional target attention from a candidate item to user history items into two distinct stages: (1) user history summarization into a few hundred tokens; followed by (2) candidate item attention to those tokens. These summarization token embeddings are then cached in storage system and then utilized as sequence features for downstream model training and inference. This novel design for scalability enables VISTA to scale to lifelong user histories (up to one million items) while keeping downstream training and inference costs fixed, which is essential in industry. Our approach achieves significant improvements in ofline and online metrics and has been successfully deployed on an industry leading recommendation platform serving billions of users.
-
-## 1 Introduction
-
-Personalized recommendation systems are now integral to digital platforms like streaming services, e-commerce, and social media, where they boost user engagement and drive key metrics such as click-through rates (CTR), session duration, and retention. The success of these systems hinges on their ability to accurately predict user preferences by processing and interpreting vast user histories.
-
-While traditional recommendation models, such as collaborative filtering (Sarwar et al., 2001) and matrix factorization (Koren et al., 2009), laid the groundwork for personalized recommendation, they often struggle to scale and capture long-term user behaviors. Deep learning introduced more powerful solutions, and the recent integration of large language models (LLMs) and sequential modeling techniques such as transformers (Section 2) has marked a significant leap forward, enabling the capture of intricate interactions across vast user histories.
-
-![](images/1815a572b7ff148e74615bc6b4656ddc8fd3252560fe940f033803b33ae80c87.jpg)  
-Figure 1: VISTA replaces standard attention with a two-stage process, allowing downstream models to compute only the highly eficient second stage.
-
-In the domain of recommendation systems, two primary types of sequence modeling techniques have been explored: full user sequence modeling, as seen in Hierarchical Sequential Transduction Units (HSTU) (Zhai et al., 2024), and target-specific sequence sampling, as seen in Search-based Interest Modeling (SIM) (Pi et al., 2020) and its subsequent works (Chang et al., 2023; Si et al., 2024). Both approaches have demonstrated success in enhancing recommendation system performance by harnessing users’ extensive historical interactions.
-
-Despite their success, full sequence modeling sufers from the computational cost of scaling. Modeling full user interaction sequences which are usually on the scale of O(100K) in length often leads to enormous computational costs and latency issues, which are very challenging for industrial recommendation systems that need to train O(10B) to O(100B) examples per day and have strict latency upper limits during inference. As a result, the full sequence modeling methods such as HSTU (Zhai et al., 2024) are hindered by high computational costs, limiting its widespread adoption across industries where many companies are still short of GPU capacities.
-
-The second approach, target-specific sequence sampling, has been extensively explored through a series of seminal works, including SIM (Pi et al., 2020), TWIN (Chang et al., 2023), and TWIN V2 (Si et al., 2024). These studies have demonstrated the efectiveness of leveraging user historical interaction sequences. However, subsequent research in this direction has encountered two significant challenges: (1) bridging the gap between attention to the target-specific shortened sequence and the full user sequence, which, however, was partially addressed in follow-up work TWIN (Chang et al., 2023); and (2) the computational cost increases linearly with the number of candidates to predict at inference time, due to the independent target-specific sequences. These two challenges remain largely unresolved, primarily due to the inherent design limitations of SIM-style models.
-
-Addressing the challenges of scalability in recommendation systems will assist with their widespread adoption. In this paper, we propose a novel two-stage modeling framework, VIrtual Sequential Target Attention (VISTA), designed to overcome the scalability challenges. The first stage compresses the ultra-long user interaction history into a few hundred of summarization embeddings (see Fig. 1); the second stage serves as eficient candidate aware target attention mechanism that leverages the summarization from the first stage for final prediction. The first stage occurs only during foundational model training, where the resulting summarization embeddings are cached to conceptually represent user embeddings. Consequently, downstream model training and inference only need to perform the second stage: computing attention between a candidate item and these cached embeddings, instead of processing the full user interaction history. This approach significantly reduces the computational complexity for downstream models, especially during inference, at the cost of additional storage. In practice, this is a worthwhile trade-of, as the cost of GPU computation remains multiple orders of magnitude higher than the cost of storage.
-
-As a summary of our contributions, to the best of our knowledge we are the first to propose:
-
-• A two-stage attention framework to decouple foundational model training and downstream model training and inference, which enables us to leverage ultra-long user histories for better recommendation model performance in industrial-scale systems,
-
-• A quasi-linear attention formulation tailored for recommendation models,
-
-• A generative sequential reconstruction loss in recommendation models, and
-
-• A practical embedding delivery system successfully deployed in an industrial-scale platform.
-
-![](images/1636ebf543d2f498d3fdb81a01f2e79a644494fb2ac4d65a1f23e2b85ef1dcce.jpg)  
-Figure 2: An overview of VISTA architecture.
-
-## 2 Related Work
-
-Hierarchical Sequential Transduction Unit (HSTU). A significant advancement in this area is the Hierarchical Sequential Transduction Unit (HSTU) (Zhai et al., 2024), which reframes recommendation as a sequential transduction problem. Designed specifically for high-cardinality, non-stationary streaming recommendation data, HSTU surpasses traditional models in both accuracy and eficiency. This architecture allows recommendation systems to scale to trillions of parameters, leading to substantial gains in predictive performance.
-
-Transformer Architectures in Recommendation Systems. The application of transformer architectures in recommendation systems has been explored extensively. By leveraging the self-attention mechanism, transformers can model complex user-item interactions over time, facilitating more nuanced and personalized recommendations (Subbiah and Aggarwal, 2024). The Deep Interest Network (DIN) (Zhou et al., 2018) and its follow-up work, Searchbased Interest Modeling (SIM) (Pi et al., 2020; Chang et al., 2023; Si et al., 2024), leverage lifelong sequential behavior data. This approach employs search-based mechanisms, also known as General Search Units (GSUs), to select a small subset of relevant interactions from the user’s historical sequence that are pertinent to the target item followed by a standard transformer network, referred to as Exact Search Units (ESUs), to compute the final target item representation. Notably, this method enables the modeling of user behavior data with lengths reaching up to hundreds of thousands (Pi et al., 2020). Other methods (Liu et al., 2023) preprocess user histories into groups and attend to the group embeddings, and separately attend to subsequences in the user history relevant to the target item.
-
-Linear Complexity Attention Mechanisms. Apart from Flash Attention (Dao et al., 2022; Dao, 2023) that is designed to improve the eficiency of the softmax attention mechanisms, there is a new trend to explore linear complexity attention mechanisms. Katharopoulos et al. (2020) first proposes linear attention. By applying matrix multiplication associative property, it enables a change in computation order from $( Q K ^ { T } ) V$ to $Q ( K ^ { T } V )$ , reducing computation complexity from $O ( N ^ { 2 } )$ to O(N) with respect to sequence length N . Recently, Lightning Attention v1 (Qin et al., 2024a) and v2 (Qin et al., 2024b) propose a light network which contains Gated Linear Attention (GLA) and Simple Gated Linear Unit (SGLU) to make linear attention more practical. Another branch of linear complexity work, namely state space model (SSM), has been widely studied. Mamba (Gu and Dao, 2024) is a pioneering work in SSM and widely used in many real-world applications, followed by Hydra (Hwang et al., 2024) which is the double-headed version of Mamba to address non-causal scenarios.
-
-## 3 Method
-
-Here we introduce the details of VISTA’s two cascaded modules: ultra-long user interaction history (UIH) sequence summarization and target-aware attention, followed by details of a practical linear complexity self-attention and generative sequence reconstruction loss. We then explain how VISTA’s design enables the scaling, storage, and processing of industry-scale user history sequences through its embedding delivery system.
-
-## 3.1 Model Architecture Overview
-
-As illustrated in Figure 2, the VISTA architecture employs distinct workflows for training and inference. During training, the computationally expensive UIH summarization module runs to generate summary embeddings. These embeddings are then quantized and exported to a large key-value cache in O(100) terabytes to $O ( 1 )$ petabytes. For inference, this expensive step is bypassed entirely. Instead, the pre-computed embeddings are simply retrieved from the cache and dequantized with minimal distortion. The final component, the target attention module, operates in both phases, using the summarization embeddings and candidate item features to make predictions.
-
-## 3.2 Ultra-long UIH Sequence Summarization
-
-In the first stage, we utilize self-attention with virtual seed embeddings to summarize ultra-long UIH sequences. These virtual seeds are initialized randomly as shared parameters across users, which are updated with the model through its interaction with the UIH sequence in the summarization module. The output of the summarization module can be interpreted as user embeddings, encoding individual personalized preferences to inform recommendations. Figure 3 visualizes these summarization embeddings, projected onto the first 2 principal components by principal component analysis $\mathrm { ( P C A ) }$ . We can clearly see the separation for users of diferent countries, with US and Canada overlapping, which is expected.
-
-![](images/aea9801365172d422b6052ffca12ab4dea59ef5b107528be461e13cdcb8cc950.jpg)  
-Figure 3: Visualization of UIH summarization embeddings.
-
-However, typical softmax attentions sufer from
-
-$O ( N ^ { 2 } )$ time complexity, which is prohibitive when dealing with ultra-long sequences $( N > \mathrm { { 1 0 } } k )$ . Therefore, we propose quasi-linear attention (QLA), a linear time complexity $O ( N )$ self-attention mechanism to overcome this issue.
-
-## 3.2.1 Linear Attention with Candidate Items for Recommendation
-
-With the emergence of Large Language Models (LLMs), researchers have proposed some linear complexity attention algorithms to accelerate transformer blocks (Katharopoulos et al., 2020; Qin et al., 2024a;b; Han et al., 2024). However in recommendation systems, unlike the text sequences in LLM, a strict rule is that the candidates cannot attend each other, since it introduces label leakage due to the fact that the logged candidates typically only form a small subset of the input candidates during inference. Therefore, we propose a linear-complexity self attention mechanism that avoids attention among candidates.
-
-The typical softmax self attention for a UIH sequence $S$ can be formulated as follows
-
-$$
-\operatorname{SoftmaxAttn} (\mathrm{S} \Rightarrow_ {\text { full }} \mathrm{S}) = \operatorname{RowSoftmax} (Q K ^ {\top}) V
-$$
-
-where $Q , K$ and V have shape $( L , d )$ and $L$ is the sequence length. Then the original linear attention (Katharopoulos et al., 2020) for a UIH sequence $S$ can be written similarly as follows
-
-$$
-\begin{array}{c} \operatorname{LinAttn} (\mathrm{S} \Rightarrow_ {\text {full}} \mathrm{S}) = \operatorname{RowNormalize} (Q K ^ {\top}) V \\ = Q (K ^ {\top} V) / \operatorname{RowSum} (Q K ^ {\top}) = Q (K ^ {\top} V) / (Q \operatorname{ColSum} (K) ^ {\top}). \end{array}\tag{1}
-$$
-
-![](images/561f618fea44ccee79c870311f1ba35ce8d3a6a0f9f0a888a45e1131acc09097.jpg)  
-Figure 4: The QLU module.
-
-![](images/690743689b74daa8d1bc463a3cb4642717172f65145f2dd03e3329127dda29b1.jpg)  
-Figure 5: Generative reconstruction loss.
-
-Note that division / here stands for broadcast division along the rows. The above can be applied to full (bi-directional) self-attention.
-
-In recommendation models, we also have target (candidate) items, let’s denote them by T . Then we want to compute target attention of T against K and V .
-
-$$
-\mathrm{LinAttn} (\mathrm{T} \Rightarrow_ {\mathrm{full}} \mathrm{S}) = \mathrm{T} (\mathrm{K} ^ {\top} \mathrm{V}) / (\mathrm{T} \operatorname{ColSum} (\mathrm{K}) ^ {\top}).\tag{2}
-$$
-
-Note that candidates cannot attend to each other. This is a strict rule in recommendation systems otherwise the model training will fail due to the leakage between candidate items. It gets slightly trickier if we also want each candidate to attend to itself. Instead of $T T ^ { \top } T$ , the contribution due to the self attention of each target item to itself is given by
-
-$$
-\mathrm{LinAttn} (\mathrm{T} \Rightarrow_ {\mathrm{individual}} \mathrm{T}) = \mathrm{Diag} (\mathrm{TT} ^ {\top}) \mathrm{T}.\tag{3}
-$$
-
-## 3.2.2 Quasi-linear Attention for Recommendation
-
-Despite its eficiency, some previous works (Han et al., 2024; 2023) prove that linear attention sufers from insuficient expressive power, making it impractical for real applications. In this section, we introduce quasi-linear attention (QLA) as an empirically efective linear attention algorithm for recommendation. This quasi-linear attention introduces more non-linear complexity in attention computation, addressing the issue of expressive power.
-
-The quasi-linear attention contains two parts: Quasi Linear Unit (QLU) module and Simple Gated Linear Unit (SGLU) module. The QLU module aims to model the interaction of Q, K, V matrices with SiLU non-linear activation as shown in Figure 4. For the SGLU module, we use the same gated function as TransNormerLLM (Qin et al., 2024a).
-
-Accordingly, we need to slightly modify the above linear attention formulation to accommodate this QLU module. For the self attention part we let the user history items attend to one another. Similar as in HSTU (Zhai et al., 2024), SASRec (Kang and McAuley, 2018), and Pinnerformer (Pancha et al., 2022), usually the causal self-attention approach via a triangular mask is used. In our case, we did not find significant diference between causal and full self attention, since the user history items merely serve as features for the final candidate prediction task – their temporal causality is not a strict requirement. Let φ denote a non-linear activation function (we use SiLU in our experiments), then the full self quasi-linear attention modified from Eq. (1) is as follows.
-
-$$
-O [ S ] = \varphi (Q [ S ]) \varphi (\varphi (K [ S ]) ^ {\top} V [ S ])
-$$
-
-where [S] denotes the source (user history) portion of the sequence. Note that we remove the RowNormalize operation, similarly as in Lightning Attention (Qin et al., 2024a;b).
-
-For the target portion of the query sequence embeddings, we can similarly apply φ-linear attention between $Q [ T ]$ and $\dot { K } [ S ] , V [ S ]$ . However to be consistent with the self-attention semantics, we also include an extra term that captures attention to the target item itself. Thus, the final formula for the target portion of the quasi-linear attention, modified from Eq. (2) and (3) is given by
-
-$$
-O [ T ] = \varphi (Q [ T ]) \varphi (\varphi (K [ S ]) ^ {\top} V [ S ]) + \Delta (\varphi (Q [ T ]), \varphi (K [ T ])) V [ T ].
-$$
-
-Here $\begin{array} { r } { \Delta ( X , Y ) _ { i j } : = \sum _ { k } X _ { i k } Y _ { i k } \delta _ { i j } } \end{array}$ stands for putting the row-wise dot product between the two matrices $\bar { X }$ and $Y$ of shape $n \times m$ on the diagonal of a square matrix of shape $n \times n$ In order to implement the quasi-linear attention eficiently using the Triton language (Tillet et al., 2019) for optimized GPU computation performance, we also calculate the gradient of the final loss function with respect to the input tensors $\check { Q } [ S ] , Q [ T ] , K [ S ] , K [ T ] , \check { V } [ S ] , V [ T ]$ in terms of the gradient with respect to the output tensor ${ \mathrm { \bar { \it O } } } [ S ] , { \mathrm { \bar { \it O } } } [ T ]$ in Appendix B.
-
-## 3.2.3 Generative Sequence Reconstruction Loss
-
-To further enhance the memorization efects, we also introduce a reconstruction loss (see Fig. 5) to encourage the sequence summarization to fully reproduce the UIH sequence, which we find particularly useful to improve VISTA’s performance. Intuitively, to reconstruct the i-th UIH item embedding, we are using all the seed embeddings and the UIH item embeddings up to the (i − 1)-th position. A natural way to accomplish this is via the decoder network, such as the causal transformer decoder, without the softmax layer. Formally,
-
-$$
-(t _ {1}, \dots , t _ {k}, v _ {1}, \dots , v _ {M}) = \operatorname{Decoder} (s _ {1}, \dots , s _ {k}, u _ {1}, \dots , u _ {M}).
-$$
-
-where $s _ { 1 } , \ldots , s _ { k }$ are the personalized seed embeddings, and $u _ { 1 } , \ldots , u _ { M }$ are the UIH item embeddings. We can feed their concatenation through the causal softmax attention block (or any other transformer block) to get the output embeddings concatenated as $t _ { 1 } , \ldots , t _ { k }$ and $v _ { 1 } , \ldots , v _ { M }$ where k is the number of seeds and M the length of the user history sequence. Then we can simply form the of-by-one mean square error of the $v _ { i } \mathrm { { s } }$ with the $u _ { i } \mathrm { ^ { * } s }$ as the construction loss as $\begin{array} { r } { L _ { \mathrm { r e c o n s t r u c t } } = \sum _ { i = 1 } ^ { M - 1 } \| v _ { i } - u _ { i + 1 } \| _ { 2 } ^ { 2 } } \end{array}$
-
-Since causal transformer block ensures that the output embedding $v _ { i }$ only depends on $u _ { 1 } , \ldots , u _ { i } .$ , there is no leak of information from $u _ { i + 1 }$ to $v _ { i }$ . This forces the personalized seed embeddings $s _ { i }$ to maximize information retained of the user history sequence $u _ { 1 } , \ldots , u _ { M }$ Similar ideas have roots in the Variational Auto-Encoder (Kingma and Welling, 2022), and have appeared in the context of transformer networks recently (Henderson and Fehr, 2022). However to the best of our knowledge, there has not been any explicit use in recommendation. For more discussion on this reconstruction loss, see Appendix C.
-
-## 3.3 Target-aware Attention
-
-As shown in Figure $^ { 2 , }$ any attention network can technically be used for the target-aware attention stage. Because this step is computationally inexpensive compared to sequence summarization, we selected a standard $\overset { \mathcal { ( ) } } { O } ( N ^ { 2 } )$ transformer block, which delivers excellent performance on the compact summary sequences.
-
-## 4 Embedding Delivery System
-
-We emphasize that the VISTA framework is not merely a theoretical model, but a novel industrial model system co-design to support large scale user interaction history sequence learning that can be deployed into the real industry infrastructure with reasonable cost.
-
-Figure 6 outlines the system’s end-to-end architecture, which comprises three main stages: (1) online training of the source model using training data stream, (2) delivery of sequence summarization embeddings to downstream models via two routes: a real-time message queue, e.g., Kafka (Kreps et al., 2011) and persistent storage, e.g., Hive (Thusoo et al., 2009), and (3) serving embeddings through a geographically replicated in-memory key-value store. In our system, we update the summarization embeddings on a 2-hour cadence, which was shown to have similar performance compared to using the summarization module directly in online $\mathrm { A } / \mathrm { B }$ tests. This design ensures both real-time performance and scalability for industrial applications. For scalability, we deliberately compress the user interaction history sequence to O(100) terabytes level, making it feasible to deploy to existing systems.
-
-![](images/f4fec74a64978642c34bef42dfa1a52c2b8e7b0fb777766a7cf99703ef52fd3d.jpg)  
-Figure 6: An overview of VISTA sequence summarization embedding delivery system.
-
-## 5 Experiments
-
-## 5.1 Datasets and Experimental Setup
-
-The proposed VISTA framework is designed for a large scale real-world dataset, where one needs to train hundreds of billions of examples per day and each user has a history which contains hundreds of thousands of items. While existing public datasets are usually much smaller, we compare our method against several baselines on public datasets in addition to reporting results on real production data.
-
-## 5.1.1 Public Dataset and Industrial-Scale Dataset
-
-We first compare the efectiveness of VISTA against several baseline models on public datasets Amazon-Electronics <sup>1</sup> and KuaiRand-1K <sup>2</sup>. To focus mainly on the efectiveness of the attention mechanism, we compare VISTA against baselines in replacing the attention layers in a common model architecture. All models are implemented, trained, and evaluated under the FuxiCTR <sup>3</sup> framework, focusing on click-through rate prediction. Additionally, we introduce a Minimal Production dataset from real production data, compatible with FuxiCTR having minimal features but with longer sequences up to 2,000.
-
-For industrial-scale ofline experimentation, we construct full training and evaluation samples from real production data, with several metrics for engagement, which we denote by “C-Task”, “E1-Task”, etc. We use 3-day data as the training set and the next 1-day data as the evaluation set in our ofline experiment. The scale of training examples per day is at O(10) billion level. The average and maximum UIH sequence lengths are 7,000 and 16,000, respectively. Note that we deploy the model with 12,000 UIH sequence length in online experiments, but we only use 2,000 in ofline experiments due to GPU resource constraints.
-
-Table 1: Dataset Statistics
-
-<table><tr><td>Dataset</td><td>Mean Seq.</td><td>Max Seq.</td></tr><tr><td>Amazon-Electronics</td><td>8.93</td><td>429</td></tr><tr><td>KuaiRand-1K</td><td>225.20</td><td>256</td></tr><tr><td>Simplified Prod</td><td>1528.18</td><td>2,000</td></tr><tr><td>Industrial-Scale Data</td><td>7,000</td><td>16,000</td></tr></table>
-
-Table 2: Comparisons on public and Minimal Production datasets. $\mathrm { V I S T A  – w / – Q L A }$ and $\mathrm { V I S T A  – w / o \mathrm { - } Q L A }$ are the VISTA model with and without quasi-linear attention, respectively.<sup>4</sup>
-
-<table><tr><td rowspan="2">Models</td><td colspan="2">Amazon</td><td colspan="2">KuaiRand</td><td colspan="2">Minimal Production</td></tr><tr><td>AUC (↑)</td><td>NE (↓)</td><td>AUC (↑)</td><td>NE (↓)</td><td>AUC (↑)</td><td>NE (↓)</td></tr><tr><td>DIN</td><td> $0.873 \pm 8e^{-4}$ </td><td> $0.656 \pm 1e^{-4}$ </td><td> $\underline{0.744 \pm 0.003}$ </td><td> $0.864 \pm 0.005$ </td><td> $0.632 \pm 0.02$ </td><td> $1.048 \pm 0.033$ </td></tr><tr><td>TTSN</td><td> $0.877 \pm 0.005$ </td><td> $0.644 \pm 0.010$ </td><td> $\underline{0.740 \pm 0.003}$ </td><td> $0.869 \pm 0.004$ </td><td> $0.648 \pm 0.005$ </td><td> $1.139 \pm 0.156$ </td></tr><tr><td>MHA</td><td> $0.881 \pm 1e^{-4}$ </td><td> $0.634 \pm 0.002$ </td><td> $0.743 \pm 0.001$ </td><td> $\underline{0.863 \pm 0.005}$ </td><td> $0.630 \pm 0.018$ </td><td> $1.049 \pm 0.041$ </td></tr><tr><td>SASRec</td><td> $0.884 \pm 4e^{-4}$ </td><td> $0.627 \pm 0.001$ </td><td> $0.742 \pm 0.003$ </td><td> $0.868 \pm 0.007$ </td><td> $0.605 \pm 0.020$ </td><td> $1.129 \pm 0.134$ </td></tr><tr><td>HSTU</td><td> $0.884 \pm 0.001$ </td><td> $0.628 \pm 0.001$ </td><td> $0.743 \pm 0.001$ </td><td> $0.863 \pm 1e^{-5}$ </td><td> $\mathbf{0.668 \pm 0.011}$ </td><td> $1.099 \pm 0.048$ </td></tr><tr><td>VISTA-w/o-QLA</td><td> $\mathbf{0.886 \pm 0.002}$ </td><td> $\mathbf{0.621 \pm 0.005}$ </td><td> $\mathbf{0.744 \pm 0.001}$ </td><td> $\mathbf{0.863 \pm 0.003}$ </td><td> $0.627 \pm 0.016$ </td><td> $\mathbf{1.038 \pm 0.05}$ </td></tr><tr><td>VISTA-w/-QLA</td><td> $0.884 \pm 0.005$ </td><td> $0.623 \pm 0.003$ </td><td> $0.743 \pm 4e^{-4}$ </td><td> $0.864 \pm 0.001$ </td><td> $0.632 \pm 0.013$ </td><td> $1.062 \pm 0.076$ </td></tr></table>
-
-![](images/ad06f4736d5abe72f114fd8f884dd9e42910c6d0c5881720d3d556766beeab94.jpg)
-
-![](images/a083eb1c5daacf3c2ea2fd7c541cca0bbd605adadc72c6bd6a770c0d2ee5e494.jpg)
-
-![](images/0a8480f8cae73146cf07c06699d09499f6c11c2b1955aef611e6d61493227f6b.jpg)  
-Figure 7: Ablation study on quasi-linear attention by varying sequence length.
-
-## 5.1.2 Baselines and Evaluation Metrics
-
-All models share a common feature embedding layer and MLP block, with consistent hyperparameters, e.g., embedding dimensions, layers, attention heads, for fair comparison. We briefly describe them: (1) Deep Interest Network (DIN) (Zhou et al., 2018) uses attention to adaptively weigh user historical behaviors, (2) Two-Tower Sparse Network (TTSN) (Covington et al., 2016) separately encodes user and item features via two towers, (3) the standard Multi-Head Attention (MHA) (Vaswani et al., 2017), (4) SASRec (Kang and McAuley, 2018) is self-attentive sequential recommendation model that uses the Transformer architecture, and (5) Hierarchical Sequential Transduction Units (HSTU) (Zhai et al., 2024) is an industry proposed transformer-like model designed to capture multi-scale sequential patterns in user behavior sequence.
-
-We use normalized entropy (NE) (He et al., 2014) as our evaluation metric, which calculates the cross entropy between the predicted probabilities and the labels, then normalizes it by the entropy of the constant predictor at label average. We also report the area under curve (AUC) for the traditional setting. Additional details about this section are in Appendix D.
-
-## 5.2 Offline Experimental Results
-
-## 5.2.1 Public Dataset Results
-
-In Table 2, we summarize the comparative results between VISTA and the baseline models. For the Amazon-Electronics dataset, VISTA outperforms the other baselines with the use of quasi-linear attention being the next best model. On the KuaiRand dataset, VISTA slightly outperforms the other models with similar NE to HSTU and MHA. This may suggest that even at smaller sequence lengths, the virtual seeding embeddings slightly help the model performance. On much longer sequences in Minimal Production, we see that HSTU and VISTA perform best demonstrating that both are designed for handling longer sequences.
-
-Figure 7 shows the ablation study results of quasi-linear attention by varying the sequence length on the Minimal Production dataset. We can clearly see that the QLA mechanism significantly reduces the the time to train and evaluate 1 epoch of data, while there are small diferences in AUC and NE.
-
-Figure 8 shows the scaling law of increasing number of seed embeddings. We can clearly see that the model performance improves with larger number of seed embeddings, which, however, will incur more storage capacity cost in real world production scenario. Thus, in practice it is a tradeof between model performance and financial cost.
-
-![](images/86ed9d0ee8f8252486ce0db9791ba1ee7aeb181fb355ce3287401f44e4a6b1fa.jpg)
-
-![](images/7c4a5e27011b48c0d029a636634975bfc58c98e87ec8be4ca3e8307c8f24c2e3.jpg)
-
-![](images/da5158f954b86cb8a3248094f01114b5b643cc4bcb35137bbfead2679e33e0b3.jpg)  
-Figure 8: Ablating VISTA across number of seed embeddings on Amazon-Electronics.  
-Figure 9: Inference time gains with increasing UIH lengths.
-
-![](images/69b6ec98bbf96ee1d2ae9787aa975f085f9e868620183e15c9a09bca2934f83d.jpg)  
-(a) Same category (142).
-
-![](images/5203401a9f4931a5a505ad5d2e62f17fca50f02d52d0d8e03bdece13798b48b5.jpg)  
-(b) Same category (368).
-
-![](images/35521d426bf7c5876e15375bd87b94b03df86601eb68e62d289ba3fe26db2e6f.jpg)  
-(c) Diferent categories (each).  
-Figure 10: Pairwise cosine similarity of the output of two-stage attention of VISTA. For the same user, we compare the target attention output for items of similar or diferent categories.
-
-Figure 10 compares the target embeddings, the output of VISTA’s two-stage attention modules, for diferent items given the same user history from Amazon-Electronics. Embeddings between items from the same category are more similar than those from diferent ones, as expected.
-
-## 5.2.2 Industrial-Scale Dataset Results
-
-In Table 3, we compare our proposed VISTA model with the baseline production model using HSTU as the backbone in both ofline and online experiments, on the industrial-scale dataset. In this setting, there are multiple tasks which measure diferent aspects of engagement information. We report the main consumption task (“C-Task”), and other engagement events (“E1-Task”, “E2-Task”, and “E3-Task”). To further understand the efectiveness of the model, we also conduct ablation studies by varying the embedding dimension, the number of seeds, and the use of generative reconstruction loss. As shorthands, (1) VISTA stands for the optimized proposed model co-trained with the baseline HSTU model, with 3-layer self-attention, 3-layer target-aware attention, 128 seeds, 256 embedding dimension and 2, 000 UIH sequence length. (2) VISTA-128D stands for VISTA model with 128 dimension embedding. (3) VISTA-64Seed stands for VISTA model with 64 seeds. (4) VISTA-w/o-Recon stands for VISTA model without generative reconstruction loss. The results demonstrate that our optimized VISTA configuration (128 seeds, 256 embedding dimension, and 2, 000 UIH sequence) significantly outperforms the standalone HSTU baseline for training and evaluation NE metrics.
-
-Table 4 summarizes the performance improvement of QLA compared with the standard self-attention on production dataset, where we can see that the QLA is able to scale up with more layers and longer sequence for better NE metrics and even higher QPS.
-
-Figure 9 shows the VISTA’s advantage on inference performance, especially for much longer sequence lengths. This is expected since VISTA’s main strength is to cache the UIH summarization. Thus, the most computationally expensive module, UIH summarization module, is deactivated during inference.
-
-Table 3: Ofline comparative results with the baseline model and ablation models.
-
-<table><tr><td rowspan="2">Models</td><td colspan="4">Training NE (↓)</td><td colspan="4">Eval NE (↓)</td></tr><tr><td>C-Task</td><td>E1-Task</td><td>E2-Task</td><td>E3-Task</td><td>C-Task</td><td>E1-Task</td><td>E2-Task</td><td>E3-Task</td></tr><tr><td>HSTU</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr><tr><td>VISTA</td><td>-0.47%</td><td>-0.82%</td><td>-2.30%</td><td>-1.72%</td><td>-0.40%</td><td>-1.19%</td><td>-2.98%</td><td>-2.23%</td></tr><tr><td>VISTA-128D</td><td>-0.32%</td><td>-0.50%</td><td>-1.86%</td><td>-1.43%</td><td>-0.29%</td><td>-1.07%</td><td>-2.51%</td><td>-1.82%</td></tr><tr><td>VISTA-64Seed</td><td>-0.36%</td><td>-0.68%</td><td>-1.70%</td><td>-1.45%</td><td>-0.37%</td><td>-1.11%</td><td>-3.01%</td><td>-2.09%</td></tr><tr><td>VISTA-w/o-Recon</td><td>-0.42%</td><td>-0.72%</td><td>-2.32%</td><td>-1.69%</td><td>-0.29%</td><td>-1.29%</td><td>-3.00%</td><td>-2.21%</td></tr></table>
-
-Table 4: Comparing VISTA with and without quasi-linear attention.
-
-<table><tr><td>Model Variant</td><td>Max Seq.</td><td>Layers</td><td>QPS (↑)</td><td>Training NE (↓)</td><td>Eval NE (↓)</td></tr><tr><td>VISTA-w/o-QLA</td><td>6,000</td><td>3</td><td>-</td><td>-</td><td>-</td></tr><tr><td>VISTA-w/-QLA</td><td>16,000</td><td>5</td><td>+5%</td><td>-0.1%</td><td>-0.13%</td></tr></table>
-
-## 5.3 Online A/B Experimental Results
-
-We conducted an online A/B test on our production video recommendation system, using 5% of the entire site trafic during a period of 15 days. The baseline is the HSTU model and we compare with adding the VISTA module, which is the same as our ofline experiment setup. Online metrics for the main consumption task “C-Task” and other online onboarding metrics, “O1-Task” and “O2-Task”, were significantly improved by 0.5%, 0.2%, 0.04%, respectively. VISTA demonstrated a 94% reduction in inference GPU resource (measured by inference QPS) usage by caching and serving embeddings, rather than re-computing them for every new user request. With a 0.01% “O2-Task” gain considered a substantial improvement on our platform, the VISTA model made realized contributions to the recommendation system.
-
-## 6 Conclusion and Discussions
-
-In this paper, we have proposed the VIrtual Sequential Target Attention (VISTA) framework, a novel two-stage approach that compresses ultra-long user interaction histories into a set of compact embeddings. This design strikes a crucial balance between computational eficiency and predictive accuracy, addressing the latency and scalability challenges of processing ultra-long user sequence data in production systems. VISTA’s practical applicability is underscored by its resilience to slight de-synchronization between its stages and its ability to approximate complex transformer architectures without their substantial computational cost. Our empirical evaluations demonstrate that VISTA not only captures the core information within user interactions but also achieves significant improvements across platform metrics. Our plans for future research involve further optimizing VISTA’s compression techniques and exploring its applications across other domains to enhance its generalizability.
-
-## Acknowledgement
-
-This work results from a large cross organization collaboration. It would not be possible without contributions from the collaborators and supports from the leaderships as follows (alphabetic order): Zheng-Yong Ang, David Bauer, Connor Chen, Shouwei Chen, Siqiao Chen, Huihui Cheng, Ek Kheng Chung, Litao Deng, Shilin Ding, Chenhao Feng, Kevin Goulding, Liang Guo, Mengyue Hang, Maxwell Lin-He, Xiaoxin He, Chufeng Hu, Jizhou Huang, Yanzun Huang, Han Jiang, Justin Khim, Emma Lin, Zihan Li, Yang Liu, Yining Liu, Li Lu, Wenhan Lyu, Jing Ma, Matt Ma, Jing Qian, Rui Qiao, Chuyu Qiu, Yongxiong Ren, Xinyue Shen, Daisy Shi, Hongzheng Shi, Ge Song, Yisong Song, Wanting Tan, Hao Wan, Meihong Wang, Yanhong Wu, Hong Yan, Yihang Yang, Chuanwei Yi, Christina You, Haoli Zhang, Rui Zhang, Yue Zhang, John Zheng, Xinye Zheng, Lizhen Zhu, Maggie Zhuang.
-
-## References
-
-Jianxin Chang, Chenbin Zhang, Zhiyi Fu, Xiaoxue Zang, Lin Guan, Jing Lu, Yiqun Hui, Dewei Leng, Yanan Niu, Yang Song, and Kun Gai. 2023. TWIN: TWo-stage Interest Network for Lifelong User Behavior Modeling in CTR Prediction at Kuaishou. arXiv:2302.02352 [cs.IR] https://arxiv.org/abs/2302.02352
-
-Paul Covington, Jay Adams, and Emre Sargin. 2016. Deep Neural Networks for YouTube Recommendations. In Proceedings of the 10th ACM Conference on Recommender Systems (Boston, Massachusetts, USA) (RecSys ’16). Association for Computing Machinery, New York, NY, USA, 191–198. doi:10.1145/2959100.2959190
-
-Tri Dao. 2023. FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning. arXiv:2307.08691 [cs.LG] https://arxiv.org/abs/2307.08691
-
-Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra, and Christopher Ré. 2022. FlashAttention: Fast and Memory-Eficient Exact Attention with IO-Awareness. arXiv:2205.14135 [cs.LG] https://arxiv.org/abs/2205.14135
-
-Chongming Gao, Shijun Li, Yuan Zhang, Jiawei Chen, Biao Li, Wenqiang Lei, Peng Jiang, and Xiangnan He. 2022. KuaiRand: An Unbiased Sequential Recommendation Dataset with Randomly Exposed Videos. In Proceedings of the 31st ACM International Conference on Information and Knowledge Management (Atlanta, GA, USA) (CIKM ’22). 3953–3957. doi:10.1145/3511808.3557624
-
-Albert Gu and Tri Dao. 2024. Mamba: Linear-Time Sequence Modeling with Selective State Spaces. arXiv:2312.00752 [cs.LG] https://arxiv.org/abs/2312.00752
-
-Dongchen Han, Xuran Pan, Yizeng Han, Shiji Song, and Gao Huang. 2023. FLatten Transformer: Vision Transformer using Focused Linear Attention. arXiv:2308.00442 [cs.CV] https://arxiv.org/abs/2308.00442
-
-Dongchen Han, Yifan Pu, Zhuofan Xia, Yizeng Han, Xuran Pan, Xiu Li, Jiwen Lu, Shiji Song, and Gao Huang. 2024. Bridging the Divide: Reconsidering Softmax and Linear Attention. arXiv:2412.06590 [cs.CV] https://arxiv.org/abs/2412.06590
-
-Xinran He, Junfeng Pan, Ou Jin, Tianbing Xu, Bo Liu, Tao Xu, Yanxin Shi, Antoine Atallah, Ralf Herbrich, Stuart Bowers, et al. 2014. Practical lessons from predicting clicks on ads at facebook. In Proceedings of the eighth international workshop on data mining for online advertising. 1–9.
-
-James Henderson and Fabio Fehr. 2022. A Variational AutoEncoder for Transformers with Nonparametric Variational Information Bottleneck. arXiv:2207.13529 [cs.LG] https: //arxiv.org/abs/2207.13529
-
-Yupeng Hou, Jiacheng Li, Zhankui He, An Yan, Xiusi Chen, and Julian McAuley. 2024. Bridging Language and Items for Retrieval and Recommendation. arXiv preprint arXiv:2403.03952 (2024).
-
-Sukjun Hwang, Aakash Lahoti, Tri Dao, and Albert Gu. 2024. Hydra: Bidirectional State Space Models Through Generalized Matrix Mixers. arXiv:2407.09941 [cs.LG] https: //arxiv.org/abs/2407.09941
-
-Wang-Cheng Kang and Julian McAuley. 2018. Self-Attentive Sequential Recommendation. arXiv:1808.09781 [cs.IR] https://arxiv.org/abs/1808.09781
-
-Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and François Fleuret. 2020. Transformers are rnns: Fast autoregressive transformers with linear attention. In International conference on machine learning. PMLR, 5156–5165.
-
-Diederik P Kingma and Max Welling. 2022. Auto-Encoding Variational Bayes. arXiv:1312.6114 [stat.ML] https://arxiv.org/abs/1312.6114
-
-Yehuda Koren, Robert Bell, and Chris Volinsky. 2009. Matrix Factorization Techniques for Recommender Systems. Computer 42, 8 (2009), 30–37. doi:10.1109/MC.2009.263
-
-Jay Kreps, Neha Narkhede, Jun Rao, et al. 2011. Kafka: A distributed messaging system for log processing. In Proceedings of the NetDB, Vol. 11. Athens, Greece, 1–7.
-
-Qi Liu, Xuyang Hou, Haoran Jin, Jin Chen, Zhe Wang, Defu Lian, Tan Qu, Jia Cheng, and Jun Lei. 2023. Deep Group Interest Modeling of Full Lifelong User Behaviors for CTR Prediction. CoRR (2023).
-
-Nikil Pancha, Andrew Zhai, Jure Leskovec, and Charles Rosenberg. 2022. PinnerFormer: Sequence Modeling for User Representation at Pinterest. arXiv:2205.04507 [cs.LG] https: //arxiv.org/abs/2205.04507
-
-Qi Pi, Xiaoqiang Zhu, Guorui Zhou, Yujing Zhang, Zhe Wang, Lejian Ren, Ying Fan, and Kun Gai. 2020. Search-based User Interest Modeling with Lifelong Sequential Behavior Data for Click-Through Rate Prediction. In Proceedings of the 29th ACM International Conference on Information & Knowledge Management (CIKM). ACM. https://doi. org/10.1145/3340531.3412744
-
-Zhen Qin, Dong Li, Weigao Sun, Weixuan Sun, Xuyang Shen, Xiaodong Han, Yunshen Wei, Baohong Lv, Xiao Luo, Yu Qiao, and Yiran Zhong. 2024a. TransNormerLLM: A Faster and Better Large Language Model with Improved TransNormer. arXiv:2307.14995 [cs.CL] https://arxiv.org/abs/2307.14995
-
-Zhen Qin, Weigao Sun, Dong Li, Xuyang Shen, Weixuan Sun, and Yiran Zhong. 2024b. Lightning Attention-2: A Free Lunch for Handling Unlimited Sequence Lengths in Large Language Models. arXiv:2401.04658 [cs.CL] https://arxiv.org/abs/2401.04658
-
-Badrul Sarwar, George Karypis, Joseph Konstan, and John Riedl. 2001. Item-based collaborative filtering recommendation algorithms. In Proceedings of the 10th International Conference on World Wide Web (Hong Kong, Hong Kong) (WWW ’01). Association for Computing Machinery, New York, NY, USA, 285–295. doi:10.1145/371920.372071
-
-Zihua Si, Lin Guan, Zhongxiang Sun, Xiaoxue Zang, Jing Lu, Yiqun Hui, Xingchao Cao, Zeyu Yang, Yichen Zheng, Dewei Leng, Kai Zheng, Chenbin Zhang, Yanan Niu, Yang Song, and Kun Gai. 2024. TWIN V2: Scaling Ultra-Long User Behavior Sequence Modeling for Enhanced CTR Prediction at Kuaishou. In Proceedings of the 33rd ACM International Conference on Information and Knowledge Management (CIKM ’24). ACM, 4890–4897. doi:10.1145/3627673.3680030
-
-Anushya Subbiah and Vikram Aggarwal. 2024. Transformers in music recommendation. https://research.google/blog/transformers-in-music-recommendation/.
-
-Ashish Thusoo, Joydeep Sen Sarma, Namit Jain, Zheng Shao, Prasad Chakka, Suresh Anthony, Hao Liu, Pete Wyckof, and Raghotham Murthy. 2009. Hive: a warehousing solution over a map-reduce framework. Proceedings of the VLDB Endowment 2, 2 (2009), 1626–1629.
-
-Philippe Tillet, H. T. Kung, and David Cox. 2019. Triton: An Intermediate Language and Compiler for Tiled Neural Network Computations. In Proceedings of the 3rd ACM SIGPLAN International Workshop on Machine Learning and Programming Languages (MAPL ’19). ACM, 10. doi:10.1145/3315508.3329973
-
-Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention Is All You Need. In Advances in Neural Information Processing Systems (NeurIPS). https://papers.nips.cc/paper/ 7181-attention-is-all-you-need.pdf
-
-Jiaqi Zhai, Lucy Liao, Xing Liu, Yueming Wang, Rui Li, Xuan Cao, Leon Gao, Zhaojie Gong, Fangda Gu, Michael He, Yinghai Lu, and Yu Shi. 2024. Actions Speak Louder than Words: Trillion-Parameter Sequential Transducers for Generative Recommendations. arXiv preprint arXiv:2402.17152. https://arxiv.org/abs/2402.17152
-
-Guorui Zhou, Chengru Song, Xiaoqiang Zhu, Ying Fan, Han Zhu, Xiao Ma, Yanghui Yan, Junqi Jin, Han Li, and Kun Gai. 2018. Deep Interest Network for Click-Through Rate Prediction. arXiv:1706.06978 [stat.ML] https://arxiv.org/abs/1706.06978
-
-Jieming Zhu, Quanyu Dai, Liangcai Su, Rong Ma, Jinyang Liu, Guohao Cai, Xi Xiao, and Rui Zhang. 2022. BARS: Towards Open Benchmarking for Recommender Systems. In SIGIR ’22: The 45th International ACM SIGIR Conference on Research and Development in Information Retrieval, Madrid, Spain, July 11 - 15, 2022, Enrique Amigó, Pablo Castells, Julio Gonzalo, Ben Carterette, J. Shane Culpepper, and Gabriella Kazai (Eds.). ACM, 2912–2923. doi:10.1145/3477495.3531723
-
-Jieming Zhu, Jinyang Liu, Shuai Yang, Qi Zhang, and Xiuqiang He. 2021. Open Benchmarking for Click-Through Rate Prediction. In CIKM ’21: The 30th ACM International Conference on Information and Knowledge Management, Virtual Event, Queensland, Australia, November 1 - 5, 2021, Gianluca Demartini, Guido Zuccon, J. Shane Culpepper, Zi Huang, and Hanghang Tong (Eds.). ACM, 2759–2769. doi:10.1145/3459637.3482486
-
-## A Usage of LLMs Disclosure
-
-In this section, we disclose the usage of LLMs in the preparation of this manuscript. LLMs were used for 1) polishing writing or shortening limited blocks of text and 2) for generating template code for plotting or minor changes of existing code. LLMs were NOT used for retrieval and discovery (e.g., finding related work), research ideation, or any other purpose not explicitly outlined in the above.
-
-## B Mixed Full Linear Attention
-
-To simplify triton implementation, especially for the gradient computation, our quasi-Linear Attention drops the normalization (RowNormalize) in the usual linear attention, similar to lightning attention. Instead we can mimic what SiLU attention does, by introducing a $1 / N$ factor.
-
-$$
-O = (Q K ^ {T}) \odot M V / N,
-$$
-
-where ⊙ is the Hadamard product (componentwise multiplication of two matrices, and $M = \left( \begin{array} { c c } { \mathbf { 1 } _ { n \times n } } & { \mathbf { 0 } _ { n \times m } } \\ { \mathbf { \qquad } } & { \mathbf { \qquad } } \\ { \mathbf { 1 } _ { m \times n } } & { \mathbf { \qquad } } \end{array} \right)$ . To compute this in triton, first break into two parts.
-
-$$
-\begin{array}{l} Q = \left(\frac {Q [ S ]}{Q [ T ]}\right), \qquad Q [ S ] \in \mathbb {R} ^ {n \times d}, \quad Q [ T ] \in \mathbb {R} ^ {m \times d}, \\ K = \left(\frac {K [ S ]}{K [ T ]}\right), \qquad K [ S ] \in \mathbb {R} ^ {n \times d}, \quad K [ T ] \in \mathbb {R} ^ {m \times d}, \\ V = \left(\frac {V [ S ]}{V [ T ]}\right), \qquad V [ S ] \in \mathbb {R} ^ {n \times d}, \quad V [ T ] \in \mathbb {R} ^ {m \times d}. \end{array}
-$$
-
-We will divide $n + m$ into A blocks of size $n ^ { \prime } ,$ and divide n into B blocks of size $n ^ { \ast }$ , so that $Q _ { i }$ are submatrices of dimension $n ^ { \prime } \times d ,$ and $K _ { j } , V _ { j }$ are submatrices of dimension $n ^ { \mathfrak { N } } \times d .$
-
-First we compute
-
-$$
-(Q K [ S ] ^ {T} V [ S ]) _ {i} = Q _ {i} \sum_ {j = 1} ^ {B} K [ S ] _ {j} ^ {\top} V [ S ] _ {j}.
-$$
-
-Next we compute the target part: we divide m into C blocks of size m<sup>′</sup> each. For the j-th block, it’s given by
-
-$$
-((Q [ T ] K [ T ] ^ {\top} \odot I _ {m}) V [ T ]) _ {j} = \operatorname{diag} ((Q [ T ] _ {j} \odot K [ T ] _ {j}) \mathbf {1} _ {m ^ {\prime} \times 1}) V [ T ] _ {j}.
-$$
-
-We usually merge the source and target embedding sequences in an interleaved fashion. To avoid HBM/SRAM sync, we probably should keep track of the ofsets of the boundary between source and target, and let $n ^ { \prime } = { \dot { m } } ^ { \prime }$ , so that for the target part, we will overlap the two computation and obtain
-
-$$
-\begin{array}{l} O [ S ] _ {\ell} = Q [ S ] _ {\ell} \sum_ {j = 1} ^ {B} K [ S ] _ {j} ^ {\top} V [ S ] _ {j} \\ O [ T ] _ {\ell} = Q [ T ] _ {\ell} \sum_ {j = 1} ^ {B} K [ S ] _ {j} ^ {\top} V [ S ] _ {j} + \mathrm{diag} ((Q [ T ] _ {\ell} \odot K [ T ] _ {\ell}) \mathbf {1} _ {m ^ {\prime} \times 1}) V [ T ] _ {\ell} \end{array}
-$$
-
-In terms of triton implementation, we will use positive ofsets for target, and negative ofsets for source, all starting from the boundary ofset.
-
-Note that the sum $\begin{array} { r } { \sum _ { j = 1 } ^ { B } K [ S ] _ { j } ^ { \top } V [ S ] _ { j } } \end{array}$ can be computed first, then multiplied with $Q [ S ] _ { \ell } .$ $Q [ T ] _ { \ell }$ etc. By choosing the block size $n ^ { \prime } = m ^ { \prime }$ suficiently small, and if necessary, also break the block $V [ S ] , V [ T ]$ along the columns into smaller dimension $d ^ { \prime } | d ,$ we can ensure all $O [ S ] _ { \ell } , O [ T ] _ { \ell }$ blocks can be computed entirely in SRAM with a single for loop.
-
-To replace linear attention with (traditional) SiLU attention for target to source, we need to replace the second line above with
-
-$$
-O [ T ] _ {\ell} = \sum_ {j = 1} ^ {B} \operatorname{SiLU} (Q [ T ] _ {\ell} K [ S ] _ {j} ^ {T}) V [ S ] _ {j} + \operatorname{SiLU} (Q [ T ] _ {\ell} \odot K [ T ] _ {\ell} 1 _ {m ^ {\prime} \times 1}) V [ T ] _ {\ell}.
-$$
-
-Here we cannot compute all the $O [ T ] _ { \ell }$ blocks easily, but instead need to have $m / m ^ { \prime }$ SM’s to compute them separately, otherwise each SM would incur a big for loop of $B m / \dot { m } ^ { \prime }$ iterations. Given H100 has about 132 SMs and batch size per rank is 512, using more SMs will likely slow things down.
-
-## B.1 Gradient Computation
-
-$$
-\begin{array}{r l} & {\frac {\partial L}{\partial V} = \mathrm{tr} \left(\left(K Q ^ {\top} \frac {\partial L}{\partial O}\right) \odot M ^ {\top}\right) / N} \\ & {\frac {\partial L}{\partial Q} = \mathrm{tr} \left(\left(K Q ^ {\top} \frac {\partial L}{\partial O}\right) \odot M ^ {\top}\right)} \end{array}
-$$
-
-Given that ${ \cal L } = { \cal L } ( { \cal O } [ S ] , { \cal O } [ T ] )$ , and $O [ S ]$ and $O [ T ]$ are disjoint, we can compute
-
-$$
-d L = \sum_ {i j} \frac {\partial L}{\partial O [ S ]} _ {i j} d O [ S ] _ {i j} + \sum_ {i j} \frac {\partial L}{\partial O [ T ]} _ {i j} d O [ T ] _ {i j}
-$$
-
-## B.1.1 Gradient of V
-
-If we diferentiate against V , we have
-
-$$
-\begin{array}{l} d O [ S ] = Q [ S ] K [ S ] ^ {\top} d V [ S ] \\ d O [ T ] = Q [ T ] K [ S ] ^ {\top} d V [ S ] + \mathrm{diag} ((Q [ T ] \odot K [ T ]) \mathbf {1} _ {T \times 1}) d V [ T ] \end{array}
-$$
-
-So,
-
-$$
-\begin{array}{l} d L = \operatorname{tr} \left(\frac {\partial L}{\partial O [ S ]} ^ {\top} d O [ S ]\right) + \operatorname{tr} \left(\frac {\partial L}{\partial O [ T ]} ^ {\top} d O [ T ]\right) \\ \quad = \operatorname{tr} \left(\frac {\partial L}{\partial O [ S ]} ^ {\top} Q [ S ] K [ S ] ^ {\top} d V [ S ]\right) + \operatorname{tr} \left(\frac {\partial L}{\partial O [ T ]} ^ {\top} (Q [ T ] K [ S ] ^ {\top} d V [ S ] + \operatorname{diag} ((Q [ T ] \odot K [ T ]) \mathbf {1} _ {T \times 1}) d V [ T ])\right) \\ \quad = \operatorname{tr} \left((\frac {\partial L}{\partial O}) ^ {\top} Q K [ S ] ^ {\top} d V [ S ]\right) + \operatorname{tr} \left((\frac {\partial L}{\partial O [ T ]}) ^ {\top} \operatorname{diag} ((Q [ T ] \odot K [ T ]) \mathbf {1} _ {T \times 1}) d V [ T ])\right). \end{array}
-$$
-
-So we have that
-
-$$
-\begin{array}{l} \frac {d L}{d V [ S ]} = K [ S ] Q ^ {\top} \frac {\partial L}{\partial O} \\ \frac {d L}{d V [ T ]} = \operatorname{diag} ((Q [ T ] \odot K [ T ]) \mathbf {1} _ {T \times 1}) \left(\frac {\partial L}{\partial O [ T ]}\right) \end{array}
-$$
-
-which means ith row of $\frac { \partial L } { \partial O [ T ] }$ will be multiplied by ith element of $( Q [ T ] \odot K [ T ] ) \mathbf { 1 } _ { T \times 1 }$
-
-## B.1.2 Gradient of Q
-
-Next we diferentiate against $\mathrm { Q }$ ,
-
-$$
-\begin{array}{l} {d O [ S ] = d Q [ S ] K [ S ] ^ {\top} V [ S ]} \\ {d O [ T ] = d Q [ T ] K [ S ] ^ {\top} V [ S ] + \mathrm{diag} ((d Q [ T ] \odot K [ T ]) \mathbf {1} _ {T \times 1}) V [ T ]} \end{array}
-$$
-
-Which results in
-
-$$
-\begin{array}{l} d L = \operatorname{tr} \left((\frac {\partial L}{\partial O [ S ]}) ^ {\top} d Q [ S ] K [ S ] ^ {\top} V [ S ]\right) + \operatorname{tr} \left((\frac {\partial L}{\partial O [ T ]}) ^ {\top} (d Q [ T ] K [ S ] ^ {\top} V [ S ]\right) \\ \quad + \operatorname{diag} ((d Q [ T ] \odot K [ T ]) \mathbf {1} _ {T \times 1}) V [ T ])). \end{array}
-$$
-
-So that
-
-$$
-\frac {d L}{d Q [ S ]} = \frac {\partial L}{\partial O [ S ]} V [ S ] ^ {\top} K [ S ].
-$$
-
-To derive $\frac { d L } { d Q [ T ] }$ , we need to pull $d Q [ T ]$ out of the unconventional expression diag $\left( ( d Q [ T ] \odot \right)$ $K [ T ] ) \mathbf { 1 } _ { T \times 1 } )$ , within the trace operator. Let’s first write it in terms of Einstein summation, abbreviation $\begin{array} { r } { \frac { \partial L } { \partial O [ T ] } , Q [ T ] , K [ T ] , V [ T ] } \end{array}$ by $X , Q , K , V$ respectively.
-
-$$
-\operatorname{tr} \left(X ^ {\top} \operatorname{diag} \left(\left(d Q \odot K\right) \mathbf {1} _ {T \times 1}\right) V\right) = \sum_ {i j k \ell} X _ {j i} d Q _ {j k} K _ {j k} \delta_ {j \ell} V _ {\ell i},
-$$
-
-where $\delta$ is the Kronecker delta matrix given by
-
-$$
-\delta_ {j \ell} = \left\{ \begin{array}{l l} 1 & \text { if } j = \ell , \\ 0 & \text { otherwise }. \end{array} \right.
-$$
-
-Note that
-
-$$
-\sum_ {i \ell} X _ {j i} K _ {j k} \delta_ {j \ell} V _ {\ell i} = \sum_ {i} X _ {j i} V _ {j i} K _ {j k} = (\operatorname{diag} ((X \odot V) \mathbf {1} _ {T \times 1}) K) _ {j k}.
-$$
-
-Thus the second half of the expression for dL (with respect to $d Q [ T ] )$ is given by
-
-$$
-\operatorname{tr} \left(\le
-
-[... truncated to fit target token budget ...]
+[... truncated ...]
 
 
 ---
-
-# 2602.21756_离线推理实现高效推荐 (truncated)
-
-**arXiv**: [2602.21756](https://arxiv.org/abs/2602.21756)
-
-# Ofline Reasoning for Eficient Recommendation: LLM-Empowered Persona-Profiled Item Indexing
-
-Deogyong Kim Yonsei University Seoul, South Korea legenduck@yonsei.ac.kr
-
-Junseong Lee<sup>∗</sup> Yonsei University Seoul, South Korea brulee@yonsei.ac.kr
-
-Jeongeun Lee Yonsei University Seoul, South Korea ljeadec31@yonsei.ac.kr
-
-Dongha Lee<sup>†</sup> Yonsei University Seoul, South Korea donalee@yonsei.ac.kr
-
-Changhoe Kim NAVER Seongnam, South Korea andres.chkim@navercorp.co
-
-Junguel Lee NAVER Seongnam, South Korea junguel.lee@navercorp.com
-
-Jungseok Lee NAVER Seongnam, South Korea jungseok.lee@navercorp.com
-
-## Abstract
-
-Recent advances in large language models (LLMs) ofer new op portunities for recommender systems by capturing the nuanced semantics of user interests and item characteristics through rich semantic understanding and contextual reasoning. In particular, LLMs have been employed as rerankers that reorder candidate items based on inferred user–item relevance. However, these approaches often require expensive online inference-time reasoning, leading to high latency that hampers real-world deployment.
-
-In this work, we introduce Persona4Rec, a recommendation framework that performs ofline reasoning to construct interpretable persona representations of items, enabling lightweight and scalable real-time inference. In the ofline stage, Persona4Rec leverages LLMs to reason over item reviews, inferring diverse user motiva tions that explain why diferent types of users may engage with an item; these inferred motivations are materialized as persona representations, providing multiple, human-interpretable views of each item. Unlike conventional approaches that rely on a single item representation, Persona4Rec learns to align user profiles with the most plausible item-side persona through a dedicated encoder, efectively transforming user–item relevance into user–persona relevance. At the online stage, this persona-profiled item index al lows fast relevance computation without invoking expensive LLM reasoning. Extensive experiments show that Persona4Rec achieves performance comparable to recent LLM-based rerankers while sub stantially reducing inference time. Moreover, qualitative analysis confirms that persona representations not only drive eficient scor ing but also provide intuitive, review-grounded explanations. These results demonstrate that Persona4Rec ofers a practical and inter pretable solution for next-generation recommender systems.<sup>1</sup>
-
-<sup>∗</sup>Both authors contributed equally to this research. <sup>†</sup>Corresponding author <sup>1</sup>https://github.com/legenduck/PERSONA4REC
-
-![](images/1a360a67f51867b4513ef099939e7827ed1d5018ba89fa0e8a3eb91a61a98fa1.jpg)  
-Figure 1: Comparison between existing LLM-based item rerankers (Upper) and our Persona4Rec (Lower). Persona4Rec shifts LLM reasoning from online inference to ofline persona construction, enabling real-time recommendation via lightweight similarity scoring.
-
-## Keywords
-
-Large Language Models, Reasoning-enhanced Recommendation, User and Item Profiling, Eficient Reranking
-
-## ACM Reference Format:
-
-Deogyong Kim, Junseong Lee, Jeongeun Lee, Dongha Lee, Changhoe Kim, Junguel Lee, and Jungseok Lee. 2026. Ofline Reasoning for Eficient Recommendation: LLM-Empowered Persona-Profiled Item Indexing. In Proceedings of Make sure to enter the correct conference title from your rights confirmation email (Conference acronym ’XX). ACM, New York, NY, USA, 11 pages. https://doi.org/XXXXXXX.XXXXXXX
-
-behind user preferences and item characteristics [8, 2
-
-[... truncated to fit target token budget ...]
-
-
----
-
-# 2603.10673_三方智能体推荐框架 (truncated)
-
-**arXiv**: [2603.10673](https://arxiv.org/abs/2603.10673)
-
-![](images/bfed4a1ba79d68ec98c42f647de690477ec73ad0899b71ef7cc39ec3fb61dd5e.jpg)
-
-(a) Transition from user-centric to tri-party utility optimization.
-
-User-Centric Optimization
-
-# Breaking User-Centric Agency: A Tri-Party Framework for Agent-Based Recommendation
-
-Yaxin Gong gyx2022@mail.ustc.edu.cn University of Science and Technology of China Hefei, China
-
-Haoyan Liu liuhaoyan@ustc.edu.cn University of Science and Technology of China Hefei, China
-
-Yangyang Li liyangyang@live.com Academy of Cyber Beijing, China
-
-Chongming Gao chongminggao@ustc.edu.cn U
-
-[... truncated to fit target token budget ...]
-
-
----
-
-## Document Stats
 
 | Metric | Value |
-|--------|-------|
-| Papers included | 17 |
-| Actual tokens | 175.7k |
-| Target tokens | 175.0k |
-| Generation time | 2026-07-24T15:22:30.943757 |
-
-*Raw concatenation of MinerU-parsed arXiv papers for LLM context window stress testing.*
+|---|---|
+| Papers | 18 |
+| Actual | 175.7k |
+| Target | 175.0k |
