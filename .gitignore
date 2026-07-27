@@ -31,3 +31,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Redbook CLI (installed via pip, cloned for reference only)
+redbook/xhs-cli/
