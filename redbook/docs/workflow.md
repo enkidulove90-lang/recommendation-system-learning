@@ -207,6 +207,7 @@ python scripts/publish_paper.py
 
 arxiv 🔗：https://arxiv.org/abs/XXXX.XXXXX
 github 🔗：https://github.com/xxx/xxx（如有）
+📎 原文 PDF：https://arxiv.org/pdf/XXXX.XXXXX
 ```
 
 **语言风格对照：**
@@ -269,10 +270,16 @@ github 🔗：https://github.com/xxx/xxx（如有）
 
    ...（一般 3-5 个方向）
 
-📚 参考论文列表
-   [1] [标题]. [会议], 2026. arXiv: XXXX
-   [2] [标题]. [会议], 2026. arXiv: XXXX
+📚 参考论文列表（含链接）
+   [1] [标题]. [会议], 2026. arXiv 🔗：https://arxiv.org/abs/XXXX
+   [2] [标题]. [会议], 2026. arXiv 🔗：https://arxiv.org/abs/XXXX
    ...
+
+💻 相关 GitHub 仓库
+   • https://github.com/xxx/xxx — [简介]
+   • https://github.com/yyy/yyy — [简介]
+
+📎 综述原文 PDF：https://arxiv.org/pdf/XXXX.XXXXX
 ```
 
 **综述类加分项：**
@@ -292,7 +299,9 @@ github 🔗：https://github.com/xxx/xxx（如有）
 |------|------|------|
 | Emoji 段落标题 | `🎓` `✨` `🧠` `📊` `💡` `🔮` | 视觉层次 |
 | 段落间空行 | `\n\n` | 避免拥挤 |
-| 链接格式 | `arxiv 🔗：URL` / `github 🔗：URL` | 用户可长按复制 |
+| 论文链接 | `arxiv 🔗：https://arxiv.org/abs/XXXX` | 可长按复制打开 |
+| 代码链接 | `github 🔗：https://github.com/xxx` | 可长按复制打开 |
+| 原文 PDF | `📎 原文 PDF：https://arxiv.org/pdf/XXXX` | 可长按复制下载 |
 | 话题标签 | `--topic "推荐系统"` CLI 参数 | **蓝色可点击**超链接 |
 | 要点列表 | `•` 或数字开头 | 结构化呈现 |
 | 数字冲击 | `↑45.45%` `14倍` `Top 2.2%` | 制造记忆点 |
