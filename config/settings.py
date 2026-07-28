@@ -140,6 +140,57 @@ class Settings:
             ),
         }
 
+    # ---- 分析增强层 (Analysis Enhancement Layer) ----
+    @property
+    def ENABLE_ANALYSIS_LAYER(self) -> bool:
+        """是否启用分析增强层。默认 True，可通过环境变量关闭。"""
+        return os.getenv("ENABLE_ANALYSIS_LAYER", "true").lower() == "true"
+
+    @property
+    def ANALYSIS_TIME_BUDGET_MINUTES(self) -> int:
+        """分析层总时间预算（分钟），超时则剩余论文降级处理。默认 45"""
+        return int(os.getenv("ANALYSIS_TIME_BUDGET_MINUTES", "45"))
+
+    @property
+    def QUALITY_THRESHOLD(self) -> float:
+        """质量评分阈值。>= 此值触发完整分析（含图谱可视化）。默认 0.7"""
+        return float(os.getenv("QUALITY_THRESHOLD", "0.7"))
+
+    @property
+    def SEMANTIC_SCHOLAR_API_BASE(self) -> str:
+        """Semantic Scholar API 端点。免费无需 Key。"""
+        return os.getenv(
+            "SEMANTIC_SCHOLAR_API_BASE",
+            "https://api.semanticscholar.org/graph/v1",
+        )
+
+    @property
+    def CITATION_CACHE_DAYS(self) -> int:
+        """引用数据缓存天数。超过后重新采集。默认 7"""
+        return int(os.getenv("CITATION_CACHE_DAYS", "7"))
+
+    @property
+    def GRAPH_CACHE_DAYS(self) -> int:
+        """图谱数据缓存天数。超过后重建。默认 30"""
+        return int(os.getenv("GRAPH_CACHE_DAYS", "30"))
+
+    @property
+    def MAX_ANALYSIS_PAPERS_PER_RUN(self) -> int:
+        """每次运行最多触发完整分析的论文数。默认 5"""
+        return int(os.getenv("MAX_ANALYSIS_PAPERS_PER_RUN", "5"))
+
+    @property
+    def GRAPH_VIZ_DPI(self) -> int:
+        """图谱可视化 DPI。默认 150"""
+        return int(os.getenv("GRAPH_VIZ_DPI", "150"))
+
+    @property
+    def GRAPH_VIZ_SIZE(self) -> tuple[int, int]:
+        """图谱可视化尺寸 (width, height)。默认 (1200, 800)"""
+        raw = os.getenv("GRAPH_VIZ_SIZE", "1200,800")
+        parts = raw.split(",")
+        return (int(parts[0].strip()), int(parts[1].strip()))
+
     # ---- 论文检索增强关键词 ----
     @property
     def EXTRA_SEARCH_QUERIES(self) -> list[dict[str, str]]:

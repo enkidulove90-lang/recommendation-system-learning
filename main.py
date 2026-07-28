@@ -35,6 +35,12 @@ main.py — arXiv 推荐系统论文爬取与解析工具 CLI 入口
 
   # 批量端到端流水线
   python main.py pipeline-all --topics all --max-per-topic 5
+
+  # 发布到小红书（基础模式）
+  python main.py publish --arxiv-id 2605.28175 --title "KDD26｜MixRAGRec" --topic "推荐系统"
+
+  # 发布到小红书（知识图谱增强）
+  python main.py publish --arxiv-id 2605.28175 --title "KDD26｜MixRAGRec" --topic "推荐系统" --kg
 """
 
 from __future__ import annotations
@@ -58,6 +64,7 @@ from skills.pdf_downloader import PDFDownloader
 from skills.deepseek_summarizer import DeepSeekSummarizer
 from crawler.arxiv_crawler import ArxivCrawler
 from pipeline.merge_pipeline import DocumentMerger
+from redbook.scripts.publish import main as publish_main
 
 
 # ======================================================================
@@ -480,6 +487,8 @@ Examples:
   python main.py merge --target 200000
   python main.py pipeline --arxiv-id 2602.21756
   python main.py pipeline-all --max-per-topic 5
+  python main.py publish --arxiv-id 2605.28175 --title "KDD26｜MixRAGRec" --topic "推荐系统"
+  python main.py publish --arxiv-id 2605.28175 --title "KDD26｜MixRAGRec" --kg --dry-run
         """,
     )
 
@@ -539,6 +548,18 @@ Examples:
     pipe_all_parser.add_argument("--skip-parse", action="store_true", help="Skip MinerU parsing")
     pipe_all_parser.add_argument("--skip-summarize", action="store_true", help="Skip DeepSeek summarization")
 
+    # ---- publish (统一发布入口) ----
+    pub_parser = subparsers.add_parser(
+        "publish",
+        help="Publish paper to Xiaohongshu (direct API + optional KG analysis)",
+    )
+    pub_parser.add_argument("--arxiv-id", required=True, help="arXiv ID (e.g. 2605.28175)")
+    pub_parser.add_argument("--title", required=True, help="Post title (max 20 chars)")
+    pub_parser.add_argument("--topic", action="append", default=[], help="Topic tags (repeatable)")
+    pub_parser.add_argument("--github", default="", help="GitHub URL (optional)")
+    pub_parser.add_argument("--kg", action="store_true", help="Enable knowledge graph analysis enhancement")
+    pub_parser.add_argument("--dry-run", action="store_true", help="Preview only, do not publish")
+
     args = parser.parse_args()
 
     if args.command == "list":
@@ -561,6 +582,22 @@ Examples:
         cmd_pipeline(args.arxiv_id)
     elif args.command == "pipeline-all":
         cmd_pipeline_all(args.topics, args.max_per_topic, args.skip_parse, args.skip_summarize)
+    elif args.command == "publish":
+        # 将 argparse namespace 转为 publish.py 需要的参数
+        sys.argv = [
+            "publish.py",
+            "--arxiv-id", args.arxiv_id,
+            "--title", args.title,
+        ]
+        if args.kg:
+            sys.argv.append("--kg")
+        if args.dry_run:
+            sys.argv.append("--dry-run")
+        if args.github:
+            sys.argv.extend(["--github", args.github])
+        for t in args.topic:
+            sys.argv.extend(["--topic", t])
+        publish_main()
     else:
         parser.print_help()
 
