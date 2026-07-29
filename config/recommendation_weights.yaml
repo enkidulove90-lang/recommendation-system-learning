@@ -1,0 +1,14 @@
+schema_version: "1.0"
+
+weights:
+  topic_and_problem: 0.30
+  pipeline_stage: 0.20
+  paradigm_and_modality: 0.15
+  shared_dataset: 0.10
+  relation_graph: 0.10
+  recency: 0.10
+  profile_quality: 0.05
+
+diversity:
+  max_same_method_family: 2
+  preferred_roles: [foundation, direct_comparison, method_extension, evaluation_benchmark]

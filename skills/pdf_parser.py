@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import subprocess
 import time
 import zipfile
 from pathlib import Path
@@ -23,6 +24,7 @@ import httpx
 
 from config import settings
 from skills.base_module import BaseSkill, register_skill
+from storage.paper_assets import normalize_arxiv_id, resolve_paper_bundle
 
 logger = logging.getLogger(__name__)
 
@@ -101,18 +103,13 @@ class PDFParser(BaseSkill):
 
         pdf_url: str = kwargs.get("pdf_url", "")
         pdf_path: str = kwargs.get("pdf_path", "")
-        arxiv_id: str = kwargs.get("arxiv_id", "")
+        arxiv_id: str = normalize_arxiv_id(kwargs.get("arxiv_id", ""))
         title: str = kwargs.get("title", "")
         output_dir: str = kwargs.get("output_dir", "")
 
-        # ---- 确定输出目录（使用标题命名） ----
+        # ---- 确定输出目录（复用已有论文资产包） ----
         if not output_dir:
-            folder_name = arxiv_id
-            if title:
-                # 将标题转为安全的文件夹名：保留字母数字和中文，限制长度
-                safe_title = PDFParser._sanitize_folder_name(title, max_len=80)
-                folder_name = f"{arxiv_id}_{safe_title}"
-            output_dir = str(settings.DATA_DIR / "parsed" / folder_name)
+            output_dir = str(resolve_paper_bundle(arxiv_id, title=title, create=True))
         out_path = Path(output_dir)
         out_path.mkdir(parents=True, exist_ok=True)
 
@@ -192,7 +189,7 @@ class PDFParser(BaseSkill):
         将论文标题转为安全的文件夹名。
 
         保留: 中文、英文、数字、空格、连字符
-        移除: 特殊字符 / \ : * ? " < > |
+        移除: 特殊字符 / \\ : * ? " < > |
         空格转下划线，限制长度。
         """
         import re
@@ -321,6 +318,72 @@ class PDFParser(BaseSkill):
     # 内部方法: 下载与解压
     # ------------------------------------------------------------------
 
+    @staticmethod
+    def _download_result_bytes(download_url: str, max_attempts: int = 3) -> bytes | None:
+        """Download a MinerU result archive with retries for transient CDN failures.
+
+        MinerU's result CDN occasionally terminates an httpx TLS connection on
+        Windows before the response body is sent.  Keep httpx as the primary
+        client and fall back to requests, which uses a different connection
+        stack in common local installations.
+        """
+        for attempt in range(1, max_attempts + 1):
+            try:
+                logger.info(
+                    "[MinerU] Downloading result (attempt %d/%d) from %s ...",
+                    attempt,
+                    max_attempts,
+                    download_url[:120],
+                )
+                with httpx.Client(
+                    timeout=httpx.Timeout(180.0, connect=30.0),
+                    follow_redirects=True,
+                ) as client:
+                    response = client.get(download_url)
+                    response.raise_for_status()
+                    return response.content
+            except Exception as exc:
+                try:
+                    import requests
+
+                    response = requests.get(
+                        download_url,
+                        timeout=(30, 180),
+                        allow_redirects=True,
+                    )
+                    response.raise_for_status()
+                    return response.content
+                except Exception as fallback_exc:
+                    try:
+                        curl = subprocess.run(
+                            [
+                                "curl.exe", "--ssl-no-revoke", "--fail", "--silent",
+                                "--show-error", "--location", "--retry", "2", download_url,
+                            ],
+                            check=True,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            timeout=240,
+                        )
+                        return curl.stdout
+                    except Exception as curl_exc:
+                        exc = curl_exc
+                if attempt == max_attempts:
+                    logger.error(
+                        "[MinerU] Result download failed after %d attempts: %s",
+                        max_attempts,
+                        exc,
+                    )
+                    return None
+                wait_seconds = 2 ** attempt
+                logger.warning(
+                    "[MinerU] Result download failed: %s; retrying in %ds",
+                    exc,
+                    wait_seconds,
+                )
+                time.sleep(wait_seconds)
+        return None
+
     def _download_and_extract(self, download_url: str, output_dir: Path, arxiv_id: str) -> bool:
         """
         下载解析结果 ZIP 包并解压到指定目录。
@@ -341,12 +404,15 @@ class PDFParser(BaseSkill):
 
         try:
             # 下载 ZIP
-            logger.info("[MinerU] Downloading from %s ...", download_url[:120])
-            with httpx.Client(timeout=120.0, follow_redirects=True) as client:
-                resp = client.get(download_url)
-                resp.raise_for_status()
-                zip_path.write_bytes(resp.content)
-            logger.info("[MinerU] Downloaded %d bytes -> %s", len(resp.content), zip_path)
+            content = self._download_result_bytes(download_url)
+            if content is None:
+                return False
+            zip_path.write_bytes(content)
+            if not zipfile.is_zipfile(zip_path):
+                logger.error("[MinerU] Downloaded result is not a valid ZIP.")
+                zip_path.unlink(missing_ok=True)
+                return False
+            logger.info("[MinerU] Downloaded %d bytes -> %s", len(content), zip_path)
 
             # 解压
             with zipfile.ZipFile(zip_path, "r") as zf:
@@ -388,6 +454,15 @@ class PDFParser(BaseSkill):
                     logger.info("[MinerU] Extracted: %s", target.name)
 
             # 清理 ZIP
+            # Some MinerU archives use a URL-derived Markdown name such as
+            # ``static.md`` rather than ``full.md``. Add the canonical name
+            # expected by callers while preserving the original file.
+            canonical_markdown = output_dir / f"{arxiv_id}.md"
+            if not canonical_markdown.exists():
+                markdown_files = sorted(output_dir.glob("*.md"))
+                if markdown_files:
+                    canonical_markdown.write_bytes(markdown_files[0].read_bytes())
+
             zip_path.unlink(missing_ok=True)
             return True
 

@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2604.16318",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.16318_冷启动推荐中LLM重排序诊断\\2604.16318.md",
+  "source_hash": "d06949acdfbea4b790665e951459b91a2acdddf41b2fef023ea405e86f59e380",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "I. INTRODUCTION",
+      "start_char": 1977,
+      "end_char": 3177,
+      "quote": "oblem remains one of the most persistent challenges in recommender systems research and practice. When new users join a platform with minimal or no interaction history, traditional collaborative filtering methods fail to generate meaningful recommendations. Recent advances in large language models (LLMs) and neural reranking architectures have sparked considerable interest in leveraging these powerful models for cold-start recommendation [1], [2].\n\nCross-encoder rerankers, such as MS-MARCO models, have demonstrated impressive performance on information retrieval benchmarks by directly scoring query-document pairs through deep attention mechanisms. This capability makes them theoretically attractive for personalized recommendation: given a user profile and item metadata, a cross-encoder could directly assess relevance without requiring historical interaction data. However, translating benchmark success to production-ready cold-start recommender systems presents significant practical challenges.\n\nDespite growing adoption, there exists a critical gap in understanding why and when LLM-based rerankers fail in real-world cold-start scenarios. Existing work often reports aggregate metrics",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.16318_冷启动推荐中LLM重排序诊断\\2604.16318.md",
+      "source_hash": "d06949acdfbea4b790665e951459b91a2acdddf41b2fef023ea405e86f59e380",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "B. Detailed Pipeline Architecture",
+      "start_char": 12859,
+      "end_char": 14058,
+      "quote": "rchitecture\n\nOur experimental pipeline follows a standard two-stage retrieve-then-rerank paradigm. Figure ?? illustrates the complete architecture (referenced but not shown due to space constraints).\n\n1) Stage 1: Item Embedding and Indexing: Embedding Model: We use all-MiniLM-L6-v2, a 22M parameter Sentence-BERT model pre-trained on 1B+ sentence pairs. This model produces 384-dimensional dense vectors optimized for semantic similarity tasks. We chose this model for its balance of quality and efficiency—inference takes ∼0.5ms per item on CPU.\n\nEmbedding Generation: All 49,157 movies are encoded offline into dense vectors. Embedding generation takes ∼25 seconds total on CPU (Intel Xeon 2.5GHz). Vectors are L2- normalized for cosine similarity equivalence.\n\nFAISS Indexing: We build a Flat index (exact brute-force search) for reproducibility. While approximate methods (IVF, HNSW) offer speed gains, we use exact search to isolate retrieval quality from approximation errors. Index construction is near-instantaneous for 49K vectors.\n\n2) Stage 2: Candidate Retrieval: Given a cold-start user with minimal profile information, we generate initial candidate sets using one of three strategies:",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.16318_冷启动推荐中LLM重排序诊断\\2604.16318.md",
+      "source_hash": "d06949acdfbea4b790665e951459b91a2acdddf41b2fef023ea405e86f59e380",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "D. Evaluation Metrics and Statistical Testing",
+      "start_char": 16942,
+      "end_char": 18142,
+      "quote": "## D. Evaluation Metrics and Statistical Testing\n\n1) Recommendation Quality Metrics: Hit Rate@10 (HR@10): Fraction of users with at least one relevant item in top-10 recommendations. Binary metric emphasizing discovery of any relevant content.\n\n$$\n\\mathrm{HR} @ 1 0 = \\frac {1}{| U |} \\sum_ {u \\in U} \\mathbb {1} [ \\exists i \\in \\operatorname{TopK} (u): i \\in \\mathrm{GT} (u) ]\n$$\n\nNormalized Discounted Cumulative Gain@10 (nDCG@10): Position-aware metric giving higher weight to relevant items ranked earlier.\n\n$$\n\\mathrm{nDCG@10} = \\frac {1}{| U |} \\sum_ {u \\in U} \\frac {\\mathrm{DCG@10} (u)}{\\mathrm{IDCG@10} (u)}\n$$\n\nwhere DCG accumulates discounted gain: DCG@K = $\\textstyle \\sum _ { i = 1 } ^ { K } { \\frac { 2 ^ { r e l _ { i } } - 1 } { \\log _ { 2 } ( i + 1 ) } }$\n\n2) Diagnostic Metrics: Recall@K: Fraction of groundtruth relevant items retrieved in top-K candidates (before reranking). Measures retrieval stage effectiveness.\n\n$$\n\\text { Recall@K } = \\frac {1}{| U |} \\sum_ {u \\in U} \\frac {| \\text { TopK } (u) \\cap \\text { GT } (u) |}{| \\text { GT } (u) |}\n$$\n\nUnique Top-1 Count: Number of distinct items appearing as rank-1 recommendation across all users. Lower values indicate exposur",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.16318_冷启动推荐中LLM重排序诊断\\2604.16318.md",
+      "source_hash": "d06949acdfbea4b790665e951459b91a2acdddf41b2fef023ea405e86f59e380",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "D. Limitations and Scope Conditions",
+      "start_char": 41347,
+      "end_char": 42547,
+      "quote": "## D. Limitations and Scope Conditions\n\n1) Dataset and Domain Specificity: Our experiments focus on movie recommendation using Serendipity-2018 dataset. Generalization to other domains (e-commerce, music, news) requires validation. Domains with richer item metadata (product descriptions, article text) may benefit more from cross-encoder semantic matching. Conversely, domains with stronger collaborative filtering signals may reduce need for content-based approaches.\n\n2) Missing Ground Truth Impact: 17 missing items affecting 838 users (0.80%) introduce slight bias. However, impact is minimal—removing affected users changes mean HR@10 by <0.001. We report results on full test set for transparency.\n\n3) Computational Resource Constraints: All experiments use CPU inference to reflect resource-constrained deployment scenarios. GPU acceleration would reduce reranking time but not address fundamental coverage and calibration issues. Our findings emphasize algorithm design over hardware optimization.\n\n4) Limited Hyperparameter Exploration: We fix embedding model (all-MiniLM-L6-v2) and cross-encoder (msmarco-MiniLM-L-6-v2) to isolate pipeline component effects. Exhaustive architecture search",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.16318_冷启动推荐中LLM重排序诊断\\2604.16318.md",
+      "source_hash": "d06949acdfbea4b790665e951459b91a2acdddf41b2fef023ea405e86f59e380",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2507.02097",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02097_多智能体推荐系统的未来\\2507.02097.md",
+  "source_hash": "782ad5be243c62bfe6ba0ae1bad12c51d962f28d8b0119ea5bcb2c23dcf09b0c",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction and Motivation",
+      "start_char": 3390,
+      "end_char": 4590,
+      "quote": "## 1 Introduction and Motivation\n\nLarge Language Model (LLM) agents go beyond traditional chatbots by ofering goal-directed, agentic behavior rather than merely responding to user queries through one-shot text generation.\n\nAuthors’ Contact Information: Reza Yousefi Maragheh, University of Illinois Urbana Champaign, Illinois, USA, ryousefimaragheh@acm.org; Yashar Deldjoo, Polytechnic University of Bari, Bari, Italy, deldjooy@acm.org.\n\nPermission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org. © 2026 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM 2770-6699/2026/7-ART https://doi.org/10.1145/nnnnnnn.nnnnnnn\n\nIn essence, they are designe",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02097_多智能体推荐系统的未来\\2507.02097.md",
+      "source_hash": "782ad5be243c62bfe6ba0ae1bad12c51d962f28d8b0119ea5bcb2c23dcf09b0c",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "2.3 Formal Framework",
+      "start_char": 24775,
+      "end_char": 25975,
+      "quote": "## 2.3 Formal Framework\n\nIn this subsection, we introduce formal definitions for key concepts central to our framework. These definitions establish a rigorous foundation for discussing the architectural and operational aspects of agents, including specialized LLM Agents, Multi-Agent Systems, and Tool-Using Agents. We also provide a generic formalism for representing the internal structure of an agent.\n\n<sub>Definition</sub> <sub>2.1</sub> <sub>(LLM</sub> <sub>Agent).</sub> An <sub>LLM</sub> <sub>Agent</sub> is an intelligent system whose core decision-making and interaction capabilities are powered by one or more large language models. Formally, we denote such an agent as:\n\n$$\nA _ {\\mathrm{LLM}} = \\Big (\\mathcal {M}, \\mathcal {I}, \\mathcal {O}, \\mathcal {F}, \\Omega \\Big),\n$$\n\nwhere:\n\n<sub>•</sub> <sub>M</sub> is the underlying language model or set of models used for text generation, understanding, and reasoning.\n\n<sub>• I</sub> represents the input space that the agent can observe.\n\n<sub>• O</sub> denotes the output space the agent can produce.\n\n<sub>•</sub> <sub>F</sub> is a set of functions, tools, or APIs the agent can invoke to enhance its capabilities.\n\n<sub>•</sub> <sub>Ω</s",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02097_多智能体推荐系统的未来\\2507.02097.md",
+      "source_hash": "782ad5be243c62bfe6ba0ae1bad12c51d962f28d8b0119ea5bcb2c23dcf09b0c",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.2 User Simulation and Recommendation Evaluation",
+      "start_char": 79447,
+      "end_char": 80647,
+      "quote": "## 4.2 User Simulation and Recommendation Evaluation\n\n<sub>Formal</sub> <sub>definition</sub> <sub>of</sub> <sub>the</sub> <sub>task.</sub> User simulation and recommendation evaluation together form a framework in which synthetic user behavior is generated to probe, test, and refine recommender systems before full-scale deployment. Let $R _ { \\phi } : \\bar { X } \\to S ^ { L }$ denote a recommender parameterised by $\\phi$ that maps the current session state $x \\in \\chi$ to an ordered list of ?? items from the catalogue <sub>S</sub>. A <sub>user</sub> <sub>simulator</sub> is a stochastic policy\n\n$$\n\\mathcal {M} _ {\\theta , \\omega}: \\mathcal {X} \\times \\mathcal {S} ^ {L} \\longrightarrow \\mathcal {A} _ {\\text { user }}, \\quad \\mathcal {A} _ {\\text { user }} \\in \\{\\text { Select }, \\text { Not   Select } \\},\n$$\n\nparameterised by intrinsic preference vector $\\theta$ and noise vector $\\omega .$ . Note that user simulator’s action space ${ \\mathcal { A } } _ { \\mathrm { u s e r } }$ can include another set of options depending on the recommendation setting. For instance it can be <sub>{Click</sub>, <sub>Pass</sub>, <sub>Purchase}</sub> in eCommerce user simulation. Given repeated interact",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02097_多智能体推荐系统的未来\\2507.02097.md",
+      "source_hash": "782ad5be243c62bfe6ba0ae1bad12c51d962f28d8b0119ea5bcb2c23dcf09b0c",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "7 Conclusion",
+      "start_char": 158818,
+      "end_char": 160018,
+      "quote": "## 7 Conclusion\n\nThis paper established a footing for agentic recommender systems: architectures in which stateful agents, memories, tools, communication protocols, and verification steps are composed to improve recommendation-layer outcomes. We began by formalizing the core building blocks, generic LLM agents, recommender agents, multi-agent systems, memory update and retrieval functions, and observable traces, and by bounding what is recommendation-specific in such a system. These abstractions unify design choices such as raw bufers, vector stores, knowledge graphs, procedural memories, and tool-mediated evidence retrieval into a vocabulary that is precise enough for evaluation while remaining implementation-flexible.\n\nBuilding on this vocabulary, Section 5 surfaced the operational fault lines that accompany such flexibility. We organized the open problems into five challenge families, communication complexity and protocol design, scalability and cost, hallucination and error propagation, emergent misalignment and collusion, and brand, policy, and legal compliance, and connected each to recommender-specific manifestations and measurable signals such as ranking quality, evidence c",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02097_多智能体推荐系统的未来\\2507.02097.md",
+      "source_hash": "782ad5be243c62bfe6ba0ae1bad12c51d962f28d8b0119ea5bcb2c23dcf09b0c",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

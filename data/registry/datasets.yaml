@@ -1,0 +1,50 @@
+schema_version: "1.0"
+verified_at: "2026-07-24"
+
+datasets:
+  movielens_1m:
+    canonical_name: MovieLens-1M
+    aliases: [MovieLens 1M, ML-1M, ML1M]
+    official_url: https://grouplens.org/datasets/movielens/1m/
+    provider: GroupLens
+    data_type: explicit_ratings
+    access: public_with_terms
+    license: see_official_readme
+
+  movielens_25m:
+    canonical_name: MovieLens-25M
+    aliases: [MovieLens 25M, ML-25M, ML25M]
+    official_url: https://grouplens.org/datasets/movielens/
+    provider: GroupLens
+    data_type: explicit_ratings_and_tags
+    access: public_with_terms
+    license: see_official_readme
+
+  amazon_reviews_2023:
+    canonical_name: Amazon Reviews 2023
+    aliases: [Amazon Reviews'23, Amazon Review 2023]
+    official_url: https://amazon-reviews-2023.github.io/main.html
+    provider: McAuley Lab
+    data_type: reviews_and_item_metadata
+    access: public_with_terms
+    license: see_official_site
+
+  mind:
+    canonical_name: MIND
+    aliases: [Microsoft News Dataset, MIND-small, MIND-large]
+    official_url: https://msnews.github.io/
+    provider: Microsoft Research
+    data_type: news_click_logs
+    access: public_with_terms
+    license: see_official_site
+
+  kuairec:
+    canonical_name: KuaiRec
+    aliases: [KwaiRec]
+    official_url: https://github.com/chongminggao/KuaiRec
+    provider: Kuaishou research dataset authors
+    data_type: video_recommendation_interactions
+    access: public_with_terms
+    license: see_official_repository
+
+pending_aliases: []

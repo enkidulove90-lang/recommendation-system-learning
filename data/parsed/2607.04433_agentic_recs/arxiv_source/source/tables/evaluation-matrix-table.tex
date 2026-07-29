@@ -1,0 +1,23 @@
+
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.08}
+\caption{Evaluation matrix for agentic recommender systems.}
+\vspace{-8pt}
+\label{tab:ars-eval-matrix}
+\begin{tabularx}{\textwidth}{@{}p{0.13\textwidth}p{0.20\textwidth}p{0.22\textwidth}X@{}}
+\toprule
+\textbf{H0 target} & \textbf{H1 protocols} & \textbf{H2 purpose} & \textbf{H3 metrics and required context} \\
+\midrule
+Recommendation outcome & Offline benchmark; simulation; online or A/B test. & Test whether the final item, list, route, or POI set is useful. & HR/Hit, Recall, Precision, NDCG, MRR, MAP, AUC, CTR/CVR. Report split, candidate set, negative sampling, baselines, LLM/backbone version, and repeated runs. \\
+Interaction and generated output & CRS benchmark; user study; dialogue simulation; human or LLM judge; reference comparison. & Test preference elicitation, task completion, response quality, and explanation usefulness. & Success@K, task completion, average turns, satisfaction, BLEU/ROUGE/METEOR/BERTScore, clarity, relevance, helpfulness. Report rubric, judge prompt, evidence visibility, and agreement. \\
+Grounding and RAG evidence & Retrieval benchmark; claim-level audit; noisy or adversarial evidence test. & Test whether retrieved user, item, or auxiliary evidence supports the recommendation and explanation. & Retrieval Recall@K/NDCG, context relevance, citation accuracy, faithfulness, hallucination and contradiction rate. Report source, granularity, freshness, retrieval budget, and claim segmentation. \\
+Simulator validity & Simulator-vs-log comparison; human validation; downstream utility; simulation-to-A/B alignment. & Test whether simulated users, creators, or environments are plausible and useful. & Distributional similarity, rating/click consistency, diversity, leakage rate, reward, liking ratio, treatment-effect correlation. Report calibration data, persona construction, leakage controls, and uncertainty. \\
+Agent trace: tools, memory, planning, coordination & Trace logging; functional validation; module ablation; error taxonomy; case study. & Attribute success and failure to agentic components, not only to the final list. & Tool-selection accuracy, argument validity, execution success, plan coverage, recovery success, memory precision/recall, contradiction rate, agreement, time-to-consensus. Report tool schema, memory store, trace format, and agent-role ablations. \\
+Safety, privacy, fairness, and deployment & Red teaming; poisoning/jailbreak tests; privacy audit; fairness analysis; efficiency measurement; production monitoring. & Test robustness, policy consistency, privacy preservation, fairness, and operational feasibility. & Attack success, policy violation, privacy leakage, exposure imbalance, diversity, latency, token/inference cost, throughput, timeout/fallback rate, retention/GMV. Report threat model, attack budget, protected/provider groups, hardware/API setup, traffic split, and confidence intervals. \\
+\bottomrule
+\end{tabularx}
+\end{table*}

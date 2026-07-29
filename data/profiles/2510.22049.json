@@ -1,0 +1,158 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2510.22049",
+  "identity": {
+    "title": "Massive Memorization with Hundreds of Trillions of Parameters for Sequential Transducer Generative Recommenders",
+    "chinese_title": "VISTA：虚拟序列目标注意力",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2510.22049"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [],
+    "pipeline_stages": [
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "transformer",
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "behavior_sequence"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出VISTA两阶段注意力框架，将用户长历史序列压缩为少量摘要嵌入并缓存，使下游模型训练和推理的计算成本固定，从而支持百万级用户历史序列的工业级推荐系统。",
+    "one_sentence_contribution": "提出VISTA两阶段注意力框架，将用户长历史序列压缩为少量摘要嵌入并缓存，使下游模型训练和推理的计算成本固定，从而支持百万级用户历史序列的工业级推荐系统。",
+    "method_overview": "采用两阶段框架：第一阶段使用准线性自注意力将超长用户历史序列压缩为128个种子嵌入；第二阶段使用标准Transformer注意力计算候选与摘要嵌入的交互。摘要嵌入每2小时更新并缓存到KV存储中，下游模型直接读取使用。",
+    "method_components": [
+      {
+        "name": "提出两阶段注意力分解框架",
+        "role": "reported_innovation",
+        "mechanism": "提出两阶段注意力分解框架，将传统目标注意力解耦为用户历史摘要和候选注意力，使下游模型仅需处理压缩后的摘要嵌入。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计准线性注意力(QLA)机制",
+        "role": "reported_innovation",
+        "mechanism": "设计准线性注意力(QLA)机制，实现O(N)复杂度的自注意力计算，避免候选间注意力导致的标签泄露问题，同时保持模型表达能力。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "引入生成式序列重建损失",
+        "role": "reported_innovation",
+        "mechanism": "引入生成式序列重建损失，通过因果解码器强制摘要嵌入保留用户历史序列的完整信息，增强模型记忆能力。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon-Electronics"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "KuaiRand-1K"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Simplified Prod (Minimal Production)"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Industrial-Scale Data (Meta生产数据)"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon-Electronics、KuaiRand-1K、Simplified Prod (Minimal Production)、Industrial-Scale Data (Meta生产数据)；任务：Experiments ## 5.1 Datasets and Experimental Setup The proposed VISTA framework is designed for a large scale real-world dataset, where one needs to train hundreds of billions of examples per day and each user has a history which contains hundreds of thousands of items.",
+      "split": "not_reported",
+      "metrics": [
+        "AUC"
+      ],
+      "baselines": [
+        "While existing public datasets are usually much smaller, we compare our method against several baselines on public datasets in addition to reporting results on real production data.；## 5.1.1 Public Dataset and Industrial-Scale Dataset We first compare the efectiveness of VISTA against several baseline models on public datasets Amazon-Electronics <sup>1</sup> and KuaiRand-1K <sup>2</sup>.；To focus mainly on the efectiveness of the attention mechanism, we compare VISTA against baselines in replacing the attention layers in a common model architecture."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在Amazon数据集上AUC达0.886，NE降至0.621，优于HSTU等基线。在工业级数据上，VISTA相比HSTU在C-Task上NE降低0.40%，E1-Task降低1.19%。在线A/B测试中，C-Task提升0.5%，O1-Task提升0.2%，O2-Task提升0.04%，推理GPU资源使用降低94%。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发有重要借鉴价值：1) 算法设计上，两阶段注意力可启发Agent设计记忆压缩模块，将长程交互历史压缩为紧凑表示；2) 系统架构上，嵌入缓存与异步更新机制为Agent提供高效的记忆检索方案；3) 评估方法上，使用NE和AUC结合在线A/B测试的评估体系可直接复用；4) 数据处理上，准线性注意力可降低Agent处理长序列的计算开销。",
+    "design_lessons": [
+      "对推荐Agent开发有重要借鉴价值",
+      "算法设计上，两阶段注意力可启发Agent设计记忆压缩模块，将长程交互历史压缩为紧凑表示；",
+      "系统架构上，嵌入缓存与异步更新机制为Agent提供高效的记忆检索方案；",
+      "评估方法上，使用NE和AUC结合在线A/B测试的评估体系可直接复用；",
+      "数据处理上，准线性注意力可降低Agent处理长序列的计算开销。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.084357+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.771465+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2510.22049_VISTA：虚拟序列目标注意力\\2510.22049.md",
+    "source_hash": "7ffaa6b2fe99f39d7428bafc46b8d41adc75f78ae81228aefccf3c174bf8d5f2",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2510.22049_summary.md",
+    "summary_hash": "5eae0d3d57fd07f0b7bd792fe4747cc55bb450092459a0011ac266c5a21991cd"
+  }
+}

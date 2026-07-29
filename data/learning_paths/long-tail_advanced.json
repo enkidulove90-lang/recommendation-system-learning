@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "path_id": "long-tail_advanced",
+  "topic": "long-tail",
+  "level": "advanced",
+  "objective": "Build a advanced understanding of long-tail, progressing from framing and evidence standards to methods and implementation implications.",
+  "generated_at": "2026-07-24T07:08:49.978369+00:00",
+  "steps": [
+    {
+      "order": 1,
+      "paper_id": "2501.01945",
+      "title": "Cold-Start Recommendation towards the Era of Large Language Models (LLMs): A Comprehensive Survey and Roadmap",
+      "role": "survey",
+      "rationale": "Use this survey paper to learn long-tail through candidate_generation, user_modeling, cold_start, long_tail, collaborative_filtering, llm.",
+      "prerequisites": [],
+      "relation_edge_ids": [],
+      "profile_quality": "B"
+    },
+    {
+      "order": 2,
+      "paper_id": "2505.09777",
+      "title": "A Survey on Large Language Models in Multimodal Recommender Systems",
+      "role": "survey",
+      "rationale": "Use this survey paper to learn long-tail through candidate_generation, user_modeling, cold_start, sparsity, collaborative_filtering, transformer.",
+      "prerequisites": [],
+      "relation_edge_ids": [],
+      "profile_quality": "B"
+    },
+    {
+      "order": 3,
+      "paper_id": "2507.21117",
+      "title": "A Comprehensive Review on Harnessing Large Language Models to Overcome Recommender System Challenges",
+      "role": "survey",
+      "rationale": "Use this survey paper to learn long-tail through candidate_generation, ranking, cold_start, long_tail, collaborative_filtering, transformer.",
+      "prerequisites": [
+        "2505.09777"
+      ],
+      "relation_edge_ids": [
+        "rel_5651a1e5ccedc0e2"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 4,
+      "paper_id": "2403.06447",
+      "title": "CoRAL: Collaborative Retrieval-Augmented Large Language Models Improve Long-tail Recommendation",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn long-tail through candidate_generation, ranking, cold_start, long_tail, collaborative_filtering, llm.",
+      "prerequisites": [
+        "2507.21117"
+      ],
+      "relation_edge_ids": [
+        "rel_2d95c6c8fb8a844e"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 5,
+      "paper_id": "2505.05196",
+      "title": "Stealthy LLM-Driven Data Poisoning Attacks Against Embedding-Based Retrieval-Augmented Recommender Systems",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn long-tail through candidate_generation, ranking, long_tail, robustness, collaborative_filtering, transformer.",
+      "prerequisites": [
+        "2507.21117"
+      ],
+      "relation_edge_ids": [
+        "rel_288b571c6a5ab3d4"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 6,
+      "paper_id": "2505.20773",
+      "title": "Adaptive Candidate Retrieval with Dynamic Knowledge Graph Construction for Cold-Start Recommendation",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn long-tail through candidate_generation, ranking, cold_start, efficiency, llm, rag.",
+      "prerequisites": [
+        "2501.01945"
+      ],
+      "relation_edge_ids": [
+        "rel_000675c4145845c5"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 7,
+      "paper_id": "2507.02626",
+      "title": "VRAgent-R1: Boosting Video Recommendation with MLLM-based Agents via Reinforcement Learning",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn long-tail through candidate_generation, ranking, cold_start, sparsity, llm, reinforcement_learning.",
+      "prerequisites": [
+        "2505.09777"
+      ],
+      "relation_edge_ids": [
+        "rel_1c123933a8b739d5"
+      ],
+      "profile_quality": "B"
+    }
+  ]
+}

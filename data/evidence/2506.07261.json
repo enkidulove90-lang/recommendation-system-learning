@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2506.07261",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2506.07261_延迟异步检索增强召回\\2506.07261.md",
+  "source_hash": "1c7e48a82f568697b65c65d13bbac3bee649513a0e1bd5f7cc03dfba1c2f5add",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2184,
+      "end_char": 3384,
+      "quote": "because the retriever must satisfy the tightest latency budget, it relies on inexpensive signals (e.g. dot-product two-tower models [1, 2] or K-nearest-neighbour CF indices) and consequently fails to surface many highly engaging items. In fact, in offline simulation studies, we observe single-digit Recall@200 from standard user-to-item and item-to-item retrieval methods (Fig. 1). This results in a retrieval bottleneck that throttles downstream ranking quality.\n\n![](images/e99cfd7920f6b7edf57eed846b150b08feb4dd23df0808e33dfc999a4adee115.jpg)  \nFigure 1: Recall@K as a Function of Candidate Retrieved Size (K) from Two Tower based DNN model\n\nResearch has therefore explored hybrid offline–online architectures that pre-compute richer candidates when latency is less constrained. These often focus on pre-computing sophisticated retrieval candidates using complex offline models, subsequently relying on lightweight online models for serving [5, 6]. For instance, TwERC [6] augments a real-time lightweight ranker with complementary sources like graph-based neighbors and cached ranker scores, significantly improving coverage. Similarly, other hybrid architectures combine batch-trained models wi",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2506.07261_延迟异步检索增强召回\\2506.07261.md",
+      "source_hash": "1c7e48a82f568697b65c65d13bbac3bee649513a0e1bd5f7cc03dfba1c2f5add",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3.2 RQ2: Retrieval Scaling vs. Model Scaling",
+      "start_char": 10425,
+      "end_char": 11488,
+      "quote": "## 3.2 RQ2: Retrieval Scaling vs. Model Scaling\n\nTo disentangle why RADAR excels, we ran ablation experiments varying the retrieved candidate pool size and model complexity. Table 2 summarizes the Recall@200 results for different configurations: (A) Base: RADAR configuration, (B) Scaled retrieved candidate pool size with simpler pre-ranker style model [9], (C) Online query candidate pool size with scaled up ranking model, (D) No scaling in candidate retrieved and ranking with simpler pre-ranker style model. Table 2 shows that both model scaling and retrieval scaling help increase RADAR performance, additionally we observe synergy between the two configs which further increase the performance of RADAR when used together.\n\nTable 2: Recall@200 by Retrieval Scaling, Model Scaling\n\n<table><tr><td>Model Scaling</td><td>Retrieval Scaling</td><td>Recall@200</td></tr><tr><td>Yes</td><td>Yes</td><td>16.5%</td></tr><tr><td>No</td><td>Yes</td><td>12.5%</td></tr><tr><td>Yes</td><td>No</td><td>12.1%</td></tr><tr><td>No</td><td>No</td><td>10.2%</td></tr></table>",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2506.07261_延迟异步检索增强召回\\2506.07261.md",
+      "source_hash": "1c7e48a82f568697b65c65d13bbac3bee649513a0e1bd5f7cc03dfba1c2f5add",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "3 Offline Experiments",
+      "start_char": 8506,
+      "end_char": 9705,
+      "quote": "## 3 Offline Experiments\n\nTo evaluate the effectiveness of RADAR we conduct offline experiments on a large-scale dataset obtained from users’ engagement on our video platform. We measure retrieval performance by instrumenting the standard recall@200 metric [3] using users’ engagement on videos as ground truth. We compare RADAR against the following retrieval baselines:\n\n1. DNN: a standard two-tower neural model[1] which maps users and items into a latent space combining collaborative filtering and content-based representations for each tower separately.\n\n2. Item-KNN [4]. This is the standard item-based collaborative filtering method\n\n3. Content-KNN: a nearest-neighbor baseline that retrieves items based solely on pretrained content embeddings using cosine similarity\n\nWe focus on three main research questions:\n\n1. RQ1: Retrieval Recall Performance – How does RADAR perform on recall@200 compared to the baselines mentioned above?\n\n2. RQ2: Impact of Pool Size, Model Complexity – Are the recall gains of RADAR primarily due to the much larger set of retrieved candidates or due to the stronger model used relative to pre-ranker model?\n\n3. RQ3: Performance Breakdown by User Segments – Does",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2506.07261_延迟异步检索增强召回\\2506.07261.md",
+      "source_hash": "1c7e48a82f568697b65c65d13bbac3bee649513a0e1bd5f7cc03dfba1c2f5add",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

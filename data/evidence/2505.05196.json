@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2505.05196",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.05196_RAG推荐系统数据投毒攻击\\2505.05196.md",
+  "source_hash": "ef2d2ae698a3431773b66fa00c4cb2928aeedf66c942d899115b325537650b8d",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2081,
+      "end_char": 3281,
+      "quote": "## 1 Introduction\n\nRetrieval-augmented generation (RAG) enhances large language models (LLMs) by grounding their outputs in external data sources, such as item reviews or user tags, rather than relying solely on internal parameters [2, 3, 6]. This grounding improves recency and factual accuracy. In fact, industry reports estimate that over 60% of LLM-powered search and recommendation systems now use RAG [6, 8]. A common RAG-based recommender architecture (Figure 1) retrieves candidate items from an external knowledge store (e.g., a database or corpus of item descriptions) and then uses an LLM to synthesize the retrieved text into final recommendations. While classical methods such as collaborative filtering (CF) can provide a base in the retrieval stage by analyzing user-item interactions, <sub>embedding-based</sub> <sub>retrieval</sub> has emerged as a particularly powerful approach in RAG pipelines. Embedding models such as BERT-like encoders or Sentence Transformers can capture an item semantic representation and dynamically decide when to retrieve additional context. By leveraging these embeddings, a recommender system can handle <sub>new</sub> or <sub>infrequently</sub> discus",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.05196_RAG推荐系统数据投毒攻击\\2505.05196.md",
+      "source_hash": "ef2d2ae698a3431773b66fa00c4cb2928aeedf66c942d899115b325537650b8d",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "1 Introduction",
+      "start_char": 2081,
+      "end_char": 3281,
+      "quote": "## 1 Introduction\n\nRetrieval-augmented generation (RAG) enhances large language models (LLMs) by grounding their outputs in external data sources, such as item reviews or user tags, rather than relying solely on internal parameters [2, 3, 6]. This grounding improves recency and factual accuracy. In fact, industry reports estimate that over 60% of LLM-powered search and recommendation systems now use RAG [6, 8]. A common RAG-based recommender architecture (Figure 1) retrieves candidate items from an external knowledge store (e.g., a database or corpus of item descriptions) and then uses an LLM to synthesize the retrieved text into final recommendations. While classical methods such as collaborative filtering (CF) can provide a base in the retrieval stage by analyzing user-item interactions, <sub>embedding-based</sub> <sub>retrieval</sub> has emerged as a particularly powerful approach in RAG pipelines. Embedding models such as BERT-like encoders or Sentence Transformers can capture an item semantic representation and dynamically decide when to retrieve additional context. By leveraging these embeddings, a recommender system can handle <sub>new</sub> or <sub>infrequently</sub> discus",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.05196_RAG推荐系统数据投毒攻击\\2505.05196.md",
+      "source_hash": "ef2d2ae698a3431773b66fa00c4cb2928aeedf66c942d899115b325537650b8d",
+      "extraction_method": "section_router",
+      "confidence": 0.67
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "3 Experimental Setup",
+      "start_char": 11653,
+      "end_char": 12853,
+      "quote": "## 3 Experimental Setup\n\nWe conduct our experiments on top of a retrieval-augmented recommendation (RAG) pipeline that integrates a Large Language Model (LLM) from OpenAI and a Sentence Transformer (ST) encoder for embedding-based retrieval. Specifically, the pipeline first employs the Sentence Transformer to select candidate items based on the semantic closeness of item descriptions, and then an OpenAI-based LLM re-ranks these candidates or generates final textual recommendations.\n\nAlthough we report results primarily on the widely used Movie Lens “ml-latest-small” dataset in this paper, we have also evaluated the proposed methods on additional benchmark datasets; due to space limitations, we present here only the detailed findings for the MovieLens dataset.\n\nWithin the MovieLens corpus, we categorize items into <sub>long-tail</sub> (unpopular) vs. <sub>short-head</sub> (popular) segments, inject adversarial textual edits, and assess the resulting changes in item ranks and system-level metrics (e.g., Recall@??, nDCG@??). Our system rein dexes or retrains on these modified descriptions, thereby simulating real-world scenarios where metadata updates could inadvertently (or malicious",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.05196_RAG推荐系统数据投毒攻击\\2505.05196.md",
+      "source_hash": "ef2d2ae698a3431773b66fa00c4cb2928aeedf66c942d899115b325537650b8d",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion",
+      "start_char": 20944,
+      "end_char": 21816,
+      "quote": "## 5 Conclusion\n\nOur work demonstrates that carefully designed textual perturbations (modifications) in item metadata can strategically alter recommendations in Retrieval-Augmented Generation (RAG) systems, emphasizing the need for robust textual provenance checks. Through a systematic exploration of diferent attack strategies—including emotional rewording<sup>,</sup> neighbor-based borrowing<sup>,</sup> <sup>and</sup> hybrid chain-<sub>ing</sub>—our experiments reveal that even <sub>small-scale</sub> <sub>semantic</sub> <sub>ma-</sub> <sub>nipulations</sub> can efectively boost the visibility of long-tail items or suppress popular ones, often while remaining stealthy and dificult to detect. These findings underscore the potential provider-side vulnerabilities in RAG-based pipelines and the necessity of defensive measures to safeguard recommendation integrity.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.05196_RAG推荐系统数据投毒攻击\\2505.05196.md",
+      "source_hash": "ef2d2ae698a3431773b66fa00c4cb2928aeedf66c942d899115b325537650b8d",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2603.10673",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2603.10673_三方智能体推荐框架\\2603.10673.md",
+  "source_hash": "16c0647b266b51c197782d726733228ff66772057b592f8f61e205c5f4baa600",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 3280,
+      "end_char": 4480,
+      "quote": "## 1 Introduction\n\nLarge language models (LLMs) have demonstrated remarkable ca pabilities across a wide range of domains [20, 29, 30, 47], fun damentally reshaping how intelligent decision-making systems reason [36, 53] and interact with users [28, 52]. In recommender systems, these advances have stimulated growing interest in LLM based agent paradigms, where agents model user behaviors through language-driven interaction and reasoning [4, 43], enabling more expressive and interpretable preference representations compared to traditional collaborative filtering approaches [2, 32, 42].\n\nHowever, despite these promising developments, most existing agent-based recommender methods largely mirror human-centered decision-making patterns [16, 49] and adopt a predominantly user centric modeling paradigm [21, 31, 33, 39]. They primarily opti mize user utility while treating items as passive functional entities [40, 45], thereby failing to adequately account for the interests of other critical stakeholders, such as content providers and platform operators [3, 28, 34, 44]. Such a user-centric decision paradigm is inherently unsustainable in multi-sided marketplaces. In particular, the pervasi",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2603.10673_三方智能体推荐框架\\2603.10673.md",
+      "source_hash": "16c0647b266b51c197782d726733228ff66772057b592f8f61e205c5f4baa600",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3.1 Multi-Stakeholder Utility Modeling",
+      "start_char": 13703,
+      "end_char": 14903,
+      "quote": "## 3.1 Multi-Stakeholder Utility Modeling\n\nWhile agent-based interaction enables flexible modeling of user preferences, real-world recommendation systems inherently involve multiple stakeholders with competing objectives. To formalize this multi-stakeholder setting, we define utility functions for users, items, and the platform, which together characterize the overall optimization target of the recommendation process.\n\n• User Utility. Users primarily seek high relevance and engagement quality [48]. At the platform stage, we define the user-side utility on a per-item basis:\n\n$$\nU _ {\\text { user }} (u, i) = r (u, i),\\tag{1}\n$$\n\nwhere $r ( u , i )$ denotes the predicted relevance score produced by the user agent.\n\n• Item Utility. Items aim to obtain efective exposure and longterm visibility across recommendation opportunities. We quantify the realized item-side gain $U _ { \\mathrm { i t e m } }$ using the Expected Item Utility (EIU):\n\n$$\nE I U (u, i) = v (\\mathrm{rank} _ {u} (i)) \\cdot \\mathrm{CTR} (u, i),\\tag{2}\n$$\n\nwhere <sup>??</sup> (·) models position-dependent exposure probability following a logarithmic decay, and $\\mathrm { C T R } ( u , i )$ denotes the predicted click-throu",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2603.10673_三方智能体推荐框架\\2603.10673.md",
+      "source_hash": "16c0647b266b51c197782d726733228ff66772057b592f8f61e205c5f4baa600",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "5.1 Experimental Setup",
+      "start_char": 36980,
+      "end_char": 38180,
+      "quote": "## 5.1 Experimental Setup\n\n5.1.1 Dataset. We conduct experiments on four real-world datasets from three sources: Amazon<sup>1</sup>, Steam<sup>2</sup>, and Goodreads<sup>3</sup>. From Amazon, we use the CDs & Vinyl and Movies & TV categories and from Goodreads, we focus on the Young Adult (YA) subdo main. Table 1 summarizes the dataset statistics. Following standard practice, we retain only positive interactions (rating ≥ 4) and filter for users with 10 to 100 interactions to ensure suficient preference signals while excluding anomalous accounts. All items are encoded with a pre-trained Sentence-BERT model [9] to obtain semantic embeddings.\n\nTable 1: Statistics of the datasets. Full represents the original scale, and Processed denotes the refined subset used for our tri-party agentic recommendation experiments.\n\n<table><tr><td>Datasets</td><td>#Items</td><td>#Inters.</td><td>Sparsity</td></tr><tr><td>CDs &amp; Vinyl (Full)</td><td>701,673</td><td>4,827,273</td><td>99.99%</td></tr><tr><td>- Processed</td><td>33,042</td><td>41,901</td><td>99.93%</td></tr><tr><td>Movies &amp; TV (Full)</td><td>747,764</td><td>17,328,314</td><td>99.99%</td></tr><tr><td>- Processed</td><td>27,407</td><t",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2603.10673_三方智能体推荐框架\\2603.10673.md",
+      "source_hash": "16c0647b266b51c197782d726733228ff66772057b592f8f61e205c5f4baa600",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "6 Conclusion and Limitations",
+      "start_char": 62894,
+      "end_char": 63691,
+      "quote": "## 6 Conclusion and Limitations\n\nWe proposed TriRec, the first tri-party LLM-agent recommendation framework that coordinates users, items, and the platform via item self-promotion and platform-led multi-objective re-ranking. Exper iments validate the superiority of TriRec over existing baselines in enhancing tri-party utilities, suggesting that item self-promotion can mitigate the conventional relevance–fairness trade-of.\n\nTwo limitations remain: our ofline protocol may not fully reflect long-term dynamics, and the generated self-promotion is not yet quantitatively audited for factuality. Future work will address these via multi-round simulation, online A/B tests, and retrieval-grounded factuality constraints, as well as safeguards against adversarial self promotion and provider gaming.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2603.10673_三方智能体推荐框架\\2603.10673.md",
+      "source_hash": "16c0647b266b51c197782d726733228ff66772057b592f8f61e205c5f4baa600",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

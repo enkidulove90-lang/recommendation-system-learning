@@ -1,0 +1,21 @@
+{
+  "arxiv_id": "2404.16924",
+  "title": "A Survey of Generative Search and Recommendation in the Era of Large Language Models",
+  "authors": [
+    "Yongqi Li",
+    "Xinyu Lin",
+    "Wenjie Wang",
+    "Fuli Feng",
+    "Liang Pang",
+    "Wenjie Li",
+    "Liqiang Nie",
+    "Xiangnan He",
+    "Tat-Seng Chua"
+  ],
+  "published": "2024-04-25",
+  "year": 2024,
+  "arxiv_url": "https://arxiv.org/abs/2404.16924",
+  "pdf_url": "https://arxiv.org/pdf/2404.16924",
+  "categories": ["cs.IR", "cs.CL"],
+  "primary_category": "cs.IR"
+}

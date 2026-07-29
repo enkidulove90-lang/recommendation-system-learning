@@ -1,0 +1,161 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2506.07261",
+  "identity": {
+    "title": "RADAR: Recall Augmentation through Deferred Asynchronous Retrieval",
+    "chinese_title": "延迟异步检索增强召回",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2506.07261"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "efficient_retrieval"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "pre_ranking",
+      "ranking",
+      "reranking",
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering"
+    ],
+    "modalities": [
+      "image",
+      "video"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出RADAR框架，通过异步离线计算，使用完整的生产级排序模型对50倍于在线规模的候选集进行预排序，并将结果存入低延迟键值存储，在线服务时直接注入最终排序阶段，绕过在线检索和预排序。",
+    "one_sentence_contribution": "提出RADAR框架，通过异步离线计算，使用完整的生产级排序模型对50倍于在线规模的候选集进行预排序，并将结果存入低延迟键值存储，在线服务时直接注入最终排序阶段，绕过在线检索和预排序。",
+    "method_overview": "采用异步离线预计算与在线注入相结合的方法。离线阶段：对目标用户使用高效检索方法获取50倍候选集，再用全量排序模型评分，将Top-200结果存入键值存储。在线阶段：并行从标准检索源和RADAR存储获取候选，RADAR候选跳过预排序，与标准候选合并后由最终排序模型重排序。",
+    "method_components": [
+      {
+        "name": "提出完全解耦的异步离线-在线混合架构",
+        "role": "reported_innovation",
+        "mechanism": "提出完全解耦的异步离线-在线混合架构，利用非高峰计算资源，使用全量生产级排序模型对50倍候选集进行离线预排序，突破了在线检索的延迟和计算瓶颈。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计基于用户活跃度的自适应刷新调度策略",
+        "role": "reported_innovation",
+        "mechanism": "设计基于用户活跃度的自适应刷新调度策略，高频用户每日刷新、低频用户每周或双周刷新，在计算成本与候选新鲜度之间取得平衡。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "通过在线检索源的重调（强调短期意图和新内容）与RADAR（专注长期稳定兴趣）形成",
+        "role": "reported_innovation",
+        "mechanism": "通过在线检索源的重调（强调短期意图和新内容）与RADAR（专注长期稳定兴趣）形成互补，实现了约60%的独特候选覆盖率，最大化增量价值。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Meta视频平台大规模用户交互数据集"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Meta视频平台大规模用户交互数据集；任务：Offline Experiments To evaluate the effectiveness of RADAR we conduct offline experiments on a large-scale dataset obtained from users’ engagement on our video platform.",
+      "split": "not_reported",
+      "metrics": [
+        "RECALL@200"
+      ],
+      "baselines": [
+        "We compare RADAR against the following retrieval baselines: 1.；Content-KNN: a nearest-neighbor baseline that retrieves items based solely on pretrained content embeddings using cosine similarity We focus on three main research questions: 1.；RQ1: Retrieval Recall Performance – How does RADAR perform on recall@200 compared to the baselines mentioned above?"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [
+      {
+        "dataset": null,
+        "metric": "Recall@200",
+        "value": 16.5,
+        "setting": "",
+        "comparison": "",
+        "delta": null,
+        "evidence_ids": [
+          "ev-experiment-01"
+        ]
+      }
+    ],
+    "results_summary": "离线实验中，RADAR的Recall@200达到16.5%，远超DNN双塔模型（8.1%）、Item-KNN（7.2%）和Content-KNN（5.1%）。消融实验表明，同时使用检索规模扩展（50X）和模型复杂度扩展（全量排序模型）时效果最佳（16.5%），单独使用分别为12.5%和12.1%。用户分群分析显示，中度活跃用户提升最大（17.3% vs 7.9%），高度活跃用户次之（16.2% vs 8.2%），休眠用户无提升。在线A/B测试带来+0.8%用户参与度提升和+6%独特内容消费增长。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发具有重要借鉴价值：1）算法设计：Agent可采用类似异步预计算策略，利用空闲计算资源对大规模候选进行深度评估，突破实时推理限制；2）系统架构：离线-在线分离的键值存储模式可直接复用，Agent可维护用户级预计算缓存，实现低延迟响应；3）评估方法：论文的Recall@200离线评估和用户分群分析（按活跃度分层）为Agent效果评估提供了方法论参考；4）数据处理：基于用户活跃度的自适应刷新策略可指导Agent的缓存更新策略，平衡计算成本与推荐时效性。",
+    "design_lessons": [
+      "对推荐Agent开发具有重要借鉴价值",
+      "算法设计：Agent可采用类似异步预计算策略，利用空闲计算资源对大规模候选进行深度评估，突破实时推理限制；",
+      "系统架构：离线-在线分离的键值存储模式可直接复用，Agent可维护用户级预计算缓存，实现低延迟响应；",
+      "评估方法：论文的Recall@200离线评估和用户分群分析（按活跃度分层）为Agent效果评估提供了方法论参考；",
+      "数据处理：基于用户活跃度的自适应刷新策略可指导Agent的缓存更新策略，平衡计算成本与推荐时效性。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.977669+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.618827+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2506.07261_延迟异步检索增强召回\\2506.07261.md",
+    "source_hash": "1c7e48a82f568697b65c65d13bbac3bee649513a0e1bd5f7cc03dfba1c2f5add",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2506.07261_summary.md",
+    "summary_hash": "90acd3f4d9608cf91b7109d258cd8a427f6d2de255443dd679fe5eb17638a42b"
+  }
+}

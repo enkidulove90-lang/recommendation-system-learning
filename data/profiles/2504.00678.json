@@ -1,0 +1,143 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2504.00678",
+  "identity": {
+    "title": "RapidPD: Rapid Human and Pet Presence Detection System for Smart Vehicles via Wi-Fi",
+    "chinese_title": "LLM增强的多阶段推荐系统",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2504.00678"
+    },
+    "paper_type": "system"
+  },
+  "classification": {
+    "research_directions": [],
+    "pipeline_stages": [
+      "candidate_generation",
+      "pre_ranking",
+      "ranking",
+      "reranking",
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency"
+    ],
+    "technical_paradigms": [
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文系统性地研究了将大型语言模型（LLM）注入推荐系统全流程（召回、粗排、精排、重排）的方法。",
+    "one_sentence_contribution": "本文系统性地研究了将大型语言模型（LLM）注入推荐系统全流程（召回、粗排、精排、重排）的方法。",
+    "method_overview": "论文采用系统性的分析方法，将推荐流水线划分为召回、粗排、精排和重排四个阶段。针对每个阶段，分别探讨了如何利用LLM进行增强，包括：使用LLM进行候选生成（召回）、利用LLM的语义理解进行粗排打分、将LLM作为精排模型的特征或评分器，以及利用LLM的上下文理解能力进行重排。论文通过理论分析和实验对比，评估了各阶段引入LLM的性能提升与计算开销。",
+    "method_components": [
+      {
+        "name": "提出了一个统一的LLM增强多阶段推荐框架",
+        "role": "reported_innovation",
+        "mechanism": "提出了一个统一的LLM增强多阶段推荐框架，系统性地覆盖了从召回、粗排、精排到重排的完整推荐流水线，而非仅关注单一环节。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "在每个阶段（召回、粗排、精排、重排）分别设计了LLM的注入方式",
+        "role": "reported_innovation",
+        "mechanism": "在每个阶段（召回、粗排、精排、重排）分别设计了LLM的注入方式，并针对性地分析了不同阶段对延迟和精度的不同要求，给出了具体的算法设计建议。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "深入分析了生产系统中引入LLM带来的延迟-精度权衡问题",
+        "role": "reported_innovation",
+        "mechanism": "深入分析了生产系统中引入LLM带来的延迟-精度权衡问题，为实际部署提供了理论指导和实践策略，例如通过模型蒸馏、知识蒸馏或轻量级LLM来平衡性能。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "未明确指定具体数据集，论文主要进行系统性分析和框架设计"
+      }
+    ],
+    "protocol": {
+      "task": "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [
+        "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "论文未提供具体的数值实验结果，其核心贡献在于提出了一个系统性的分析框架和设计指南。主要结论是：在召回和粗排阶段引入LLM可以显著提升候选集质量，但需注意延迟；在精排和重排阶段，LLM能提供更精准的个性化排序，但计算成本较高。论文强调了在不同阶段进行延迟-精度权衡的重要性，并建议根据生产环境的具体要求（如延迟预算）选择合适的LLM增强策略。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发的借鉴价值极高。首先，论文提出的多阶段增强框架可直接作为Agent架构设计的蓝图，指导Agent在不同决策环节（如候选生成、初步筛选、精细排序、最终调整）中如何集成LLM。其次，论文对延迟-精度权衡的分析，为Agent在实际部署中的资源分配和性能优化提供了方法论。最后，论文中关于利用LLM进行上下文理解和重排的思路，可启发Agent在最终推荐列表生成时，考虑更丰富的上下文信息（如用户当前意图、对话历史），从而生成更符合用户即时需求的推荐结果。",
+    "design_lessons": [
+      "对推荐系统Agent开发的借鉴价值极高。首先，论文提出的多阶段增强框架可直接作为Agent架构设计的蓝图，指导Agent在不同决策环节（如候选生成、初步筛选、精细排序、最终调整）中如何集成LLM。其次，论文对延迟-精度权衡的分析，为Agent在实际部署中的资源分配和性能优化提供了方法论。最后，论文中关于利用LLM进行上下文理解和重排的思路，可启发Agent在最终推荐列表生成时，考虑更丰富的上下文信息（如用户当前意图、对话历史），从而生成更符合用户即时需求的推荐结果。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "failed",
+    "grade": "D",
+    "confidence": 0.2,
+    "issues": [
+      "summary English title conflicts with the parsed paper title; parsed title is authoritative",
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T05:46:49.429870+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T05:46:47.987268+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.00678_LLM增强的多阶段推荐系统\\2504.00678.md",
+    "source_hash": "66342440bff76cc15662f93c70d73f22ff8bf2a9ec93894933a0eeecbcf24abe",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2504.00678_summary.md",
+    "summary_hash": "eda25b7665b86685dc6f808d9817ca6de8ed42a24bd280326c2572958e5cb11f"
+  }
+}

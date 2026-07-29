@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2507.21117",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.21117_利用大语言模型克服推荐系统挑战综述\\2507.21117.md",
+  "source_hash": "9e528f93dfd501a00954ab5af83ab1cc2f2a34735b9f56c145d8a52490d1beab",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "5 Limitations & Open Challenges of LLMs in Recommender Systems",
+      "start_char": 115548,
+      "end_char": 116748,
+      "quote": "## 5 Limitations & Open Challenges of LLMs in Recommender Systems\n\n<sub>Latency</sub> <sub>and</sub> <sub>Throughput</sub> <sub>Bottlenecks</sub> <sub>–</sub> Autoregressive decoding imposes sequential delays that violate the sub–100 ms SLA common in web-scale ranking. Even with 4-bit weight-only quantization, a 7-B model exceeds 35 ms per query on a single A100 [174]. Token-parallel kernels, KV-cache fusion, and Flash-Attention v3 yield 1.7<sub>×</sub>–2.3<sub>×</sub> speed-ups but degrade under bursts that saturate memory bandwidth [77, 191]. Hierarchical routing—first-stage dense retrieval, second-stage sparse MoE—cuts tail latency by 28 % yet adds routing overhead and fairness concerns [204]. On-device NPUs and speculative decoding shrink <sub>≈</sub>40 ms, but require tight integration with vector search pre-rankers to avoid head-of-line blocking [102, 246].\n\n<sub>Operational</sub> <sub>Cost</sub> <sub>and</sub> <sub>Resource</sub> <sub>Footprint</sub> <sub>–</sub> Inference FLOPs scale roughly linearly with prompt length and quadratically with hidden width; doubling model size can quadruple serving cost and 3× carbon footprint [269]. Sparse MoE routing and LoRA adapters reduc",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.21117_利用大语言模型克服推荐系统挑战综述\\2507.21117.md",
+      "source_hash": "9e528f93dfd501a00954ab5af83ab1cc2f2a34735b9f56c145d8a52490d1beab",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "4.2 Modeling and Algorithmic Challenges",
+      "start_char": 72417,
+      "end_char": 73617,
+      "quote": "{2},\\tag{1}\n$$\n\nwhere $\\hat { r } _ { u i }$ is the predicted interaction (e.g., rating or click) and $r _ { u i }$ the observed label. Without external context or structural priors, the model fails to generalize beyond $\\mathcal { T } _ { u } .$ —the items historically interacted with by user ??.\n\nLLMs mitigate the personalization-generalization trade-of through a unified prompt-based interface that integrates multiple strategies into a cohesive framework. <sub>Instruction-Tuned</sub> <sub>Gen-</sub> <sub>eralization</sub> exploits the global instruction-following capabilities of models such as FLAN-T5 [30], InstructGPT [158], and T0 [183], enabling dynamic adaptation to new contexts without retraining. <sub>Prompt-Tuned</sub> <sub>Personalization</sub> enhances recommendations by directly embedding structured user feedback within prompts, thereby removing the necessity for continuous fine-tuning; approaches like PROMO [75] and PEPLER [119] successfully leverage explicit user preference signals. Additionally, Behavioral Diversity via Generative Modeling generates diverse recommendation candidates using generative prompts, fostering exploration and preventing recommendation collaps",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.21117_利用大语言模型克服推荐系统挑战综述\\2507.21117.md",
+      "source_hash": "9e528f93dfd501a00954ab5af83ab1cc2f2a34735b9f56c145d8a52490d1beab",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.3 Evaluation and Experimentation Challenges",
+      "start_char": 87737,
+      "end_char": 88937,
+      "quote": "## 4.3 Evaluation and Experimentation Challenges\n\nEvaluation in recommender systems is inherently constrained by the ofline-online discrepancy, label sparsity, and the delayed nature of user feedback. Traditional pipelines rely heavily on historical logs and costly online experiments, which often fail to capture long-term or latent efects. LLMs with their ability to model complex distributions and perform conditional reasoning over structured and unstructured inputs, ofer a new framework for addressing these limitations. By encoding user-item dynamics and simulating plausible interactions, LLMs introduce new avenues for counterfactual estimation and representation-aligned evaluation under uncertainty.\n\nRisk and Auditability Matrix for LLM Deployment. Diferent integration strategies expose different vulnerabilities. Template-bound prompting ofers improved compliance, while full LLM generation requires enhanced auditing and safety layers\n\n<sub>4.3.1</sub> <sub>Ofline-Online</sub> <sub>Gap.</sub> A persistent challenge in recommender systems is the misalignment between <sub>ofline</sub> <sub>evaluation</sub> <sub>metrics</sub>—such as NDCG, Recall@K, or MAP—and <sub>online</sub> <sub>",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.21117_利用大语言模型克服推荐系统挑战综述\\2507.21117.md",
+      "source_hash": "9e528f93dfd501a00954ab5af83ab1cc2f2a34735b9f56c145d8a52490d1beab",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Limitations & Open Challenges of LLMs in Recommender Systems",
+      "start_char": 115548,
+      "end_char": 116748,
+      "quote": "## 5 Limitations & Open Challenges of LLMs in Recommender Systems\n\n<sub>Latency</sub> <sub>and</sub> <sub>Throughput</sub> <sub>Bottlenecks</sub> <sub>–</sub> Autoregressive decoding imposes sequential delays that violate the sub–100 ms SLA common in web-scale ranking. Even with 4-bit weight-only quantization, a 7-B model exceeds 35 ms per query on a single A100 [174]. Token-parallel kernels, KV-cache fusion, and Flash-Attention v3 yield 1.7<sub>×</sub>–2.3<sub>×</sub> speed-ups but degrade under bursts that saturate memory bandwidth [77, 191]. Hierarchical routing—first-stage dense retrieval, second-stage sparse MoE—cuts tail latency by 28 % yet adds routing overhead and fairness concerns [204]. On-device NPUs and speculative decoding shrink <sub>≈</sub>40 ms, but require tight integration with vector search pre-rankers to avoid head-of-line blocking [102, 246].\n\n<sub>Operational</sub> <sub>Cost</sub> <sub>and</sub> <sub>Resource</sub> <sub>Footprint</sub> <sub>–</sub> Inference FLOPs scale roughly linearly with prompt length and quadratically with hidden width; doubling model size can quadruple serving cost and 3× carbon footprint [269]. Sparse MoE routing and LoRA adapters reduc",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.21117_利用大语言模型克服推荐系统挑战综述\\2507.21117.md",
+      "source_hash": "9e528f93dfd501a00954ab5af83ab1cc2f2a34735b9f56c145d8a52490d1beab",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

@@ -1,0 +1,212 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2606.26859",
+  "identity": {
+    "title": "AgentX: Towards Agent-Driven Self-Iteration of Industrial Recommender Systems",
+    "chinese_title": "AgentX：工业推荐系统自迭代框架",
+    "authors": [
+      "Changxin Lao",
+      "Fei Pan",
+      "Guozhuang Ma",
+      "Han Li",
+      "Huihuang Lin",
+      "Jijun Shi",
+      "Kangzhi Zhao",
+      "Kun Gai",
+      "Mo Zhou",
+      "Qinqin Zhou",
+      "Quan Chen",
+      "Ruochen Yang",
+      "Shifu Bie",
+      "Shijie Yi",
+      "Shuang Yang",
+      "Shuo Yang",
+      "Wenhao Li",
+      "Wentao Xie",
+      "Xiao Lv",
+      "Xuming Wang",
+      "Yijun Wang",
+      "Yiming Chen",
+      "Yusheng Huang",
+      "Zhongyuan Wang",
+      "Zibo Zhao",
+      "Zijie Zhuang",
+      "Baoning Xia",
+      "Chao Liu",
+      "Chaoyi Ma",
+      "Chubo He",
+      "Dawei Cong",
+      "Feng Jiang",
+      "Gang Wang",
+      "Guilin Xia",
+      "Hanwen Xu",
+      "Jiahong Xie",
+      "Jiahui Qiao",
+      "Jian Liang",
+      "Jiangfan Yue",
+      "Jing Wang",
+      "Jinghan Yang",
+      "Jinghui Jia",
+      "Kan Qin",
+      "Lei Wang",
+      "Ming Li",
+      "Peilin Song",
+      "Pengbo Xu",
+      "Qiang Luo",
+      "Ruiming Tang",
+      "Shiyang Liu",
+      "Shuxian Jin",
+      "Tao Wang",
+      "Tao Zhang",
+      "Xiang Gao",
+      "Xianghan Li",
+      "Yingsong Luo",
+      "Yiwen Ning",
+      "Yongcheng Liu",
+      "Yueyang Liu",
+      "Yuan Guo",
+      "Zhaojie Liu",
+      "Zhenkai Cui"
+    ],
+    "published_date": "2026-06-25",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2606.26859"
+    },
+    "paper_type": "system"
+  },
+  "classification": {
+    "research_directions": [],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "online_learning",
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency",
+      "robustness"
+    ],
+    "technical_paradigms": [
+      "llm"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文提出并部署了AgentX，一个面向工业推荐系统的多智能体自动化开发框架。",
+    "one_sentence_contribution": "本文提出并部署了AgentX，一个面向工业推荐系统的多智能体自动化开发框架。",
+    "method_overview": "AgentX采用多智能体协同架构：Brainstorm Agent通过证据加权生成可执行提案；Developing Agent基于仓库感知生成生产级代码；Evaluation Agent进行安全在线部署和A/B判断；Harness Evolution层通过SGPO从执行轨迹中学习，持续优化智能体行为。系统形成闭环，每次实验的轨迹数据都用于改进后续迭代。",
+    "method_components": [
+      {
+        "name": "提出完整的工业级闭环迭代框架",
+        "role": "reported_innovation",
+        "mechanism": "提出完整的工业级闭环迭代框架，包含Brainstorm、Developing、Evaluation和Harness Evolution四个智能体，实现从模糊意图到在线收益的端到端自动化。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计基于语义梯度的提示优化方法（SGPO）",
+        "role": "reported_innovation",
+        "mechanism": "设计基于语义梯度的提示优化方法（SGPO），通过执行轨迹数据持续优化智能体自身，使系统具备自我进化能力。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "构建证据加权提案生成机制",
+        "role": "reported_innovation",
+        "mechanism": "构建证据加权提案生成机制，融合实验知识库、系统知识库、数据分析和模型研究四类证据源，确保提案的可行性和业务价值。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "快手主Feed推荐场景"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "快手生活服务推荐场景"
+      }
+    ],
+    "protocol": {
+      "task": "实验在快手App的主Feed和生活服务推荐场景进行，数据规模为亿级用户和样本。未明确披露训练/验证/测试划分细节。",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [
+        "对比方法包括：人工算法工程师（baseline）、AgentX系统自身在不同进化阶段的表现。消融实验包括：有无SGPO进化、不同证据源组合、不同智能体配置。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在三周部署中，3个AgentX worker处理374个想法，其中10个成功上线。每个worker的吞吐量每周翻倍，实现8倍于人工的并发度和3.7倍的业务价值。用户App使用时长提升0.561%，年化收入超过1亿人民币。系统在模型研究场景也能自主完成论文复现、模块消融和跨论文组合，展示了强大的泛化能力。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发的借鉴价值：1）算法设计：证据加权提案生成机制可复用，通过多源知识融合提升提案质量；2）评估方法：以真实在线A/B结果作为奖励信号，避免离线指标偏差；3）系统架构：多智能体闭环架构可参考，特别是Brainstorm-Developing-Evaluation-Harness Evolution的四阶段设计；4）数据处理：实验知识库和系统知识库的构建与维护方法，以及轨迹数据的积累与利用策略，对构建自进化推荐Agent系统具有直接指导意义。",
+    "design_lessons": [
+      "对推荐系统Agent开发的借鉴价值",
+      "算法设计：证据加权提案生成机制可复用，通过多源知识融合提升提案质量；",
+      "评估方法：以真实在线A/B结果作为奖励信号，避免离线指标偏差；",
+      "系统架构：多智能体闭环架构可参考，特别是Brainstorm-Developing-Evaluation-Harness Evolution的四阶段设计；",
+      "数据处理：实验知识库和系统知识库的构建与维护方法，以及轨迹数据的积累与利用策略，对构建自进化推荐Agent系统具有直接指导意义。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Local PDF fallback has lower structural confidence than MinerU.",
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.241451+00:00"
+  },
+  "provenance": {
+    "parser": "local_pypdf",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.977344+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.26859\\2606.26859.md",
+    "source_hash": "975c7597609b53cb9cad80b2f64ed64e37092602f66769f44c1e96c7c303ae9f",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2606.26859_summary.md",
+    "summary_hash": "a8390556356ef017097e1ecaec880968a9552496f4278fa90a28c64fc08f6726"
+  }
+}

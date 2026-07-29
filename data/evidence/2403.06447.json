@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2403.06447",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2403.06447\\2403.06447.md",
+  "source_hash": "78c99cad1df28d8543532c4b712c9364f61c9452e802c5ae9c66073fbd3c990a",
+  "parser": "local_pypdf",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "Page 1",
+      "start_char": 139,
+      "end_char": 1338,
+      "quote": "## Page 1\n\nCoRAL: Collaborative Retrieval-Augmented Large Language\nModels Improve Long-tail Recommendation\nJunda Wu\njuw069@ucsd.edu\nUniversity of California San Diego\nLa Jolla, California, USA\nCheng-Chun Chang\ncc4900@columbia.edu\nColumbia University\nNew York, New York, USA\nTong Yu\ntyu@adobe.com\nAdobe Research\nSan Jose, California, USA\nZhankui He\nzhh004@eng.ucsd.edu\nUniversity of California San Diego\nLa Jolla, California, USA\nJianing Wang\nlygwjn@gmail.com\nUniversity of California San Diego\nLa Jolla, California, USA\nYupeng Hou\nyphou@ucsd.edu\nUniversity of California San Diego\nLa Jolla, California, USA\nJulian McAuley\njmcauley@ucsd.edu\nUniversity of California San Diego\nLa Jolla, California, USA\nABSTRACT\nThe long-tail recommendation is a challenging task for traditional\nrecommender systems, due to data sparsity and data imbalance\nissues. The recent development of large language models (LLMs)\nhas shown their abilities in complex reasoning, which can help\nto deduce users’ preferences based on very few previous inter-\nactions. However, since most LLM-based systems rely on items’\nsemantic meaning as the sole evidence for reasoning, the collab-\norative information of user-item interactions",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2403.06447\\2403.06447.md",
+      "source_hash": "78c99cad1df28d8543532c4b712c9364f61c9452e802c5ae9c66073fbd3c990a",
+      "extraction_method": "section_router",
+      "confidence": 0.51
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "Page 5",
+      "start_char": 24156,
+      "end_char": 25356,
+      "quote": "## Page 5\n\nCoRAL: Collaborative Retrieval-Augmented Large Language Models Improve Long-tail Recommendation Conference’17, July 2017, Washington, DC, USA\n4.2 Retrieval Policy Network\nIn this section, we design the retrieval policy 𝜋𝜃 to sequentially\ninclude additional users and items, which may provide an infor-\nmation gain for the LLM’s reasoning. Since the prompt has only a\nlimited capacity of users and items included, the goal of the retrieval\npolicy is to construct a minimal-sufficient prompt that contains\ncomplete information about the current recommendation task of\nthe user-item pair 𝑧 = (𝑢, 𝑖), Specifically, the retrieval policy needs\nto maximize its long-term information gain by maximizing the\ncumulative reward function.\nInstead of learning the action distribution over all the users and\nitems like value-based reinforcement learning methods [33, 44], we\nchoose to directly learn the continuous vector representations of\nthe next user and item based on the DDPG algorithm [25], which\nhelps to learn a low-rank decision space and also makes the solution\nmore scalable even with new users and items included during the\ninference stage.\n4.2.1 State Representation. For each user-item pa",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2403.06447\\2403.06447.md",
+      "source_hash": "78c99cad1df28d8543532c4b712c9364f61c9452e802c5ae9c66073fbd3c990a",
+      "extraction_method": "section_router",
+      "confidence": 0.59
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "Page 7",
+      "start_char": 35389,
+      "end_char": 36589,
+      "quote": "## Page 7\n\nCoRAL: Collaborative Retrieval-Augmented Large Language Models Improve Long-tail Recommendation Conference’17, July 2017, Washington, DC, USA\nSoftware Prime Pantry Gift Cards Appliances Average\nAUC F1 AUC F1 AUC F1 AUC F1 AUC F1\nAFM [61] 75.12 58.39 69.47 52.51 46.93 61.56 76.86 65.52 67.10 59.49\nDCN [50] 76.75 66.20 73.30 49.99 55.59 67.07 80.70 71.15 71.59 63.60\nDFM [14] 76.04 66.63 72.92 57.86 66.76 60.01 81.83 77.37 74.39 65.47\nWDL [10] 78.20 69.25 73.77 56.43 60.81 57.66 73.82 74.56 71.65 64.48\nIPS [43] 78.24 71.32 72.24 61.65 64.79 63.95 82.28 75.65 74.39 66.23\nCausE [6] 77.78 70.84 73.69 59.80 70.51 65.39 76.86 72.04 74.71 67.02\nLLM-Language [42] 73.10 66.32 51.48 41.47 83.52 74.85 74.36 70.52 70.61 63.29\nCoRAL-random 77.56 58.60 64.07 50.15 91.30 59.66 77.51 61.35 77.61 57.44\nCoRAL-DFM 95.25 88.68 93.32 86.73 96.52 67.51 90.87 86.76 93.99 82.42\nCoRAL-WDL 93.97 91.18 87.08 80.52 92.22 70.74 92.55 89.22 91.45 82.92\nCoRAL-AFM 93.99 88.41 89.10 86.17 98.99 76.17 92.66 84.55 93.69 83.83\nCoRAL-DCN 91.74 87.20 85.75 77.59 97.16 70.63 91.73 86.28 91.59 80.43\nTable 1: Experimental results (AUC and F1) on four Amazon Product datasets.\n• CoRAL-random: The LLM is also augmen",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2403.06447\\2403.06447.md",
+      "source_hash": "78c99cad1df28d8543532c4b712c9364f61c9452e802c5ae9c66073fbd3c990a",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

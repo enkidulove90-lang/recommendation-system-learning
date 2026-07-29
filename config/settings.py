@@ -57,6 +57,19 @@ class Settings:
     def DEEPSEEK_MODEL(self) -> str:
         return os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
+    # ---- ModelScope / Qwen multimodal ----
+    @property
+    def MODELSCOPE_API_KEY(self) -> str:
+        return os.getenv("MODELSCOPE_API_KEY", "")
+
+    @property
+    def MODELSCOPE_BASE_URL(self) -> str:
+        return os.getenv("MODELSCOPE_BASE_URL", "https://api-inference.modelscope.ai/v1")
+
+    @property
+    def MODELSCOPE_VISION_MODEL(self) -> str:
+        return os.getenv("MODELSCOPE_VISION_MODEL", "Qwen/Qwen3.5-397B-A17B")
+
     # ---- arXiv API ----
     @property
     def ARXIV_API_BASE(self) -> str:

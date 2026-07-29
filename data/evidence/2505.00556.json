@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2505.00556",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.00556_生成式检索推荐综述\\2505.00556.md",
+  "source_hash": "b0225bd8726d6e1bc23c3b65b0c3cd3be61e3a0c57fb4c554e177c6faf6af309",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "<sub>1.</sub> Introduction",
+      "start_char": 1041,
+      "end_char": 2241,
+      "quote": "## <sub>1.</sub> Introduction\n\nIn this paper we prove several results concerning the “sizes” of subgroups and subrings of the reals. Here by “size”, we typically refer to the Hausdorf measure and dimension of such objects. The story of “sizes” has a rich history, which begins with a classical result in real analysis.\n\nTheorem 1.1 (Steinhaus [18]). Suppose $A \\subseteq \\mathbb { R } ^ { n }$ is Lebesgue measurable and has positive measure. Then the diference set $A - A : = \\{ x - y : x , y \\in A \\}$ contains a ball with positive radius whose center is at the origin.\n\nThe next corollary follows immediately.\n\nCorollary 1.2. If A is a measurable proper subgroup of (<sup>R</sup>, +), then A is null.<sup>1</sup>\n\nSubsequently, Volkmann and Erd˝os initiated the study of the dimension of subgroups/rings of the reals in the 1960s. In [20] they showed that for each $\\alpha \\in [ 0 , 1 ]$ there is a Borel subgroup of (<sup>R</sup>, +) with Hausdorf dimension α. Edgar and Miller [3], and independently Bourgain [1] showed that an analytic (see the definition before Fact 2.5) subring of <sup>R</sup> either has Hausdorf dimension 0 or is all of <sup>R</sup>. Mauldin [14] showed that assuming CH (",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.00556_生成式检索推荐综述\\2505.00556.md",
+      "source_hash": "b0225bd8726d6e1bc23c3b65b0c3cd3be61e3a0c57fb4c554e177c6faf6af309",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "<sub>1.</sub> Introduction",
+      "start_char": 1041,
+      "end_char": 2241,
+      "quote": "## <sub>1.</sub> Introduction\n\nIn this paper we prove several results concerning the “sizes” of subgroups and subrings of the reals. Here by “size”, we typically refer to the Hausdorf measure and dimension of such objects. The story of “sizes” has a rich history, which begins with a classical result in real analysis.\n\nTheorem 1.1 (Steinhaus [18]). Suppose $A \\subseteq \\mathbb { R } ^ { n }$ is Lebesgue measurable and has positive measure. Then the diference set $A - A : = \\{ x - y : x , y \\in A \\}$ contains a ball with positive radius whose center is at the origin.\n\nThe next corollary follows immediately.\n\nCorollary 1.2. If A is a measurable proper subgroup of (<sup>R</sup>, +), then A is null.<sup>1</sup>\n\nSubsequently, Volkmann and Erd˝os initiated the study of the dimension of subgroups/rings of the reals in the 1960s. In [20] they showed that for each $\\alpha \\in [ 0 , 1 ]$ there is a Borel subgroup of (<sup>R</sup>, +) with Hausdorf dimension α. Edgar and Miller [3], and independently Bourgain [1] showed that an analytic (see the definition before Fact 2.5) subring of <sup>R</sup> either has Hausdorf dimension 0 or is all of <sup>R</sup>. Mauldin [14] showed that assuming CH (",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.00556_生成式检索推荐综述\\2505.00556.md",
+      "source_hash": "b0225bd8726d6e1bc23c3b65b0c3cd3be61e3a0c57fb4c554e177c6faf6af309",
+      "extraction_method": "section_router",
+      "confidence": 0.35
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "<sub>1.</sub> Introduction",
+      "start_char": 5441,
+      "end_char": 6641,
+      "quote": "an algebraically closed field and M is a maximal subfield of K without a given point $^ { a , }$ and used Galois theory to give existence proofs of M more precise than that trivially given by Zorn’s Lemma. We restrict our attention to the case that $K = \\mathbb { R }$ . We show that the usage of AC (the Axiom of Choice) is necessary for the existence of a maximal subfield of <sup>R</sup> without a given point (Corollary 2.7). On the other hand, by assuming CH, we construct a maximal subfield of <sup>R</sup> with Hausdorf dimension 0 such that some given point is not in its algebraic closure relative to <sup>R</sup> (Proposition 4.10).\n\nThe structure of the paper is as follows: Section 2 deals with subrings and subfields of <sup>R</sup>. In Section 3 we discuss some simple results concerning the basic properties of subgroups and prove Theorem 1.4. In Section 4 we assume CH in the constructions and prove Theorem 1.5. We also show that A in Theorem 1.5 cannot be $F _ { \\sigma }$ (Proposition 4.6). Due to the variety of the tools used for the results and the independence of the methods, we postpone the introduction of notation and terminologies, and only recall them when being used.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.00556_生成式检索推荐综述\\2505.00556.md",
+      "source_hash": "b0225bd8726d6e1bc23c3b65b0c3cd3be61e3a0c57fb4c554e177c6faf6af309",
+      "extraction_method": "section_router",
+      "confidence": 0.43
+    }
+  ]
+}

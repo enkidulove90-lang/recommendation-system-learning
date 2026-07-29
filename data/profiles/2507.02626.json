@@ -1,0 +1,174 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2507.02626",
+  "identity": {
+    "title": "VRAgent-R1: Boosting Video Recommendation with MLLM-based Agents via Reinforcement Learning",
+    "chinese_title": "VRAgent-R1：强化学习增强视频推荐",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2507.02626"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "multimodal_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "sparsity",
+      "efficiency",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "llm",
+      "reinforcement_learning"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "behavior_sequence"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出VRAgent-R1双智能体框架，通过Item Perception Agent（IP Agent）进行渐进式多模态视频理解，以及User Simulation Agent（US Agent）结合链式推理和强化学习（GRPO）进行用户行为模拟。",
+    "one_sentence_contribution": "提出VRAgent-R1双智能体框架，通过Item Perception Agent（IP Agent）进行渐进式多模态视频理解，以及User Simulation Agent（US Agent）结合链式推理和强化学习（GRPO）进行用户行为模拟。",
+    "method_overview": "采用双智能体架构：IP Agent基于Qwen2.5-7B MLLM，通过CLIP检索关键帧、MLLM协同理解标题与帧内容、生成约35词的推荐摘要。US Agent基于相同LLM，通过GRPO强化学习优化，以用户实际行为（点击/跳过）作为奖励信号，结合用户历史观看和评论进行链式推理，输出偏好判断和下一视频选择。",
+    "method_components": [
+      {
+        "name": "提出IP Agent",
+        "role": "reported_innovation",
+        "mechanism": "提出IP Agent，通过关键帧检索、协同多模态感知和推荐相关分析三步渐进式方法，利用MLLM深度挖掘视频中的推荐相关语义，克服了传统多模态融合中的模态竞争问题。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "首次将强化微调（RFT）应用于LLM-based用户模拟",
+        "role": "reported_innovation",
+        "mechanism": "首次将强化微调（RFT）应用于LLM-based用户模拟，US Agent通过GRPO策略优化，基于用户实际行为奖励进行训练，使模拟行为更贴近真实用户决策，且仅需少量训练数据。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "构建双智能体协作范式",
+        "role": "reported_innovation",
+        "mechanism": "构建双智能体协作范式，IP Agent增强视频表示后同时服务于推荐模型和US Agent，US Agent通过链式推理分析用户状态并重排候选集，实现可解释的推荐优化。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "Limitations and Future Directions.",
+      "In future work, we plan to explore adding more user behaviors, such as clicks and retention, to achieve more realistic user-system interactions.",
+      "Limitations Question: Does the paper discuss the limitations of the work performed by the authors?"
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "MicroLens-100k"
+      },
+      {
+        "registry_id": "movielens_1m",
+        "paper_name": "MovieLens-1M"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：MicroLens-100k、MovieLens-1M；任务：Experiments Datasets and Metrics.",
+      "split": "not_reported",
+      "metrics": [
+        "HR@10",
+        "NDCG@10",
+        "HR@20",
+        "NDCG@20",
+        "F1",
+        "RECALL"
+      ],
+      "baselines": [
+        "Table 1: Comparison results on MicroLens-100K.；Our method has a great advantage in modeling cold-start users due to the good multimodal understanding, outperforming the baseline by more than 10%.；2 presents the results comparing our method with commercial models (GPT-4o [27], DeepSeek-R1 [34]) and several user simulation baseline methods."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [
+        {
+          "model": "A100",
+          "count": null
+        }
+      ],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在MicroLens-100k上，IP Agent增强的SASRec相比基线HR@10提升4.3%（0.0953→0.0994），NDCG@10提升6.0%（0.0517→0.0548）。US Agent在用户模拟中准确率达71.5%，比MLLM-MSR（SFT）的58.5%提升22.2%，下一视频选择准确率（m=3）达64.1%，比SFT基线提升45.0%。在MovieLens-1M上，US Agent准确率达83.2%，显著优于Agent4Rec的69.1%。冷启动用户推荐HR@10提升超过10%。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发有重要借鉴价值：1）算法设计：IP Agent的渐进式多模态理解（检索-感知-分析）可直接用于构建视频内容理解Agent，US Agent的GRPO强化学习范式为Agent行为优化提供新思路。2）评估方法：采用用户模拟准确率、F1和下一视频选择准确率等多维度评估，可迁移至其他Agent仿真场景。3）系统架构：双智能体解耦设计（内容感知+用户模拟）便于模块化开发和独立优化。4）数据处理：利用用户评论作为额外信号增强用户建模，以及通过关键帧采样降低计算开销的策略值得借鉴。",
+    "design_lessons": [
+      "对推荐Agent开发有重要借鉴价值",
+      "算法设计：IP Agent的渐进式多模态理解（检索-感知-分析）可直接用于构建视频内容理解Agent，US Agent的GRPO强化学习范式为Agent行为优化提供新思路。",
+      "评估方法：采用用户模拟准确率、F1和下一视频选择准确率等多维度评估，可迁移至其他Agent仿真场景。",
+      "系统架构：双智能体解耦设计（内容感知+用户模拟）便于模块化开发和独立优化。",
+      "数据处理：利用用户评论作为额外信号增强用户建模，以及通过关键帧采样降低计算开销的策略值得借鉴。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.028063+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.699424+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02626_VRAgent-R1：强化学习增强视频推荐\\2507.02626.md",
+    "source_hash": "32dbac7817b1bba4820bbccbe3efaa18423cd7d9c761cbe0a5619a8a8027ef9f",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2507.02626_summary.md",
+    "summary_hash": "142b430556409d301dd1f2d82c034529b3d16597645968fa04239e36449bb920"
+  }
+}

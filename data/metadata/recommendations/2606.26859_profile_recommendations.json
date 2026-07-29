@@ -1,0 +1,231 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-24T07:08:50.720973+00:00",
+  "seed_id": "2606.26859",
+  "weights": {
+    "topic_and_problem": 0.3,
+    "pipeline_stage": 0.2,
+    "paradigm_and_modality": 0.15,
+    "shared_dataset": 0.1,
+    "relation_graph": 0.1,
+    "recency": 0.1,
+    "profile_quality": 0.05
+  },
+  "candidate_count": 25,
+  "recommendations": [
+    {
+      "rank": 1,
+      "paper_id": "2505.20773",
+      "title": "Adaptive Candidate Retrieval with Dynamic Knowledge Graph Construction for Cold-Start Recommendation",
+      "score": 48.49,
+      "score_breakdown": {
+        "topic_and_problem": 15.0,
+        "pipeline_stage": 12.0,
+        "paradigm_and_modality": 5.625,
+        "shared_dataset": 0.0,
+        "relation_graph": 4.1119,
+        "recency": 7.5,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: efficiency, robustness",
+        "profile.pipeline_stages overlap: candidate_generation, evaluation, ranking",
+        "relation_graph contains shared_problem (confidence=0.77)"
+      ],
+      "comparison_role": "method_extension",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 2,
+      "paper_id": "2604.12965",
+      "title": "Eficient Retrieval Scaling with Hierarchical Indexing for Large Scale Recommendation",
+      "score": 46.25,
+      "score_breakdown": {
+        "topic_and_problem": 15.0,
+        "pipeline_stage": 12.0,
+        "paradigm_and_modality": 5.0,
+        "shared_dataset": 0.0,
+        "relation_graph": 0.0,
+        "recency": 10.0,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: efficiency",
+        "profile.pipeline_stages overlap: candidate_generation, evaluation, ranking"
+      ],
+      "comparison_role": "method_extension",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 3,
+      "paper_id": "2504.16420",
+      "title": "A Survey of Foundation Model-Powered Recommender Systems: From Feature-Based, Generative to Agentic Paradigms",
+      "score": 45.86,
+      "score_breakdown": {
+        "topic_and_problem": 10.0,
+        "pipeline_stage": 15.0,
+        "paradigm_and_modality": 5.0,
+        "shared_dataset": 0.0,
+        "relation_graph": 4.1119,
+        "recency": 7.5,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: efficiency, robustness",
+        "profile.pipeline_stages overlap: candidate_generation, online_learning, ranking",
+        "relation_graph contains shared_problem (confidence=0.77)",
+        "profile.reproducibility reports public code"
+      ],
+      "comparison_role": "foundation",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 4,
+      "paper_id": "2606.09595",
+      "title": "Popcorn: A Configurable Benchmark for Visual Evidence in Multimodal Movie Recommendation",
+      "score": 45.25,
+      "score_breakdown": {
+        "topic_and_problem": 15.0,
+        "pipeline_stage": 12.0,
+        "paradigm_and_modality": 4.0,
+        "shared_dataset": 0.0,
+        "relation_graph": 0.0,
+        "recency": 10.0,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: efficiency, robustness",
+        "profile.pipeline_stages overlap: candidate_generation, evaluation, ranking",
+        "profile.reproducibility reports public code"
+      ],
+      "comparison_role": "evaluation_benchmark",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 5,
+      "paper_id": "2509.13179",
+      "title": "Efficient Cold-Start Recommendation via BPE Token-Level Embedding Initialization with LLM",
+      "score": 45.24,
+      "score_breakdown": {
+        "topic_and_problem": 10.0,
+        "pipeline_stage": 15.0,
+        "paradigm_and_modality": 4.375,
+        "shared_dataset": 0.0,
+        "relation_graph": 4.1119,
+        "recency": 7.5,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: efficiency, robustness",
+        "profile.pipeline_stages overlap: candidate_generation, evaluation, ranking",
+        "relation_graph contains shared_problem (confidence=0.77)"
+      ],
+      "comparison_role": "method_extension",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 6,
+      "paper_id": "2503.16734",
+      "title": "Towards Agentic Recommender Systems in the Era of Multimodal Large Language Models",
+      "score": 44.38,
+      "score_breakdown": {
+        "topic_and_problem": 15.0,
+        "pipeline_stage": 12.0,
+        "paradigm_and_modality": 5.625,
+        "shared_dataset": 0.0,
+        "relation_graph": 0.0,
+        "recency": 7.5,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: robustness",
+        "profile.pipeline_stages overlap: evaluation, online_learning, ranking"
+      ],
+      "comparison_role": "method_extension",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 7,
+      "paper_id": "2607.07108",
+      "title": "Seeing and Reflecting: Multimodal Memory-Enhanced Agent Collaboration for Recommendation",
+      "score": 43.75,
+      "score_breakdown": {
+        "topic_and_problem": 10.0,
+        "pipeline_stage": 12.0,
+        "paradigm_and_modality": 7.5,
+        "shared_dataset": 0.0,
+        "relation_graph": 0.0,
+        "recency": 10.0,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: robustness",
+        "profile.pipeline_stages overlap: candidate_generation, evaluation, ranking"
+      ],
+      "comparison_role": "method_extension",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "rank": 8,
+      "paper_id": "2507.00715",
+      "title": "EARN: Eficient Inference Acceleration for LLM-based Generative Recommendation by Register Tokens",
+      "score": 32.0,
+      "score_breakdown": {
+        "topic_and_problem": 10.0,
+        "pipeline_stage": 4.0,
+        "paradigm_and_modality": 6.25,
+        "shared_dataset": 0.0,
+        "relation_graph": 0.0,
+        "recency": 7.5,
+        "profile_quality": 4.25
+      },
+      "why_this_paper": [
+        "profile.classification matches research problem: efficiency",
+        "profile.pipeline_stages overlap: evaluation",
+        "profile.reproducibility reports public code"
+      ],
+      "comparison_role": "method_extension",
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01",
+        "ev-experiment-01"
+      ],
+      "profile_quality": "B"
+    }
+  ]
+}

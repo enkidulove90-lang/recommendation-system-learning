@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2510.22049",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2510.22049_VISTA：虚拟序列目标注意力\\2510.22049.md",
+  "source_hash": "7ffaa6b2fe99f39d7428bafc46b8d41adc75f78ae81228aefccf3c174bf8d5f2",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2736,
+      "end_char": 3935,
+      "quote": "language models (LLMs) and sequential modeling techniques such as transformers (Section 2) has marked a significant leap forward, enabling the capture of intricate interactions across vast user histories.\n\n![](images/1815a572b7ff148e74615bc6b4656ddc8fd3252560fe940f033803b33ae80c87.jpg)  \nFigure 1: VISTA replaces standard attention with a two-stage process, allowing downstream models to compute only the highly eficient second stage.\n\nIn the domain of recommendation systems, two primary types of sequence modeling techniques have been explored: full user sequence modeling, as seen in Hierarchical Sequential Transduction Units (HSTU) (Zhai et al., 2024), and target-specific sequence sampling, as seen in Search-based Interest Modeling (SIM) (Pi et al., 2020) and its subsequent works (Chang et al., 2023; Si et al., 2024). Both approaches have demonstrated success in enhancing recommendation system performance by harnessing users’ extensive historical interactions.\n\nDespite their success, full sequence modeling sufers from the computational cost of scaling. Modeling full user interaction sequences which are usually on the scale of O(100K) in length often leads to enormous computational c",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2510.22049_VISTA：虚拟序列目标注意力\\2510.22049.md",
+      "source_hash": "7ffaa6b2fe99f39d7428bafc46b8d41adc75f78ae81228aefccf3c174bf8d5f2",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "D.2 FuxiCTR Framework",
+      "start_char": 62040,
+      "end_char": 63240,
+      "quote": "## D.2 FuxiCTR Framework\n\nWe utilize the FuxiCTR library developed by Zhu et al. (2022; 2021) for our traditional sequential setting experiments. As mentioned in the main text, we designed the traditional sequential setting experiments mainly to compare the efectiveness of the attention layers and keep constant other model architecture and hyperparameter choices. (See Figure 12.)\n\nWe also report the common hyperparameters used in all the experiment results in Table 13.\n\n![](images/6d7681332233602bbc4fc216ef8e61da165aaeb1dd0c1aa1fac9fdaebcc3f2c0.jpg)\n\n<table><tr><td>Hyperparameter</td><td>Amazon</td><td>KuaiRand</td><td>Simplified Prod</td></tr><tr><td>Learning Rate</td><td>5.0e-4</td><td>1.0e-4</td><td>1.0e-3</td></tr><tr><td>Optimizer</td><td>Adam</td><td>Adam</td><td>Adam</td></tr><tr><td>Batch Size</td><td>1024</td><td>1024</td><td>128</td></tr><tr><td>Batch Norm</td><td>No</td><td>No</td><td>Yes</td></tr><tr><td>Early Stop Patience</td><td>4</td><td>5</td><td>1</td></tr><tr><td>Embedding Regularizer</td><td>0.005</td><td>None</td><td>None</td></tr><tr><td>Embedding Dimension</td><td>64</td><td>32</td><td>32</td></tr><tr><td>Embedding Initializer</td><td>1e-4</td><td>1e-4</td><t",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2510.22049_VISTA：虚拟序列目标注意力\\2510.22049.md",
+      "source_hash": "7ffaa6b2fe99f39d7428bafc46b8d41adc75f78ae81228aefccf3c174bf8d5f2",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "5.1 Datasets and Experimental Setup",
+      "start_char": 22277,
+      "end_char": 22718,
+      "quote": "## 5.1 Datasets and Experimental Setup\n\nThe proposed VISTA framework is designed for a large scale real-world dataset, where one needs to train hundreds of billions of examples per day and each user has a history which contains hundreds of thousands of items. While existing public datasets are usually much smaller, we compare our method against several baselines on public datasets in addition to reporting results on real production data.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2510.22049_VISTA：虚拟序列目标注意力\\2510.22049.md",
+      "source_hash": "7ffaa6b2fe99f39d7428bafc46b8d41adc75f78ae81228aefccf3c174bf8d5f2",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

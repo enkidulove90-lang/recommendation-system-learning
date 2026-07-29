@@ -37,3 +37,13 @@ openai>=1.0.0
 
 # Pydantic data models
 pydantic>=2.0.0
+
+# Controlled taxonomies and dataset registry
+PyYAML>=6.0.0
+
+# Chapter 6 figure composition
+Pillow>=10.0.0
+PyMuPDF>=1.24.0
+
+# Local PDF text fallback when MinerU is not configured
+pypdf>=5.0.0

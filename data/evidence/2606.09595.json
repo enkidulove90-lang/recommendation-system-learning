@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2606.09595",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.09595_多模态电影推荐视觉证据基准\\2606.09595.md",
+  "source_hash": "06a5f948a9094683bc6888e2e259b1c37fbe9965a1beed132e66a550524d7187",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction and Related Resources",
+      "start_char": 2427,
+      "end_char": 3626,
+      "quote": "film’s visual identity into a single static image, typically emphasizing faces, typography, iconic objects, color palette, and genre symbolism. This distinction also determines what visual backbones can exploit. The mainstream approach in earlier multimodal movie recommendation has been to extract CNN features from multiple video frames, typically from trailers or other sampled video data [4, 5]. Such multi-frame CNN pipelines can capture recurring objects, textures, scene composition, lighting, and frame-level cues that act as proxies for genre, mood, or visual style. Modern vision-language models (VLMs), in contrast, can encode a single thumbnail or poster into a semantically organized image–text representation, making sparse image evidence surprisingly informative at large catalog scale. Thus, the comparison studied here is not only a backbone comparison between classical CNNs and modern VLMs; it is a comparison between two evidence regimes: multipleframe trailer/full-movie evidence with classical CNN pipelines and single-thumbnail semantic evidence with modern VLMs. Popcorn aims to make this distinction explicit so that improvements can be interpreted in terms of evidence sour",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.09595_多模态电影推荐视觉证据基准\\2606.09595.md",
+      "source_hash": "06a5f948a9094683bc6888e2e259b1c37fbe9965a1beed132e66a550524d7187",
+      "extraction_method": "section_router",
+      "confidence": 0.74
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3 Benchmark Protocol",
+      "start_char": 13261,
+      "end_char": 14461,
+      "quote": "## 3 Benchmark Protocol\n\nThe large-catalog experiments use MovieLens-1M [6] interactions with a 10-core filter, top-10 recom mendation, and VBPR [7] over approximately 14K MovieLens-linked items. They compare audio, LLM-augmented text, single-thumbnail/VLM visual features, PCA/CCA fusion, and the MMTF-14K [4] trailer-CNN visual baseline. The thumbnail backbones are CLIP [13], OpenCLIP [3], DINOv2-base and -large [11], SigLIP-base [21], and SigLIP2-base [19]. The aligned-video experiments use the 274-title full movie/trailer subset with Inception-v3 [15] aggregate max-pooled CNN features and report in visual-only and text+visual CCA settings.\n\nMetrics. We evaluate two metric groups. Accuracy metrics include nDCG@10, Recall@10, precision, MAP, and hit rate, computed at top-K with binary relevance. Beyond-accuracy metrics include coverage, novelty, diversity, fairness, popularity bias, cold rate, and calibration bias. For brevity, we only name these metrics here; their formal definitions and implementation details are provided in the GitHub repository. Higher values are preferred for accuracy, coverage, novelty, diversity, fairness, and cold-rate exposure, while lower values are prefe",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.09595_多模态电影推荐视觉证据基准\\2606.09595.md",
+      "source_hash": "06a5f948a9094683bc6888e2e259b1c37fbe9965a1beed132e66a550524d7187",
+      "extraction_method": "section_router",
+      "confidence": 0.75
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4 Experiments and Discussion",
+      "start_char": 20740,
+      "end_char": 21940,
+      "quote": "## 4 Experiments and Discussion\n\nWe organize the discussion around three experimental questions: RQ1 asks how far a single thumbnail encoded by a VLM can go compared with multi-frame CNN evidence from trailers or full movies; RQ2 asks whether gains come from multimodal fusion or from LLM data augmentation, and how these choices afect beyond-accuracy metrics; and RQ3 asks how thumbnail VLM performance changes with a model-size/storage proxy.\n\nRQ1: visual evidence. Table 2 shows that a single thumbnail encoded by modern VLMs can outperform the older MMTF-14K trailer-CNN visual baseline. SigLIP-base reaches nDCG@10=0.269 and Recall@10=0.262, corresponding to gains of 21.2% and 29.1%. The result should not be interpreted as thumbnails fully representing films: thumbnails cannot observe pacing, repeated shots, or narrative progression. Rather, they provide a strong catalog-scale semantic signal. On the aligned 274-title slice, trailers remain stronger than full movies in visual-only settings for VBPR, AMR, and VMF, which is plausible because trailers concentrate recommendation-salient highlights. After CCA fusion, the gap narrows for VBPR and reverses for AMR and VMF, showing that trail",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.09595_多模态电影推荐视觉证据基准\\2606.09595.md",
+      "source_hash": "06a5f948a9094683bc6888e2e259b1c37fbe9965a1beed132e66a550524d7187",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion and Limitations",
+      "start_char": 23820,
+      "end_char": 24775,
+      "quote": "## 5 Conclusion and Limitations\n\nWe presented Popcorn, a configurable benchmark for visual evidence in multimodal movie recommendation. Popcorn separates thumbnails, trailers, and full movies while logging the backbone, fusion, augmentation, split, recommender, and evaluation settings needed for reproducible ablations. Results show that modern\n\nVLM thumbnails improve over older CNN visual baselines, while trailer/full-movie evidence, fusion, and augmentation afect both accuracy and beyond-accuracy behavior.\n\nThe main limitations are scale, access, and ofline evaluation. Full movies are released as derived embeddings; the aligned full-movie subset is smaller than the thumbnail layer, and LLM augmentation remains sensitive to model and prompt choices. Future work will extend Popcorn with larger lawful-access full-movie collections, stronger temporal encoders, audio-centric ablations, Visual RAG integration, user studies, and online evaluation.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.09595_多模态电影推荐视觉证据基准\\2606.09595.md",
+      "source_hash": "06a5f948a9094683bc6888e2e259b1c37fbe9965a1beed132e66a550524d7187",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

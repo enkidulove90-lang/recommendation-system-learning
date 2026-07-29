@@ -1,0 +1,23 @@
+{
+  "paper_id": "2503.00987",
+  "profile_path": "D:\\recommendation-system-learning\\data\\profiles\\2503.00987.json",
+  "status": "failed",
+  "grade": "D",
+  "issues": [
+    {
+      "severity": "error",
+      "code": "asset_identity_conflict",
+      "path": "identity.title",
+      "message": "summary English title conflicts with the parsed paper title; parsed title is authoritative"
+    },
+    {
+      "severity": "info",
+      "code": "implementation_incomplete",
+      "path": "experiment.implementation",
+      "message": "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    }
+  ],
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "generated_at": "2026-07-24T05:46:49.398296+00:00"
+}

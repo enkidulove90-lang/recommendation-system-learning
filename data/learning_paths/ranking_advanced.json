@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0",
+  "path_id": "ranking_advanced",
+  "topic": "ranking",
+  "level": "advanced",
+  "objective": "Build a advanced understanding of ranking, progressing from framing and evidence standards to methods and implementation implications.",
+  "generated_at": "2026-07-24T07:08:49.971163+00:00",
+  "steps": [
+    {
+      "order": 1,
+      "paper_id": "2507.21117",
+      "title": "A Comprehensive Review on Harnessing Large Language Models to Overcome Recommender System Challenges",
+      "role": "survey",
+      "rationale": "Use this survey paper to learn ranking through candidate_generation, ranking, cold_start, long_tail, collaborative_filtering, transformer.",
+      "prerequisites": [],
+      "relation_edge_ids": [],
+      "profile_quality": "B"
+    },
+    {
+      "order": 2,
+      "paper_id": "2606.09595",
+      "title": "Popcorn: A Configurable Benchmark for Visual Evidence in Multimodal Movie Recommendation",
+      "role": "benchmark",
+      "rationale": "Use this benchmark paper to learn ranking through candidate_generation, ranking, fairness, efficiency, transformer, llm.",
+      "prerequisites": [],
+      "relation_edge_ids": [],
+      "profile_quality": "B"
+    },
+    {
+      "order": 3,
+      "paper_id": "2403.06447",
+      "title": "CoRAL: Collaborative Retrieval-Augmented Large Language Models Improve Long-tail Recommendation",
+      "role": "method",
+      "rationale": "Use this method paper to learn ranking through candidate_generation, ranking, cold_start, long_tail, collaborative_filtering, llm.",
+      "prerequisites": [
+        "2507.21117"
+      ],
+      "relation_edge_ids": [
+        "rel_2d95c6c8fb8a844e"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 4,
+      "paper_id": "2505.05196",
+      "title": "Stealthy LLM-Driven Data Poisoning Attacks Against Embedding-Based Retrieval-Augmented Recommender Systems",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn ranking through candidate_generation, ranking, long_tail, robustness, collaborative_filtering, transformer.",
+      "prerequisites": [
+        "2507.21117"
+      ],
+      "relation_edge_ids": [
+        "rel_288b571c6a5ab3d4"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 5,
+      "paper_id": "2505.20773",
+      "title": "Adaptive Candidate Retrieval with Dynamic Knowledge Graph Construction for Cold-Start Recommendation",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn ranking through candidate_generation, ranking, cold_start, efficiency, llm, rag.",
+      "prerequisites": [
+        "2606.09595"
+      ],
+      "relation_edge_ids": [
+        "rel_e240293bb7df5bd3"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 6,
+      "paper_id": "2506.07261",
+      "title": "RADAR: Recall Augmentation through Deferred Asynchronous Retrieval",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn ranking through candidate_generation, pre_ranking, efficiency, collaborative_filtering.",
+      "prerequisites": [
+        "2505.20773"
+      ],
+      "relation_edge_ids": [],
+      "profile_quality": "B"
+    },
+    {
+      "order": 7,
+      "paper_id": "2507.02626",
+      "title": "VRAgent-R1: Boosting Video Recommendation with MLLM-based Agents via Reinforcement Learning",
+      "role": "advanced",
+      "rationale": "Use this advanced paper to learn ranking through candidate_generation, ranking, cold_start, sparsity, llm, reinforcement_learning.",
+      "prerequisites": [
+        "2606.09595"
+      ],
+      "relation_edge_ids": [
+        "rel_af7bdfcdfccb451e"
+      ],
+      "profile_quality": "B"
+    }
+  ]
+}

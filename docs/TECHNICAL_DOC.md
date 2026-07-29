@@ -110,9 +110,89 @@
 - **可扩展性优先**：新增一个搜索源（如 Semantic Scholar）只需编写新的 Skill 类并注册
 - **优雅降级**：MinerU 不可用时，爬取流程正常执行，PDF 解析步骤静默跳过
 
+### 2.3 Seed-Driven 推荐扩展
+
+针对“围绕关键论文补齐相关研究”的使用场景，系统新增 `related-paper-recommend` Skill，
+在原有主题爬取之外增加一条种子论文驱动链路：
+
+```
+Seed arXiv ID
+    ↓
+获取种子论文元数据
+    ↓
+扩展相关查询（Agent / LLM / 工业评估 / 自动迭代）
+    ↓
+候选论文去重
+    ↓
+可解释评分（主题命中 + 种子关键词重叠 + 年份 + 分类 + 查询命中）
+    ↓
+Top-K 推荐报告
+    ↓
+可选 PDF 下载
+    ↓
+MinerU 可用时再进入全文解析与 DeepSeek 摘要
+```
+
+该扩展的目的不是替代 `crawl-all`，而是补强推荐系统学习过程中的“重点论文追踪”能力。
+固定主题爬取适合周期性扩库，Seed-Driven 推荐适合从一篇核心论文出发快速定位上下游工作，
+并将推荐结果保存到 `data/metadata/recommendations/`，作为后续解析与摘要的任务清单。
+`data/summaries/` 仅保存 DeepSeek 生成的单篇论文知识摘要。
+解析层采用 MinerU 优先、本地兜底策略：当 `.env` 未配置 `MINERU_API_KEY` 时，
+CLI 会自动调用 `pdf-parse-local` 将已下载 PDF 提取为纯文本 Markdown，保证摘要和合并链路不中断。
+
 ---
 
 ## 3. 目录结构与文件说明
+
+### 3.1 数据存储约定
+
+| 路径 | 内容 |
+|---|---|
+| `data/parsed/{arXiv ID}_{中文标题}/` | 单篇论文资产包：MinerU Markdown、原始 PDF、图片及结构化产物 |
+| `data/summaries/{arXiv ID}_summary.md` | DeepSeek 单篇知识摘要：贡献、创新点、方法、数据集、实验条件、实验效果、Agent 借鉴 |
+| `data/metadata/recommendations/` | 种子论文扩展查询、候选排序和下载记录 |
+| `data/papers/` | PDF 下载缓存；进入解析流程后同时归档至论文资产包 |
+
+`storage/paper_assets.py` 统一处理 `{id}` 与 `{id}_{中文标题}` 两种目录名，CLI、批处理和合并流程不得自行拼接解析文件路径。
+
+### 3.2 Summary 2.0 知识层
+
+Summary 2.0 在既有 Markdown 摘要之外增加四类机器可读产物：
+
+| 产物 | 路径 | 作用 |
+|---|---|---|
+| Research Profile | `data/profiles/{id}.json` | 分类、研究主张、实验事实、Agent 设计价值 |
+| Evidence Bundle | `data/evidence/{id}.json` | 原文章节、字符范围、摘录和源文件哈希 |
+| Review Record | `data/reviews/{id}.json` | Schema、受控标签、证据覆盖和跨文件一致性问题 |
+| Paper Registry | `data/registry/papers.jsonl` | 以 arXiv ID 为主键的增量资产与质量索引 |
+
+受控标签维护在 `data/registry/taxonomies.yaml`，数据集规范名和官方来源维护在 `data/registry/datasets.yaml`。未知标签不能直接进入正式索引。
+
+完整命令：
+
+```bash
+python main.py profile --arxiv-id 2606.09595
+python main.py profile --all --force
+python main.py validate-profile --all
+python main.py search-profile --paradigm llm --quality B,C
+```
+
+`profile` 会优先复用现有 DeepSeek Markdown；摘要缺失时可从解析原文降级构建，但质量等级会下降。`validate-profile` 不调用 LLM，可重复检查证据引用、源哈希、数值证据、受控词表和资产身份冲突，并生成 `data/reviews/quality_report.md`。
+
+### 3.3 关系图、学习路径与 Profile 重排
+
+关系图只读取通过质量门禁且未被隔离的 Profile。引用边来自解析原文中可定位的 arXiv 引用；语义边来自受控研究方向、链路阶段、问题、技术范式、模态、数据集和指标交集，并限制每篇论文保留的语义邻居数量。
+
+```bash
+python main.py build-relations --arxiv-id 2606.26859
+python main.py learning-path --topic multimodal --level intermediate
+python main.py learning-path --all
+python main.py recommend --seed 2606.26859 --top-k 8 --use-profiles
+```
+
+Profile 重排按 `config/recommendation_weights.yaml` 计算主题与问题、链路阶段、范式与模态、共享数据集、关系图、时效性和质量分。输出包含 `why_this_paper`、`comparison_role`、`evidence_refs`、分项得分及质量等级，并在最终候选集合上执行方法族多样性约束。
+
+错配论文不会被删除。`data/registry/quarantined_assets.yaml` 保存原始 ID、隔离原因和有效替代论文；全量校验、检索、关系构建、学习路径和重排默认只使用活跃资产。
 
 ```
 recommendation-system/

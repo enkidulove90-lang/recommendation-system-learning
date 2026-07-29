@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0",
+  "path_id": "agent_intermediate",
+  "topic": "agent",
+  "level": "intermediate",
+  "objective": "Build a intermediate understanding of agent, progressing from framing and evidence standards to methods and implementation implications.",
+  "generated_at": "2026-07-24T07:08:49.956828+00:00",
+  "steps": [
+    {
+      "order": 1,
+      "paper_id": "2504.16420",
+      "title": "A Survey of Foundation Model-Powered Recommender Systems: From Feature-Based, Generative to Agentic Paradigms",
+      "role": "survey",
+      "rationale": "Use this survey paper to learn agent through candidate_generation, ranking, cold_start, sparsity, llm, rag.",
+      "prerequisites": [],
+      "relation_edge_ids": [],
+      "profile_quality": "B"
+    },
+    {
+      "order": 2,
+      "paper_id": "2507.21117",
+      "title": "A Comprehensive Review on Harnessing Large Language Models to Overcome Recommender System Challenges",
+      "role": "survey",
+      "rationale": "Use this survey paper to learn agent through candidate_generation, ranking, cold_start, long_tail, collaborative_filtering, transformer.",
+      "prerequisites": [
+        "2504.16420"
+      ],
+      "relation_edge_ids": [
+        "rel_894bbde93d74fa47"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 3,
+      "paper_id": "2606.09595",
+      "title": "Popcorn: A Configurable Benchmark for Visual Evidence in Multimodal Movie Recommendation",
+      "role": "benchmark",
+      "rationale": "Use this benchmark paper to learn agent through candidate_generation, ranking, fairness, efficiency, transformer, llm.",
+      "prerequisites": [
+        "2504.16420"
+      ],
+      "relation_edge_ids": [
+        "rel_775c275a3bc1c9bf"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 4,
+      "paper_id": "2507.02097",
+      "title": "The Future is Agentic: Definitions, Perspectives, and Open Challenges of Multi-Agent Recommender Systems",
+      "role": "method",
+      "rationale": "Use this method paper to learn agent through candidate_generation, ranking, fairness, efficiency, llm.",
+      "prerequisites": [
+        "2504.16420"
+      ],
+      "relation_edge_ids": [
+        "rel_2ec0dd2e6282ad66"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 5,
+      "paper_id": "2507.02626",
+      "title": "VRAgent-R1: Boosting Video Recommendation with MLLM-based Agents via Reinforcement Learning",
+      "role": "method",
+      "rationale": "Use this method paper to learn agent through candidate_generation, ranking, cold_start, sparsity, llm, reinforcement_learning.",
+      "prerequisites": [
+        "2606.09595"
+      ],
+      "relation_edge_ids": [
+        "rel_af7bdfcdfccb451e"
+      ],
+      "profile_quality": "B"
+    },
+    {
+      "order": 6,
+      "paper_id": "2604.12965",
+      "title": "Eficient Retrieval Scaling with Hierarchical Indexing for Large Scale Recommendation",
+      "role": "method",
+      "rationale": "Use this method paper to learn agent through candidate_generation, ranking, efficiency.",
+      "prerequisites": [
+        "2507.02626"
+      ],
+      "relation_edge_ids": [
+        "rel_644b6e5575dfd3e5"
+      ],
+      "profile_quality": "B"
+    }
+  ]
+}

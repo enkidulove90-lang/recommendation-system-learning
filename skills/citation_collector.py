@@ -240,6 +240,17 @@ class CitationCollector(BaseSkill):
         # 过滤掉标题行、空白行
         entries = [e.strip() for e in entries if len(e.strip()) > 20]
 
+        # MinerU sometimes preserves bibliography entries as blank-line-separated
+        # paragraphs without numeric labels. Treating the complete section as
+        # one entry would discard the paper's real reference network.
+        if len(entries) <= 1:
+            entries = [
+                entry.strip()
+                for entry in re.split(r'\n\s*\n+', ref_text)
+                if len(entry.strip()) > 20
+                and entry.strip().lower() not in {"references", "bibliography"}
+            ]
+
         for entry in entries:
             ref = CitationCollector._parse_single_ref(entry)
             if ref.get("title"):

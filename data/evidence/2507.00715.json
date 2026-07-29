@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2507.00715",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.00715_EARN：基于注册令牌的LLM推荐加速\\2507.00715.md",
+  "source_hash": "95098d1293cf28f222fd7684ae6b56088e97df27012aceca9ce971f842c07c10",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2843,
+      "end_char": 4042,
+      "quote": "## 1 Introduction\n\nRecently, Large Language Model (LLM)-based generative recommendation (LLMRec) has shown great potential due to its superior reasoning capabilities [10, 16, 20–22, 36, 38]. However, it sufers from high inference latency due to its massive model architecture and auto-regressive decoding paradigm, which severely limits its application in practical recommendation scenarios [12, 37, 44]. For instance, platforms like YouTube, which serve hundreds of millions of users daily with billions of interactions, require millisecond-level response times<sup>1</sup>. This highlights the stark eficiency gap between current LLMRec implementations and real-world application requirements. Therefore, enhancing the inference eficiency of LLM-Rec is a crucial issue for industrial applications.\n\n![](images/0bc9a10217a509aad4e91e24f7df1bc053c7e5be3113dac868c52b64a7b5c559.jpg)  \nFigure 1: The inference process of LLMRec. In the prefilling stage, LLM computes the initial KV Cache and generates the first token of the output; in the decoding stage, LLM updates the KV Cache and generates subsequent tokens one by one.\n\nstages. As shown in Figure 1, given the input token sequence (user profile,",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.00715_EARN：基于注册令牌的LLM推荐加速\\2507.00715.md",
+      "source_hash": "95098d1293cf28f222fd7684ae6b56088e97df27012aceca9ce971f842c07c10",
+      "extraction_method": "section_router",
+      "confidence": 0.74
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3 Method",
+      "start_char": 14842,
+      "end_char": 15080,
+      "quote": "## 3 Method\n\nIn order to improve the inference eficiency while ensuring the recommendation efectiveness, we proposed EARN, which achieves inference acceleration through register tokens. The overview of our method is presented in Figure 3.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.00715_EARN：基于注册令牌的LLM推荐加速\\2507.00715.md",
+      "source_hash": "95098d1293cf28f222fd7684ae6b56088e97df27012aceca9ce971f842c07c10",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.1 Experimental Settings",
+      "start_char": 24222,
+      "end_char": 25422,
+      "quote": "## 4.1 Experimental Settings\n\n4.1.1 Models and Datasets. We conduct experiments on two mainstream LLMRec methods: LC-Rec [43] and TIGER [31], with two distinct LLM architectures: Llama-7B [35] using multi-head attention and Qwen2.5-7B [34] using grouped-query attention. We test EARN on three real-world recommendation datasets: 1) Beauty contains user interactions with the beauty products. 2) Games cov ers user interactions with the video games. 3) MovieLens-1M col lects user interactions with movies. More details of the datasets and experimental implementation details can be found in Appendix A.3.\n\n4.1.2 Baselines. We compare our approach against commonly used practices and existing SOTA methods, serving as our baselines:\n\n• Basic Methods\n\n– Finetune: Standard full finetuning of the model.\n\n– SkipLayers: Skipping redundant subsequent layers.\n\n• Prompt Compression: Methods targeting the prefilling stage. – POD [11]: Distilling task instructions in the prompt into few virtual tokens.\n\n– 500xCompressor [18]: Compressing the context (user historical interactions in our scenario) within the prompt into one single special token, by employing frozen original LLM and trainable additional L",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.00715_EARN：基于注册令牌的LLM推荐加速\\2507.00715.md",
+      "source_hash": "95098d1293cf28f222fd7684ae6b56088e97df27012aceca9ce971f842c07c10",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

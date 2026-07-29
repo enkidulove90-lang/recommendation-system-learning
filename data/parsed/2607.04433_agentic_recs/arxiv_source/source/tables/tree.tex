@@ -1,0 +1,351 @@
+\definecolor{softblue}{RGB}{220,230,242}
+\definecolor{softgreen}{RGB}{226,239,218}
+\definecolor{softpurple}{RGB}{229,224,236}
+\definecolor{softyellow}{RGB}{255,242,204}
+\definecolor{softred}{RGB}{242,220,219}
+\definecolor{softgray}{RGB}{240,240,240}
+\definecolor{softgold}{RGB}{235,190,115}
+\definecolor{myyellow}{RGB}{255,242,204}
+
+\tikzstyle{leaf}=[draw=black,
+    rounded corners,minimum height=1em,
+    text width=22.50em,
+    text opacity=1,
+    align=left,
+    fill opacity=.3, text=black,font=\scriptsize,
+    inner xsep=5pt, inner ysep=3pt,
+    ]
+\tikzstyle{leaf1}=[draw=black,
+    rounded corners,minimum height=1em,
+    text width=6.0em,
+    text opacity=1, align=center,
+    fill opacity=.5, text=black,font=\scriptsize,
+    inner xsep=3pt, inner ysep=3pt,
+    ]
+\tikzstyle{leaf2}=[draw=black,
+    rounded corners,minimum height=1em,
+    text width=4.5em,
+    text opacity=1, align=center,
+    fill opacity=.8, text=black,font=\scriptsize,
+    inner xsep=3pt, inner ysep=3pt,
+    ]
+\tikzstyle{leaf3}=[draw=black,
+    rounded corners,minimum height=1em,
+    text width=3.5em,
+    text opacity=1, align=center,
+    fill opacity=1.0, text=black,font=\scriptsize,
+    inner xsep=3pt, inner ysep=3pt,
+]
+
+\begin{figure*}
+\centering
+\begin{adjustbox}{max totalsize={\textwidth}{\textheight},center}
+\begin{forest}
+  for tree={
+    forked edges,
+    grow=east,
+    reversed=true,
+    anchor=center,
+    parent anchor=east,
+    child anchor=west,
+    base=center,
+    font=\small,
+    rectangle,
+    draw=black,
+    edge={black!50},
+    rounded corners,
+    minimum width=2em,
+    minimum height=2.5em,
+    s sep=5pt,
+    inner xsep=3pt,
+    inner ysep=1pt
+  },
+  where level=1{text width=5.5em}{},
+  where level=2{text width=6em,font=\scriptsize}{},
+  where level=3{font=\scriptsize}{},
+  where level=4{font=\scriptsize}{},
+  where level=5{font=\scriptsize}{},
+  [Agentic Recommender System,rotate=90,anchor=north,inner xsep=8pt,inner ysep=3pt,edge={black!50},draw=black
+    [\textbf{Agent-assisted} \\ \textbf{RecSys} \\ \S~\ref{sec:agent-assisted}, edge={black!50}, leaf3, fill=softblue,
+      [\mbox{\textbf{Level 2}} \\ Retrieval-grounded Augmentation \\ \S~\ref{sec:assist-rag}, leaf2, fill=softblue,
+        [Functional Role of Retrieval, leaf1, fill=softblue,
+          [Preference grounding{: }RAH~\cite{shu2024rah}{, }
+          iAgent~\cite{xu2025iagent}{, }etc{; }
+          Item grounding{: }ItemRAG~\cite{kim2025itemrag}{, }
+          RecByGen~\cite{bhattacharya2025recbygen}{, }etc{; }
+          Context expansion{: }ARAG~\cite{maragheh2025arag}{, }
+          RETRO~\cite{borgeaud2022improving}{, }etc
+            ,leaf,fill=softblue]
+         ],
+        [Retrieval Content, leaf1, fill=softblue,
+          [User information{: }ARAG~\cite{maragheh2025arag}{, }
+          AgentDR~\cite{yang2025agentdr}{, }etc{; }
+          Item information{: }AgentCF~\cite{zhang2023agentcf}{, }
+          AgentCF++~\cite{liu2025agentcf++}{, }etc{; }
+          Auxiliary Knowledge{: }iAgent~\cite{xu2025iagent}{, }
+          ARAG~\cite{maragheh2025arag}{, }etc
+            ,leaf,fill=softblue]
+         ]
+         [Retrieval Workflow, leaf1, fill=softblue,
+            [Coarse-to-fine retrieval{: }
+             InteRecAgent~\cite{huang2024interecagent}{, }
+             ARAG~\cite{maragheh2025arag}{, }etc{; }
+             Iterative retrieval with reflection{: }
+             InteRecAgent~\cite{huang2024interecagent}{, }
+             iAgent~\cite{xu2025iagent}{, }etc{; }
+             Multi-source fusion{: }
+             AgentCF++~\cite{liu2025agentcf++}{, }
+             AgentCF~\cite{zhang2023agentcf}{, }etc
+            ,leaf,fill=softblue]
+         ]
+      ]
+      [\textbf{Level 3}:\\ Tool-Driven Assistance \\ \S~\ref{sec:assist-tools}, leaf2, fill=softblue,
+        [Recommendation Tools, leaf1, fill=softblue,
+          [IRF~\cite{tang2025interactive}{, }
+          Agent0~\cite{vskrlj2024agent0}{, }
+          TAIRA~\cite{yu2025thought}{, }
+          RecAI~\cite{lian2024recai}{, }
+          AgentDR~\cite{yang2025agentdr}{, }
+          LLMRecAgent~\cite{carraro2025large}{, }
+          AdaptJobRec~\cite{wang2025adaptjobrec}{, }
+          CDA4Rec~\cite{long2025cloud}{, }
+          RouteLLM~\cite{zhe2025constraint}{, }
+          CoRAL~\cite{wu2024coral}
+            ,leaf,fill=softblue]
+         ],
+        [External information tools, leaf1, fill=softblue,
+          [AgenticRAG~\cite{ma2025agenticrag}{, }
+          RecAI~\cite{lian2024recai}{, }
+          GRS~\cite{jannach2025rethinking}
+            ,leaf,fill=softblue]
+         ]
+         [Attribute-oriented Tools, leaf1, fill=softblue,
+          [OptiRAG-Rec~\cite{zhou2025efficiency}{, }
+          MAP~\cite{lee2025map}{, }
+          SmartEats~\cite{liang2025smarteats}{, }
+          CSHI~\cite{zhu2025llm}
+            ,leaf,fill=softblue]
+         ]
+         [Multimodal Tools, leaf1, fill=softblue,
+          [RAG-VisualRec~\cite{tourani2025rag}{, }
+          C-LINK Agent~\cite{ordoumpozanis2024c}{, }
+          VRAgent-R1~\cite{chen2025vragent}
+            ,leaf,fill=softblue]
+         ]
+      ]
+      [\textbf{Level 4}:\\ Planning as Assistance \\ \S~\ref{sec:assist-planning}, leaf2, fill=softblue,
+        [Interaction planning, leaf1, fill=softblue,
+          [InteRecAgent~\cite{huang2024interecagent}{, }
+          ECPO~\cite{feng2025expectation}
+            ,leaf,fill=softblue]
+         ]
+         [Representation planning, leaf1, fill=softblue,
+          [AgentCF~\cite{zhang2023agentcf}{, }
+          AgentCF++~\cite{liu2025agentcf++}
+            ,leaf,fill=softblue]
+         ]
+         [Ranking/Reranking planning, leaf1, fill=softblue,
+          [TAIRA~\cite{yu2025thought}{, }
+          AKF-Agent~\cite{yu2025intelligent_agent}{, }
+          BiLLP~\cite{shi2024planner}
+            ,leaf,fill=softblue]
+         ]
+      ]
+    ]
+    [\textbf{Agent(s) as RecSys} \\ \S~\ref{sec:agent_as_recommender}, edge={black!50}, leaf3, fill=softgreen,
+      [\mbox{\textbf{Level 4:}} \\ Single Agent \\ Recommender \\ \S~\ref{subsec:agent_rec_components}, leaf2, fill=softgreen,
+       [Profile \\ \S~\ref{subsubsec:agent_rec_profile}, leaf1, fill=softgreen,
+          [Summary from history{: }InteRecAgent~\cite{huang2024interecagent}{, }
+          task-specific preference{: }Instruct$^2$Rec~\cite{xu2025iagent}
+          ,leaf,fill=softgreen]
+         ],
+        [Memory \\ \S~\ref{subsubsec:agent_rec_memory}, leaf1, fill=softgreen,
+          [\textit{Working memory}{: }InteRecAgent~\cite{huang2024interecagent}{, }
+          ToolRec~\cite{zhao2024toolrec}{, }
+          AgentRecBench~\cite{shang2025agentrecbench}{, }
+          InstructAgent~\cite{xu2025iagent}{, }
+          AgentDR~\cite{yang2025agentdr}{, }
+          RuleAgent~\cite{wang2025ruleagent}{, }
+          PUMA~\cite{cai2025large}{, }
+          VibeMus~\cite{guo2025vibemus}{; }
+          \textit{Episodic memory}{: }PUMA~\cite{cai2025large}{; }
+          \textit{Semantic memory}{: }RecMind~\cite{wang2024recmind}{, }
+          AFL~\cite{cai2025agentic}{, }
+          RecAI~\cite{lian2024recai}{, }
+          InstructAgent~\cite{xu2025iagent}{, }
+          AgentDR~\cite{yang2025agentdr}{, }
+          MemRec~\cite{chen2026memrec}
+          ,leaf,fill=softgreen]
+         ]
+         [Tool-using \\ \S~\ref{subsubsec:agent_rec_tools}, leaf1, fill=softgreen,
+          [\textit{RecTools}{: }InteRecAgent~\cite{huang2024interecagent}{, }
+          RecMind~\cite{wang2024recmind}{, }
+          AgentDR~\cite{yang2025agentdr}{, }
+          MACRec~\cite{macrec}{; }
+          \textit{External knowledge}{: }RecMind~\cite{wang2024recmind}{, }
+          AgenticRAG~\cite{ma2025agenticrag}{; }
+          \textit{Attribute tools}{: }ToolRec~\cite{zhao2024toolrec}{, }
+          BiLLP~\cite{shi2024planner}{, }
+          MAP~\cite{lee2025map}{, }
+          SmartEats~\cite{liang2025smarteats}{; }
+          \textit{Multimodal tools}{: }VRAgent-R1~\cite{chen2025vragent}
+          ,leaf,fill=softgreen]
+         ]
+         [Workflow \\ \S~\ref{subsubsec:agent_rec_workflow}, leaf1, fill=softgreen,
+          [\textit{ReAct}{: }MoRE~\cite{more}{, }
+          DRDT~\cite{drdt}{, }
+          R4ec~\cite{gu2025r}{, }
+          Re2LLM~\cite{re2llm}{, }
+          SRLF~\cite{srlf}{; }
+          \textit{Plan-then-Execute}{: }
+          InteRecAgent~\cite{huang2024interecagent}{, }
+          RecMind~\cite{wang2024recmind}{, }
+          Instruct$^2$Agent~\cite{xu2025iagent}{; }
+          \textit{Reflex}{: }
+          BiLLP~\cite{shi2024planner}{, }
+          T-PRA~\cite{wang2025t-pra}{, }
+          AgentDR~\cite{yang2025agentdr}
+          ,leaf,fill=softgreen]
+         ]
+         [Optimization \\ \S~\ref{subsubsec:agent_rec_optimization}, leaf1, fill=softgreen,
+          [\textit{Self reflection}{: }
+          T-PRA~\cite{wang2025t-pra}{; }
+          \textit{Feedback reflection}{: }
+          ECPO~\cite{feng2025expectation}
+          ,leaf,fill=softgreen]
+         ]
+      ]
+      [\mbox{\textbf{Level 5:}} \\ Multi-Agents Recommender \\ \S~\ref{subsec:agent_rec_multi}, leaf2, fill=softgreen,
+       [Roles and Coordination Protocols, leaf1, fill=softgreen,
+          [Manager-worker{: }MACRec~\cite{wang2024macrec}{, }
+          MultiCF~\cite{xia2026multi}{, }
+          LLMOrch~\cite{zhang2026llms}{; }
+          debate-judge{: }MACRS~\cite{fang2024multi}{; }
+          role-based{: }MATCHA~\cite{hui2025matcha}{; }
+          negotiation-based{: }Collab-REC~\cite{banerjee2025collab}
+            ,leaf,fill=softgreen]
+         ],
+        [Communication, leaf1, fill=softgreen,
+          [Free-form{: }MACRec~\cite{macrec}{, }
+          MAS4POI~\cite{wu2025mas4poi}{; }
+          Pipeline-aware{: }ARAG~\cite{maragheh2025arag}{, }
+          TAIRA~\cite{yu2025thought}{, }
+          RecBot~\cite{tang2025interactive}{, }
+          MATCHA~\cite{hui2025matcha}{; }
+          Negotiation\&aggregation{: }MACRS~\cite{fang2024multi}{, }
+          Collab-REC~\cite{banerjee2025collab}
+            ,leaf,fill=softgreen]
+         ]
+         [Optimization \\ \S~\ref{subsubsec:multi-agent-optimization}, leaf1, fill=softgreen,
+          [Coordination-based{: }MACRS~\cite{fang2024multi}{, }
+          ARAG~\cite{maragheh2025arag}{; }
+          Reward-driven{: }Collab-REC~\cite{banerjee2025collab}{; }
+          Experience-based{: }RecBot~\cite{tang2025interactive}{, }
+          TAIRA~\cite{yu2025thought}
+            ,leaf,fill=softgreen]
+         ]
+      ]
+    ]
+    [\textbf{Agent as User Simulator} \\ \S~\ref{sec:simulation}, edge={black!50}, leaf3, fill=myyellow,
+      [\mbox{\textbf{Level 4\&5: }} \\ Single \& Multi Agents \\ \S~\ref{sec:simulation}, leaf2, fill=myyellow,
+        [Data Synthesis \\ \S~\ref{subsubsec:simulation-data-synthesis}, leaf1, fill=myyellow,
+          [TalkPlayData~2~\cite{choi2025talkplaydata}{, }
+          ColdLLM~\cite{huang2025large}{, }
+          LAUS~\cite{park2025llm}{, }
+          LLM-USim~\cite{zhang2025llm}
+            ,leaf,fill=myyellow]
+         ]
+        [User Simulation \\ \S~\ref{subsubsec:simulation-single-agent-simulator}, leaf1, fill=myyellow,
+          [Fidelity (profile construction{: }RecAgent~\cite{wang2023recagent}{, }
+          Lusifer~\cite{ebrat2025lusifer}{, }
+          Agent4Rec~\cite{zhang2024agent4rec}{; }
+          memory design{: }RecAgent~\cite{recagent}{, }
+          Agent4Rec~\cite{zhang2024agent4rec}){; }
+          Controllability{: }CSHI~\cite{zhu2025llm}{; }
+          Observability{: }LAUS~\cite{park2025llm}{, }
+          Lusifer~\cite{ebrat2025lusifer}{; }
+          Behavior calibration (user-system{: }Agent4Rec~\cite{zhang2024agent4rec}{, }
+          ColdLLM~\cite{huang2025large}{; }
+          user-user{: }RecAgent~\cite{recagent})
+            ,leaf,fill=myyellow]
+         ]
+         [Multi-agent \\ Environment \\ Simulation \\ \S~\ref{subsubsec:simulation-closed-loop-multi-agent-environment}, leaf1, fill=myyellow,
+          [RecoWorld~\cite{liu2025recoworld}{, }
+          SimTok++~\cite{sukiennik2025simulating}{, }
+          CreAgent~\cite{ye2025creagent}{, }
+          RecInter~\cite{jin2025recinter}{, }
+          AFL~\cite{cai2025agentic}{, }
+          GGBond~\cite{zhong2025ggbond}
+            ,leaf,fill=myyellow]
+         ]
+      ]
+    ]
+    [\textbf{Evaluation of Agentic Recsys} \\ \S~\ref{sec:evaluation}, edge={black!50}, leaf3, fill=softred,
+      [{\textbf{Agentic \\ Recommender}} \\ \S~\ref{subsec:outcome-eval}-\S~\ref{subsec:rag-eval}, leaf2, fill=softred,
+        [Recommendation \\ Effectiveness , leaf1, fill=softred,
+          [Ranking Quality{: }
+          InteRecAgent~\cite{huang2025recommender}{, }
+          ToolRec~\cite{zhao2024toolrec}{, }
+          AgentDR~\cite{yang2025agentdr}{, }
+          ColdLLM~\cite{huang2025large}{; }
+          Conversational Success{: }
+          MACRS~\cite{fang2024multi}{, }
+          ECPO~\cite{feng2025expectation}{, }
+          RecBot~\cite{tang2025interactive}{, }
+          SmartEats~\cite{liang2025smarteats}
+            ,leaf,fill=softred]
+         ],
+        [Output Quality, leaf1, fill=softred,
+          [Explanation Quality{: }
+          MADREC~\cite{park2025madrec}{, }
+          REXHA~\cite{sun2025retrieval}{, }
+          CARTS~\cite{chen2025carts}{, }
+          C-LINK~\cite{ordoumpozanis2024c}{; }
+          RAG Grounding \& Faithfulness{: }
+          RA-Rec~\cite{kemper2024retrieval}{, }
+          CORAL~\cite{wu2024coral}{, }
+          ARAG~\cite{maragheh2025arag}{, }
+          AgenticRAG~\cite{ma2025agenticrag}
+            ,leaf,fill=softred]
+         ],
+        [Agentic Process \\ Quality, leaf1, fill=softred,
+          [Tool{/}Planning{/}Memory{: }
+          ToolRec~\cite{zhao2024toolrec}{, }
+          RecMind~\cite{wang2024recmind}{, }
+          TAIRA~\cite{yu2025thought}{, }
+          MACRec~\cite{wang2024macrec}{, }
+          MATCHA~\cite{hui2025matcha}{; }
+          Safety{/}Privacy{/}Robustness{: }
+          MATCHA~\cite{hui2025matcha}{, }
+          poisoning~\cite{nazary2025stealthy}{, }
+          privacy~\cite{zhang2025towards}{, }
+          Collab-REC~\cite{banerjee2025collab}
+            ,leaf,fill=softred]
+         ]
+      ]
+      [{\textbf{Agentic \\ Simulator}} \\ \S~\ref{subsec:simulator-eval}, leaf2, fill=softred,
+        [Simulator \\ Validity, leaf1, fill=softred,
+          [Distributional Fidelity{: }
+          RecAgent~\cite{wang2023recagent}{, }
+          Agent4Rec~\cite{zhang2024agent4rec}{, }
+          AlignUSER~\cite{bougie2026alignuser}{; }
+          Behavioral Realism \& Calibration{: }
+          CSHI~\cite{zhu2025llm}{, }
+          RecUserSim~\cite{chen2025recusersim}{, }
+          LAUS-News~\cite{park2025llm}
+            ,leaf,fill=softred]
+         ],
+        [Downstream \\ Utility, leaf1, fill=softred,
+          [LLM-USim~\cite{zhang2025llm}{, }
+          RecoWorld~\cite{liu2025recoworld}{, }
+          ColdLLM~\cite{huang2025large}
+            ,leaf,fill=softred]
+         ]
+      ]
+    ]
+  ]
+\end{forest}
+\end{adjustbox}
+\caption{Overview structure of this survey.}
+\label{fig:tree}
+\end{figure*}

@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2604.12965",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.12965_大规模推荐的高效检索分层索引\\2604.12965.md",
+  "source_hash": "b6ccae2d69a66ca6d62a2f955a98a45693ed83bf3d22dc5450b36c194789ef76",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2517,
+      "end_char": 3717,
+      "quote": "## 1 Introduction\n\nWith the success of foundation models, substantial research has focused on exploring scaling laws [20, 25], such as those involving data volume, computational resources, and model parameters during training, with the aim of achieving improved performance at inference time. Building upon the scaling advancements in foundation language models, recent research has extended to foundation ranking and retrieval models for recommendation [1, 11, 16, 45, 65], catalyzing the development of numerous largescale industrial recommendation systems such as Wukong [62], HSTU [61], InterFormer [60], and ExFM [33].\n\nHowever, given the surging development of enormous foundation models for ranking and retrieval in recommendation, how to deploy them to serve real-world (e.g., high frequency and heavy load) scenarios well is underexplored or not fully discussed. The most appealing concern can be the inference and retrieval cost. To leverage the inference ability of foundation retrieval models, passing the user and item features into the large-scale complex retrieval models to get the preference score prediction is often time-consuming and costly, especially when facing a massive volum",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.12965_大规模推荐的高效检索分层索引\\2604.12965.md",
+      "source_hash": "b6ccae2d69a66ca6d62a2f955a98a45693ed83bf3d22dc5450b36c194789ef76",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "2 Foundation Retrieval Model at Meta - MoNN",
+      "start_char": 7251,
+      "end_char": 8451,
+      "quote": "## 2 Foundation Retrieval Model at Meta - MoNN\n\nIn this section, we briefly introduce the architecture of the foundation model deployed in Meta for retrieval, which is called Modular Neural Network (MoNN), and is flexible to operate under diferent infrastructure constraints.\n\n![](images/8668422b7ee5b2f345ea0fecf529e7abe0bb87b59126e7c92e97430ae9cbed42.jpg)  \nFigure 2: A MoNN Block\n\nIn general, Modular Neural Network (MoNN) enhances the learning of sophisticated user and item interactions beyond a single dot product while maintaining high eficiency. As shown in Figure 2, MoNN has a modularized design comprising separate modules for user representations (User Tower), item representations (Item Tower), and the interaction between user and item (Interaction Tower).\n\nUser Tower. In short, the user tower takes user features to generate fixed-size user embeddings. These features can be dense (e.g., number of clicks by the user) and sparse (e.g., user engaged videos). Sparse features are processed by an embedding lookup table, and then all feature embeddings are concatenated and fed into the tower. Given that the user tower only needs to be computed once and shared across a vast number of i",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.12965_大规模推荐的高效检索分层索引\\2604.12965.md",
+      "source_hash": "b6ccae2d69a66ca6d62a2f955a98a45693ed83bf3d22dc5450b36c194789ef76",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.2 Baselines",
+      "start_char": 27849,
+      "end_char": 29049,
+      "quote": "## 4.2 Baselines\n\nWe select diferent categorical baselines, including (1) classic collaborative filtering methods, (2) neural collaborative filtering methods, (3) generative collaborative filtering methods, (4) industrial retrieval models, (5) general graph neural networks, and (6) graph neural network-inspired retrieval models. For the page limitation, we leave the reference of each baseline in Table 3.\n\nTable 1: HILL-Enabled MoNN Performance with Baselines in Internal Data. $\\mathbf { I } _ { 1 } , \\mathbf { I } _ { 2 } , \\mathbf { V }$ are in the order of O(1,000), O(100,000), O(10,000,000), $\\mathbf { M } _ { s }$ denotes the model size of Small Model, and $\\mathbf { M } _ { \\mathrm { L } }$ denotes the model size of Large Model\n\n<table><tr><td>Model Architecture</td><td>Eval NE (↓)</td><td>Recall (↑)</td><td>Infra Cost (↓)</td><td>Theoretical Cost</td></tr><tr><td>TTSN [3]</td><td>baseline</td><td>0%</td><td>1x</td><td> $M_{XS} \\times V$ </td></tr><tr><td>EBR [23]</td><td>+0.03%</td><td>-0.1%</td><td>0.5x</td><td> $M_{XS} \\times I_1$ </td></tr><tr><td>MoNN Small</td><td>-0.29%</td><td>+2.4%</td><td>2.5x</td><td> $M_S \\times V$ </td></tr><tr><td>MoNN Medium</td><td>-0.70%</td><",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.12965_大规模推荐的高效检索分层索引\\2604.12965.md",
+      "source_hash": "b6ccae2d69a66ca6d62a2f955a98a45693ed83bf3d22dc5450b36c194789ef76",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

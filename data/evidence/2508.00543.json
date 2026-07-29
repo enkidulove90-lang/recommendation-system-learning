@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2508.00543",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2508.00543_长尾推荐再探：LLM弥合流行度差距\\2508.00543.md",
+  "source_hash": "3a89ce2c9b73a3ae545c32fe92e5e0057c1686ea4b0e115bff814bbcca59ade9",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "3.1 Introduction to Maritime ROCs",
+      "start_char": 25873,
+      "end_char": 27073,
+      "quote": "## 3.1 Introduction to Maritime ROCs\n\nA ROC is a shore-based control center required for monitoring, controlling and supporting MASS. Depending on the level of automation, MASS can be highly automated or autonomous surface ships that can be remotely monitored and controlled by a ROC. Although the ROC operators are physically separated from the ship, they perform important tasks during regular operations, in extreme situations, and when making critical decisions [29]. The main features of a ROC are:\n\n∙ there is a human operator (HO)\n\n∙ it centralizes the monitoring and remote control of MASS\n\n∙ its operating modes range from passive monitoring to active remote control of the ship\n\n∙ it ofers a high degree of automation on board with minimal human intervention if required,\n\n∙ it has technical interfaces to navigation systems, sensors, communication, emergency management.\n\nImportantly, the ISO/TS 23860 specifies four diferent operation modes for ROCs [29]:\n\nStrategic Control: In this mode, the operator provides instructions to the entire fleet. This covers planning and organisational tasks. For example, a strategy for saving fuel under certain conditions may be communicated.\n\nTactical",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2508.00543_长尾推荐再探：LLM弥合流行度差距\\2508.00543.md",
+      "source_hash": "3a89ce2c9b73a3ae545c32fe92e5e0057c1686ea4b0e115bff814bbcca59ade9",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3.3 Functional Architecture",
+      "start_char": 30501,
+      "end_char": 31701,
+      "quote": "## 3.3 Functional Architecture\n\nWe start by modeling the functional architecture of a generic MASS-ROC pair at a high level of abstraction with a focus on the flow of information. This functional architecture, shown in Figure 3, serves as a starting point for building a hazard database as it defines generic interfaces between the involved entities. Note that the abstraction level needs to be detailed enough to enable the identification and analysis of hazards and abstract enough to keep HARA eforts manageable. Inside the ROC itself, we model exactly one control station with three components:\n\n![](images/79d89803352871ec9e67a8341cf677e35502107d5e6d978986b083551e5cc7a2.jpg)  \nFig. 3: Functional architecture for a single control station inside a shore-based ROC and a generic MASS. The flow of in formation in encoded by three diferent types of arrows.\n\nData Communication Middleware (DCM): This component is responsible for managing the exchange of data between the ROC and the MASS. As indicated by the blue color coding, this component is present in the MASS as well. However, for brevity, we abstain from explicitly modeling it within the MASS here. Crucially, the DCM defines the interfac",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2508.00543_长尾推荐再探：LLM弥合流行度差距\\2508.00543.md",
+      "source_hash": "3a89ce2c9b73a3ae545c32fe92e5e0057c1686ea4b0e115bff814bbcca59ade9",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "Technical System Safety",
+      "start_char": 17509,
+      "end_char": 18709,
+      "quote": "nit within the safety analysis. The methodology enables the systematic identification of scenarios, in which the ROC is required to intervene, the information it must receive to perform this role, and the system architecture necessary to support interventions\n\n– particularly in relation to mitigation strategies. Supervisory control agents located within the ROC operate in either an active or passive monitoring capacity, typically involving human operators. The efectiveness of mitigation measures attributed to the ROC is thus evaluated not only on the technical basis, but also with regard to human performance factors, such as operator response time or workload.\n\nAnother method specifically developed for automated systems has been proposed by Kramer et al. [33, 6]. The Automation Risk method has initially been designed for automotive applications, but has also been transferred to the maritime domain [50, 21]. It aims to identify and evaluate hazardous scenarios, thereby supporting a scenario-based safety assessment. Conceptually, the method draws upon HAZOP and FTA, adapting and integrating elements of both to address the specific challenges that arise for highly automated systems.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2508.00543_长尾推荐再探：LLM弥合流行度差距\\2508.00543.md",
+      "source_hash": "3a89ce2c9b73a3ae545c32fe92e5e0057c1686ea4b0e115bff814bbcca59ade9",
+      "extraction_method": "section_router",
+      "confidence": 0.43
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion",
+      "start_char": 41903,
+      "end_char": 42497,
+      "quote": "## 5 Conclusion\n\nIn this paper, we laid first steps towards building a hazard database for certification of shore-based ROCs. Based on a generic MASS-ROC functional architecture we derived three diferent categories of hazard sources while identifying SOTIF as a relevant, complementary category. Moreover, we performed a preliminary suitability analysis of HARA methods which may cover these categories.\n\nRegarding future work, conducting a HARA for a concrete shore-based ROC by combining adequate techniques will enable the initial build-up of safety artifacts for the envisioned Hazard-DB.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2508.00543_长尾推荐再探：LLM弥合流行度差距\\2508.00543.md",
+      "source_hash": "3a89ce2c9b73a3ae545c32fe92e5e0057c1686ea4b0e115bff814bbcca59ade9",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

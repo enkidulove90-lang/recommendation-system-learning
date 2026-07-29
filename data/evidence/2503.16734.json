@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2503.16734",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.16734_多模态大模型时代的智能体推荐系统\\2503.16734.md",
+  "source_hash": "e59bcf639744c95e66416010133cad2f39a9e6cffc35996eefef8a0c931b3fe0",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 4699,
+      "end_char": 5899,
+      "quote": "ve begun to address this issue, they remain limited in their ability to integrate openended natural language understanding with personalized ranking, particularly in scenarios that require multiple rounds of clarification to resolve ambiguous user queries.\n\nRecent advances in Large Language Models (LLMs) and Multimodal LLMs (MLLMs) have greatly improved language comprehension and cognitive processing [24, 39]. With stronger reasoning and planning abilities, (M)LLM-based agents can interpret human language, devise strategies, and execute complex tasks. These breakthroughs ofer new avenues for enhancing RSs’ adaptability, personalization, and user-centricity. The rapid surge in LLM-driven RS research is evident from the 290 references cited in a recent survey on this topic [17, 31, 32], along with numerous influential papers in the field (e.g., [44]). The existing work on applying LLMs to RS, however, has mostly focused on applying LLMs to improve the current RSs. Furthermore, the existing works have underexplored the important question of how LLMs or LLM agents would impact the future of RS in the long run. We argue that LLM-based Agentic Recommender Systems (LLM-ARS) present a prom",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.16734_多模态大模型时代的智能体推荐系统\\2503.16734.md",
+      "source_hash": "e59bcf639744c95e66416010133cad2f39a9e6cffc35996eefef8a0c931b3fe0",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "8 Framework and Learning Paradigms (RQ3)",
+      "start_char": 44106,
+      "end_char": 45306,
+      "quote": "## 8 Framework and Learning Paradigms (RQ3)\n\nTo enable LLM-ARS, novel frameworks and learning paradigms are required to enhance autonomy, adaptability, and human alignment (RQ3). We categorize these advancements into three key areas: single-agent architectures, which focus on individual agents as decision-makers; multi-agent collaboration, which leverages interactions among multiple agents to improve reasoning and adaptability; and human-LLM hybrid architectures, which emphasize collaboration between human users and LLM-based agents to refine personalization, control, and interpretability in recommendations.\n\nSingle-Agent Framework for RS: LLM-powered single-agent frameworks enable autonomous decision-making in RSs by integrating reasoning, memory, and planning. The RAH framework [53] employs a Learn-Act-Critic loop to iteratively refine recommendations, improving personalization and reducing bias. Wang et al. [67] introduce Self-Inspiring Planning, where an LLM agent retrospectively analyzes past decisions to optimize future choices while leveraging external tools like search engines and summarization models. InteRecAgent [20] further enhances this paradigm by treating LLMs as dec",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.16734_多模态大模型时代的智能体推荐系统\\2503.16734.md",
+      "source_hash": "e59bcf639744c95e66416010133cad2f39a9e6cffc35996eefef8a0c931b3fe0",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "8 Framework and Learning Paradigms (RQ3)",
+      "start_char": 44583,
+      "end_char": 45783,
+      "quote": "hasize collaboration between human users and LLM-based agents to refine personalization, control, and interpretability in recommendations.\n\nSingle-Agent Framework for RS: LLM-powered single-agent frameworks enable autonomous decision-making in RSs by integrating reasoning, memory, and planning. The RAH framework [53] employs a Learn-Act-Critic loop to iteratively refine recommendations, improving personalization and reducing bias. Wang et al. [67] introduce Self-Inspiring Planning, where an LLM agent retrospectively analyzes past decisions to optimize future choices while leveraging external tools like search engines and summarization models. InteRecAgent [20] further enhances this paradigm by treating LLMs as decision-making cores, selectively invoking domain-specific tools (e.g., retrieval and ranking modules) and maintaining long-term candidate memory for adaptive ranking. These architectures transform LLMs from passive generators into adaptive decision-makers, enabling more context-aware, interactive recommendations. However, they face scalability challenges and lack collaborative reasoning in multi-domain scenarios.\n\nMulti-Agent Framework for RS Multi-agent frameworks extend s",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.16734_多模态大模型时代的智能体推荐系统\\2503.16734.md",
+      "source_hash": "e59bcf639744c95e66416010133cad2f39a9e6cffc35996eefef8a0c931b3fe0",
+      "extraction_method": "section_router",
+      "confidence": 0.51
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "10 Conclusion",
+      "start_char": 56592,
+      "end_char": 57396,
+      "quote": "## 10 Conclusion\n\nThis perspective paper first examines the integration of LLMs into agentic RSs, highlighting their role in enabling dynamic, adaptive, and multimodal interactions. We categorize recent advancements into single-agent, multi-agent, and human-LLM hybrid architectures, analyzing their impact on personalization, transparency, and reasoning. Despite these advancements, challenges such as eficiency, hallucination, safety, and lifelong learning remain critical. To address these, we outline future directions, including scalable architectures, robust evaluation frameworks, and improved domain generalization. As agentic RSs evolve, ensuring a balance between autonomy and controllability will be essential for building trustworthy, context-aware, and ethically aligned recommender systems.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.16734_多模态大模型时代的智能体推荐系统\\2503.16734.md",
+      "source_hash": "e59bcf639744c95e66416010133cad2f39a9e6cffc35996eefef8a0c931b3fe0",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

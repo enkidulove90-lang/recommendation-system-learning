@@ -1,0 +1,149 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2503.16734",
+  "identity": {
+    "title": "Towards Agentic Recommender Systems in the Era of Multimodal Large Language Models",
+    "chinese_title": "多模态大模型时代的智能体推荐系统",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2503.16734"
+    },
+    "paper_type": "system"
+  },
+  "classification": {
+    "research_directions": [
+      "agent_recommendation",
+      "generative_recommendation"
+    ],
+    "pipeline_stages": [
+      "ranking",
+      "user_modeling",
+      "online_learning",
+      "evaluation"
+    ],
+    "problems": [
+      "robustness"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video",
+      "behavior_sequence"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "这是一篇视角论文，系统性地定义了基于LLM的智能体推荐系统（LLM-ARS）。",
+    "one_sentence_contribution": "这是一篇视角论文，系统性地定义了基于LLM的智能体推荐系统（LLM-ARS）。",
+    "method_overview": "本文采用视角论文（Perspective Paper）的方法论，通过文献综述和概念分析，对现有LLM-based Agent和推荐系统研究进行归纳、分类和批判性分析。论文构建了理论框架（四阶段演进、形式化定义），并基于此框架识别开放挑战和未来方向，而非提出新的算法或实验。",
+    "method_components": [
+      {
+        "name": "提出了推荐系统的四阶段演进模型（Level 0-3）",
+        "role": "reported_innovation",
+        "mechanism": "提出了推荐系统的四阶段演进模型（Level 0-3），将LLM-ARS定位为最高级的自主、自适应、主动推荐范式，超越了传统的被动推荐。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "形式化了LLM-ARS的数学框架",
+        "role": "reported_innovation",
+        "mechanism": "形式化了LLM-ARS的数学框架，定义了用户画像、规划、记忆和行动四大核心模块及其交互机制，为系统设计提供了理论基础。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "系统性地从智能体能力（规划、记忆、多模态推理、角色扮演）和推荐系统视角（用户建模",
+        "role": "reported_innovation",
+        "mechanism": "系统性地从智能体能力（规划、记忆、多模态推理、角色扮演）和推荐系统视角（用户建模、决策、评估）两个维度，提出了7个关键研究问题（RQ1-RQ7），并分析了现有工作的不足。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "Despite these advancements, challenges such as eficiency, hallucination, safety, and lifelong learning remain critical."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "未明确指定单一基准数据集，但引用了相关工作中使用的数据集，如RecAgent、Agent4Rec等仿真环境"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：未明确指定单一基准数据集，但引用了相关工作中使用的数据集，如RecAgent、Agent4Rec等仿真环境",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": []
+    },
+    "results": [],
+    "results_summary": "作为视角论文，本文未提出新模型或进行实验。其主要贡献在于概念框架和问题定义，而非具体的性能指标。论文通过引用现有工作（如RAH、MACRec、PUMA等）的定性或定量结果来支持论点，但未提供统一的实验对比。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计：可直接采用其提出的四模块架构（用户画像、规划、记忆、行动）作为Agent设计蓝图；2）评估方法：其提出的RQ5（评估有效性和鲁棒性）和RQ7（终身个性化）为构建Agent评估体系提供了方向；3）系统架构：单智能体、多智能体和人类-LLM混合三种架构的分类，为选择或设计Agent协作模式提供了参考；4）数据处理：强调多模态信息（文本、图像、行为信号）的融合，指导Agent如何构建更丰富的用户画像。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计：可直接采用其提出的四模块架构（用户画像、规划、记忆、行动）作为Agent设计蓝图；",
+      "评估方法：其提出的RQ5（评估有效性和鲁棒性）和RQ7（终身个性化）为构建Agent评估体系提供了方向；",
+      "系统架构：单智能体、多智能体和人类-LLM混合三种架构的分类，为选择或设计Agent协作模式提供了参考；",
+      "数据处理：强调多模态信息（文本、图像、行为信号）的融合，指导Agent如何构建更丰富的用户画像。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.891051+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.513439+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.16734_多模态大模型时代的智能体推荐系统\\2503.16734.md",
+    "source_hash": "e59bcf639744c95e66416010133cad2f39a9e6cffc35996eefef8a0c931b3fe0",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2503.16734_summary.md",
+    "summary_hash": "c2ff447b30dd2230286da5c3d94638a275166346d427925f3540cde81ad27138"
+  }
+}

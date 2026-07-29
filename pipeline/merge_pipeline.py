@@ -23,6 +23,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 from config import settings
+from storage.paper_assets import (
+    find_bundle_pdf,
+    find_parsed_markdown,
+    paper_id_from_folder,
+    summary_path as get_summary_path,
+)
 from utils.token_counter import count_tokens, count_tokens_file, token_size_friendly
 
 logger = logging.getLogger(__name__)
@@ -164,19 +170,31 @@ class DocumentMerger:
     def _scan_data_directories() -> list[dict[str, Any]]:
         """扫描 data/parsed 和 data/summaries 目录，构建论文列表。"""
         parsed_dir = settings.DATA_DIR / "parsed"
-        summaries_dir = settings.DATA_DIR / "summaries"
         paper_list: list[dict[str, Any]] = []
+        seen_ids: set[str] = set()
 
         if parsed_dir.exists():
             for item in sorted(parsed_dir.iterdir()):
                 if item.is_dir():
-                    md_file = item / f"{item.name}.md"
-                    json_file = item / f"{item.name}.json"
+                    arxiv_id = paper_id_from_folder(item.name)
+                    if arxiv_id in seen_ids:
+                        logger.warning("Duplicate parsed bundle for %s: %s", arxiv_id, item)
+                        continue
+                    seen_ids.add(arxiv_id)
+
+                    md_file = find_parsed_markdown(arxiv_id)
+                    json_file = item / f"{arxiv_id}.json"
+                    if not json_file.exists():
+                        json_candidates = sorted(item.glob("*_content.json"))
+                        json_file = json_candidates[0] if json_candidates else json_file
+                    pdf_file = find_bundle_pdf(arxiv_id)
                     paper_list.append({
-                        "arxiv_id": item.name,
-                        "md_path": str(md_file) if md_file.exists() else None,
+                        "arxiv_id": arxiv_id,
+                        "asset_dir": str(item),
+                        "md_path": str(md_file) if md_file is not None else None,
                         "json_path": str(json_file) if json_file.exists() else None,
-                        "summary_path": str(summaries_dir / f"{item.name}_summary.md"),
+                        "pdf_path": str(pdf_file) if pdf_file is not None else None,
+                        "summary_path": str(get_summary_path(arxiv_id)),
                     })
 
         return paper_list

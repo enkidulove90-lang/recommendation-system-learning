@@ -1,0 +1,19 @@
+{
+  "arxiv_id": "2403.06447",
+  "title": "CoRAL: Collaborative Retrieval-Augmented Large Language Models Improve Long-tail Recommendation",
+  "authors": [
+    "Junda Wu",
+    "Cheng-Chun Chang",
+    "Tong Yu",
+    "Zhankui He",
+    "Jianing Wang",
+    "Yupeng Hou",
+    "Julian McAuley"
+  ],
+  "published": "2024-03-11",
+  "year": 2024,
+  "arxiv_url": "https://arxiv.org/abs/2403.06447",
+  "pdf_url": "https://arxiv.org/pdf/2403.06447",
+  "categories": ["cs.IR", "cs.AI"],
+  "primary_category": "cs.IR"
+}

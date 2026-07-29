@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2507.02626",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02626_VRAgent-R1：强化学习增强视频推荐\\2507.02626.md",
+  "source_hash": "32dbac7817b1bba4820bbccbe3efaa18423cd7d9c761cbe0a5619a8a8027ef9f",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2271,
+      "end_char": 3471,
+      "quote": "media services, particularly the booming popularity of short video platforms like TikTok and Kuaishou, Multimodal Recommendation Systems (MRS) have attracted considerable attention from both academia and industry. Unlike conventional recommendation technologies [1, 2, 3, 4, 5] that rely on ID-based user/item representation learning, MRS focuses on effectively integrating data associated with items from diverse modalities, such as text, images, videos, and audio, which aims to offer more personalized recommendations by deep semantic understanding of item and user characteristics. However, in video recommendations, existing approaches predominantly construct item representations based on text and images due to challenges in computational efficiency and processing heterogeneous information across modalities, the full potential of multimodal information in video recommendation systems remains largely unexplored.\n\n![](images/834c0899f148f71a3126fc2ce555133d00980bf45b67fb9f83d5eff875633ad1.jpg)  \nFigure 1: Qualitative examples of VRAgent-R1 for Video Recommendation. Our VRAgent-R1 stands out from previous supervised fine-tuning of MLLM, which fails to give the correct prediction due to t",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02626_VRAgent-R1：强化学习增强视频推荐\\2507.02626.md",
+      "source_hash": "32dbac7817b1bba4820bbccbe3efaa18423cd7d9c761cbe0a5619a8a8027ef9f",
+      "extraction_method": "section_router",
+      "confidence": 0.82
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3 Method",
+      "start_char": 14713,
+      "end_char": 15044,
+      "quote": "## 3 Method\n\nAs shown in Fig. 2, our VRAgent-R1 framework mainly consists of two components: the Item Perception Agent (IP Agent) for video modeling and the User Simulation Agent (US Agent) for user modeling. In the following sections, we will detail how each agent works and how they collaborate to achieve better user simulation.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02626_VRAgent-R1：强化学习增强视频推荐\\2507.02626.md",
+      "source_hash": "32dbac7817b1bba4820bbccbe3efaa18423cd7d9c761cbe0a5619a8a8027ef9f",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4 Experiments",
+      "start_char": 24633,
+      "end_char": 25833,
+      "quote": "## 4 Experiments\n\nDatasets and Metrics. We have conducted extensive experiments on MicroLens-100K [21], an open-source, real-world video recommendation dataset that includes 100,000 users, 19,738 items, and 719,405 interactions, with a sparsity level of 99.96%. Notably, MicroLens is the first micro-video recommendation dataset to provide original video content, which enables us to analyze videos from raw frames. The average video duration is 161 seconds, featuring rich visual content. For traditional recommendation metrics across the entire dataset, we report standard recommendation metrics such as HR@10, NDCG@10, HR@20, and NDCG@20. For the evaluation of user behavior simulation, we report binary classification metrics such as accuracy (Acc) and F1 Score for preference judgment, as well as selection accuracy for next video selection.\n\nTable 1: Comparison results on MicroLens-100K. The fusion of different modality features is achieved by weighted pooling. The underline T, I, V, F correspond to text, image, video, and fusion features, respectively. Our MLLM-enhanced features successfully boost the performance of different traditional sequence recommendation methods.\n\n<table><tr><td>",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02626_VRAgent-R1：强化学习增强视频推荐\\2507.02626.md",
+      "source_hash": "32dbac7817b1bba4820bbccbe3efaa18423cd7d9c761cbe0a5619a8a8027ef9f",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion",
+      "start_char": 39322,
+      "end_char": 40521,
+      "quote": "## 5 Conclusion\n\nIn this paper, we propose a novel VRAgent-R1 framework for user simulation in video recommendation. It first utilizes an MLLM to collaboratively understand the retrieved multimodal content with pre-trained world knowledge, then analyzes the history sequence to establish user status and make final decision through RFT. By exploring different strategies and using real user decisions as verifiable rewards under different tasks, our VRAgent-R1 method achieves significant improvements in user behavior simulation for video recommendation. It outperforms SFT with minimal data and shows strong generalization. As a pioneering work, this study demonstrates the potential of applying RFT to LLMs in recommendation systems.\n\nLimitations and Future Directions. Although the dataset used in this paper focuses on video recommendations, our VRAgent-R1 paradigm can be easily extended to various domains such as games, news, and e-commerce. Currently, the user action space in our experiments is relatively limited due to the dataset properties. In future work, we plan to explore adding more user behaviors, such as clicks and retention, to achieve more realistic user-system interactions.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.02626_VRAgent-R1：强化学习增强视频推荐\\2507.02626.md",
+      "source_hash": "32dbac7817b1bba4820bbccbe3efaa18423cd7d9c761cbe0a5619a8a8027ef9f",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

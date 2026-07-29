@@ -6,6 +6,22 @@ models/ — 数据模型定义
 
 from models.paper import Paper
 from models.parsed_content import ParsedContent
+from models.research_profile import (
+    EvidenceBundle,
+    EvidenceItem,
+    ProfileReview,
+    ResearchProfileV2,
+    ValidationIssue,
+)
+from models.research_graph import (
+    LearningPath,
+    LearningStep,
+    ProfileRecommendationReport,
+    RankedRecommendation,
+    RelationEdge,
+    RelationGraph,
+    ScoreBreakdown,
+)
 from models.summary import PaperSummary
 from models.academic_graph import (
     AcademicGraph,
@@ -22,18 +38,30 @@ from models.academic_graph import (
 )
 
 __all__ = [
-    "Paper",
-    "ParsedContent",
-    "PaperSummary",
     "AcademicGraph",
+    "Author",
     "Citation",
     "CitationGraph",
-    "GraphNode",
+    "CollaborationNetwork",
+    "EvidenceBundle",
+    "EvidenceItem",
     "GraphEdge",
+    "GraphNode",
+    "LearningPath",
+    "LearningStep",
+    "Paper",
+    "PaperSummary",
+    "ParsedContent",
+    "ProfileReview",
+    "ProfileRecommendationReport",
+    "QualityScore",
+    "RankedRecommendation",
+    "RelationEdge",
+    "RelationGraph",
+    "ResearchProfileV2",
+    "ScoreBreakdown",
+    "SourcePaper",
     "Timeline",
     "TimelineMilestone",
-    "QualityScore",
-    "CollaborationNetwork",
-    "SourcePaper",
-    "Author",
+    "ValidationIssue",
 ]

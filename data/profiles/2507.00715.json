@@ -1,0 +1,170 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2507.00715",
+  "identity": {
+    "title": "EARN: Eficient Inference Acceleration for LLM-based Generative Recommendation by Register Tokens",
+    "chinese_title": "EARN：基于注册令牌的LLM推荐加速",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2507.00715"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "generative_recommendation",
+      "efficient_retrieval"
+    ],
+    "pipeline_stages": [
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "sparsity",
+      "efficiency"
+    ],
+    "technical_paradigms": [
+      "transformer",
+      "llm"
+    ],
+    "modalities": [
+      "id",
+      "text",
+      "image"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "论文针对基于LLM的生成式推荐系统推理延迟高的问题，提出了EARN方法。",
+    "one_sentence_contribution": "论文针对基于LLM的生成式推荐系统推理延迟高的问题，提出了EARN方法。",
+    "method_overview": "EARN方法首先在输入序列首尾插入可学习的注册令牌（前缀和后缀），然后利用LLM的前k层（如4层）进行全序列计算，将用户历史交互信息压缩到注册令牌中。在后续层中，仅保留注册令牌参与计算，丢弃中间令牌，从而大幅减少KV Cache大小和计算量。该方法通过端到端微调训练注册令牌和模型参数。",
+    "method_components": [
+      {
+        "name": "发现并验证了LLMRec中独特的层间注意力稀疏性反转现象",
+        "role": "reported_innovation",
+        "mechanism": "发现并验证了LLMRec中独特的层间注意力稀疏性反转现象，即早期层注意力密集而后期层高度稀疏，这与NLP任务中的模式相反。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "发现并验证了LLMRec中的双注意力下沉现象",
+        "role": "reported_innovation",
+        "mechanism": "发现并验证了LLMRec中的双注意力下沉现象，即注意力分数高度集中在输入序列的首部和尾部令牌，而非NLP任务中的首部和广泛尾部区域。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "提出基于注册令牌的高效推理框架EARN",
+        "role": "reported_innovation",
+        "mechanism": "提出基于注册令牌的高效推理框架EARN，利用前k层将信息压缩到首尾注册令牌中，后续层仅处理这些令牌，实现了计算和内存的显著缩减，且不损失推荐效果。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Beauty"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Games"
+      },
+      {
+        "registry_id": "movielens_1m",
+        "paper_name": "MovieLens-1M"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MMLU (用于泛化性验证)"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Beauty、Games、MovieLens-1M、MMLU (用于泛化性验证)；任务：Experiment In this section, we conduct extensive experiments to answer the following research questions: • RQ1: How does our proposed EARN perform compared to com mon inference acceleration methods?；划分：8:1:1",
+      "split": "8:1:1",
+      "metrics": [
+        "RECALL",
+        "NDCG",
+        "R@10",
+        "R@20",
+        "N@10",
+        "N@20"
+      ],
+      "baselines": [
+        "## 4 Experiment In this section, we conduct extensive experiments to answer the following research questions: • RQ1: How does our proposed EARN perform compared to com mon inference acceleration methods?；4.1.2 Baselines.；We compare our approach against commonly used practices and existing SOTA methods, serving as our baselines: • Basic Methods – Finetune: Standard full finetuning of the model."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [
+        {
+          "model": "H100",
+          "count": null
+        }
+      ],
+      "framework": null,
+      "optimizer": "AdamW",
+      "hyperparameters": {},
+      "unreported_fields": [
+        "framework",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在LC-Rec方法上，EARN在Beauty/Llama组合上达到3.79倍加速和80.5% KV Cache缩减，Recall@10从0.0145提升至0.0167；在Games/Llama上达到3.53倍加速和80.8%缩减，Recall@10从0.0167提升至0.0180；在MovieLens/Llama上达到3.21倍加速和79.7%缩减，Recall@10从0.0247提升至0.0259。在TIGER和HSTU方法上也取得类似效果。相比所有基线方法，EARN在效率和效果上均达到最优。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/transcend-0/EARN",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1) 算法设计上，可借鉴注册令牌思想，将用户长期行为压缩为少量虚拟令牌，降低Agent推理时的计算开销；2) 系统架构上，可采用分层计算剪枝策略，在早期层充分编码后，后续层仅处理压缩表示，适合流式或实时推荐场景；3) 评估方法上，论文同时关注时间效率（加速比、吞吐量）、空间效率（KV Cache缩减）和推荐效果，为Agent性能评估提供了多维度框架；4) 数据处理上，注册令牌可视为一种可学习的用户行为摘要，可用于Agent的记忆模块设计。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计上，可借鉴注册令牌思想，将用户长期行为压缩为少量虚拟令牌，降低Agent推理时的计算开销；",
+      "系统架构上，可采用分层计算剪枝策略，在早期层充分编码后，后续层仅处理压缩表示，适合流式或实时推荐场景；",
+      "评估方法上，论文同时关注时间效率（加速比、吞吐量）、空间效率（KV Cache缩减）和推荐效果，为Agent性能评估提供了多维度框架；",
+      "数据处理上，注册令牌可视为一种可学习的用户行为摘要，可用于Agent的记忆模块设计。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: framework, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.994445+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.639411+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2507.00715_EARN：基于注册令牌的LLM推荐加速\\2507.00715.md",
+    "source_hash": "95098d1293cf28f222fd7684ae6b56088e97df27012aceca9ce971f842c07c10",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2507.00715_summary.md",
+    "summary_hash": "4045f095e39b78bc7a5a4d33fe4b60b0a93244dad1e8df3249774a91333714ac"
+  }
+}

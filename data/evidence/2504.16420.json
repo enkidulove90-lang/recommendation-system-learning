@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2504.16420",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.16420\\2504.16420.md",
+  "source_hash": "58bf5409478c3f0e2a20257a0d42503891f466961ca8e89d635e617e4ddb811e",
+  "parser": "local_pypdf",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "Page 1",
+      "start_char": 1509,
+      "end_char": 2709,
+      "quote": "e feature-based paradigm (improving feature representations), the generative paradigm (directly\ngenerating recommendations or related content), and the agentic paradigm (enabling autonomous recommendation agents and\nsimulators). Afterward, we examine FM applications in various recommendation tasks: Top-N recommendation, sequential\nrecommendation, zero/few-shot scenarios, conversational recommendation, and novel item/content generation. Through an analysis of\nrecent research, we highlight key opportunities that have been realized (e.g., improved generalization, better explanations, reasoning\nability) as well as challenges encountered (e.g., cross-domain generality, interpretability, fairness, and multimodal integration). Finally,\nwe outline open research directions and technical challenges for next-generation FM4RecSys, such as multimodal recommender\nagents, retrieval-augmented frameworks, lifelong learning for long user sequences, efficiency and cost issues, etc. This survey not only\nreviews the state-of-the-art methods but also provides a critical analysis of the trade-offs among the feature-based, the generative, and\nthe agentic paradigms, outlining key open issues and future res",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.16420\\2504.16420.md",
+      "source_hash": "58bf5409478c3f0e2a20257a0d42503891f466961ca8e89d635e617e4ddb811e",
+      "extraction_method": "section_router",
+      "confidence": 0.43
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "Page 3",
+      "start_char": 15121,
+      "end_char": 16320,
+      "quote": "new insights. Finally, we further\ndelve into the latest unresolved questions and potential\nopportunities in this area.\nCriteria for Collecting Papers: We collected over 150\npapers related to Foundation Models for Recommender\nSystems. Initially, we searched top-tier conferences and\njournals such as ICLR, NeurIPS, WWW, WSDM, SIGIR,\nKDD, ACL, EMNLP , NAACL, RecSys, CIKM, TOIS, TORS,\nand TKDE to identify recent work. The primary keywords\nused in our search included large language models for\nrecommender systems, generative recommendation, large\nlanguage models, multi-modal recommendation, and agents\nfor recommendation.\nContributions of This Survey: The aim of this survey is\nto conduct a thorough review of the advancements in Foun-\ndation Models for Recommender Systems (FM4RecSys). It\noffers a comprehensive overview that enables readers to\nquickly grasp and engage with the field of foundation\nmodel-based recommendations. This survey establishes the\ngroundwork to encourage innovation in RSs and explore the\ndepth of this research domain. It is intended for researchers\nand practitioners interested in RSs, providing them with a\nguide for selecting FMs to address recommendation tasks. In\nsum",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.16420\\2504.16420.md",
+      "source_hash": "58bf5409478c3f0e2a20257a0d42503891f466961ca8e89d635e617e4ddb811e",
+      "extraction_method": "section_router",
+      "confidence": 0.59
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "Page 18",
+      "start_char": 97943,
+      "end_char": 99143,
+      "quote": "## Page 18\n\nIEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING, SUBMISSION 2025 18\nReference Framework BackboneNS NDCG@5 by DatasetBeauty Toys Sports Games CDs Office Yelp MIND GoodRead\nSARSRec [137]- Transformer0 0.0249 0.0306 0.0154 0.0365 - - 0.0100 - -BertRec [230] - Bert 0 0.0124 0.0071 0.0075 0.0311 - - 0.0033 - -\nP5 [93] Feature-based T5 0 0.0107 0.0050 0.0041 - - - - - -TIGER [16] Feature-based/GenerativeT5 0 0.0321 0.0371 0.0181 - - - - - -LMIndexer [231]Feature-based T5 0 0.0262 0.0268 0.0142 - - - - - -HyperGraph-LLM [232]Feature-based GPT-4 0 0.0376 0.0379 - - - - - - -ReAT [233] Feature-based T5 99 0.0382 0.0390 0.0188 - - - - - -LC-Rec [124] Feature-based/GenerativeGPT-3.5Random- - - 0.0560 - - - - -ONCE [234] Feature-based GPT-3.5 4 - - - - - - - 0.3872 0.7196EmbSum [235]Feature-based T5 4 - - - - - - - 0.3675 0.5486LLMHD [236]Feature-based GPT-3.5 - - - - - - - 0.0542 - -KDA [237] Feature-based GPT-3 99 - - - - - 0.3403 - - -POD [238] Generative T5 99 0.0395 0.0599 0.0396 - - - - - -GenRec [239] Generative T5 0 0.0397 - 0.0332 - - - 0.0475 - -BIGRec [240] Generative Llama - - - - 0.0189 - - - - -RDRec [241] Generative T5 99 0.0461 0.0593 0.0408 - - - - - -RecGPT [2",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.16420\\2504.16420.md",
+      "source_hash": "58bf5409478c3f0e2a20257a0d42503891f466961ca8e89d635e617e4ddb811e",
+      "extraction_method": "section_router",
+      "confidence": 0.83
+    }
+  ]
+}

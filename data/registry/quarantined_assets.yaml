@@ -1,0 +1,34 @@
+schema_version: "1.0"
+updated_at: "2026-07-24"
+
+repairs:
+  - original_id: "2505.05196"
+    resolution: repaired_in_place
+    replacement_id: "2505.05196"
+    reason: Summary title conflicted with the parsed paper; regenerated from the authoritative source with DeepSeek.
+
+  - original_id: "2503.00987"
+    resolution: quarantined_and_replaced
+    replacement_id: "2505.09777"
+    reason: The downloaded arXiv paper is about pipe-flow turbulence, not multimodal recommendation.
+
+  - original_id: "2504.00678"
+    resolution: quarantined_and_replaced
+    replacement_id: "2504.16420"
+    reason: The downloaded arXiv paper is about Wi-Fi presence detection, not LLM recommender pipelines.
+
+  - original_id: "2505.00556"
+    resolution: quarantined_and_replaced
+    replacement_id: "2404.16924"
+    reason: The downloaded arXiv paper is a mathematics paper, not generative retrieval or recommendation.
+
+  - original_id: "2508.00543"
+    resolution: quarantined_and_replaced
+    replacement_id: "2403.06447"
+    reason: The downloaded arXiv paper is about maritime certification, not long-tail recommendation.
+
+quarantined_ids:
+  - "2503.00987"
+  - "2504.00678"
+  - "2505.00556"
+  - "2508.00543"

@@ -1,0 +1,23 @@
+{
+  "paper_id": "2606.26859",
+  "profile_path": "D:\\recommendation-system-learning\\data\\profiles\\2606.26859.json",
+  "status": "validated",
+  "grade": "B",
+  "issues": [
+    {
+      "severity": "warning",
+      "code": "lower_confidence_parser",
+      "path": "provenance.parser",
+      "message": "Local PDF fallback has lower structural confidence than MinerU."
+    },
+    {
+      "severity": "info",
+      "code": "implementation_incomplete",
+      "path": "experiment.implementation",
+      "message": "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    }
+  ],
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "generated_at": "2026-07-24T07:08:48.241451+00:00"
+}

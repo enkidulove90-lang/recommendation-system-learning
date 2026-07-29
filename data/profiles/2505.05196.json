@@ -1,0 +1,164 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2505.05196",
+  "identity": {
+    "title": "Stealthy LLM-Driven Data Poisoning Attacks Against Embedding-Based Retrieval-Augmented Recommender Systems",
+    "chinese_title": "LLM驱动的隐蔽数据投毒攻击",
+    "authors": [
+      "Fatemeh Nazary",
+      "Yashar Deldjoo",
+      "Tommaso Di Noia",
+      "Eugenio Di Sciascio"
+    ],
+    "published_date": "2025-05-08",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2505.05196"
+    },
+    "paper_type": "system"
+  },
+  "classification": {
+    "research_directions": [
+      "llm_ranking",
+      "rag_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "long_tail",
+      "robustness"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "transformer",
+      "llm",
+      "rag"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文系统研究了针对基于嵌入的检索增强推荐系统（RAG）的提供方数据投毒攻击。",
+    "one_sentence_contribution": "本文系统研究了针对基于嵌入的检索增强推荐系统（RAG）的提供方数据投毒攻击。",
+    "method_overview": "本文采用提供方数据投毒攻击方法。攻击者选择长尾（提升）或热门（打压）项目，使用LLM在10%令牌编辑预算和SBERT语义相似度≥0.80约束下重写项目描述。设计了三种攻击：情感编辑、邻居借用和链式攻击。在RAG推荐管道中，先由Sentence Transformer检索候选，再由OpenAI LLM重排序，评估攻击对项目排名和系统级指标（Recall@K, nDCG@K）的影响。",
+    "method_components": [
+      {
+        "name": "形式化了面向RAG推荐系统的提供方文本重写攻击",
+        "role": "reported_innovation",
+        "mechanism": "形式化了面向RAG推荐系统的提供方文本重写攻击，定义了提升和打压两种对抗目标，并引入令牌编辑预算和语义相似性约束来量化攻击的隐蔽性。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计了三种基于LLM的文本攻击变体",
+        "role": "reported_innovation",
+        "mechanism": "设计了三种基于LLM的文本攻击变体：情感编辑（注入情感词）、邻居借用（从语义相似项目借用短语）和链式攻击（两者结合），均可在低编辑预算下实现有效攻击。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "通过实验对比OpenAI和Sentence Transformer两种检索模块",
+        "role": "reported_innovation",
+        "mechanism": "通过实验对比OpenAI和Sentence Transformer两种检索模块，发现基于LLM的管道对文本修改更敏感，揭示了生成式重排序会放大对抗性文本信号。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "Through a systematic exploration of diferent attack strategies—including emotional rewording<sup>,</sup> neighbor-based borrowing<sup>,</sup> <sup>and</sup> hybrid chain-<sub>ing</sub>—our experiments reveal that even <sub>small-scale</sub> <sub>semantic</sub> <sub>ma-</sub> <sub>nipulations</sub> can efectively boost the visibility of long-tail items or suppress popular ones, often while remaining stealthy and dificult to detect."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "MovieLens ml-latest-small"
+      }
+    ],
+    "protocol": {
+      "task": "实验任务：在MovieLens数据集上评估文本投毒攻击对RAG推荐系统的影响。数据规模：ml-latest-small（约100k评分）。预处理：将项目按流行度分为长尾（不流行）和短头（流行）两类。训练/验证/测试划分：原文未明确披露，但系统对修改后的描述进行重新索引或重新训练。",
+      "split": "not_reported",
+      "metrics": [
+        "RECALL",
+        "NDCG"
+      ],
+      "baselines": [
+        "主要对比方法：无攻击的原始描述（Original）作为基线。消融设置：对比三种攻击变体（Emotional, Neighborhood, Chain）的效果。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "实验表明，链式攻击在提升场景下最有效，在OpenAI管道中将项目平均排名从7.00降至4.67（降低33%），而情感和邻居攻击效果较温和。在打压场景中，链式攻击同样产生最大排名变化。OpenAI管道对文本修改比Sentence Transformer更敏感。系统级指标Recall和nDCG变化不大（最大下降约2-3个百分点），表明局部攻击主要影响目标项目可见性而非全局性能。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计：Agent需考虑输入文本的对抗性鲁棒性，可借鉴本文的隐蔽性度量（令牌编辑预算+语义相似度）来设计防御机制；2）评估方法：Agent评估时应包含对抗性测试场景，如本文的三种攻击变体，以验证系统对元数据篡改的鲁棒性；3）系统架构：Agent应引入文本来源追踪和一致性检查模块，检测描述中的异常情感词或语义不连贯片段；4）数据处理：Agent在接收外部元数据更新时，需实施输入验证和净化策略。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计：Agent需考虑输入文本的对抗性鲁棒性，可借鉴本文的隐蔽性度量（令牌编辑预算+语义相似度）来设计防御机制；",
+      "评估方法：Agent评估时应包含对抗性测试场景，如本文的三种攻击变体，以验证系统对元数据篡改的鲁棒性；",
+      "系统架构：Agent应引入文本来源追踪和一致性检查模块，检测描述中的异常情感词或语义不连贯片段；",
+      "数据处理：Agent在接收外部元数据更新时，需实施输入验证和净化策略。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.925727+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.557333+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.05196_RAG推荐系统数据投毒攻击\\2505.05196.md",
+    "source_hash": "ef2d2ae698a3431773b66fa00c4cb2928aeedf66c942d899115b325537650b8d",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2505.05196_summary.md",
+    "summary_hash": "6da35d11a15d9cfbef6c32e06375afe0f3e3a223005a8fc70fdac9e6498ff8d7"
+  }
+}

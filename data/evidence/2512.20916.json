@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2512.20916",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.20916_多模态大模型摘要与检索增强序列推荐\\2512.20916.md",
+  "source_hash": "5c2ecc6bf248ceebbc55dec0248ebbfc9faa98d9f939a399f072377c3c2b7bbd",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2865,
+      "end_char": 4064,
+      "quote": "learn sequential behavior patterns, and incorporate multimodal information as supplementary input to enhance recommendations.\n\n![](images/7f3110354bfd441003ee228c451a98a6c86ba6e65d93f3aaa5cb109b69565f78.jpg)  \nFig. 1: Comparison between existing multimodal sequential recommendation methods based on MLLM and our proposed method.\n\nRecent advances in Multimodal Large Language Models (MLLMs) have demon strated significant potential in RSs [30]. Several approaches have been explored to adapt MLLMs for multimodal SR tasks, which can be broadly categorized into two main directions, as illustrated in Fig. 1. The first approach treats pretrained MLLMs as visual encoders, where multimodal information is fed into the MLLM at an early stage to obtain item representations [25,4,15]. These representations are then used either directly as feature embeddings or further processed into semantic IDs, which are subsequently integrated into traditional multimodal recommendation models. However, such methods sufer from several limitations. First, they leverage only the pre-trained MLLMs, overlooking the distribution shift between MLLM pre-training corpora and real-world recommendation data. Second, the",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.20916_多模态大模型摘要与检索增强序列推荐\\2512.20916.md",
+      "source_hash": "5c2ecc6bf248ceebbc55dec0248ebbfc9faa98d9f939a399f072377c3c2b7bbd",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "MMSRARec: Summarization and Retrieval Augumented Sequential Recommendation Based on Multimodal Large Language Model",
+      "start_char": 63,
+      "end_char": 1263,
+      "quote": "ecommendation Based on Multimodal Large Language Model\n\nHaoyu Wang<sup>1</sup>, Yitong Wang<sup>1</sup>, and Jining Wang<sup>1</sup>\n\nCollege of Computer Science and Artificial Intelligence, Fudan University wanghy24@m.fudan.edu.cn\n\nAbstract. Recent advancements in Multimodal Large Language Models (MLLMs) have demonstrated significant potential in recommendation systems. However, the efective application of MLLMs to multimodal sequential recommendation remains unexplored: A) Existing methods primarily leverage the multimodal semantic understanding capabilities of pre-trained MLLMs to generate item embeddings or semantic IDs, thereby enhancing traditional recommendation models. These approaches generate item representations that exhibit limited interpretability, and pose challenges when transferring to language model-based recommendation systems. B) Other approaches convert user behavior sequence into image-text pairs and perform recommendation through multiple MLLM inference, incurring prohibitive computational and time costs. C) Current MLLM-based recommendation systems generally neglect the integration of collaborative signals. To address these limitations while balancing recomme",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.20916_多模态大模型摘要与检索增强序列推荐\\2512.20916.md",
+      "source_hash": "5c2ecc6bf248ceebbc55dec0248ebbfc9faa98d9f939a399f072377c3c2b7bbd",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.1 Dataset",
+      "start_char": 21352,
+      "end_char": 22552,
+      "quote": "## 4.1 Dataset\n\nWe utilized open-source and real-world datasets from diverse recommendation domains to ensure broad applicability and robust validation: (1) Microlens [18], a micro-video recommendation dataset; (2) Amazon Baby [6], from the ecommerce domain, representing dense purchasing behavior in the baby product category; and (3) Amazon Games [16], which reflects user preferences in the digital goods sector. All datasets comprise user-item interactions, product descriptions, and images. During the preprocessing stage, we filtered out users and items with fewer interactions to ensure that user historical behavior sequences met a minimum length threshold. Following the practice of MLLM-MSR [24], for each user u with a historical sequence of length n, we treated the user’s interaction after time step $n + 1$ as positive samples. Additionally, we randomly selected 20 items with which the user had not interacted as negative samples. We randomly split all impression item lists into training, validation, and test sets in an 8:1:1 ratio. Detailed statistics for these datasets are provided in Table 3.\n\nTable 3: The Statistics of Datasets\n\n<table><tr><td>Dataset</td><td>Microlens</td><td",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.20916_多模态大模型摘要与检索增强序列推荐\\2512.20916.md",
+      "source_hash": "5c2ecc6bf248ceebbc55dec0248ebbfc9faa98d9f939a399f072377c3c2b7bbd",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion and Future Work",
+      "start_char": 38071,
+      "end_char": 39271,
+      "quote": "## 5 Conclusion and Future Work\n\nThis paper proposes a novel method named MMSRARec for multimodal sequential recommendation, based on a multimodal large language model (MLLM). We first employ the MLLM to summarize items into concise keywords and finetune the model using rewards that incorporate summary length, information loss, and reconstruction dificulty, thereby enabling adaptive adjustment of the summarization strategy. Inspired by retrieval-augmented generation, we convert collaborative signals into corresponding keywords and integrate them as contextual input. Finally, we apply supervised fine-tuning with multi-task learning to align the MLLM’s capabilities with the requirements of multimodal sequential recommendation. This approach leverages the MLLM’s strong semantic understanding and in-context learning abilities, introduces previously overlooked collaborative signals into the MLLM, and reduces computational and time costs through once MLLM inference. Experiments on three real-world recommendation datasets demonstrate that MMSRARec achieves a better understanding of multimodal item information and user preferences, enabling accurate and interpretable recommendations.\n\nCurr",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.20916_多模态大模型摘要与检索增强序列推荐\\2512.20916.md",
+      "source_hash": "5c2ecc6bf248ceebbc55dec0248ebbfc9faa98d9f939a399f072377c3c2b7bbd",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

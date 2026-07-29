@@ -1,0 +1,30 @@
+version: 1
+evidence_pack: scicomm-2026
+sources:
+  - id: social_attention_2018
+    supports: "社交注意力带来短期访问；不可把相关性写成引用或传播效果的因果结论。"
+    parsed_markdown: data/evidence/scicomm-2026/parsed/social_attention_2018/social.md
+  - id: static_dynamic_2021
+    supports: "动态内容在该研究的 Instagram/TikTok 场景取得更高互动；仅可作为待验证假设。"
+    parsed_markdown: data/evidence/scicomm-2026/parsed/static_dynamic_2021/static.md
+  - id: interpersonal_2020
+    supports: "可回答的互动问题与后续回应可促进科学对话。"
+    parsed_markdown: data/evidence/scicomm-2026/parsed/interpersonal_2020/interpersonal.md
+  - id: quality_communication_2022
+    supports: "清晰标题、叙事、行动号召和受众匹配可纳入平台内 A/B 测试，同时保留透明度。"
+    parsed_markdown: data/evidence/scicomm-2026/parsed/quality_communication_2022/quality.md
+scope: "科技论文解读与科学传播内容；研究主要来自 Twitter、Instagram、TikTok、Facebook，不直接外推为小红书因果结论。"
+mandatory_rules:
+  - "论文事实、实验数字、代码状态和落地状态必须来自解析结果或官方链接。"
+  - "把‘论文已证明’、‘合理推断’和‘原文未披露’分开写。"
+  - "每篇稿保留论文与 PDF 链接；代码不可确认时写‘暂无官方代码’。"
+  - "互动目标按任务区分：收藏看可执行性，评论看对话问题，点击看封面与标题；不把点赞当作全部质量。"
+  - "不使用未经证实的名人背书、夸张绝对化词或虚构亲历。"
+research_backed_designs:
+  - "用问答、低术语摘要和受众任务匹配降低理解门槛。"
+  - "把评论引导设计为可回答的具体问题，并在互动后回应。"
+  - "根据真实反馈做平台内 A/B 比较，不复用跨平台的绝对互动率。"
+non_transferable_claims:
+  - "动态视频优于静态图文的结果不能直接要求小红书论文图文改做视频。"
+  - "Twitter、Instagram、Facebook 的互动量级和算法不构成小红书推荐规律。"
+  - "社交注意力与访问或引用的相关性不能解释为因果提升。"

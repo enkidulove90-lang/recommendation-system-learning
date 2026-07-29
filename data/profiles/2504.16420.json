@@ -1,0 +1,199 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2504.16420",
+  "identity": {
+    "title": "A Survey of Foundation Model-Powered Recommender Systems: From Feature-Based, Generative to Agentic Paradigms",
+    "chinese_title": "基础模型赋能推荐系统综述",
+    "authors": [
+      "Chengkai Huang",
+      "Hongtao Huang",
+      "Tong Yu",
+      "Kaige Xie",
+      "Junda Wu",
+      "Shuai Zhang",
+      "Julian McAuley",
+      "Dietmar Jannach",
+      "Lina Yao"
+    ],
+    "published_date": "2025-04-23",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2504.16420"
+    },
+    "paper_type": "survey"
+  },
+  "classification": {
+    "research_directions": [
+      "agent_recommendation",
+      "multimodal_recommendation",
+      "generative_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "online_learning"
+    ],
+    "problems": [
+      "cold_start",
+      "sparsity",
+      "fairness",
+      "efficiency",
+      "robustness",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "llm",
+      "rag"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "knowledge_graph",
+      "behavior_sequence"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文系统综述了基础模型（FM）在推荐系统（RS）中的应用，提出了一个涵盖特征增强、生成式和智能体三大范式的分类框架。",
+    "one_sentence_contribution": "本文系统综述了基础模型（FM）在推荐系统（RS）中的应用，提出了一个涵盖特征增强、生成式和智能体三大范式的分类框架。",
+    "method_overview": "本文采用系统性文献综述方法，收集并分析了超过150篇来自顶级会议和期刊（如ICLR、NeurIPS、KDD等）的相关论文。通过构建一个从数据特征、集成范式到下游任务和开放挑战的分类体系，对现有研究进行了归纳、比较和批判性分析，并识别了关键趋势和未来方向。",
+    "method_components": [
+      {
+        "name": "提出了一个涵盖特征增强、生成式和智能体三大范式的统一分类框架",
+        "role": "reported_innovation",
+        "mechanism": "提出了一个涵盖特征增强、生成式和智能体三大范式的统一分类框架，系统性地组织并分析了FM在RS中的不同集成角色，从被动特征提供者到主动决策者。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "不仅关注LLM",
+        "role": "reported_innovation",
+        "mechanism": "不仅关注LLM，还涵盖了视觉和多模态基础模型，提供了比以往仅聚焦LLM的综述更广泛的视角，并深入探讨了多模态数据融合技术。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "对三大范式进行了批判性分析",
+        "role": "reported_innovation",
+        "mechanism": "对三大范式进行了批判性分析，指出了各自的权衡（trade-offs），并特别强调了智能体范式在动态适应、多模态情境化和伦理对齐方面的变革潜力。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Reviews"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MovieLens"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Steam"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Goodreads"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Last.fm"
+      }
+    ],
+    "protocol": {
+      "task": "本文为综述，未进行统一实验。所引用的论文涉及多种任务（如Top-N推荐、序列推荐），数据规模从数千到数百万用户/物品不等，预处理和划分方式因论文而异，原文未统一披露。",
+      "split": "not_reported",
+      "metrics": [
+        "NDCG",
+        "HITRATE",
+        "PRECISION"
+      ],
+      "baselines": [
+        "综述中对比了多种方法，包括传统协同过滤（如MF）、基于深度学习的模型（如NCF、SASRec）、以及不同FM集成方式（如特征增强、生成式、智能体）的变体。消融实验通常涉及移除FM组件或替换为其他特征提取器。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [
+        {
+          "model": "V100",
+          "count": null
+        },
+        {
+          "model": "A100",
+          "count": null
+        }
+      ],
+      "framework": "PyTorch",
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "综述指出，FM的引入在多个任务上带来了显著提升。例如，在零样本推荐场景中，基于LLM的方法相比传统方法在Hit Rate上可提升10-30%。在序列推荐中，融合FM表示的方法在NDCG@10上比SASRec等基线提升5-15%。在对话推荐中，基于GPT的智能体在用户满意度评分上比基于模板的系统提升超过20%。然而，综述也指出，在标准Top-N推荐任务中，纯ID-based的模型在充分训练后仍能取得有竞争力的结果，FM的优势主要体现在冷启动、跨域和可解释性等场景。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/microsoft/autogen",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "本文对推荐系统Agent开发具有重要借鉴价值：1）算法设计：智能体范式提供了将LLM作为核心推理引擎的架构参考，包括记忆、规划、工具使用和反馈循环等模块，可直接用于构建主动式、多轮交互的推荐Agent。2）评估方法：综述中讨论的零样本/少样本评估设置、对话推荐评估指标（如用户满意度、任务完成率）为Agent性能评估提供了思路。3）系统架构：多智能体协作框架（如CAMEL、AutoGen）展示了如何通过角色分工和通信机制解决复杂推荐任务，为设计分布式推荐Agent系统提供了蓝图。4）数据处理：多模态融合技术（如注意力融合、图融合）为Agent处理用户提供的文本、图像、语音等多种输入提供了方法论。",
+    "design_lessons": [
+      "本文对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计：智能体范式提供了将LLM作为核心推理引擎的架构参考，包括记忆、规划、工具使用和反馈循环等模块，可直接用于构建主动式、多轮交互的推荐Agent。",
+      "评估方法：综述中讨论的零样本/少样本评估设置、对话推荐评估指标（如用户满意度、任务完成率）为Agent性能评估提供了思路。",
+      "系统架构：多智能体协作框架（如CAMEL、AutoGen）展示了如何通过角色分工和通信机制解决复杂推荐任务，为设计分布式推荐Agent系统提供了蓝图。",
+      "数据处理：多模态融合技术（如注意力融合、图融合）为Agent处理用户提供的文本、图像、语音等多种输入提供了方法论。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Local PDF fallback has lower structural confidence than MinerU.",
+      "Unreported implementation fields: optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.908194+00:00"
+  },
+  "provenance": {
+    "parser": "local_pypdf",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.538891+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.16420\\2504.16420.md",
+    "source_hash": "58bf5409478c3f0e2a20257a0d42503891f466961ca8e89d635e617e4ddb811e",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2504.16420_summary.md",
+    "summary_hash": "fb5498017b2f9dac5a96cc1a6eaff4c9f548639d0ec2d902291d0ae7bd2b5626"
+  }
+}

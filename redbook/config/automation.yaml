@@ -1,0 +1,27 @@
+sources:
+  output_root: data
+  source_priority:
+    conference_announcement: 100
+    proceedings: 90
+    openreview: 80
+    arxiv: 70
+quality:
+  threshold: 0.72
+schedule:
+  timezone: Asia/Shanghai
+  slots: ["08:15", "12:20", "20:35"]
+  min_total_posts: 28
+  min_posts_per_slot: 7
+  exploration_rate: 0.30
+  max_posts_per_day: 2
+  min_event_gap_hours: 6
+feedback:
+  windows_hours: [2, 24, 168, 720]
+  group_prior_weight: 12
+composition:
+  canvas: [1440, 1920]
+  margin_px: 48
+  gap_px: 24
+  max_panels_per_composite: 4
+  min_panel_short_edge_px: 520
+  fallback: original_figures

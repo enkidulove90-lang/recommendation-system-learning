@@ -1,0 +1,167 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2607.07108",
+  "identity": {
+    "title": "Seeing and Reflecting: Multimodal Memory-Enhanced Agent Collaboration for Recommendation",
+    "chinese_title": "多模态记忆增强的推荐智能体协作",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2607.07108"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "agent_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "robustness",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "llm",
+      "rag"
+    ],
+    "modalities": [
+      "text",
+      "image"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出MMEACR框架，通过双轨记忆架构（推理轨+匹配轨）解决现有LLM推荐智能体仅依赖文本、记忆更新粗糙的问题。",
+    "one_sentence_contribution": "提出MMEACR框架，通过双轨记忆架构（推理轨+匹配轨）解决现有LLM推荐智能体仅依赖文本、记忆更新粗糙的问题。",
+    "method_overview": "采用双轨架构：推理轨使用LLM驱动的用户和物品记忆智能体，通过属性引导的强化与反思更新记忆；匹配轨使用预训练多模态嵌入模型编码原始交互叙事和物品图像，计算余弦相似度排名。两轨通过加权倒数排名融合（RRF）得到最终推荐列表。",
+    "method_components": [
+      {
+        "name": "提出属性引导的记忆演化机制",
+        "role": "reported_innovation",
+        "mechanism": "提出属性引导的记忆演化机制，通过预定义的语义属性空间提取偏好相关属性，指导智能体在正确时强化、错误时反思，减少语义噪声和偏好漂移。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计双轨推荐流水线",
+        "role": "reported_innovation",
+        "mechanism": "设计双轨推荐流水线，将可解释的语言智能体推理与基于多模态嵌入的密集匹配分离，并通过加权RRF融合，兼顾可解释性与细粒度相似度。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "构建多模态智能体记忆",
+        "role": "reported_innovation",
+        "mechanism": "构建多模态智能体记忆，利用多模态LLM将产品图像转换为语言可读描述，初始化并丰富物品记忆，使智能体能够“看见”视觉证据。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "## 6 Conclusion In this paper, we propose MMEACR, a multimodal memory-enhanced agent collaboration framework for recommendation that overcomes modal-lacking limitations in text-only LLM-based systems by jointly leveraging visual and textual features and enabling dynamic memory evolution through iterative agent interactions.",
+      "## Limitations While MMEACR demonstrates strong performance and efficient inference, one limitation is the longterm scalability of the continuous memory evolution.",
+      "Although this is mitigated by our RRF-based ranking fusion in current benchmarks, optimizing the balance between memory capacity and lifelong efficiency remains a promising direction for our future work."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon CDs_and_Vinyl"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Cell_Phones_and_Accessories"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Fashion"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon CDs_and_Vinyl、Amazon Cell_Phones_and_Accessories、Amazon Fashion；任务：Experiments Datasets.；划分：leave-one-out",
+      "split": "leave-one-out",
+      "metrics": [
+        "N@1",
+        "N@5",
+        "N@10",
+        "MRR",
+        "NDCG@5"
+      ],
+      "baselines": [
+        "Following previous work (Zhang et al., 2024; Huang et al., 2023b,a, 2024b), we conduct experiments on three text-intensive subsets of the Table 1: Performance comparison on three domains.；denotes the relative improvement of our method over the strongest baseline.；Baselines."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "MMEACR-RRF在三个域上表现最佳。在CDs域，N@1提升20.59%，MRR提升1.89%；在Cell_Phones域，N@1提升14.3%，N@5提升21.26%；在Fashion域，N@1提升45.45%，N@5提升23.33%，MRR提升27.14%。消融实验表明，移除属性引导或任一智能体均导致性能下降，验证了各组件的有效性。推理时间相比AgentCF降低6%-16%。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发的借鉴价值：1）算法设计：可借鉴属性引导的记忆演化机制，通过结构化属性空间约束智能体记忆更新，避免自由文本反思带来的噪声和漂移；2）系统架构：双轨设计（推理+匹配）提供了一种分离可解释推理与密集匹配的范式，适用于需要兼顾解释性和精度的场景；3）评估方法：采用留一法评估，并对比多种LLM基线和智能体基线，提供了全面的评估框架；4）数据处理：利用多模态LLM将图像转换为文本描述，为视觉信息融入智能体记忆提供了可行方案。",
+    "design_lessons": [
+      "对推荐系统Agent开发的借鉴价值",
+      "算法设计：可借鉴属性引导的记忆演化机制，通过结构化属性空间约束智能体记忆更新，避免自由文本反思带来的噪声和漂移；",
+      "系统架构：双轨设计（推理+匹配）提供了一种分离可解释推理与密集匹配的范式，适用于需要兼顾解释性和精度的场景；",
+      "评估方法：采用留一法评估，并对比多种LLM基线和智能体基线，提供了全面的评估框架；",
+      "数据处理：利用多模态LLM将图像转换为文本描述，为视觉信息融入智能体记忆提供了可行方案。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.257578+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "",
+    "generated_at": "2026-07-24T07:08:46.998675+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2607.07108_多模态记忆增强的推荐智能体协作\\2607.07108.md",
+    "source_hash": "78a364e778ed252da3715943e050d09fcdf19c6de1d9a3f7bc4cd2432837f349",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2607.07108_summary.md",
+    "summary_hash": "cdc9169dcb2ac54455b08bdf2ce8dc0c9c5f6136d1a6926207b4ec82dcbeb6b3"
+  }
+}

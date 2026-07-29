@@ -2,7 +2,7 @@
   "mcpServers": {
     "xiaohongshu": {
       "command": "python",
-      "args": ["c:/Users/xu.yan1/papers/recommendation-system-learning/redbook/mcp/server.py"]
+      "args": ["redbook/mcp/server.py"]
     }
   }
 }

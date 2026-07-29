@@ -1,0 +1,193 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2606.09595",
+  "identity": {
+    "title": "Popcorn: A Configurable Benchmark for Visual Evidence in Multimodal Movie Recommendation",
+    "chinese_title": "多模态电影推荐视觉证据基准",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2606.09595"
+    },
+    "paper_type": "benchmark"
+  },
+  "classification": {
+    "research_directions": [
+      "multimodal_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "evaluation"
+    ],
+    "problems": [
+      "fairness",
+      "efficiency",
+      "robustness",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "transformer",
+      "llm",
+      "rag"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video",
+      "audio",
+      "behavior_sequence"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文提出了Popcorn，一个可配置的多模态电影推荐基准，旨在系统性地比较不同视觉证据源（缩略图、预告片、完整电影）对推荐性能的影响。",
+    "one_sentence_contribution": "本文提出了Popcorn，一个可配置的多模态电影推荐基准，旨在系统性地比较不同视觉证据源（缩略图、预告片、完整电影）对推荐性能的影响。",
+    "method_overview": "Popcorn构建了一个分层资源与管道：对齐视频层提供274部电影的完整电影/预告片嵌入；缩略图/VLM层链接约65K电影标题。通过单一配置文件控制证据加载、融合（Concat/PCA/CCA）、分割、训练和评估。使用VBPR、AMR、VMF等代表性推荐器，在MovieLens-1M和274标题子集上进行实验，对比不同视觉源和骨干网络。",
+    "method_components": [
+      {
+        "name": "提出了视觉证据源可控的基准框架",
+        "role": "reported_innovation",
+        "mechanism": "提出了视觉证据源可控的基准框架，将多模态电影推荐的核心变量从模型架构转向视觉证据源（缩略图、预告片、完整电影），并提供了对齐的数据和可配置的管道。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "大规模发布了缩略图/VLM特征层",
+        "role": "reported_innovation",
+        "mechanism": "大规模发布了缩略图/VLM特征层，覆盖约65K电影标题，使用6种现代视觉/VLM骨干网络编码，产出超过30万视觉嵌入，支持目录规模的实验。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "系统性地评估了融合策略（PCA/CCA）和LLM数据增强对准确率及超越准确率指标",
+        "role": "reported_innovation",
+        "mechanism": "系统性地评估了融合策略（PCA/CCA）和LLM数据增强对准确率及超越准确率指标（覆盖率、多样性、公平性等）的影响，揭示了这些技术并非单调提升，存在权衡。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "## 5 Conclusion and Limitations We presented Popcorn, a configurable benchmark for visual evidence in multimodal movie recommendation.",
+      "The main limitations are scale, access, and ofline evaluation.",
+      "Full movies are released as derived embeddings; the aligned full-movie subset is smaller than the thumbnail layer, and LLM augmentation remains sensitive to model and prompt choices."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": "movielens_1m",
+        "paper_name": "MovieLens-1M"
+      },
+      {
+        "registry_id": "movielens_25m",
+        "paper_name": "MovieLens-25M"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MMTF-14K"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：MovieLens-1M、MovieLens-25M、MMTF-14K；任务：Experiments and Discussion We organize the discussion around three experimental questions: RQ1 asks how far a single thumbnail encoded by a VLM can go compared with multi-frame CNN evidence from trailers or full movies; RQ2 asks whether gains come from multimodal fusion or from LLM data augmentation, and how these choices afect beyond-accuracy metrics; and RQ3 asks how thumbnail VLM performance changes with a model-size/storage proxy.",
+      "split": "not_reported",
+      "metrics": [
+        "NDCG@10",
+        "RECALL@10"
+      ],
+      "baselines": [
+        "## 4 Experiments and Discussion We organize the discussion around three experimental questions: RQ1 asks how far a single thumbnail encoded by a VLM can go compared with multi-frame CNN evidence from trailers or full movies; RQ2 asks whether gains come from multimodal fusion or from LLM data augmentation, and how these choices afect beyond-accuracy metrics; and RQ3 asks how thumbnail VLM performance changes with a model-size/storage proxy.；Table 2 shows that a single thumbnail encoded by modern VLMs can outperform the older MMTF-14K trailer-CNN visual baseline."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [
+      {
+        "dataset": null,
+        "metric": "nDCG@10",
+        "value": 0.269,
+        "setting": "",
+        "comparison": "",
+        "delta": null,
+        "evidence_ids": [
+          "ev-experiment-01"
+        ]
+      },
+      {
+        "dataset": null,
+        "metric": "Recall@10",
+        "value": 0.262,
+        "setting": "",
+        "comparison": "",
+        "delta": null,
+        "evidence_ids": [
+          "ev-experiment-01"
+        ]
+      }
+    ],
+    "results_summary": "在约14K项目的大规模实验中，SigLIP-base缩略图VLM特征在VBPR上达到nDCG@10=0.269和Recall@10=0.262，相比MMTF-14K预告片CNN基线（0.222/0.203）分别提升21.2%和29.1%。在对齐的274标题子集中，预告片在视觉-only设置下优于完整电影（如VBPR: 0.433 vs 0.413 nDCG@10），但CCA融合后差距缩小甚至逆转。融合虽能提升准确率，但可能降低多样性（如AMR完整电影CCA融合后多样性从0.773降至0.742）。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/RecSys-lab/Popcorn",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计：Agent可借鉴Popcorn的配置驱动思想，将视觉证据源作为可切换的模块，根据任务需求（如冷启动、多样性）动态选择最优视觉源或融合策略。2）评估方法：Popcorn提供的超越准确率审计（覆盖率、多样性、公平性、校准偏差）为Agent的评估提供了更全面的框架，避免仅优化点击率。3）系统架构：其模块化管道（证据加载、融合、LLM增强、Visual RAG）可直接作为Agent系统架构的参考，支持可插拔的视觉编码器和推理组件。4）数据处理：LLM数据增强的审计方法（记录提示、嵌入、推荐列表）为Agent的可解释性和可复现性提供了实践范例。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计：Agent可借鉴Popcorn的配置驱动思想，将视觉证据源作为可切换的模块，根据任务需求（如冷启动、多样性）动态选择最优视觉源或融合策略。",
+      "评估方法：Popcorn提供的超越准确率审计（覆盖率、多样性、公平性、校准偏差）为Agent的评估提供了更全面的框架，避免仅优化点击率。",
+      "系统架构：其模块化管道（证据加载、融合、LLM增强、Visual RAG）可直接作为Agent系统架构的参考，支持可插拔的视觉编码器和推理组件。",
+      "数据处理：LLM数据增强的审计方法（记录提示、嵌入、推荐列表）为Agent的可解释性和可复现性提供了实践范例。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.228114+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.952829+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.09595_多模态电影推荐视觉证据基准\\2606.09595.md",
+    "source_hash": "06a5f948a9094683bc6888e2e259b1c37fbe9965a1beed132e66a550524d7187",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2606.09595_summary.md",
+    "summary_hash": "c622ff87ef09c289547809a1e7528515c8f89ed71cf72017d153a10f894a840a"
+  }
+}

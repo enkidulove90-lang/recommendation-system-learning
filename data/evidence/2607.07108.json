@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2607.07108",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2607.07108_多模态记忆增强的推荐智能体协作\\2607.07108.md",
+  "source_hash": "78a364e778ed252da3715943e050d09fcdf19c6de1d9a3f7bc4cd2432837f349",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 1896,
+      "end_char": 3096,
+      "quote": "## 1 Introduction\n\nLarge language models (LLMs) have recently enabled a new class of agentic recommender systems that model user preferences through naturallanguage reasoning and interaction (Huang et al., 2025b, 2024a, 2025a). Representative methods such as AgentCF (Zhang et al., 2024) formulate recommendation as a collaborative process among language agents, where agents compare candidate items, generate rationales, and update their internal memories. This paradigm improves interpretability and flexibility by externalizing preference modeling into language-mediated reasoning rather than relying solely on gradient-based representation learning.\n\n![](images/98edc660de228c64ca9f1fa89d330eb2d5da132f1ae5e3f3e3c4828baaf36ad2.jpg)  \nFigure 1: Comparison between conventional textcentric agent-based recommendation and MMEACR. MMEACR combines multimodal agent memory evolution with embedding-based cross-modal matching and fuses their rankings via Reciprocal Rank Fusion (RRF).\n\nDespite their promise, existing LLM-based recommendation agents still suffer from two key limitations. First, most methods remain text-centric, constructing user and item memories mainly from textual histories, review",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2607.07108_多模态记忆增强的推荐智能体协作\\2607.07108.md",
+      "source_hash": "78a364e778ed252da3715943e050d09fcdf19c6de1d9a3f7bc4cd2432837f349",
+      "extraction_method": "section_router",
+      "confidence": 0.74
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "4 Methodology",
+      "start_char": 11239,
+      "end_char": 11807,
+      "quote": "## 4 Methodology\n\nWe present MMEACR, a multimodal memoryenhanced agent collaboration framework for recommendation. As shown in Figure 2, MMEACR contains two complementary tracks: (1) a reasoning track, where User and Item Memory Agents maintain and update interpretable multimodal memories through LLM-based interaction; and (2) a matching track, where raw interaction narratives and item images are encoded into dense multimodal embeddings. The two tracks are finally combined through weighted Reciprocal Rank Fusion (RRF) to produce the final recommendation ranking.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2607.07108_多模态记忆增强的推荐智能体协作\\2607.07108.md",
+      "source_hash": "78a364e778ed252da3715943e050d09fcdf19c6de1d9a3f7bc4cd2432837f349",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "5 Experiments",
+      "start_char": 20774,
+      "end_char": 21974,
+      "quote": "## 5 Experiments\n\nDatasets. Following previous work (Zhang et al., 2024; Huang et al., 2023b,a, 2024b), we conduct experiments on three text-intensive subsets of the\n\nTable 1: Performance comparison on three domains. Best results are in bold, second-best are underlined. Imp. denotes the relative improvement of our method over the strongest baseline. All results are averaged over five runs with different seeds.\n\n<table><tr><td rowspan=\"2\">Method</td><td colspan=\"4\">CDs_and_Vinyl</td><td colspan=\"4\">Cell_Phones_and_Accessories</td><td colspan=\"4\">Fashion</td></tr><tr><td>N@1</td><td>N@5</td><td>N@10</td><td>MRR</td><td>N@1</td><td>N@5</td><td>N@10</td><td>MRR</td><td>N@1</td><td>N@5</td><td>N@10</td><td>MRR</td></tr><tr><td>Pop</td><td>0.1100</td><td>0.3237</td><td>0.4708</td><td>0.3138</td><td>0.1300</td><td>0.3173</td><td>0.4734</td><td>0.3177</td><td>0.1100</td><td>0.3241</td><td>0.4749</td><td>0.3180</td></tr><tr><td>BM25</td><td>0.1600</td><td>0.1769</td><td>0.4439</td><td>0.2852</td><td>0.2100</td><td>0.3691</td><td>0.4747</td><td>0.3741</td><td>0.2100</td><td>0.3708</td><td>0.4351</td><td>0.3650</td></tr><tr><td>SASRec</td><td>0.1400</td><td>0.3206</td><td>0.4790</td><td>0.325",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2607.07108_多模态记忆增强的推荐智能体协作\\2607.07108.md",
+      "source_hash": "78a364e778ed252da3715943e050d09fcdf19c6de1d9a3f7bc4cd2432837f349",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "Limitations",
+      "start_char": 35647,
+      "end_char": 36183,
+      "quote": "## Limitations\n\nWhile MMEACR demonstrates strong performance and efficient inference, one limitation is the longterm scalability of the continuous memory evolution. As user interactions scale over extended periods, the iterative accumulation in the multimodal embedding memory could potentially increase storage and retrieval costs. Although this is mitigated by our RRF-based ranking fusion in current benchmarks, optimizing the balance between memory capacity and lifelong efficiency remains a promising direction for our future work.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2607.07108_多模态记忆增强的推荐智能体协作\\2607.07108.md",
+      "source_hash": "78a364e778ed252da3715943e050d09fcdf19c6de1d9a3f7bc4cd2432837f349",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

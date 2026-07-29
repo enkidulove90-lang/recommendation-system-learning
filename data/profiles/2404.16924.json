@@ -1,0 +1,217 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2404.16924",
+  "identity": {
+    "title": "A Survey of Generative Search and Recommendation in the Era of Large Language Models",
+    "chinese_title": "大语言模型时代的生成式搜索与推荐综述",
+    "authors": [
+      "Yongqi Li",
+      "Xinyu Lin",
+      "Wenjie Wang",
+      "Fuli Feng",
+      "Liang Pang",
+      "Wenjie Li",
+      "Liqiang Nie",
+      "Xiangnan He",
+      "Tat-Seng Chua"
+    ],
+    "published_date": "2024-04-25",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2404.16924"
+    },
+    "paper_type": "survey"
+  },
+  "classification": {
+    "research_directions": [
+      "generative_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "retrieval_index",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "gnn",
+      "transformer",
+      "llm"
+    ],
+    "modalities": [
+      "id",
+      "text",
+      "video",
+      "behavior_sequence"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文首次从统一视角系统综述了生成式搜索与推荐这一新兴范式。",
+    "one_sentence_contribution": "本文首次从统一视角系统综述了生成式搜索与推荐这一新兴范式。",
+    "method_overview": "本文采用文献综述方法，系统收集并分类了生成式搜索与推荐领域的最新研究。通过抽象统一框架，将现有工作按技术阶段归类，并对比不同标识符类型、训练策略和推理方式的优劣。同时，通过时间线梳理了该领域的发展脉络。",
+    "method_components": [
+      {
+        "name": "首次提出生成式搜索与推荐的统一框架",
+        "role": "reported_innovation",
+        "mechanism": "首次提出生成式搜索与推荐的统一框架，将两者抽象为查询/用户构建、标识符设计、训练和推理四个核心阶段，便于跨领域比较与借鉴。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "系统总结了生成式搜索中五种文档标识符（数字ID、标题、N-gram、码本、多视角",
+        "role": "reported_innovation",
+        "mechanism": "系统总结了生成式搜索中五种文档标识符（数字ID、标题、N-gram、码本、多视角ID），并从语义性、区分性、可更新性、训练方式和适用场景五个维度进行了对比分析。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "明确区分了生成式搜索与推荐的技术差异",
+        "role": "reported_innovation",
+        "mechanism": "明确区分了生成式搜索与推荐的技术差异，如查询/用户构建的复杂性、标识符设计的不同挑战，并指出了当前范式的开放问题（如可扩展性、冷启动、评估方法）。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "NQ (Natural Questions)"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "TriviaQA"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MS MARCO"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "KILT"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "BEIR"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "NQ10K"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "NQ100K"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "NQ320K"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "TREC DL"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "TOPIOCQA"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "QRECC"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "ORQUAC"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "HotpotQA"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "XOR QA 100k"
+      }
+    ],
+    "protocol": {
+      "task": "本文为综述论文，未进行新实验。所引用的实验任务包括文档级检索、段落级检索、对话QA、多跳QA和跨语言检索。数据集规模从数万到数百万不等，具体划分方式因方法而异（原文未统一披露）。",
+      "split": "not_reported",
+      "metrics": [
+        "MRR",
+        "RECALL"
+      ],
+      "baselines": [
+        "综述中对比了多种生成式搜索方法（如GENRE、DSI、SEAL、NCI、MINDER等）以及传统密集检索方法（如DPR）。消融实验涉及标识符类型、训练策略（生成式vs判别式）等。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "综述指出：1）在NQ320K上，DSI (T5-XXL) 的Recall@10达到约80%，优于DPR的约78%；2）在MS MARCO上，RIPOR (T5-base) 的MRR@10达到约0.38，接近SOTA密集检索方法；3）多视角标识符方法MINDER在NQ、TriviaQA和MS MARCO上均优于单一标识符方法，Recall@10提升约3-5%；4）引入判别式训练（如ListGR）可进一步提升生成式搜索性能约2-3%。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发的借鉴价值：1）算法设计：可借鉴生成式搜索的标识符设计思想，为物品设计语义化的短标识符（如标签、摘要），使Agent能直接生成推荐结果而非仅计算相似度；2）评估方法：综述中对比的标识符评估维度（语义性、区分性、可更新性）可用于Agent推荐模块的标识符选择；3）系统架构：统一框架中的四阶段设计（输入构建、标识符、训练、推理）可作为Agent推荐子系统的模块化架构参考；4）数据处理：多视角标识符方法表明融合多种信息源可提升鲁棒性，Agent可借鉴此思路融合用户多模态行为数据。",
+    "design_lessons": [
+      "对推荐系统Agent开发的借鉴价值",
+      "算法设计：可借鉴生成式搜索的标识符设计思想，为物品设计语义化的短标识符（如标签、摘要），使Agent能直接生成推荐结果而非仅计算相似度；",
+      "评估方法：综述中对比的标识符评估维度（语义性、区分性、可更新性）可用于Agent推荐模块的标识符选择；",
+      "系统架构：统一框架中的四阶段设计（输入构建、标识符、训练、推理）可作为Agent推荐子系统的模块化架构参考；",
+      "数据处理：多视角标识符方法表明融合多种信息源可提升鲁棒性，Agent可借鉴此思路融合用户多模态行为数据。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Local PDF fallback has lower structural confidence than MinerU.",
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.853250+00:00"
+  },
+  "provenance": {
+    "parser": "local_pypdf",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.472763+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2404.16924\\2404.16924.md",
+    "source_hash": "bddac65b8c80dc3db48bfb9b11cafc8cae153b0959678747ff514fa81f6d8e62",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2404.16924_summary.md",
+    "summary_hash": "46ddcd7d1dd8946b026e0e012e47549f5a43bc88ed34bed07991fd84a3a8d05b"
+  }
+}

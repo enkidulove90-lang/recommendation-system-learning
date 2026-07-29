@@ -41,6 +41,7 @@ from skills.pdf_downloader import PDFDownloader
 from skills.pdf_parser import PDFParser
 from skills.deepseek_summarizer import DeepSeekSummarizer
 from pipeline.merge_pipeline import DocumentMerger
+from storage.paper_assets import find_parsed_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -166,8 +167,8 @@ class BatchPipeline:
                 continue
 
             # 检查是否已解析
-            md_path = settings.DATA_DIR / "parsed" / aid / f"{aid}.md"
-            if md_path.exists():
+            md_path = find_parsed_markdown(aid)
+            if md_path is not None:
                 paper["local_md_path"] = str(md_path)
                 print(f"  [{i}/{len(self._papers)}] {aid}: Already parsed")
                 self._mark_step_done(aid, "parse")
@@ -184,6 +185,7 @@ class BatchPipeline:
             result = self._parser.execute(
                 pdf_url=paper.get("pdf_url", f"https://arxiv.org/pdf/{aid}"),
                 arxiv_id=aid,
+                title=paper.get("chinese_title") or paper.get("title", ""),
             )
 
             if result["error"]:
@@ -226,10 +228,11 @@ class BatchPipeline:
             # 读取全文
             md_path = paper.get("local_md_path", "")
             if not md_path:
-                md_path = str(settings.DATA_DIR / "parsed" / aid / f"{aid}.md")
+                resolved_md = find_parsed_markdown(aid)
+                md_path = str(resolved_md) if resolved_md is not None else ""
 
             full_text = ""
-            if Path(md_path).exists():
+            if md_path and Path(md_path).exists():
                 full_text = Path(md_path).read_text(encoding="utf-8", errors="replace")
 
             if not full_text:
@@ -268,7 +271,8 @@ class BatchPipeline:
         paper_list = []
         for paper in self._papers:
             aid = paper.get("arxiv_id", "")
-            md_path = paper.get("local_md_path") or str(settings.DATA_DIR / "parsed" / aid / f"{aid}.md")
+            resolved_md = find_parsed_markdown(aid)
+            md_path = paper.get("local_md_path") or (str(resolved_md) if resolved_md else "")
             summary_path = paper.get("local_summary_path") or str(settings.DATA_DIR / "summaries" / f"{aid}_summary.md")
 
             paper_list.append({

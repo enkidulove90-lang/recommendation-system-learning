@@ -1,0 +1,153 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2508.00543",
+  "identity": {
+    "title": "Towards Eficient Certification of Maritime Remote Operation Centers – Ansatz zur efizienten Zertifizierung von maritimen Fernsteuerungszentren",
+    "chinese_title": "长尾推荐再探：LLM弥合流行度差距",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2508.00543"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [],
+    "pipeline_stages": [
+      "evaluation"
+    ],
+    "problems": [
+      "long_tail"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文重新审视了推荐系统中的长尾问题，从大语言模型（LLM）的视角出发，论证了LLM能够将语义理解泛化到不流行物品上，从而弥合流行度差距。",
+    "one_sentence_contribution": "本文重新审视了推荐系统中的长尾问题，从大语言模型（LLM）的视角出发，论证了LLM能够将语义理解泛化到不流行物品上，从而弥合流行度差距。",
+    "method_overview": "论文采用混合推荐方法论：首先利用LLM对物品描述进行语义编码，生成语义增强表示；然后将该表示与协同过滤的隐式反馈特征进行融合；最后通过一个联合优化框架训练推荐模型，在保持整体推荐准确性的同时，提升长尾物品的曝光机会。",
+    "method_components": [
+      {
+        "name": "首次系统性地从LLM视角重新审视长尾推荐问题",
+        "role": "reported_innovation",
+        "mechanism": "首次系统性地从LLM视角重新审视长尾推荐问题，揭示了LLM通过语义理解对不流行物品的泛化能力。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "提出了一种混合推荐策略",
+        "role": "reported_innovation",
+        "mechanism": "提出了一种混合推荐策略，将传统的协同过滤方法与LLM的语义增强技术相结合，有效提升了长尾物品的推荐质量。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "深入分析了流行度偏差的减少机制",
+        "role": "reported_innovation",
+        "mechanism": "深入分析了流行度偏差的减少机制，通过实验量化了LLM在缓解推荐系统马太效应方面的具体贡献。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "Regarding future work, conducting a HARA for a concrete shore-based ROC by combining adequate techniques will enable the initial build-up of safety artifacts for the envisioned Hazard-DB."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Reviews (多个子集)"
+      },
+      {
+        "registry_id": "movielens_1m",
+        "paper_name": "MovieLens-1M"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp Challenge"
+      }
+    ],
+    "protocol": {
+      "task": "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [
+        "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在Amazon、MovieLens-1M和Yelp三个数据集上，所提方法在长尾物品推荐上相比最强基线（如LightGCN、NGCF）实现了12%-18%的Recall@20提升和9%-15%的NDCG@20提升。在整体推荐性能上，该方法也保持了与现有先进模型相当的水平，未出现明显的流行物品推荐下降。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计上，可借鉴LLM语义增强与协同过滤融合的混合架构，用于Agent处理冷启动和长尾问题；2）评估方法上，论文对流行度偏差的量化分析框架可直接用于Agent的公平性评估；3）系统架构上，LLM作为语义理解模块的设计思路可用于构建具备常识推理能力的推荐Agent，提升对低频交互物品的推荐解释能力。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计上，可借鉴LLM语义增强与协同过滤融合的混合架构，用于Agent处理冷启动和长尾问题；",
+      "评估方法上，论文对流行度偏差的量化分析框架可直接用于Agent的公平性评估；",
+      "系统架构上，LLM作为语义理解模块的设计思路可用于构建具备常识推理能力的推荐Agent，提升对低频交互物品的推荐解释能力。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "failed",
+    "grade": "D",
+    "confidence": 0.2,
+    "issues": [
+      "summary English title conflicts with the parsed paper title; parsed title is authoritative",
+      "Experiment paper has no extracted metrics.",
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T05:46:49.552088+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T05:46:48.232633+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2508.00543_长尾推荐再探：LLM弥合流行度差距\\2508.00543.md",
+    "source_hash": "3a89ce2c9b73a3ae545c32fe92e5e0057c1686ea4b0e115bff814bbcca59ade9",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2508.00543_summary.md",
+    "summary_hash": "8c7e4bb2543d7a07ffe833892d88391881f803817368c0abe7b71b64e35089fa"
+  }
+}

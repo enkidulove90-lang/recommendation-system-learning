@@ -25,6 +25,14 @@ output/
 *.json
 !package.json
 !.mcp.json
+!data/profiles/*.json
+!data/evidence/*.json
+!data/reviews/*.json
+!data/registry/*.json
+!data/relations/*.json
+!data/learning_paths/*.json
+!data/metadata/papers/*.json
+!data/metadata/recommendations/*.json
 
 # OS
 .DS_Store

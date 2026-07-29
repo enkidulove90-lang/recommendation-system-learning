@@ -77,7 +77,7 @@ class DeepSeekSummarizer(BaseSkill):
             title       (str): 论文标题
             abstract    (str): 论文摘要
             full_text   (str): 论文全文（Markdown 格式）
-            output_dir  (str): 输出目录，保存 {arxiv_id}_summary.md 和 .json
+            output_dir  (str): 输出目录，保存 {arxiv_id}_summary.md
             max_retries (int): 最大重试次数，默认 3
 
         返回:
@@ -90,6 +90,12 @@ class DeepSeekSummarizer(BaseSkill):
                     "main_contribution": str,
                     "innovation_points": [...],
                     "benchmark_datasets": [...],
+                    "experimental_conditions": {
+                        "task_and_data": str,
+                        "baselines": str,
+                        "metrics": str,
+                        "implementation": str,
+                    },
                     "experimental_results": str,
                     "agent_relevance": str,
                     "methodology": str,
@@ -138,8 +144,6 @@ class DeepSeekSummarizer(BaseSkill):
         out_path.mkdir(parents=True, exist_ok=True)
 
         md_path = out_path / f"{arxiv_id}_summary.md"
-        json_path = out_path / f"{arxiv_id}_summary.json"
-
         # ---- 构建 Prompt ----
         system_prompt = self._build_system_prompt()
         user_prompt = self._build_user_prompt(title, abstract, trimmed_text)
@@ -170,7 +174,7 @@ class DeepSeekSummarizer(BaseSkill):
                 summary_data["generated_at"] = datetime.now().isoformat()
 
                 # 保存到文件
-                self._save_summary(summary_data, md_path, json_path)
+                self._save_summary(summary_data, md_path)
 
                 return {
                     "ready": True,
@@ -190,6 +194,83 @@ class DeepSeekSummarizer(BaseSkill):
             "arxiv_id": arxiv_id,
             "summary": None,
             "summary_path": None,
+            "error": f"Failed after {max_retries} retries.",
+        }
+
+    def extract_experimental_conditions(self, **kwargs: Any) -> dict[str, Any]:
+        """Extract experiment setup fields without regenerating an existing summary."""
+        if not self.is_ready:
+            return {
+                "ready": False,
+                "experimental_conditions": None,
+                "error": "DEEPSEEK_API_KEY not set in .env",
+            }
+
+        title = str(kwargs.get("title", ""))
+        full_text = str(kwargs.get("full_text", ""))
+        max_retries = int(kwargs.get("max_retries", 3))
+        if not full_text:
+            return {
+                "ready": True,
+                "experimental_conditions": None,
+                "error": "full_text is required.",
+            }
+
+        experiment_context = self._trim_paper_text(full_text, max_chars=35000)
+        system_prompt = """你是一位推荐系统实验复现审计专家。
+请仅根据论文原文提取实验条件，并严格返回合法 JSON：
+{
+  "task_and_data": "实验任务、数据规模、预处理、训练/验证/测试划分",
+  "baselines": "主要对比方法、基线与消融设置",
+  "metrics": "评价指标和计算口径",
+  "implementation": "硬件、软件、模型版本、优化器、学习率、批大小、轮数及推理参数"
+}
+要求：
+1. 使用中文，专业名称保留英文。
+2. 只记录原文明确给出的事实，不得推测。
+3. 某类信息未提供时写“原文未披露”。
+4. 只输出 JSON，不要附加解释。"""
+        user_prompt = f"## 论文标题\n{title}\n\n## 论文实验相关正文\n{experiment_context}"
+
+        for attempt in range(1, max_retries + 1):
+            try:
+                response = self._client.chat.completions.create(
+                    model=self._model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    temperature=0.1,
+                    max_tokens=1600,
+                )
+                raw_output = response.choices[0].message.content or ""
+                text = raw_output.strip()
+                if "```json" in text:
+                    start = text.index("```json") + 7
+                    end = text.index("```", start)
+                    text = text[start:end].strip()
+                elif "```" in text:
+                    start = text.index("```") + 3
+                    end = text.index("```", start)
+                    text = text[start:end].strip()
+                conditions = self._normalize_experimental_conditions(json.loads(text))
+                return {
+                    "ready": True,
+                    "experimental_conditions": conditions,
+                    "error": None,
+                }
+            except Exception as exc:
+                logger.error(
+                    "[DeepSeek] Experiment conditions attempt %d error: %s",
+                    attempt,
+                    exc,
+                )
+                if attempt < max_retries:
+                    time.sleep(2 ** attempt)
+
+        return {
+            "ready": True,
+            "experimental_conditions": None,
             "error": f"Failed after {max_retries} retries.",
         }
 
@@ -218,6 +299,12 @@ class DeepSeekSummarizer(BaseSkill):
     "数据集/基准名称1",
     "数据集/基准名称2"
   ],
+  "experimental_conditions": {
+    "task_and_data": "实验任务、数据规模、预处理与训练/验证/测试划分",
+    "baselines": "主要对比方法、基线和消融设置",
+    "metrics": "评价指标及其计算口径",
+    "implementation": "硬件、软件、模型版本、训练/推理参数；原文未披露时明确说明"
+  },
   "experimental_results": "关键实验效果总结，包含主要指标数值对比（100-200字）",
   "agent_relevance": "对推荐系统Agent开发的借鉴价值：算法设计思路、评估方法、系统架构、数据处理等方面（100-200字）"
 }
@@ -226,10 +313,12 @@ class DeepSeekSummarizer(BaseSkill):
 要求:
 1. innovation_points 至少列出 3 个创新点，每个用 1-2 句话描述
 2. benchmark_datasets 列出论文使用的所有数据集和评估基准
-3. experimental_results 要包含具体的性能提升百分比或数值
-4. agent_relevance 要具体说明可借鉴的算法设计、评估方法、系统架构等
-5. 所有中文回答，专业术语可保留英文
-6. 只输出 JSON，不要有其他内容"""
+3. experimental_conditions 必须覆盖数据与划分、基线、指标、实现环境和关键参数
+4. 对原文没有披露的实验条件明确写“原文未披露”，不得猜测
+5. experimental_results 要包含具体的性能提升百分比或数值
+6. agent_relevance 要具体说明可借鉴的算法设计、评估方法、系统架构等
+7. 所有中文回答，专业术语可保留英文
+8. 只输出 JSON，不要有其他内容"""
         return system_prompt
 
     @staticmethod
@@ -270,6 +359,7 @@ class DeepSeekSummarizer(BaseSkill):
             "introduction", "method", "approach", "proposed",
             "methodology", "framework", "architecture", "model",
             "experiment", "result", "evaluation", "performance",
+            "experimental setup", "implementation", "dataset", "baseline", "metric",
             "conclusion", "discussion",
         ]
         low_priority = [
@@ -330,6 +420,27 @@ class DeepSeekSummarizer(BaseSkill):
     # ------------------------------------------------------------------
 
     @staticmethod
+    def _empty_experimental_conditions() -> dict[str, str]:
+        return {
+            "task_and_data": "原文未披露",
+            "baselines": "原文未披露",
+            "metrics": "原文未披露",
+            "implementation": "原文未披露",
+        }
+
+    @staticmethod
+    def _normalize_experimental_conditions(value: Any) -> dict[str, str]:
+        conditions = DeepSeekSummarizer._empty_experimental_conditions()
+        if isinstance(value, dict):
+            for key in conditions:
+                text = str(value.get(key, "")).strip()
+                if text:
+                    conditions[key] = text
+        elif value:
+            conditions["task_and_data"] = str(value).strip()
+        return conditions
+
+    @staticmethod
     def _parse_response(raw: str, arxiv_id: str, title: str) -> dict[str, Any]:
         """解析 DeepSeek 返回的 JSON 响应。"""
         default = {
@@ -339,6 +450,7 @@ class DeepSeekSummarizer(BaseSkill):
             "main_contribution": "",
             "innovation_points": [],
             "benchmark_datasets": [],
+            "experimental_conditions": DeepSeekSummarizer._empty_experimental_conditions(),
             "experimental_results": "",
             "agent_relevance": "",
             "methodology": "",
@@ -365,6 +477,9 @@ class DeepSeekSummarizer(BaseSkill):
                 "main_contribution": str(data.get("main_contribution", "")),
                 "innovation_points": [str(p) for p in data.get("innovation_points", [])],
                 "benchmark_datasets": [str(d) for d in data.get("benchmark_datasets", [])],
+                "experimental_conditions": DeepSeekSummarizer._normalize_experimental_conditions(
+                    data.get("experimental_conditions", {})
+                ),
                 "experimental_results": str(data.get("experimental_results", "")),
                 "agent_relevance": str(data.get("agent_relevance", "")),
                 "methodology": str(data.get("methodology", "")),
@@ -379,8 +494,8 @@ class DeepSeekSummarizer(BaseSkill):
             }
 
     @staticmethod
-    def _save_summary(summary_data: dict, md_path: Path, json_path: Path) -> None:
-        """保存摘要为 Markdown 和 JSON 文件。"""
+    def _save_summary(summary_data: dict, md_path: Path) -> None:
+        """Save one DeepSeek paper summary as Markdown."""
         # Markdown 格式
         md_content = f"""# {summary_data.get('chinese_title', '') or summary_data.get('title', 'Unknown Title')}
 
@@ -411,7 +526,17 @@ class DeepSeekSummarizer(BaseSkill):
         for ds in summary_data.get("benchmark_datasets", []):
             md_content += f"- {ds}\n"
 
+        conditions = DeepSeekSummarizer._normalize_experimental_conditions(
+            summary_data.get("experimental_conditions", {})
+        )
         md_content += f"""
+## 实验条件
+
+- **数据与任务设置**：{conditions['task_and_data']}
+- **基线与对照**：{conditions['baselines']}
+- **评价指标**：{conditions['metrics']}
+- **实现环境与关键参数**：{conditions['implementation']}
+
 ## 实验效果
 
 {summary_data.get('experimental_results', 'N/A')}
@@ -427,10 +552,4 @@ class DeepSeekSummarizer(BaseSkill):
 
         md_path.write_text(md_content, encoding="utf-8")
 
-        # JSON 格式
-        json_path.write_text(
-            json.dumps(summary_data, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-
-        logger.info("[DeepSeek] Summary saved -> %s, %s", md_path.name, json_path.name)
+        logger.info("[DeepSeek] Summary saved -> %s", md_path.name)

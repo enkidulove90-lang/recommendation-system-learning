@@ -1,0 +1,27 @@
+id: scicomm-2026
+title: 科技论文分享与科学传播证据包
+papers:
+  - id: social_attention_2018
+    title: Social Media Attention Increases Article Visits
+    year: 2018
+    source_url: https://arxiv.org/abs/1801.02383
+    pdf_url: https://arxiv.org/pdf/1801.02383
+    doi: 10.48550/arXiv.1801.02383
+  - id: static_dynamic_2021
+    title: Static vs. Dynamic Methods of Delivery for Science Communication
+    year: 2021
+    source_url: https://doi.org/10.1371/journal.pone.0248507
+    pdf_url: https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0248507&type=printable
+    doi: 10.1371/journal.pone.0248507
+  - id: interpersonal_2020
+    title: Using Interpersonal Communication Strategies to Encourage Science Conversations
+    year: 2020
+    source_url: https://doi.org/10.1371/journal.pone.0241972
+    pdf_url: https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0241972&type=printable
+    doi: 10.1371/journal.pone.0241972
+  - id: quality_communication_2022
+    title: Promoting Engagement with Quality Communication in Social Media
+    year: 2022
+    source_url: https://doi.org/10.1371/journal.pone.0275534
+    pdf_url: https://journals.plos.org/plosone/article/file?id=10.1371%2Fjournal.pone.0275534&type=printable
+    doi: 10.1371/journal.pone.0275534

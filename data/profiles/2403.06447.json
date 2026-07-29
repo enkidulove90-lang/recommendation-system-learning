@@ -1,0 +1,175 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2403.06447",
+  "identity": {
+    "title": "CoRAL: Collaborative Retrieval-Augmented Large Language Models Improve Long-tail Recommendation",
+    "chinese_title": "协同检索增强大模型长尾推荐",
+    "authors": [
+      "Junda Wu",
+      "Cheng-Chun Chang",
+      "Tong Yu",
+      "Zhankui He",
+      "Jianing Wang",
+      "Yupeng Hou",
+      "Julian McAuley"
+    ],
+    "published_date": "2024-03-11",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2403.06447"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "long_tail",
+      "sparsity",
+      "debiasing",
+      "efficiency"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm",
+      "rag",
+      "reinforcement_learning"
+    ],
+    "modalities": [
+      "text",
+      "behavior_sequence"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文提出CoRAL框架，通过强化学习训练检索策略，为大型语言模型（LLM）检索最简充分的协同信息（用户-物品交互），以对齐LLM的推理与长尾推荐任务。",
+    "one_sentence_contribution": "本文提出CoRAL框架，通过强化学习训练检索策略，为大型语言模型（LLM）检索最简充分的协同信息（用户-物品交互），以对齐LLM的推理与长尾推荐任务。",
+    "method_overview": "CoRAL将长尾推荐任务转化为LLM的自然语言推理问题。首先，通过检索策略（基于DDPG）序贯地选择用户和物品，构建包含协同信息的提示。然后，LLM基于该提示进行推理，预测用户对物品的偏好。检索策略以预测概率的边际信息增益为奖励，通过强化学习优化，以找到最小充分的协同信息集。",
+    "method_components": [
+      {
+        "name": "识别并解决了LLM在长尾推荐中因缺乏协同信息导致的推理与任务对齐问题",
+        "role": "reported_innovation",
+        "mechanism": "识别并解决了LLM在长尾推荐中因缺乏协同信息导致的推理与任务对齐问题。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "提出将协同信息检索建模为序贯决策过程",
+        "role": "reported_innovation",
+        "mechanism": "提出将协同信息检索建模为序贯决策过程，并采用DDPG强化学习框架学习最优检索策略，以获取最小充分证据。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "利用流行物品数据预训练用户和物品嵌入",
+        "role": "reported_innovation",
+        "mechanism": "利用流行物品数据预训练用户和物品嵌入，为检索策略提供热启动，提高数据效率和探索效率。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Appliances"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Gift Cards"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Prime Pantry"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Software"
+      }
+    ],
+    "protocol": {
+      "task": "任务：长尾物品偏好预测（二分类）。数据：四个Amazon子集，按80/20规则划分长尾物品，过滤交互少于5的用户和物品。划分：70%长尾数据+剩余数据训练，30%长尾数据等分验证和测试。评分按阈值3转为二值标签。",
+      "split": "not_reported",
+      "metrics": [
+        "AUC",
+        "F1"
+      ],
+      "baselines": [
+        "协同过滤：AFM、DCN、DFM、WDL；流行度去偏：IPS、CausE；LLM基线：LLM-Language；消融：CoRAL-random（随机检索）。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": "PyTorch",
+      "optimizer": null,
+      "hyperparameters": {
+        "learning_rate": "0.001"
+      },
+      "unreported_fields": [
+        "hardware",
+        "optimizer"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "CoRAL在四个数据集上平均AUC和F1分别达到约93.69%和83.83%，相比最佳传统基线（CausE，AUC 74.71%，F1 67.02%）提升约25.1%和25.1%；相比LLM基线（LLM-Language，AUC 70.61%，F1 63.29%）提升约32.7%和32.5%。CoRAL-random的AUC（77.61%）优于LLM-Language，但F1（57.44%）较低，表明随机检索引入噪声。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发的价值：1）算法设计：可借鉴其将检索建模为强化学习序贯决策的思路，使Agent能主动收集最相关信息，而非被动接收。2）评估方法：使用边际信息增益作为奖励，为Agent的探索-利用平衡提供量化指标。3）系统架构：采用轻量级检索策略网络与冻结的LLM结合，实现高效协同，适合资源受限的Agent部署。4）数据处理：利用流行物品数据预训练进行热启动，可加速Agent在稀疏环境下的学习。",
+    "design_lessons": [
+      "对推荐系统Agent开发的价值",
+      "算法设计：可借鉴其将检索建模为强化学习序贯决策的思路，使Agent能主动收集最相关信息，而非被动接收。",
+      "评估方法：使用边际信息增益作为奖励，为Agent的探索-利用平衡提供量化指标。",
+      "系统架构：采用轻量级检索策略网络与冻结的LLM结合，实现高效协同，适合资源受限的Agent部署。",
+      "数据处理：利用流行物品数据预训练进行热启动，可加速Agent在稀疏环境下的学习。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Local PDF fallback has lower structural confidence than MinerU.",
+      "Unreported implementation fields: hardware, optimizer"
+    ],
+    "validated_at": "2026-07-24T07:08:47.837386+00:00"
+  },
+  "provenance": {
+    "parser": "local_pypdf",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.449419+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2403.06447\\2403.06447.md",
+    "source_hash": "78c99cad1df28d8543532c4b712c9364f61c9452e802c5ae9c66073fbd3c990a",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2403.06447_summary.md",
+    "summary_hash": "a62ef53b07ea605b8da622b8f5f4eb7df81cf7382424a10370e7e446a13adb25"
+  }
+}

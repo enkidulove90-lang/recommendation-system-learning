@@ -1,0 +1,21 @@
+{
+  "arxiv_id": "2504.16420",
+  "title": "A Survey of Foundation Model-Powered Recommender Systems: From Feature-Based, Generative to Agentic Paradigms",
+  "authors": [
+    "Chengkai Huang",
+    "Hongtao Huang",
+    "Tong Yu",
+    "Kaige Xie",
+    "Junda Wu",
+    "Shuai Zhang",
+    "Julian McAuley",
+    "Dietmar Jannach",
+    "Lina Yao"
+  ],
+  "published": "2025-04-23",
+  "year": 2025,
+  "arxiv_url": "https://arxiv.org/abs/2504.16420",
+  "pdf_url": "https://arxiv.org/pdf/2504.16420",
+  "categories": ["cs.IR", "cs.AI"],
+  "primary_category": "cs.IR"
+}

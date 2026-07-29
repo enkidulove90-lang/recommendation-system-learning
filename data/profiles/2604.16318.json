@@ -1,0 +1,182 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2604.16318",
+  "identity": {
+    "title": "Diagnosing LLM-based Rerankers in Cold-Start Recommender Systems: Coverage, Exposure and Practical Mitigations",
+    "chinese_title": "冷启动推荐中LLM重排序诊断",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2604.16318"
+    },
+    "paper_type": "system"
+  },
+  "classification": {
+    "research_directions": [
+      "llm_ranking",
+      "cold_start"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "retrieval_index",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "long_tail",
+      "fairness",
+      "efficiency",
+      "robustness",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "transformer",
+      "llm",
+      "rag"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文对基于LLM的交叉编码器重排序器在冷启动推荐场景中的失败模式进行了系统性诊断。",
+    "one_sentence_contribution": "本文对基于LLM的交叉编码器重排序器在冷启动推荐场景中的失败模式进行了系统性诊断。",
+    "method_overview": "采用两阶段检索-重排序流水线：使用Sentence-BERT进行物品嵌入和FAISS索引，通过嵌入相似性检索候选集，再使用MS-MARCO训练的交叉编码器进行重排序。通过控制变量实验、统计假设检验（t检验、Wilcoxon检验）、效应量分析和错误案例分类来诊断失败原因。",
+    "method_components": [
+      {
+        "name": "提出了一套多维度诊断框架",
+        "role": "reported_innovation",
+        "mechanism": "提出了一套多维度诊断框架，系统分析检索覆盖率、曝光偏差、分数校准和池大小效应，以隔离交叉编码器重排序器在冷启动环境中的失败模式。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "通过实验证明简单的流行度基线在冷启动场景下显著优于复杂的LLM重排序（HR@10",
+        "role": "reported_innovation",
+        "mechanism": "通过实验证明简单的流行度基线在冷启动场景下显著优于复杂的LLM重排序（HR@10: 0.268 vs 0.008，提升33.5倍），并指出检索覆盖率是主要瓶颈。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "揭示了交叉编码器重排序器存在严重的曝光偏差",
+        "role": "reported_innovation",
+        "mechanism": "揭示了交叉编码器重排序器存在严重的曝光偏差，仅将推荐集中在极少数物品上，并发现较小的候选池（K=200）反而能取得更好的性能（HR@10提升3.1倍）。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "Limitations and Scope Conditions 1) Dataset and Domain Specificity: Our experiments focus on movie recommendation using Serendipity-2018 dataset.",
+      "However, impact is minimal—removing affected users changes mean HR@10 by <0.001.",
+      "However, our goal is diagnostic analysis of standard approaches, not achieving state-of-the-art performance."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Serendipity-2018"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Serendipity-2018；任务：DATASET AND EXPERIMENTAL SETUP ## A.",
+      "split": "not_reported",
+      "metrics": [
+        "HITRATE@10",
+        "HR@10",
+        "NDCG@10",
+        "RECALL"
+      ],
+      "baselines": [
+        "Popularity baseline dramatically outperforms LLM-based reranker.；3) Statistical Hypothesis Testing: For each metric comparison, we perform: Paired t-test: Tests null hypothesis that mean difference between paired samples is zero.；Statistical Comparison with Best Baseline Table III presents detailed statistical analysis comparing our approach to the best baseline (Popularity)."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [
+      {
+        "dataset": null,
+        "metric": "HR@10",
+        "value": 0.268,
+        "setting": "",
+        "comparison": "",
+        "delta": null,
+        "evidence_ids": [
+          "ev-experiment-01"
+        ]
+      }
+    ],
+    "results_summary": "在Serendipity-2018数据集上，流行度基线HR@10为0.268，而LLM重排序仅为0.008（33.5倍差距）。FAISS检索的召回率@200仅为0.109，远低于基线方法的0.609（5.6倍差距）。交叉编码器重排序仅产生3个独特Top-1物品，而随机基线为497个。分数分析显示相关与不相关物品的Cohen's d仅为0.11，Spearman秩相关系数接近0。较小的候选池（K=200）比大池（K=1000）HR@10提升3.1倍。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/nikita-zmanovskiy/",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计：应优先优化检索覆盖率而非重排序能力，可采用混合检索（ANN ∪ BM25）提升召回；2）评估方法：需引入诊断性指标（如召回率曲线、曝光集中度、分数校准分析）而非仅依赖聚合指标；3）系统架构：采用较小候选池（K=200）可同时提升质量和效率；4）数据处理：需注意领域迁移问题，对重排序器进行领域内微调或分数校准。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计：应优先优化检索覆盖率而非重排序能力，可采用混合检索（ANN ∪ BM",
+      "提升召回；",
+      "评估方法：需引入诊断性指标（如召回率曲线、曝光集中度、分数校准分析）而非仅依赖聚合指标；",
+      "系统架构：采用较小候选池（K=",
+      "可同时提升质量和效率；",
+      "数据处理：需注意领域迁移问题，对重排序器进行领域内微调或分数校准。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.196127+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.914526+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.16318_冷启动推荐中LLM重排序诊断\\2604.16318.md",
+    "source_hash": "d06949acdfbea4b790665e951459b91a2acdddf41b2fef023ea405e86f59e380",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2604.16318_summary.md",
+    "summary_hash": "e7333508e31f2f6729a067a1becaa2d3633f4908f131d31ca6de1cb287a22ec0"
+  }
+}

@@ -17,6 +17,10 @@ class PaperSummary(BaseModel):
     main_contribution: str = Field(default="", description="主要贡献")
     innovation_points: list[str] = Field(default_factory=list, description="创新点列表")
     benchmark_datasets: list[str] = Field(default_factory=list, description="使用的 Benchmark 和数据集")
+    experimental_conditions: dict[str, str] = Field(
+        default_factory=dict,
+        description="数据划分、基线、评价指标、实现环境与关键参数",
+    )
     experimental_results: str = Field(default="", description="关键实验效果")
     agent_relevance: str = Field(default="", description="对推荐系统 Agent 开发的借鉴之处")
     methodology: str = Field(default="", description="方法论简述")

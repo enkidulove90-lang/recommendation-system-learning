@@ -1,0 +1,17 @@
+{
+  "paper_id": "2505.20773",
+  "profile_path": "D:\\recommendation-system-learning\\data\\profiles\\2505.20773.json",
+  "status": "validated",
+  "grade": "B",
+  "issues": [
+    {
+      "severity": "info",
+      "code": "implementation_incomplete",
+      "path": "experiment.implementation",
+      "message": "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    }
+  ],
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "generated_at": "2026-07-24T07:08:47.961104+00:00"
+}

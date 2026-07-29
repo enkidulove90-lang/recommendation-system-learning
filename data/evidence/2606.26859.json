@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2606.26859",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.26859\\2606.26859.md",
+  "source_hash": "975c7597609b53cb9cad80b2f64ed64e37092602f66769f44c1e96c7c303ae9f",
+  "parser": "local_pypdf",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "Page 31",
+      "start_char": 95815,
+      "end_char": 97015,
+      "quote": "## Page 31\n\nAgentX Technical Report\nand dryrun-template maturation. Averaged across the three-week window, each AgentX worker\nsustained roughly12concurrent experiments, against1.5for an engineer under the traditional\nmanual workflow—an8× single-worker gain (Table 8). Because no stage forces ideas to contend for\na shared resource, adding workers raises throughput almost linearly, so iteration speed is governed\nby idea supply and evaluation bandwidth rather than by how fast one person can push a single idea\nthrough the chain.\nAgentX delivers more rollout-level results by automating both ends of the loop under human\nreview(RQ2).At the front end, abrainstormagent produces candidate ideas in parallel and routes\nthem through a review gate, so engineers curate a high-volume stream instead of hand-writing\neach idea; only the28.34%of ideas that pass review survive (Table 5). Human effort is thereby\nelevated from idea production to idea selection. At the back end, thedevelopingagent is the decisive\nlever: turning an idea into deployable code that clears dry-run validation is the most labor-intensive\nand failure-prone step of a manual workflow. By raising the code-and-launch rate to94.3%, the",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.26859\\2606.26859.md",
+      "source_hash": "975c7597609b53cb9cad80b2f64ed64e37092602f66769f44c1e96c7c303ae9f",
+      "extraction_method": "section_router",
+      "confidence": 0.51
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "Page 37",
+      "start_char": 114219,
+      "end_char": 115419,
+      "quote": "## Page 37\n\nAgentX Technical Report\nTable 12| Expert agent and AgentX co-evolution loop – agent inputs and outputs.Revenuerefers to\nthe commercial revenue generated in the online advertising system of the Kuaishou platform.\nAgent Input Output\nRecommendation\nDecision Agent\n(Expert)\nHistory sequence, user\nprofile, and aggregated\nstatistics.\nDiagnosed the user’s advertising interests via chain-of-\nthought reasoning—e.g., combining a driver occupation\nwith searches for vehicle pricing to infer a clear but under-\nserved interest in automotive ads—and emitted control\nsuggestions across multiple factors (industry filter, CPM\nthreshold, CPM boost ratios, etc.) as structured JSON.\nBrainstorm Agent Control suggestions from\nthe recommendation de-\ncision agent.\nAssessed the feasibility of the control suggestions and\nselected a CPM boost as the control action, producing a\ncomplete, executable scheme for it.\nDeveloping AgentThe CPM-boost scheme. Implemented the data-fetching logic and the UV-level\ncontrol, carrying the scheme through code development\nto an online A/B test.\nEvaluation Agent Online A/B result of the\nCPM-boost scheme.\nProduced a launch-review-ready conclusion: the UV-level\nCPM boos",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.26859\\2606.26859.md",
+      "source_hash": "975c7597609b53cb9cad80b2f64ed64e37092602f66769f44c1e96c7c303ae9f",
+      "extraction_method": "section_router",
+      "confidence": 0.83
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "Page 1",
+      "start_char": 139,
+      "end_char": 1339,
+      "quote": "## Page 1\n\nAgentX: Towards Agent-Driven Self-Iteration of\nIndustrial Recommender Systems\nAgentX Team\nRecommendation algorithm iteration is moving from an artisanal, engineer-bound\nprocess toward an industrialized research loop, but this transition remains blocked by\na structural execution bottleneck: the idea-to-launch cycle still depends on human en-\ngineers to generate hypotheses, modify production code, launch A/B experiments, and\nattributeonlineresults. Innovationthereforescaleslinearlywithheadcountratherthan\ncompounding with evidence, compute, and accumulated experimental knowledge. We\npresent AgentX, a production-deployed multi-agent system that fundamentally restruc-\ntures this production function. AgentX operates as a self-evolving development engine:\nit autonomously generates, implements, evaluates, and learns from recommendation\nexperiments at a scale and pace that no manual workflow can sustain.\nThesystemorchestratesfourtightlycoupledstagesinaclosedloop. ABrainstormAgent\nsynthesizes evidence from historical experiments, system architecture, data analysis,\nandexternalresearchintoranked, executableproposals. ADevelopingAgenttranslates\neach proposal into production-ready co",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.26859\\2606.26859.md",
+      "source_hash": "975c7597609b53cb9cad80b2f64ed64e37092602f66769f44c1e96c7c303ae9f",
+      "extraction_method": "section_router",
+      "confidence": 0.43
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2604.12965",
+  "identity": {
+    "title": "Eficient Retrieval Scaling with Hierarchical Indexing for Large Scale Recommendation",
+    "chinese_title": "大规模推荐的高效检索分层索引",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2604.12965"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "efficient_retrieval"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "retrieval_index",
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency"
+    ],
+    "technical_paradigms": [],
+    "modalities": [
+      "text",
+      "image",
+      "video"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文提出HILL方法，为大规模基础检索模型（如Meta的MoNN）学习一个分层索引结构，通过交叉注意力和残差量化实现高效近似搜索，同时保持检索准确性。",
+    "one_sentence_contribution": "本文提出HILL方法，为大规模基础检索模型（如Meta的MoNN）学习一个分层索引结构，通过交叉注意力和残差量化实现高效近似搜索，同时保持检索准确性。",
+    "method_overview": "HILL方法首先利用交叉注意力机制学习单层映射，将物品嵌入软分配到索引节点；然后通过残差量化逐层堆叠，将低层残差传递到高层，形成层次结构。训练过程中采用温度调度、平衡正则化和预热策略优化。此外，还提供了基于EM算法和FAISS的近似版本，以降低计算资源需求。",
+    "method_components": [
+      {
+        "name": "提出HILL分层索引学习方法",
+        "role": "reported_innovation",
+        "mechanism": "提出HILL分层索引学习方法，利用交叉注意力机制和残差量化，在基础检索模型之上构建层次化索引树，实现从粗到细的近似搜索，大幅降低推理成本。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "发现索引树的中间层节点可生成高质量的用户-索引节点数据对",
+        "role": "reported_innovation",
+        "mechanism": "发现索引树的中间层节点可生成高质量的用户-索引节点数据对，用于测试时训练（Test-Time Training），在不依赖真实标签的情况下微调模型，进一步提升检索性能。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计了软硬分配过渡的温度调度器、平衡索引分布的FLOPs正则化器以及预热策略等训",
+        "role": "reported_innovation",
+        "mechanism": "设计了软硬分配过渡的温度调度器、平衡索引分布的FLOPs正则化器以及预热策略等训练技巧，确保索引学习的稳定性和有效性。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Gowalla"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp2018"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon-Book"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Meta内部广告推荐数据集"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Gowalla、Yelp2018、Amazon-Book、Meta内部广告推荐数据集；任务：Experiments In this section, we introduce the datasets, baselines, metrics, ofline performance, and online service report.",
+      "split": "not_reported",
+      "metrics": [
+        "RECALL"
+      ],
+      "baselines": [
+        "## 4 Experiments In this section, we introduce the datasets, baselines, metrics, ofline performance, and online service report.；## 4.2 Baselines We select diferent categorical baselines, including (1) classic collaborative filtering methods, (2) neural collaborative filtering methods, (3) generative collaborative filtering methods, (4) industrial retrieval models, (5) general graph neural networks, and (6) graph neural network-inspired retrieval models.；For the page limitation, we leave the reference of each baseline in Table 3."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在内部数据集上，HILL使MoNN Large模型相比基线TTSN在NE指标上降低1.70%，Recall提升9.4%，但推理成本仅增加24.6倍（相比无索引的线性扫描大幅降低）。在公开数据集Gowalla上，HILL在Recall@20和NDCG@20上分别达到0.1924和0.1628，优于所有基线（如NESCL: 0.1908/0.1614）。消融实验显示，移除温度调度器导致NE上升0.10%，验证了各训练技巧的有效性。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计上，HILL的分层索引思想可被Agent用于构建高效的记忆检索结构，实现快速知识召回；2）评估方法上，论文使用的NE和Recall指标及消融实验设计，可用于Agent检索模块的评估；3）系统架构上，MoNN的模块化设计（用户塔、物品塔、交互塔）和HILL的联合训练框架，为Agent提供可扩展的组件化架构参考；4）数据处理上，利用索引中间节点生成高质量训练数据的方法，可启发Agent如何从现有数据中自动挖掘新训练样本。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计上，HILL的分层索引思想可被Agent用于构建高效的记忆检索结构，实现快速知识召回；",
+      "评估方法上，论文使用的NE和Recall指标及消融实验设计，可用于Agent检索模块的评估；",
+      "系统架构上，MoNN的模块化设计（用户塔、物品塔、交互塔）和HILL的联合训练框架，为Agent提供可扩展的组件化架构参考；",
+      "数据处理上，利用索引中间节点生成高质量训练数据的方法，可启发Agent如何从现有数据中自动挖掘新训练样本。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.177366+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.893817+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2604.12965_大规模推荐的高效检索分层索引\\2604.12965.md",
+    "source_hash": "b6ccae2d69a66ca6d62a2f955a98a45693ed83bf3d22dc5450b36c194789ef76",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2604.12965_summary.md",
+    "summary_hash": "5782ba4ca0317472b8b0a7ab1aa27eca1c658dab790588a51f2005f81f4fbf78"
+  }
+}

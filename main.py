@@ -21,6 +21,9 @@ main.py — arXiv 推荐系统论文爬取与解析工具 CLI 入口
   # 下载单篇论文 PDF
   python main.py download --arxiv-id 2602.21756
 
+  # 围绕一篇种子论文推荐并下载相关论文
+  python main.py recommend --seed 2606.26859 --top-k 8 --download-pdf
+
   # 解析单篇论文 PDF（MinerU）
   python main.py parse --arxiv-id 2602.21756
 
@@ -65,6 +68,9 @@ from skills.deepseek_summarizer import DeepSeekSummarizer
 from crawler.arxiv_crawler import ArxivCrawler
 from pipeline.merge_pipeline import DocumentMerger
 from redbook.scripts.publish import main as publish_main
+from storage.asset_governance import AssetGovernance
+from storage.paper_metadata import save_paper_metadata
+from storage.paper_assets import find_parsed_markdown, paper_id_from_folder
 
 
 # ======================================================================
@@ -165,19 +171,145 @@ def cmd_download(arxiv_id: str) -> None:
     downloader = PDFDownloader()
     result = downloader.execute(arxiv_id=arxiv_id)
     if result["error"]:
-        print(f"ERROR: {result['error']}")
+        print(f"WARN: MinerU parse failed: {result['error']}")
+        local_parser = get_skill("pdf-parse-local")
+        local_pdf = Path(pdf_path) if pdf_path else settings.DATA_DIR / "papers" / f"{arxiv_id}.pdf"
+        fallback = local_parser.execute(
+            arxiv_id=arxiv_id,
+            pdf_path=str(local_pdf),
+        )
+        if fallback["error"]:
+            print(f"ERROR: Local fallback failed: {fallback['error']}")
+            sys.exit(1)
+        text = fallback.get("content", {}).get("text", "")
+        print(f"Local fallback complete: {fallback['markdown_path']} ({len(text)} chars)")
     elif result["downloaded"]:
         print(f"Downloaded: {result['pdf_path']} ({result['file_size']} bytes)")
     else:
         print(f"Already exists: {result['pdf_path']} ({result['file_size']} bytes)")
 
 
+def cmd_recommend(
+    seed_arxiv_id: str,
+    max_results_per_query: int,
+    top_k: int,
+    download_pdf: bool,
+    parse_seed: bool,
+    use_profiles: bool = False,
+) -> None:
+    """围绕一篇种子论文发现、排序并可选下载相关论文。"""
+    if use_profiles:
+        reranker = get_skill("research-profile-rerank")
+        result = reranker.execute(seed_id=seed_arxiv_id, top_k=top_k)
+        if result.get("error"):
+            print(f"ERROR: {result['error']}")
+            return
+        print("=" * 60)
+        print(f"  Profile-aware Recommendation: {seed_arxiv_id}")
+        print("=" * 60)
+        print(
+            f"Candidates: {result['candidate_count']} | "
+            f"Top-K: {len(result['results'])}"
+        )
+        for item in result["results"]:
+            print(
+                f"{item['rank']:2d}. {item['paper_id']} | "
+                f"score={item['score']:.2f} | role={item['comparison_role']} | "
+                f"{item['title']}"
+            )
+            print(f"    why: {'; '.join(item['why_this_paper'])}")
+        print(f"\nReport JSON: {result['report_json_path']}")
+        print(f"Report Markdown: {result['report_md_path']}")
+        return
+
+    recommender = get_skill("related-paper-recommend")
+
+    print("=" * 60)
+    print(f"  Related Paper Recommendation: {seed_arxiv_id}")
+    print("=" * 60)
+    result = recommender.execute(
+        seed_arxiv_id=seed_arxiv_id,
+        max_results_per_query=max_results_per_query,
+        top_k=top_k,
+        download_top_k=download_pdf,
+        start_year=settings.START_YEAR,
+    )
+
+    if result.get("error"):
+        print(f"ERROR: {result['error']}")
+        sys.exit(1)
+
+    seed = result["seed"]
+    print(f"\nSeed: {seed['title']}")
+    print(f"arXiv: {seed['arxiv_url']}")
+    print(f"Candidates: {result['total_candidates']} | Top-K: {len(result['results'])}")
+
+    print("\nTop recommendations:")
+    for i, paper in enumerate(result["results"], 1):
+        print(
+            f"  {i:2d}. {paper['arxiv_id']} | "
+            f"score={paper['relevance_score']} | {paper['title']}"
+        )
+        print(f"      reason: {paper['recommendation_reason']}")
+        if paper.get("local_pdf_path"):
+            print(f"      pdf: {paper['local_pdf_path']}")
+
+    print(f"\nReport JSON: {result['report_json_path']}")
+    print(f"Report Markdown: {result['report_md_path']}")
+
+    if parse_seed:
+        parser = PDFParser()
+        if not parser.is_ready:
+            print("\nMinerU API key not configured; using local PDF text fallback.")
+            local_parser = get_skill("pdf-parse-local")
+            local_pdf = settings.DATA_DIR / "papers" / f"{seed_arxiv_id}.pdf"
+            local_result = local_parser.execute(
+                arxiv_id=seed_arxiv_id,
+                pdf_path=str(local_pdf),
+                title=seed.get("title", ""),
+            )
+            if local_result["error"]:
+                print(f"Local parse ERROR: {local_result['error']}")
+            else:
+                text_len = len(local_result.get("content", {}).get("text", ""))
+                print(f"Local parsed Markdown: {local_result['markdown_path']} ({text_len} chars)")
+        else:
+            print(f"\nParsing seed paper with MinerU: {seed_arxiv_id}")
+            parse_result = parser.execute(
+                pdf_url=seed.get("pdf_url", f"https://arxiv.org/pdf/{seed_arxiv_id}"),
+                arxiv_id=seed_arxiv_id,
+                title=seed.get("title", ""),
+            )
+            if parse_result["error"]:
+                print(f"Parse ERROR: {parse_result['error']}")
+            else:
+                print(f"Parsed Markdown: {parse_result.get('markdown_path')}")
+
+
 def cmd_parse(arxiv_id: str, pdf_path: str = "") -> None:
     """解析单篇论文 PDF（MinerU v4）。"""
     parser = get_skill("pdf-parse")
     if not parser.is_ready:
-        print("ERROR: MinerU API key not configured. Set MINERU_API_KEY in .env")
-        sys.exit(1)
+        print("WARN: MinerU API key not configured. Using local PDF text fallback.")
+        local_parser = get_skill("pdf-parse-local")
+        local_pdf = Path(pdf_path) if pdf_path else settings.DATA_DIR / "papers" / f"{arxiv_id}.pdf"
+        result = local_parser.execute(
+            arxiv_id=arxiv_id,
+            pdf_path=str(local_pdf),
+        )
+        if result["error"]:
+            print(f"ERROR: {result['error']}")
+            sys.exit(1)
+
+        text = result.get("content", {}).get("text", "")
+        print(f"\nLocal parse complete!")
+        print(f"  Markdown: {result['markdown_path']} ({len(text)} chars)")
+        preview = text[:200]
+        try:
+            print(f"\nPreview:\n{preview}...")
+        except UnicodeEncodeError:
+            print(f"\nPreview:\n{preview.encode('ascii', errors='replace').decode('ascii')}...")
+        return
 
     pdf_url = f"https://arxiv.org/pdf/{arxiv_id}"
     print(f"Parsing: {pdf_url}")
@@ -224,8 +356,8 @@ def cmd_summarize(arxiv_id: str, md_path: str = "", title: str = "", abstract: s
         full_text = Path(md_path).read_text(encoding="utf-8", errors="replace")
     else:
         # 自动查找解析结果
-        auto_md = settings.DATA_DIR / "parsed" / arxiv_id / f"{arxiv_id}.md"
-        if auto_md.exists():
+        auto_md = find_parsed_markdown(arxiv_id)
+        if auto_md is not None:
             md_path = str(auto_md)
             full_text = auto_md.read_text(encoding="utf-8", errors="replace")
             print(f"Auto-loaded parsed text from: {auto_md}")
@@ -309,14 +441,226 @@ def cmd_merge(
         print(f"    Strategy: {f['strategy']}, Target: {f['target']}, Actual: {f['size_tokens']} tokens")
 
 
+def _available_profile_ids() -> list[str]:
+    parsed_root = settings.DATA_DIR / "parsed"
+    if not parsed_root.exists():
+        return []
+    paper_ids = sorted({
+        paper_id_from_folder(path.name)
+        for path in parsed_root.iterdir()
+        if path.is_dir()
+    })
+    return AssetGovernance().filter_active(paper_ids)
+
+
+def cmd_profile(arxiv_id: str = "", all_profiles: bool = False, force: bool = False) -> None:
+    """Build Summary 2.0 research profiles from local paper assets."""
+    builder = get_skill("research-profile-build")
+    paper_ids = _available_profile_ids() if all_profiles else [arxiv_id]
+    success = skipped = failed = 0
+    for index, paper_id in enumerate(paper_ids, 1):
+        result = builder.execute(arxiv_id=paper_id, force=force)
+        if result.get("error"):
+            failed += 1
+            print(f"[{index}/{len(paper_ids)}] {paper_id}: ERROR {result['error']}")
+        elif result.get("skipped"):
+            skipped += 1
+            print(f"[{index}/{len(paper_ids)}] {paper_id}: up to date")
+        else:
+            success += 1
+            print(f"[{index}/{len(paper_ids)}] {paper_id}: {result['profile_path']}")
+    print(f"Profile build complete: generated={success}, skipped={skipped}, failed={failed}")
+
+
+def cmd_validate_profile(arxiv_id: str = "", all_profiles: bool = False) -> None:
+    """Validate profiles against schema, evidence, hashes, and taxonomies."""
+    validator = get_skill("research-profile-validate")
+    paper_ids = _available_profile_ids() if all_profiles else [arxiv_id]
+    counts = {"A": 0, "B": 0, "C": 0, "D": 0}
+    failed = 0
+    report_rows = []
+    for index, paper_id in enumerate(paper_ids, 1):
+        result = validator.execute(arxiv_id=paper_id)
+        if result.get("error"):
+            failed += 1
+            print(f"[{index}/{len(paper_ids)}] {paper_id}: ERROR {result['error']}")
+            continue
+        grade = result["grade"]
+        counts[grade] += 1
+        report_rows.append(result)
+        print(
+            f"[{index}/{len(paper_ids)}] {paper_id}: "
+            f"grade={grade} status={result['status']} issues={len(result['issues'])}"
+        )
+    print(
+        "Validation complete: "
+        + ", ".join(f"{grade}={count}" for grade, count in counts.items())
+        + f", failed={failed}"
+    )
+    if all_profiles:
+        report_path = settings.DATA_DIR / "reviews" / "quality_report.md"
+        report_lines = [
+            "# Research Profile Quality Report",
+            "",
+            f"Generated at: {datetime.now().isoformat()}",
+            "",
+            "## Summary",
+            "",
+            "| Grade | Count |",
+            "|---|---:|",
+            *[f"| {grade} | {counts[grade]} |" for grade in ("A", "B", "C", "D")],
+            "",
+            "## Papers",
+            "",
+            "| Paper | Grade | Status | Evidence coverage | Issues |",
+            "|---|---|---|---:|---:|",
+        ]
+        report_lines.extend(
+            f"| {row['paper_id']} | {row['grade']} | {row['status']} | "
+            f"{row['evidence_coverage']:.3f} | {len(row['issues'])} |"
+            for row in report_rows
+        )
+        report_lines.extend(["", "## Blocked Papers", ""])
+        blocked = [row for row in report_rows if row["grade"] == "D"]
+        if not blocked:
+            report_lines.append("None.")
+        for row in blocked:
+            report_lines.append(f"### {row['paper_id']}")
+            report_lines.append("")
+            for issue in row["issues"]:
+                report_lines.append(
+                    f"- `{issue['code']}`: {issue['message']}"
+                )
+            report_lines.append("")
+        governance = AssetGovernance()
+        report_lines.extend(["## Asset Repairs", ""])
+        report_lines.extend(
+            [
+                "| Original | Resolution | Active replacement |",
+                "|---|---|---|",
+            ]
+        )
+        for repair in governance.repairs:
+            report_lines.append(
+                f"| {repair.get('original_id', '')} | "
+                f"{repair.get('resolution', '')} | "
+                f"{repair.get('replacement_id', '')} |"
+            )
+        report_lines.append("")
+        report_path.write_text("\n".join(report_lines), encoding="utf-8")
+        print(f"Quality report: {report_path}")
+
+
+def cmd_search_profile(
+    *,
+    stage: str = "",
+    problem: str = "",
+    paradigm: str = "",
+    modality: str = "",
+    quality: str = "",
+    query: str = "",
+    limit: int = 20,
+) -> None:
+    """Search local machine-readable profiles."""
+    searcher = get_skill("research-profile-search")
+    result = searcher.execute(
+        stage=stage,
+        problem=problem,
+        paradigm=paradigm,
+        modality=modality,
+        quality=quality,
+        query=query,
+        limit=limit,
+    )
+    if result.get("error"):
+        print(f"ERROR: {result['error']}")
+        return
+    print(f"Matched profiles: {result['total']}")
+    for index, item in enumerate(result["results"], 1):
+        title = item["chinese_title"] or item["title"] or item["paper_id"]
+        print(
+            f"{index:2d}. {item['paper_id']} | grade={item['quality']['grade']} | {title}"
+        )
+        print(
+            "    "
+            f"stages={','.join(item['pipeline_stages']) or '-'} "
+            f"problems={','.join(item['problems']) or '-'} "
+            f"paradigms={','.join(item['technical_paradigms']) or '-'}"
+        )
+
+
+def cmd_build_relations(arxiv_id: str = "", max_semantic_edges: int = 6) -> None:
+    """Build citation and semantic relation edges for active profiles."""
+    builder = get_skill("research-relations-build")
+    result = builder.execute(
+        arxiv_id=arxiv_id,
+        max_semantic_edges=max_semantic_edges,
+    )
+    if result.get("error"):
+        print(f"ERROR: {result['error']}")
+        return
+    print(
+        f"Relation graph: profiles={result['profile_count']} "
+        f"edges={result['edge_count']}"
+    )
+    if arxiv_id:
+        print(f"Edges touching {arxiv_id}: {result['selected_edge_count']}")
+    print(f"Graph JSON: {result['graph_path']}")
+    print(f"Relations JSONL: {result['jsonl_path']}")
+
+
+def cmd_learning_path(
+    topic: str = "",
+    level: str = "intermediate",
+    all_paths: bool = False,
+    max_papers: int = 0,
+) -> None:
+    """Generate one or the five default explainable learning paths."""
+    builder = get_skill("research-learning-path")
+    if all_paths:
+        from skills.learning_path_builder import DEFAULT_PATHS
+
+        requests = list(DEFAULT_PATHS)
+    else:
+        requests = [(topic, level)]
+    failed = 0
+    for path_topic, path_level in requests:
+        result = builder.execute(
+            topic=path_topic,
+            level=path_level,
+            max_papers=max_papers,
+        )
+        if result.get("error"):
+            failed += 1
+            print(f"{path_topic}/{path_level}: ERROR {result['error']}")
+            continue
+        print(
+            f"{result['path_id']}: steps={len(result['steps'])} "
+            f"markdown={result['markdown_path']}"
+        )
+    print(f"Learning paths complete: generated={len(requests) - failed}, failed={failed}")
+
+
 def cmd_pipeline(arxiv_id: str) -> None:
     """端到端流水线：单篇论文 下载 → 解析 → 摘要。"""
     print("=" * 60)
     print(f"  Pipeline: {arxiv_id}")
     print("=" * 60)
 
+    paper_metadata = {}
+    try:
+        metadata_fetcher = get_skill("related-paper-recommend")
+        paper_metadata = metadata_fetcher._fetch_by_id(arxiv_id) or {}
+        if paper_metadata:
+            save_paper_metadata(paper_metadata)
+            print(f"  Metadata: {paper_metadata.get('title', arxiv_id)}")
+    except Exception as exc:
+        print(f"  Metadata WARN: {exc}")
+    paper_title = str(paper_metadata.get("title", ""))
+    paper_abstract = str(paper_metadata.get("abstract", ""))
+
     # Step 1: Download
-    print("\n[1/3] Downloading PDF...")
+    print("\n[1/6] Downloading PDF...")
     downloader = PDFDownloader()
     dl_result = downloader.execute(arxiv_id=arxiv_id)
     if dl_result["error"]:
@@ -325,34 +669,67 @@ def cmd_pipeline(arxiv_id: str) -> None:
         print(f"  PDF: {dl_result['pdf_path']} ({dl_result['file_size']} bytes)")
 
     # Step 2: Parse
-    print("\n[2/3] Parsing PDF with MinerU...")
+    print("\n[2/6] Parsing PDF with MinerU...")
     parser = PDFParser()
     if not parser.is_ready:
-        print("  SKIP: MinerU API key not configured.")
+        print("  MinerU API key not configured; using local PDF text fallback.")
+        local_parser = get_skill("pdf-parse-local")
+        local_pdf = Path(dl_result.get("pdf_path") or settings.DATA_DIR / "papers" / f"{arxiv_id}.pdf")
+        local_result = local_parser.execute(
+            arxiv_id=arxiv_id,
+            pdf_path=str(local_pdf),
+            title=paper_title,
+        )
+        if local_result["error"]:
+            print(f"  Local parse ERROR: {local_result['error']}")
+        else:
+            text_len = len(local_result.get("content", {}).get("text", ""))
+            print(f"  Local Markdown: {local_result['markdown_path']} ({text_len} chars)")
     else:
         parse_result = parser.execute(
             pdf_url=f"https://arxiv.org/pdf/{arxiv_id}",
             arxiv_id=arxiv_id,
+            title=paper_title,
         )
         if parse_result["error"]:
-            print(f"  Parse ERROR: {parse_result['error']}")
+            print(f"  MinerU parse WARN: {parse_result['error']}")
+            local_parser = get_skill("pdf-parse-local")
+            local_pdf = Path(
+                dl_result.get("pdf_path")
+                or settings.DATA_DIR / "papers" / f"{arxiv_id}.pdf"
+            )
+            local_result = local_parser.execute(
+                arxiv_id=arxiv_id,
+                pdf_path=str(local_pdf),
+                title=paper_title,
+            )
+            if local_result["error"]:
+                print(f"  Local fallback ERROR: {local_result['error']}")
+            else:
+                text_len = len(local_result.get("content", {}).get("text", ""))
+                print(
+                    f"  Local fallback Markdown: "
+                    f"{local_result['markdown_path']} ({text_len} chars)"
+                )
         else:
             md_path = parse_result.get("markdown_path", "")
             text_len = len(parse_result.get("content", {}).get("text", ""))
             print(f"  Markdown: {md_path} ({text_len} chars)")
 
     # Step 3: Summarize
-    print("\n[3/3] Generating summary with DeepSeek...")
+    print("\n[3/6] Generating summary with DeepSeek...")
     summarizer = DeepSeekSummarizer()
     if not summarizer.is_ready:
         print("  SKIP: DeepSeek API key not configured.")
     else:
         # Read parsed text
-        md_file = settings.DATA_DIR / "parsed" / arxiv_id / f"{arxiv_id}.md"
-        if md_file.exists():
+        md_file = find_parsed_markdown(arxiv_id)
+        if md_file is not None:
             full_text = md_file.read_text(encoding="utf-8", errors="replace")
             summary_result = summarizer.execute(
                 arxiv_id=arxiv_id,
+                title=paper_title,
+                abstract=paper_abstract,
                 full_text=full_text,
             )
             if summary_result["error"]:
@@ -363,6 +740,38 @@ def cmd_pipeline(arxiv_id: str) -> None:
                 print(f"  Main contribution: {s.get('main_contribution', '')[:150]}...")
         else:
             print("  SKIP: No parsed Markdown found. Run parse step first.")
+
+    print("\n[4/6] Building Summary 2.0 profile...")
+    profile_builder = get_skill("research-profile-build")
+    profile_result = profile_builder.execute(arxiv_id=arxiv_id)
+    if profile_result.get("error"):
+        print(f"  Profile ERROR: {profile_result['error']}")
+    else:
+        state = "up to date" if profile_result.get("skipped") else "generated"
+        print(f"  Profile {state}: {profile_result['profile_path']}")
+
+    print("\n[5/6] Validating profile...")
+    validator = get_skill("research-profile-validate")
+    validation_result = validator.execute(arxiv_id=arxiv_id)
+    if validation_result.get("error"):
+        print(f"  Validation ERROR: {validation_result['error']}")
+    else:
+        print(
+            f"  Quality: grade={validation_result['grade']} "
+            f"status={validation_result['status']} "
+            f"issues={len(validation_result['issues'])}"
+        )
+
+    print("\n[6/6] Updating relation graph...")
+    relation_builder = get_skill("research-relations-build")
+    relation_result = relation_builder.execute(arxiv_id=arxiv_id)
+    if relation_result.get("error"):
+        print(f"  Relations ERROR: {relation_result['error']}")
+    else:
+        print(
+            f"  Relation graph: edges={relation_result['edge_count']} "
+            f"touching_paper={relation_result['selected_edge_count']}"
+        )
 
     print("\nPipeline complete!")
 
@@ -426,6 +835,7 @@ def cmd_pipeline_all(
                 parse_result = parser.execute(
                     pdf_url=paper.get("pdf_url", f"https://arxiv.org/pdf/{aid}"),
                     arxiv_id=aid,
+                    title=title,
                 )
                 if not parse_result["error"]:
                     paper["local_md_path"] = parse_result.get("markdown_path")
@@ -433,8 +843,8 @@ def cmd_pipeline_all(
                     print(f"    Parsed: {aid}")
 
             if not skip_summarize and summarizer.is_ready:
-                md_file = settings.DATA_DIR / "parsed" / aid / f"{aid}.md"
-                if md_file.exists():
+                md_file = find_parsed_markdown(aid)
+                if md_file is not None:
                     full_text = md_file.read_text(encoding="utf-8", errors="replace")
                     summary_result = summarizer.execute(
                         arxiv_id=aid,
@@ -482,8 +892,12 @@ Examples:
   python main.py crawl --topic agent-recommendation --max 10 --download-pdf
   python main.py search --query 'all:"multimodal" AND all:"recommendation"' --max 20
   python main.py download --arxiv-id 2602.21756
+  python main.py recommend --seed 2606.26859 --top-k 8 --download-pdf
   python main.py parse --arxiv-id 2602.21756
   python main.py summarize --arxiv-id 2602.21756
+  python main.py profile --arxiv-id 2602.21756
+  python main.py validate-profile --arxiv-id 2602.21756
+  python main.py search-profile --problem cold_start --quality B,C
   python main.py merge --target 200000
   python main.py pipeline --arxiv-id 2602.21756
   python main.py pipeline-all --max-per-topic 5
@@ -516,6 +930,31 @@ Examples:
     dl_parser = subparsers.add_parser("download", help="Download a paper PDF")
     dl_parser.add_argument("--arxiv-id", required=True, help="arXiv ID (e.g. 2602.21756)")
 
+    # ---- recommend ----
+    rec_parser = subparsers.add_parser(
+        "recommend",
+        help="Find related papers from a seed arXiv paper",
+    )
+    rec_parser.add_argument("--seed", required=True, help="Seed arXiv ID (e.g. 2606.26859)")
+    rec_parser.add_argument(
+        "--max-per-query",
+        type=int,
+        default=10,
+        help="Max arXiv results fetched for each expanded query",
+    )
+    rec_parser.add_argument("--top-k", type=int, default=8, help="Recommended papers to keep")
+    rec_parser.add_argument("--download-pdf", action="store_true", help="Download Top-K PDFs")
+    rec_parser.add_argument(
+        "--parse-seed",
+        action="store_true",
+        help="Parse the seed paper with MinerU after recommendation",
+    )
+    rec_parser.add_argument(
+        "--use-profiles",
+        action="store_true",
+        help="Use validated local profiles and relation graph for reranking",
+    )
+
     # ---- parse ----
     parse_parser = subparsers.add_parser("parse", help="Parse a paper PDF with MinerU v4")
     parse_parser.add_argument("--arxiv-id", required=True, help="arXiv ID")
@@ -527,6 +966,66 @@ Examples:
     sum_parser.add_argument("--md-path", default="", help="Path to parsed Markdown file")
     sum_parser.add_argument("--title", default="", help="Paper title (optional)")
     sum_parser.add_argument("--abstract", default="", help="Paper abstract (optional)")
+
+    # ---- profile ----
+    profile_parser = subparsers.add_parser(
+        "profile",
+        help="Build a Summary 2.0 machine-readable research profile",
+    )
+    profile_target = profile_parser.add_mutually_exclusive_group(required=True)
+    profile_target.add_argument("--arxiv-id", help="arXiv ID")
+    profile_target.add_argument("--all", action="store_true", help="Build all local parsed papers")
+    profile_parser.add_argument("--force", action="store_true", help="Rebuild even if source hashes match")
+
+    # ---- validate-profile ----
+    validate_parser = subparsers.add_parser(
+        "validate-profile",
+        help="Validate profiles and generate quality review records",
+    )
+    validate_target = validate_parser.add_mutually_exclusive_group(required=True)
+    validate_target.add_argument("--arxiv-id", help="arXiv ID")
+    validate_target.add_argument("--all", action="store_true", help="Validate all local profiles")
+
+    # ---- search-profile ----
+    profile_search_parser = subparsers.add_parser(
+        "search-profile",
+        help="Search local structured research profiles",
+    )
+    profile_search_parser.add_argument("--stage", default="", help="Controlled pipeline stage")
+    profile_search_parser.add_argument("--problem", default="", help="Controlled research problem")
+    profile_search_parser.add_argument("--paradigm", default="", help="Controlled technical paradigm")
+    profile_search_parser.add_argument("--modality", default="", help="Controlled input modality")
+    profile_search_parser.add_argument("--quality", default="", help="Comma-separated grades, e.g. A,B")
+    profile_search_parser.add_argument("--query", default="", help="Free-text substring query")
+    profile_search_parser.add_argument("--limit", type=int, default=20)
+
+    # ---- build-relations ----
+    relation_parser = subparsers.add_parser(
+        "build-relations",
+        help="Build citation and semantic relations between active profiles",
+    )
+    relation_parser.add_argument("--arxiv-id", default="", help="Show edges touching one paper")
+    relation_parser.add_argument(
+        "--max-semantic-edges",
+        type=int,
+        default=6,
+        help="Maximum semantic neighbours retained per profile",
+    )
+
+    # ---- learning-path ----
+    learning_parser = subparsers.add_parser(
+        "learning-path",
+        help="Generate explainable reading paths from profiles and relations",
+    )
+    learning_target = learning_parser.add_mutually_exclusive_group(required=True)
+    learning_target.add_argument("--topic", default="", help="Topic or controlled tag")
+    learning_target.add_argument("--all", action="store_true", help="Generate five default paths")
+    learning_parser.add_argument(
+        "--level",
+        choices=("beginner", "intermediate", "advanced"),
+        default="intermediate",
+    )
+    learning_parser.add_argument("--max-papers", type=int, default=0)
 
     # ---- merge ----
     merge_parser = subparsers.add_parser("merge", help="Merge papers into test documents")
@@ -572,10 +1071,37 @@ Examples:
         cmd_search(args.query, args.max_results)
     elif args.command == "download":
         cmd_download(args.arxiv_id)
+    elif args.command == "recommend":
+        cmd_recommend(
+            args.seed,
+            args.max_per_query,
+            args.top_k,
+            args.download_pdf,
+            args.parse_seed,
+            args.use_profiles,
+        )
     elif args.command == "parse":
         cmd_parse(args.arxiv_id, args.pdf_path)
     elif args.command == "summarize":
         cmd_summarize(args.arxiv_id, args.md_path, args.title, args.abstract)
+    elif args.command == "profile":
+        cmd_profile(args.arxiv_id or "", args.all, args.force)
+    elif args.command == "validate-profile":
+        cmd_validate_profile(args.arxiv_id or "", args.all)
+    elif args.command == "search-profile":
+        cmd_search_profile(
+            stage=args.stage,
+            problem=args.problem,
+            paradigm=args.paradigm,
+            modality=args.modality,
+            quality=args.quality,
+            query=args.query,
+            limit=args.limit,
+        )
+    elif args.command == "build-relations":
+        cmd_build_relations(args.arxiv_id, args.max_semantic_edges)
+    elif args.command == "learning-path":
+        cmd_learning_path(args.topic, args.level, args.all, args.max_papers)
     elif args.command == "merge":
         cmd_merge(args.target, args.strategy, args.paper_list)
     elif args.command == "pipeline":

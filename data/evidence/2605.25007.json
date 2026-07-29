@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2605.25007",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2605.25007_元模态智能体：缺失模态候选重排序\\2605.25007.md",
+  "source_hash": "6d7b783dfe5d9c787129ae71caf4ff4fcbf5b61f49519ca119a63f2d6f9b726a",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 4325,
+      "end_char": 5524,
+      "quote": "observed evidence is informative enough to constrain the missing signal. Under extreme missingness, however, reconstruction can become a liability: a generated behavioral profile from a single weak textual clue may look plausible while adding unsupported evidence to the ranking pipeline [13, 30].\n\nLLM-based reranking agents ofer a diferent model. Rather than producing a single fused representation, an agent can decide which tool to call, inspect returned evidence, recover from tool failures, and ask a user for clarification [2, 19]. Generative agents perform well in recommendation, and large-scale tool-use training allows LLMs to use APIs efectively [16, 29]. ReAct-style prompting shows how language models can interleave reasoning with environment actions [27]. Yet static agent prompts often assume that tools will return valid observations. When a history lookup returns Null, a brittle agent may retry the same failed path or hallucinate the unavailable evidence.\n\nThis paper reframes missing modalities from a purely representation learning problem to a dynamic evidence-routing problem inside candidate-pool reranking. If the reranking state is partially observ able, then a scorer ca",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2605.25007_元模态智能体：缺失模态候选重排序\\2605.25007.md",
+      "source_hash": "6d7b783dfe5d9c787129ae71caf4ff4fcbf5b61f49519ca119a63f2d6f9b726a",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "1 Introduction",
+      "start_char": 4272,
+      "end_char": 5472,
+      "quote": ", 18, 24]. These approaches are appropriate when the observed evidence is informative enough to constrain the missing signal. Under extreme missingness, however, reconstruction can become a liability: a generated behavioral profile from a single weak textual clue may look plausible while adding unsupported evidence to the ranking pipeline [13, 30].\n\nLLM-based reranking agents ofer a diferent model. Rather than producing a single fused representation, an agent can decide which tool to call, inspect returned evidence, recover from tool failures, and ask a user for clarification [2, 19]. Generative agents perform well in recommendation, and large-scale tool-use training allows LLMs to use APIs efectively [16, 29]. ReAct-style prompting shows how language models can interleave reasoning with environment actions [27]. Yet static agent prompts often assume that tools will return valid observations. When a history lookup returns Null, a brittle agent may retry the same failed path or hallucinate the unavailable evidence.\n\nThis paper reframes missing modalities from a purely representation learning problem to a dynamic evidence-routing problem inside candidate-pool reranking. If the rerank",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2605.25007_元模态智能体：缺失模态候选重排序\\2605.25007.md",
+      "source_hash": "6d7b783dfe5d9c787129ae71caf4ff4fcbf5b61f49519ca119a63f2d6f9b726a",
+      "extraction_method": "section_router",
+      "confidence": 0.59
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.1 Experimental Setup",
+      "start_char": 24490,
+      "end_char": 25690,
+      "quote": "## 4.1 Experimental Setup\n\nDatasets. We evaluate on Amazon-Baby and Amazon-Sports [14], and Yelp (Yelp Open Dataset 2022 release). Amazon datasets provide text metadata, product images, and collaborative-filtering (CF) signals. For Yelp, text is drawn from item descriptions and review summaries; visual features are CLIP-ViT-L/14 embeddings of up to three business photos per venue; CF signals come from the user–business interaction graph. Data is split chronologically: the earliest 80% of interactions form training, the next 10% validation, and the most recent 10% test. Table 2 summarizes statistics.\n\nCandidate-pool protocol. All methods are evaluated within the same target-positive <sup>??</sup>-item candidate pool per episode. The held-out target item is inserted, and the remaining <sup>??</sup> − 1 candidates are hard negatives retrieved from the surviving evidence source: BM25 for text-present settings, CLIP nearest-neighbor retrieval for image-only settings, and ANN graph retrieval for behavior-only settings. MMA acts only as a scorer and reranker over this pool; it does not recall additional items from the full catalog. This protocol isolates candidate scoring and reranking. B",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2605.25007_元模态智能体：缺失模态候选重排序\\2605.25007.md",
+      "source_hash": "6d7b783dfe5d9c787129ae71caf4ff4fcbf5b61f49519ca119a63f2d6f9b726a",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion and Limitations",
+      "start_char": 43522,
+      "end_char": 44722,
+      "quote": "## 5 Conclusion and Limitations\n\nWe introduced the Meta-Modal Agent, a candidate-pool reranking framework that reframes missing modalities in cold-start recom mendation from a static representation learning task to a sequential evidence-routing problem. MMA operates after first-stage retrieval: it scores a shared candidate pool and fuses agent scores with first stage retrieval scores, making HR and NDCG evaluation explicit. The evaluation separates the automated deployment setting from the interactive upper bound: MMA-Auto disables Ask\\_User, while MMA-Interactive keeps clarification available only for diagnostic analysis. Across the automated evidence chain, MMA-Auto wins all 9 dataset–modality OOMA cells against the strongest static baseline, improves target-positive OOMA NDCG@10 by 4<sup>.</sup>0%, achieves a 12<sup>.</sup>7% mean per-dataset relative NDCG@10 gain in fixed-pool full-catalog reranking, improves over the RuleRouter-Fuse deterministic control from 0.1578 to 0.1711 average OOMA NDCG@10, and reaches <sup>?? <</sup> 0<sup>.</sup>05 on all three datasets with modest but positive efect sizes. MMA-Interactive adds a 4<sup>.</sup>1% upper-bound gain over MMA-Auto when cla",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2605.25007_元模态智能体：缺失模态候选重排序\\2605.25007.md",
+      "source_hash": "6d7b783dfe5d9c787129ae71caf4ff4fcbf5b61f49519ca119a63f2d6f9b726a",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

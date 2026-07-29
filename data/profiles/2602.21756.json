@@ -1,0 +1,171 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2602.21756",
+  "identity": {
+    "title": "Ofline Reasoning for Eficient Recommendation: LLM-Empowered Persona-Profiled Item Indexing",
+    "chinese_title": "离线推理实现高效推荐",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2602.21756"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "retrieval_index",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "fairness",
+      "efficiency",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm",
+      "reinforcement_learning"
+    ],
+    "modalities": [
+      "text",
+      "image"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出Persona4Rec框架，将LLM的推理过程从在线阶段转移到离线阶段，通过预计算物品的多视角可解释人物画像（persona），实现轻量级在线推理。",
+    "one_sentence_contribution": "提出Persona4Rec框架，将LLM的推理过程从在线阶段转移到离线阶段，通过预计算物品的多视角可解释人物画像（persona），实现轻量级在线推理。",
+    "method_overview": "采用两阶段框架：离线阶段，使用LLM从物品元数据生成摘要，从用户评论提取方面（aspect），再综合生成多个结构化人物画像；通过LLM-as-a-judge选择用户-人物画像对齐对，训练轻量级编码器（基于BGE-M3）。在线阶段，编码用户历史交互为画像，与预计算的人物画像进行相似度计算，选择最佳匹配人物画像作为重排序分数。",
+    "method_components": [
+      {
+        "name": "提出离线人物画像构建机制",
+        "role": "reported_innovation",
+        "mechanism": "提出离线人物画像构建机制，利用LLM对物品元数据和用户评论进行推理，为每个物品生成多个可解释的人物画像，每个画像代表一种不同的用户动机或偏好模式。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计用户-人物画像对齐框架",
+        "role": "reported_innovation",
+        "mechanism": "设计用户-人物画像对齐框架，通过LLM-as-a-judge范式为每个交互对选择最相关的人物画像，生成监督信号训练轻量级编码器，将用户画像和物品人物画像映射到共享语义空间。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "构建人物画像索引的物品表示",
+        "role": "reported_innovation",
+        "mechanism": "构建人物画像索引的物品表示，在线推理时仅需计算用户画像与预计算人物画像的相似度，避免昂贵的实时LLM调用，实现亚毫秒级推理延迟。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon-Books (Amazon Reviews 2023)"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp (Philadelphia region restaurant and food)"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon-Books (Amazon Reviews 2023)、Yelp (Philadelphia region restaurant and food)；任务：Experiments In this section, we design and conduct experiments to answer the following research questions.；划分：leave-one-out",
+      "split": "leave-one-out",
+      "metrics": [
+        "NDCG",
+        "HR",
+        "MRR"
+      ],
+      "baselines": [
+        "<sub>•</sub> RQ2 (Eficiency & Scalability): <sub>How</sub> <sub>do</sub> <sub>inference</sub> <sub>latency</sub> <sub>and</sub> memory footprint compare to LLM-based rerankers, and how do they scale with request volume?；4.1.2 Baselines.；Within this framework, our main baselines are <sup>LLM-based</sup> <sup>rerankers</sup>, which directly apply LLMs during inference to reorder candidates."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [
+      {
+        "dataset": null,
+        "metric": "NDCG@10",
+        "value": 0.0622,
+        "setting": "",
+        "comparison": "",
+        "delta": null,
+        "evidence_ids": [
+          "ev-experiment-01"
+        ]
+      }
+    ],
+    "results_summary": "Persona4Rec在Amazon-Books和Yelp数据集上一致优于ZS-LLM、TALLRec、EXP3RT等LLM重排序基线。在Amazon-Books上，使用LightGCN作为候选生成器时，Persona4Rec在HR@10上达到0.1151（提升7.5%），NDCG@10达到0.0622（提升10.9%）。在冷启动场景中，对尾部物品的HR@10提升达18.8%。推理延迟仅0.52ms（CPU），比ZS-LLM（5537ms）快4个数量级，内存占用仅0.1GB。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/legenduck/PERSONA4REC",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发有重要借鉴价值：1）算法设计上，可采用离线知识构建+在线轻量匹配的架构，将LLM推理作为离线数据增强工具，避免在线推理延迟；2）评估方法上，可参考其冷启动/热启动、头部/尾部物品的分层评估策略；3）系统架构上，人物画像索引的设计思路可用于构建可解释的推荐Agent记忆模块，支持快速检索和解释生成；4）数据处理上，将非结构化评论转化为结构化人物画像的方法可用于Agent对用户偏好的建模。",
+    "design_lessons": [
+      "对推荐Agent开发有重要借鉴价值",
+      "算法设计上，可采用离线知识构建+在线轻量匹配的架构，将LLM推理作为离线数据增强工具，避免在线推理延迟；",
+      "评估方法上，可参考其冷启动/热启动、头部/尾部物品的分层评估策略；",
+      "系统架构上，人物画像索引的设计思路可用于构建可解释的推荐Agent记忆模块，支持快速检索和解释生成；",
+      "数据处理上，将非结构化评论转化为结构化人物画像的方法可用于Agent对用户偏好的建模。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.149868+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.851317+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2602.21756_离线推理实现高效推荐\\2602.21756.md",
+    "source_hash": "b445b01cd470deda3ec0a8afcb55cae9511c16797d4eafc9811830f13aa9bb3b",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2602.21756_summary.md",
+    "summary_hash": "3aecc3796beecc69e55918e94f0c626238f8a7a0ea0334347fbea9f72ac0f831"
+  }
+}

@@ -1,0 +1,76 @@
+"""The supported entry point for the Redbook creation workflow."""
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import sys
+
+from redbook.application.paper_workflow import PaperCreationWorkflow
+from redbook.application.evidence_pack import EvidencePackParser
+from redbook.infrastructure.modelscope_vision import ModelScopeVisionReviewer
+from redbook.services.figure_retrieval import FigureRetrievalService
+from redbook.services.persona_composer import PersonaCatalog, PersonaPostComposer
+
+
+def _emit_json(value: object) -> None:
+    """Keep Chinese and emoji intact when launched from legacy Windows consoles."""
+    payload = json.dumps(value, ensure_ascii=False, indent=2) + "\n"
+    try:
+        sys.stdout.write(payload)
+    except UnicodeEncodeError:
+        sys.stdout.buffer.write(payload.encode("utf-8"))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Redbook paper creation workflow")
+    commands = parser.add_subparsers(dest="command", required=True)
+    figures = commands.add_parser("prepare-figures", help="prefer arXiv source figures, then use high-DPI PDF fallback")
+    figures.add_argument("--paper-id", required=True)
+    figures.add_argument("--markdown", type=Path, required=True)
+    figures.add_argument("--images", type=Path, required=True)
+    figures.add_argument("--pdf", type=Path)
+    figures.add_argument("--layout", type=Path)
+    figures.add_argument("--arxiv-id", help="enables source-first acquisition from arxiv.org/e-print/<id>")
+    figures.add_argument("--vision", action="store_true", help="use ModelScope Qwen multimodal final review")
+    figures.add_argument("--data-root", type=Path, default=Path("data"))
+    personas = commands.add_parser("list-personas", help="list available paper-sharing author personas")
+    compose = commands.add_parser("compose-post", help="compose a draft only; never publishes to Xiaohongshu")
+    compose.add_argument("--summary", type=Path, required=True, help="structured paper summary Markdown")
+    compose.add_argument("--arxiv-id", required=True)
+    compose.add_argument("--persona", default="research_translator")
+    compose.add_argument("--github", default="")
+    compose.add_argument("--title", default="", help="optional authoritative paper title")
+    compose.add_argument("--output", type=Path, help="optional JSON draft path")
+    evidence = commands.add_parser("parse-evidence-pack", help="parse an open-access research evidence pack with MinerU")
+    evidence.add_argument("--manifest", type=Path, required=True)
+    evidence.add_argument("--data-root", type=Path, default=Path("data"))
+    args = parser.parse_args()
+    if args.command == "prepare-figures":
+        reviewer = ModelScopeVisionReviewer() if args.vision else None
+        service = FigureRetrievalService(reviewer=reviewer)
+        workflow = PaperCreationWorkflow(args.data_root, figures=service)
+        result = workflow.prepare_figures(
+            args.paper_id, args.markdown, args.images, args.pdf, args.layout, args.vision, args.arxiv_id
+        )
+        _emit_json(result.as_dict())
+    elif args.command == "list-personas":
+        _emit_json([
+            {"id": item.id, "name": item.name, "audience": item.audience, "topics": item.topics,
+             "strategy": item.strategy}
+            for item in PersonaCatalog().list()
+        ])
+    elif args.command == "compose-post":
+        result = PersonaPostComposer().compose(
+            args.summary.read_text(encoding="utf-8"), args.arxiv_id, args.persona, args.github, args.title
+        ).as_dict()
+        if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        _emit_json(result)
+    elif args.command == "parse-evidence-pack":
+        _emit_json(EvidencePackParser(args.data_root).parse(args.manifest))
+
+
+if __name__ == "__main__":
+    main()

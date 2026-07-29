@@ -1,0 +1,168 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2512.20916",
+  "identity": {
+    "title": "MMSRARec: Summarization and Retrieval Augumented Sequential Recommendation Based on Multimodal Large Language Model",
+    "chinese_title": "多模态大模型摘要与检索增强序列推荐",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2512.20916"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "multimodal_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "llm",
+      "rag",
+      "reinforcement_learning"
+    ],
+    "modalities": [
+      "id",
+      "text",
+      "image",
+      "behavior_sequence"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出MMSRARec，一种基于多模态大语言模型（MLLM）的序列推荐方法。",
+    "one_sentence_contribution": "提出MMSRARec，一种基于多模态大语言模型（MLLM）的序列推荐方法。",
+    "method_overview": "采用三阶段流水线：1）离线多模态摘要阶段，使用MLLM结合RLVR（GRPO算法）将物品图像和文本摘要为关键词；2）相似用户检索阶段，基于SASRec的ID特征嵌入计算余弦相似度，检索k个相似用户并将其后续交互物品的关键词作为上下文；3）多任务学习阶段，通过PEFT（LoRA）微调MLLM，使用包含正负样本的多种推荐指令进行监督学习，基于首token概率进行推荐。",
+    "method_components": [
+      {
+        "name": "首次将物品多模态信息通过MLLM摘要为自然语言关键词",
+        "role": "reported_innovation",
+        "mechanism": "首次将物品多模态信息通过MLLM摘要为自然语言关键词，并采用RLVR（含信息损失、重构难度和长度三重奖励）自适应优化摘要策略，替代了不可解释的向量或语义ID。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "受RAG启发",
+        "role": "reported_innovation",
+        "mechanism": "受RAG启发，通过传统序列推荐模型（如SASRec）检索行为相似用户，将其后续交互物品的关键词作为协同信号上下文注入MLLM，首次将协同信号以自然语言形式融入语言模型推荐系统。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计多任务学习框架",
+        "role": "reported_innovation",
+        "mechanism": "设计多任务学习框架，通过构建多种推荐指令和正负样本对比训练，结合LoRA参数高效微调，使MLLM仅需单次推理即可完成推荐，大幅降低计算和时延成本。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "## 5 Conclusion and Future Work This paper proposes a novel method named MMSRARec for multimodal sequential recommendation, based on a multimodal large language model (MLLM)."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Microlens"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Baby"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Games"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Microlens、Amazon Baby、Amazon Games；任务：Experiment ## 4.1 Dataset We utilized open-source and real-world datasets from diverse recommendation domains to ensure broad applicability and robust validation: (1) Microlens [18], a micro-video recommendation dataset; (2) Amazon Baby [6], from the ecommerce domain, representing dense purchasing behavior in the baby product category; and (3) Amazon Games [16], which reflects user preferences in the digital goods sector.；划分：8:1:1",
+      "split": "8:1:1",
+      "metrics": [
+        "HR@5",
+        "NDCG@5",
+        "AUC",
+        "HITRATE"
+      ],
+      "baselines": [
+        "Table 3: The Statistics of Datasets <table><tr><td>Dataset</td><td>Microlens</td><td>Amazon Baby</td><td>Amazon Game</td></tr><tr><td>#User</td><td>25411</td><td>41081</td><td>38808</td></tr><tr><td>#Item</td><td>20276</td><td>14393</td><td>13379</td></tr><tr><td>#Interaction</td><td>223263</td><td>400876</td><td>352136</td></tr><tr><td>#Avg Seqlen</td><td>11.35</td><td>13.65</td><td>13.23</td></tr></table> ## 4.2 Experimental Setup To assess the performance of baseline and our proposed method for multimodal sequential recommendations, we utilize HR@5, NDCG@5 and AUC as evaluation metrics.；## 4.3 Baseline To evaluate the efectiveness of our proposed method, we select several mainstream methods for comparison covering four categories of recommendation systems: 1.；## 4.4 Main Results Table 4 presents a comparison between our proposed MMSRARec and baseline methods across three real-world datasets."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [
+        {
+          "model": "A800",
+          "count": 8
+        }
+      ],
+      "framework": "PyTorch",
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "MMSRARec在三个数据集上均取得最佳或次优结果。在Microlens上HR@5达85.09（次优81.32），AUC达84.36；Amazon Baby上HR@5达81.50（次优77.61），AUC达85.27；Amazon Games上HR@5达83.74（次优79.86），AUC达85.81。相比MLLM-MSR（需6次推理，耗时7.35s），MMSRARec仅需1次推理，耗时0.73s（Qwen2.5VL-7B），性能显著提升。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发有重要借鉴价值：1）算法设计上，摘要+检索增强的范式可被Agent用于压缩用户画像和引入外部知识，RLVR奖励设计（信息性、重构性、长度）可指导Agent生成更精准的摘要；2）评估方法上，HR/NDCG/AUC指标及消融实验设计（分阶段移除组件）可直接复用；3）系统架构上，离线摘要+在线推理的分离设计降低了Agent的实时计算压力，多任务指令微调策略可增强Agent对多样化推荐场景的适应能力；4）数据处理上，将协同信号转化为自然语言关键词的方法，为Agent融合结构化与非结构化信息提供了新思路。",
+    "design_lessons": [
+      "对推荐Agent开发有重要借鉴价值",
+      "算法设计上，摘要+检索增强的范式可被Agent用于压缩用户画像和引入外部知识，RLVR奖励设计（信息性、重构性、长度）可指导Agent生成更精准的摘要；",
+      "评估方法上，HR/NDCG/AUC指标及消融实验设计（分阶段移除组件）可直接复用；",
+      "系统架构上，离线摘要+在线推理的分离设计降低了Agent的实时计算压力，多任务指令微调策略可增强Agent对多样化推荐场景的适应能力；",
+      "数据处理上，将协同信号转化为自然语言关键词的方法，为Agent融合结构化与非结构化信息提供了新思路。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.117640+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.812966+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.20916_多模态大模型摘要与检索增强序列推荐\\2512.20916.md",
+    "source_hash": "5c2ecc6bf248ceebbc55dec0248ebbfc9faa98d9f939a399f072377c3c2b7bbd",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2512.20916_summary.md",
+    "summary_hash": "12cfe64de92203880c77951c11990c8d82d20e5ecab605a0c5f312614197475c"
+  }
+}

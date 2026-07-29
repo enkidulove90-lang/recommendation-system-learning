@@ -1,0 +1,175 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2603.10673",
+  "identity": {
+    "title": "Breaking User-Centric Agency: A Tri-Party Framework for Agent-Based Recommendation",
+    "chinese_title": "三方智能体推荐框架",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2603.10673"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "agent_recommendation"
+    ],
+    "pipeline_stages": [
+      "ranking",
+      "reranking",
+      "user_modeling",
+      "online_learning",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "long_tail",
+      "debiasing",
+      "fairness",
+      "robustness",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "audio",
+      "behavior_sequence"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文首次提出三方LLM智能体推荐框架TriRec，协调用户效用、物品曝光和平台公平性。",
+    "one_sentence_contribution": "本文首次提出三方LLM智能体推荐框架TriRec，协调用户效用、物品曝光和平台公平性。",
+    "method_overview": "采用两阶段智能体架构。第一阶段：物品智能体基于用户兴趣表示生成个性化自我推广文本，用户智能体进行语义偏好推理生成相关性排序。第二阶段：平台重排序器将曝光作为控制状态，通过序列决策过程联合优化用户相关性、物品期望效用和平台级公平性，采用对数衰减的曝光函数模拟位置偏差。",
+    "method_components": [
+      {
+        "name": "首次提出三方LLM智能体推荐框架",
+        "role": "reported_innovation",
+        "mechanism": "首次提出三方LLM智能体推荐框架，明确协调用户、物品和平台三方的利益，突破了传统以用户为中心的建模范式。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计两阶段流水线架构",
+        "role": "reported_innovation",
+        "mechanism": "设计两阶段流水线架构，第一阶段通过物品智能体生成个性化自我推广内容来改善匹配质量并缓解冷启动，第二阶段通过平台级序列多目标重排序来平衡三方效用。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "将物品曝光作为核心控制状态",
+        "role": "reported_innovation",
+        "mechanism": "将物品曝光作为核心控制状态，通过状态感知的序列决策过程动态调节曝光分配，实现长期公平性和生态系统稳定性。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "## 6 Conclusion and Limitations We proposed TriRec, the first tri-party LLM-agent recommendation framework that coordinates users, items, and the platform via item self-promotion and platform-led multi-objective re-ranking.",
+      "Two limitations remain: our ofline protocol may not fully reflect long-term dynamics, and the generated self-promotion is not yet quantitatively audited for factuality.",
+      "Future work will address these via multi-round simulation, online A/B tests, and retrieval-grounded factuality constraints, as well as safeguards against adversarial self promotion and provider gaming."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon CDs & Vinyl"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Movies & TV"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Goodreads Young Adult (YA)"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Steam Games"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon CDs & Vinyl、Amazon Movies & TV、Goodreads Young Adult (YA)、Steam Games；任务：Experiments In this section, we conduct experiments to address the following research questions: • RQ1: How does TriRec perform in terms of accuracy, fairness, and expected item utility compared to existing methods?；划分：leave-one-out",
+      "split": "leave-one-out",
+      "metrics": [
+        "NDCG",
+        "MRR"
+      ],
+      "baselines": [
+        "## 5 Experiments In this section, we conduct experiments to address the following research questions: • RQ1: How does TriRec perform in terms of accuracy, fairness, and expected item utility compared to existing methods?；<table><tr><td>Datasets</td><td>#Items</td><td>#Inters.</td><td>Sparsity</td></tr><tr><td>CDs &amp; Vinyl (Full)</td><td>701,673</td><td>4,827,273</td><td>99.99%</td></tr><tr><td>- Processed</td><td>33,042</td><td>41,901</td><td>99.93%</td></tr><tr><td>Movies &amp; TV (Full)</td><td>747,764</td><td>17,328,314</td><td>99.99%</td></tr><tr><td>- Processed</td><td>27,407</td><td>40,907</td><td>99.92%</td></tr><tr><td>Goodreads YA (Full)</td><td>93,398</td><td>34,919,254</td><td>99.94%</td></tr><tr><td>- Processed</td><td>10,786</td><td>60,743</td><td>99.71%</td></tr><tr><td>Steam Games (Full)</td><td>15,474</td><td>7,793,069</td><td>99.98%</td></tr><tr><td>- Processed</td><td>6,635</td><td>36,00；We compare TriRec with three groups of state-ofthe-art models: • Agent-based User-Centric: AgentCF++ [19] and MACRec [32]."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "TriRec在四个数据集上均取得最佳或次佳效果。在CDs & Vinyl上，NDCG达0.4951（优于MACRec的0.4858），EIU达0.5925（最高）。在Movies & TV上，NDCG达0.4630（最高），DGU和MGU均为最低（0.2258和0.1768），实现最佳公平性。在Goodreads YA上，NDCG达0.5503，EIU达0.6465，均为最高。在Steam上，DGU和MGU最低（0.4054和0.3970），EIU最高（0.5748）。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/Marfekey/TriRec",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计：可借鉴物品智能体主动生成个性化推广内容的机制，使物品从被动候选变为主动参与者，特别适用于冷启动场景；2）系统架构：两阶段解耦设计（相关性建模与曝光调节分离）可作为多目标推荐系统的通用架构模板；3）评估方法：三方效用评估体系（用户准确性、物品期望效用、平台公平性）为多利益相关方推荐系统提供了标准化评估框架；4）数据处理：基于LLM的语义偏好推理方法可替代传统协同过滤，实现更丰富的用户-物品交互建模。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计：可借鉴物品智能体主动生成个性化推广内容的机制，使物品从被动候选变为主动参与者，特别适用于冷启动场景；",
+      "系统架构：两阶段解耦设计（相关性建模与曝光调节分离）可作为多目标推荐系统的通用架构模板；",
+      "评估方法：三方效用评估体系（用户准确性、物品期望效用、平台公平性）为多利益相关方推荐系统提供了标准化评估框架；",
+      "数据处理：基于LLM的语义偏好推理方法可替代传统协同过滤，实现更丰富的用户-物品交互建模。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.165733+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.873209+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2603.10673_三方智能体推荐框架\\2603.10673.md",
+    "source_hash": "16c0647b266b51c197782d726733228ff66772057b592f8f61e205c5f4baa600",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2603.10673_summary.md",
+    "summary_hash": "5885ab90dc5b5136b6df9a986c36bc848936449f8abe0516e46749d5a26882e9"
+  }
+}

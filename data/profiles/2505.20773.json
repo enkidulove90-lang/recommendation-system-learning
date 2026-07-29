@@ -1,0 +1,167 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2505.20773",
+  "identity": {
+    "title": "Adaptive Candidate Retrieval with Dynamic Knowledge Graph Construction for Cold-Start Recommendation",
+    "chinese_title": "冷启动推荐的知识引导检索增强生成",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2505.20773"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "cold_start"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "efficiency",
+      "robustness",
+      "explainability"
+    ],
+    "technical_paradigms": [
+      "llm",
+      "rag"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "knowledge_graph",
+      "behavior_sequence"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出ColdRAG框架，通过动态构建领域知识图谱和LLM引导的多跳推理，解决了冷启动推荐中静态知识图谱维护成本高、LLM依赖预过滤候选列表的问题。",
+    "one_sentence_contribution": "提出ColdRAG框架，通过动态构建领域知识图谱和LLM引导的多跳推理，解决了冷启动推荐中静态知识图谱维护成本高、LLM依赖预过滤候选列表的问题。",
+    "method_overview": "采用检索增强生成（RAG）框架，结合动态知识图谱构建与LLM推理。首先用LLM生成商品画像并提取实体关系构建图结构；推理时，基于用户历史嵌入定位图节点，通过LLM评分边进行多跳扩展，收集候选集；最后用检索到的上下文和候选集生成推荐。",
+    "method_components": [
+      {
+        "name": "动态知识图谱构建",
+        "role": "reported_innovation",
+        "mechanism": "动态知识图谱构建。利用LLM从商品元数据（标题、描述、属性、评论）中自动提取实体和关系，构建可增量更新的结构化语义图，避免了静态图谱的维护成本和过时问题。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "LLM引导的自适应候选检索",
+        "role": "reported_innovation",
+        "mechanism": "LLM引导的自适应候选检索。将候选生成视为目标导向的图遍历，通过LLM对边进行相关性评分（阈值λ=7），实现多跳推理，无需预过滤候选列表，解决了LLM上下文窗口限制。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "证据路径驱动的推荐",
+        "role": "reported_innovation",
+        "mechanism": "证据路径驱动的推荐。检索过程中保留实体和关系的自然语言描述作为证据，在最终推荐时作为系统提示提供语义基础，显著降低了LLM的幻觉率（降至3.15%）。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "## Limitations While ColdRAG demonstrates strong performance, it faces several practical constraints.",
+      "Another limitation lies in ColdRAG’s limited adaptability."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Review数据集（Games）"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Review数据集（Toys）"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Review数据集（Office）"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon Review数据集（Games）、Amazon Review数据集（Toys）、Amazon Review数据集（Office）；任务：Experiments We conduct comprehensive experiments to evaluate the effectiveness of ColdRAG in item cold-start recommendation.；划分：leave-one-out",
+      "split": "leave-one-out",
+      "metrics": [
+        "RECALL@10",
+        "NDCG@10"
+      ],
+      "baselines": [
+        "For training-based baselines, these 500 cold-item sequences are used for testing, and all remaining sequences form the training set, ensuring consistent evaluation between training-based and training-free settings.；## 4.1.2 Baselines We compare ColdRAG with representative baselines spanning both training-based and trainingfree paradigms.；Among the training-based baselines, UniSRec fine-tunes a pretrained model, whereas CLCRec and TDRO are trained from scratch."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在Games、Toys、Office三个数据集上，ColdRAG（使用GPT）的Recall@10分别达到12.38%、5.40%、8.60%，NDCG@10分别为4.37%、2.29%、3.26%。相比最强基线（KALM4Rec/LLMRank），Recall@10提升78.22%、26.76%、123.81%。使用Qwen模型时，Games数据集Recall@10达19.57%。幻觉率仅3.15%，远低于其他LLM方法的5-10%。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发有重要借鉴价值：1）算法设计：可采用动态知识图谱作为Agent的长期记忆，支持增量更新；2）推理机制：LLM引导的多跳图遍历可作为Agent的推理策略，实现目标导向的探索；3）评估方法：论文的稳定性（5次运行方差）和幻觉率评估指标可直接用于Agent质量监控；4）系统架构：混合存储（图拓扑+向量数据库）的设计可复用，支持高效语义检索与结构化推理的结合。",
+    "design_lessons": [
+      "对推荐Agent开发有重要借鉴价值",
+      "算法设计：可采用动态知识图谱作为Agent的长期记忆，支持增量更新；",
+      "推理机制：LLM引导的多跳图遍历可作为Agent的推理策略，实现目标导向的探索；",
+      "评估方法：论文的稳定性（5次运行方差）和幻觉率评估指标可直接用于Agent质量监控；",
+      "系统架构：混合存储（图拓扑+向量数据库）的设计可复用，支持高效语义检索与结构化推理的结合。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.961104+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.602359+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.20773_冷启动推荐的知识引导检索增强生成\\2505.20773.md",
+    "source_hash": "c54bd1952fea01f2e621d1294fd1c1d6d935667bde26e5359729c305bde428fb",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2505.20773_summary.md",
+    "summary_hash": "1020aeb994124558453de09a9bd3bf2e9bf56e55cefc892270708817dd20bdb3"
+  }
+}

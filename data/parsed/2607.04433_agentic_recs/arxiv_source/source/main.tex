@@ -1,0 +1,185 @@
+\documentclass[11pt, a4paper, onecolumn, copyright]{AweAI}
+
+\usepackage[authoryear, sort&compress, round]{natbib}
+\bibliographystyle{abbrvnat}
+
+% Packages --------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{bm}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{ragged2e}
+\usepackage{makecell}
+\usepackage{balance}
+\usepackage[normalem]{ulem}
+\usepackage[table]{xcolor}
+\usepackage{colortbl}
+% \usepackage{subfigure}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{enumitem}
+\usepackage[most]{tcolorbox}
+\usepackage{marvosym}
+
+% taxonomy tree / overview tree
+\usepackage{adjustbox}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows.meta,positioning,fit,matrix}
+\usepackage[edges]{forest}
+
+\definecolor{lightgray}{RGB}{215,215,215}
+\definecolor{myred}{RGB}{210,109,91}
+\definecolor{mygreen}{HTML}{F28705}
+\useunder{\uline}{\ul}{}
+\newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
+
+% Macros ----------------------------------------------------------------
+\newcommand{\ie}{\emph{i.e., }}
+\newcommand{\eg}{\emph{e.g., }}
+\newcommand{\etal}{\emph{et al. }}
+% \newcommand{\st}{\emph{s.t. }}
+\newcommand{\etc}{\emph{etc.}}
+\newcommand{\wrt}{\emph{w.r.t. }}
+\newcommand{\cf}{\emph{cf. }}
+\newcommand{\aka}{\emph{a.k.a. }}
+\newcommand{\todo}[1]{\textcolor{red}{todo: #1}}
+\newcommand{\xinyu}[1]{\textcolor[HTML]{029386}{[\textbf{Xinyu}: #1]}}
+\newcommand{\honghui}[1]{\textcolor[HTML]{7B68EE}{[\textbf{Honghui}: #1]}}
+\newcommand{\sunhao}[1]{\textcolor{blue}{sunhao: #1}}
+\newcommand{\feiliu}[1]{\textcolor{magenta}{feiliu: #1}}
+\newcommand{\yashar}[1]{\textcolor{magenta}{\textbf{[Yashar:]} #1}}
+\newcommand{\yasharColor}[1]{\textcolor{magenta}{#1}}
+\newcommand{\athena}[1]{\textcolor{brown}{[\textbf{Athena:} #1]}}
+
+% for algorithm
+\newlength\myindent
+\setlength\myindent{2em}
+\newcommand\bindent{%
+    \begingroup
+    \setlength{\itemindent}{\myindent}
+    \addtolength{\algorithmicindent}{\myindent}
+}
+\newcommand\eindent{\endgroup}
+\floatname{algorithm}{Algorithm}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\clubpenalty=10000
+\widowpenalty=10000
+\hyphenpenalty=2000
+\tolerance=7000
+
+% Theorem environments --------------------------------------------------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% Metadata --------------------------------------------------------------
+% \title{Autonomous Information Seeking: A Roadmap for Agentic Recommender Systems}
+\title{Autonomous Information Seeking: A Roadmap for Agentic Recommender Systems}
+
+
+\author{%
+  {Xinyu Lin$^1$~Yashar Deldjoo$^2$\textsuperscript{\Letter}~Sunhao Dai$^3$~Honghui Bao$^1$~Xiaopeng Ye$^3$~Fatemeh Nazary$^2$~
+  Wenjie Wang$^4$~Tommaso Di Noia$^2$~Jun Xu$^3$~Tat-Seng Chua$^1$}\\
+  $^1$National University of Singapore~~$^2$Polytechnic University of Bari\\
+  $^3$Renmin University of China~~$^4$University of Science and Technology of China\\
+  \texttt{xylin1028@gmail.com, deldjooy@acm.org}
+}
+
+\renewcommand{\today}{}
+\makeatletter
+\renewcommand{\abscontent}{%
+    \noindent
+    \parbox{\dimexpr\linewidth}{\absfont \theabstract}%
+    \vskip1em
+    \noindent\textbf{Keywords:} Agentic Recommender System, Level of Autonomy, LLM Agent, Agent-assisted Recommender, Agent as Recommender, Agent as User Simulator\\
+    \vspace{0.4em}
+    \hrule
+    \vspace{0.3em}
+    {\small
+    \textsuperscript{\Letter} Corresponding author.
+    }
+}
+\fancypagestyle{firststyle}{
+    \fancyhead[R]{%
+        \ifdefined\paperurl
+        \if\relax\the\paperurl\relax \else
+            \href{\the\paperurl}{\urlheaderfont \itshape \the\paperurl}\\ \fi
+        \else
+        \fi
+        {\footerfont\itshape\monthyeardate\today\hspace{8pt}}%
+        \ifthenelse{\boolean{confidential}}{\\ \footerfont \internalonly}{}
+    }
+    \fancyhead[C]{}
+    \fancyfoot[L]{
+    \footerfont\itshape
+        \ifdefined\correspondingauthor
+        \if\relax\detokenize\expandafter{\the\correspondingauthor}\relax
+      \else
+        \footerfont\itshape {Emails: \the\correspondingauthor\\}%
+      \fi
+    \fi
+    }
+    \fancyfoot[R]{
+        \ifthenelse{\boolean{confidential}}{
+        \ifdefined\reportnumber
+        \if\relax\the\reportnumber\relax
+        \else \footerfont\itshape  {\footerfont \thepa{} Technical Report \the\reportnumber} \fi
+        \else \fi
+        }{\footerfont\bfseries\relax}
+    }
+    \fancyfoot[C]{
+        \footerfont\bfseries\relax}
+}
+\makeatother
+
+\renewcommand{\footrulewidth}{0pt}
+
+\begin{abstract}
+The rapid integration of large language model-based agents into recommender systems has driven a shift from static, ranking-based pipelines toward autonomous and interactive systems that can reason, plan, and act. This survey provides a comprehensive overview of this emerging landscape by introducing a unified taxonomy grounded in the level of autonomy and three core paradigms of agentic recommender systems: agent-assisted recommendation, agent-as-recommender, and agent-as-user-simulator. The autonomy framework organizes existing methods along increasing capabilities in proactivity, context awareness, interaction flexibility, and adaptivity. Building on this framework, the survey analyzes how each paradigm adopts different agentic architectures and how agents enhance key components such as profiles, memory, tool use, workflows, and optimization mechanisms.
+We further examine evaluation methodologies for agentic recommendation, covering automated metrics, LLM-based judging, and simulation-based assessment, and discuss their limitations in capturing reasoning quality, user experience, and system behavior. 
+Beyond existing evaluation protocols, we further discuss unresolved issues in evaluating agentic recommender systems, including trajectory-level assessment, agent contribution analysis, and calibration of user simulation. 
+Lastly, the survey outlines open challenges in lifelong user modeling, contextual abstraction, multimodal alignment, controllability, trustworthiness, privacy, scalability, and efficiency. 
+Together, these analyses establish a unified foundation for understanding the current progress of agentic recommender systems and highlight promising opportunities for developing more autonomous, reliable, and human-aligned recommendation agents.
+\end{abstract}
+
+\begin{document}
+
+\begingroup
+\makeatletter
+\renewcommand{\thefootnote}{}
+\renewcommand{\@makefnmark}{}
+\maketitle
+\makeatother
+\endgroup
+
+\input{sections/0_intro}
+\input{sections/1_foundation_and_taxonomy}
+\input{sections/2_agent_assisted_rec}
+\input{sections/3_unified_agent4rec}
+\input{sections/4_user_simulator}
+\input{sections/5_evaluation_and_challenges_updatednew}
+\input{sections/6_challenges}
+\input{sections/7_conclusion}
+
+\bibliography{bibtex}
+
+\end{document}

@@ -1,0 +1,17 @@
+{
+  "paper_id": "2512.20916",
+  "profile_path": "D:\\recommendation-system-learning\\data\\profiles\\2512.20916.json",
+  "status": "validated",
+  "grade": "B",
+  "issues": [
+    {
+      "severity": "info",
+      "code": "implementation_incomplete",
+      "path": "experiment.implementation",
+      "message": "Unreported implementation fields: optimizer, hyperparameters"
+    }
+  ],
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "generated_at": "2026-07-24T07:08:48.117640+00:00"
+}

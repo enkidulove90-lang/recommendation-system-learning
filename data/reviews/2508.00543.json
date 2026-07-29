@@ -1,0 +1,29 @@
+{
+  "paper_id": "2508.00543",
+  "profile_path": "D:\\recommendation-system-learning\\data\\profiles\\2508.00543.json",
+  "status": "failed",
+  "grade": "D",
+  "issues": [
+    {
+      "severity": "error",
+      "code": "asset_identity_conflict",
+      "path": "identity.title",
+      "message": "summary English title conflicts with the parsed paper title; parsed title is authoritative"
+    },
+    {
+      "severity": "warning",
+      "code": "metrics_missing",
+      "path": "experiment.protocol.metrics",
+      "message": "Experiment paper has no extracted metrics."
+    },
+    {
+      "severity": "info",
+      "code": "implementation_incomplete",
+      "path": "experiment.implementation",
+      "message": "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    }
+  ],
+  "reviewed_by": null,
+  "reviewed_at": null,
+  "generated_at": "2026-07-24T05:46:49.552088+00:00"
+}

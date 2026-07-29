@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2511.15141",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2511.15141_ItemRAG：基于物品的检索增强生成推荐\\2511.15141.md",
+  "source_hash": "beb69602db23d340442b5cceb63cac2da15f17874abd98624007769295b8eb05",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2963,
+      "end_char": 4163,
+      "quote": "ast item pools [1, 7–10, 12, 16, 17]. By inferring users’ preferences from their purchase histories, recommender systems provide personalized recommendations that improve user satisfaction and drive business revenue.\n\nIn recent years, there have been significant eforts to use large language models (LLMs) as a recommender system. In standard practice, given a target user’s purchase history, an LLM is prompted to recommend items from a candidate set (e.g., a small subset of the full item set) [11, 14]. Owing to LLM’s strong reasoning and zero-/few-shot capabilities, LLM-based recommenders can handle coldstart items efectively and can also provide intuitive explanations that improve users’ understanding of the recommendation results.\n\nTo better adapt LLMs for the recommendation tasks, various retrieval-augmented generation (RAG) techniques have been used [4, 12]. Such methods typically focus on user retrieval [21, 25], retrieving users similar to a target user and supplying their purchase histories together with the target user’s own history to the LLM.\n\nHowever, user retrieval has several limitations. First, retrieved users, although coarsely similar to the target user, may still inc",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2511.15141_ItemRAG：基于物品的检索增强生成推荐\\2511.15141.md",
+      "source_hash": "beb69602db23d340442b5cceb63cac2da15f17874abd98624007769295b8eb05",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3 Proposed method",
+      "start_char": 9745,
+      "end_char": 10005,
+      "quote": "## 3 Proposed method\n\nIn this section, we introduce ItemRAG, an item-based retrievalaugmented generation (RAG) method for LLM-based recommendation. We first give an overview of the ItemRAG pipeline (Section 3.1) and detail our retrieval strategy (Section 3.2).",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2511.15141_ItemRAG：基于物品的检索增强生成推荐\\2511.15141.md",
+      "source_hash": "beb69602db23d340442b5cceb63cac2da15f17874abd98624007769295b8eb05",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.1 Experimental setting",
+      "start_char": 16084,
+      "end_char": 17284,
+      "quote": "## 4.1 Experimental setting\n\nDatasets and evaluation protocol. We use four domains from the latest Amazon Reviews dataset [3]: Sports & Outdoors (Sports), Toys & Games (Toys), Beauty & Personal Care (Beauty), and Arts, Crafts & Sewing (Arts). Further details, including preprocessing steps and dataset statistics, are provided in Appendix [13]. For evaluation, following prior work [14, 23], we use a leave-one-out protocol: for each user, the last purchased item is held out for testing, and the remaining history is used as input. Also, following [14], we prompt the LLM to rank 10 candidate items for the target user’s next purchase; the set includes 1 ground-truth item and 9 randomly sampled items, and results with larger candidate sets are reported in Appendix [13]. We run each experiment three times and report the mean metrics. We further conduct a Wilcoxon signed-rank test between ItemRAG and each baseline to assess statistical significance. In addition, we provide an inference runtime analysis of ItemRAG in the appendix [13].\n\nBaseline methods and ItemRAG. For comparison, we use 9 baseline methods: two graph-based models (LightGCN [2] and Light-GCN++ [15]), two sequential models (S",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2511.15141_ItemRAG：基于物品的检索增强生成推荐\\2511.15141.md",
+      "source_hash": "beb69602db23d340442b5cceb63cac2da15f17874abd98624007769295b8eb05",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "5 Conclusion and discussion",
+      "start_char": 29734,
+      "end_char": 30934,
+      "quote": "## 5 Conclusion and discussion\n\nIn this work, we introduce ItemRAG, an item-based RAG technique for LLM-based recommendation. The key idea is to augment indi vidual items in the target user’s purchase history or the candidate set, instead of relying on coarse user-level augmentation. Especially, its carefully designed retrieval strategy, guided by co-purchase in formation, retrieves items that are recommendation-relevant rather than merely semantically similar, and also augments cold-start items. Through extensive experiments, we demonstrate the efec tiveness of ItemRAG for LLM-based recommendation and cold-start item recommendation. One limitation of ItemRAG is that incorpo rating additional retrieved information can increase the length of the input prompt to the LLM recommender, which in turn leads to higher API costs and longer inference time. Reducing the token usage by the retrieved information is thus an important direction for future work, especially for practical deployment.\n\nAcknowledgements. This work was partly supported by the National Research Foundation of Korea (NRF) grant funded by the Korea government (MSIT) (No. RS-2024-00406985, 40%). This work was partly support",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2511.15141_ItemRAG：基于物品的检索增强生成推荐\\2511.15141.md",
+      "source_hash": "beb69602db23d340442b5cceb63cac2da15f17874abd98624007769295b8eb05",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

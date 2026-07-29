@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2404.16924",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2404.16924\\2404.16924.md",
+  "source_hash": "bddac65b8c80dc3db48bfb9b11cafc8cae153b0959678747ff514fa81f6d8e62",
+  "parser": "local_pypdf",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "Page 5",
+      "start_char": 24477,
+      "end_char": 25677,
+      "quote": "ronym ’XX, June 03–05, 2024, Woodstock, NY\nTable 1: Identifiers in generative search.\nType Semantic Distinctiveness Update Training Applicable retrieval scenarios\nNumeric ID × ✓ × document-to-identifier\nquery-to-identifier Small-scale corpus\nTitles ✓ × ✓ query-to-identifier Document-level retrieval\nN-grams ✓ × ✓ query-to-identifier Document-level & Passage-level retrieval\nCodebook ✓ ✓ ✓ codebook training\nquery-to-identifier Document-level & Passage-level retrieval\nMultiview ✓ × ✓ query-to-identifier Document-level & Passage-level retrieval\ninstance, in Wikipedia, each page is assigned a unique title that\nsuccinctly summarizes its content. These titles are semantically\nlinked to the documents and establish a one-to-one correspondence,\nmaking them ideal identifiers. In 2021, Cao et al. investigated the\nutilization of titles as identifiers in entity retrieval and document\nretrieval [24]. Besides, there are some title-like identifiers, including\nURLs [113, 178, 180], keywords [63], and summaries [176].\nHowever, document titles are only effective in certain retrieval\ndomains and prove ineffective in the following aspects. 1) Firstly,\nin passage-level retrieval, documents are often divid",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2404.16924\\2404.16924.md",
+      "source_hash": "bddac65b8c80dc3db48bfb9b11cafc8cae153b0959678747ff514fa81f6d8e62",
+      "extraction_method": "section_router",
+      "confidence": 0.43
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "Page 1",
+      "start_char": 139,
+      "end_char": 1339,
+      "quote": "## Page 1\n\nA Survey of Generative Search and Recommendation in the Era of\nLarge Language Models\nYongqi Li∗\nliyongqi0@gmail.com\nThe Hong Kong Polytechnic\nUniversity\nXinyu Lin∗\nxylin1028@gmail.com\nNational University of Singapore\nWenjie Wang\nwenjiewang96@gmail.com\nNational University of Singapore\nFuli Feng\nfulifeng93@gmail.com\nUniversity of Science and Technology\nof China\nLiang Pang\npangliang@ict.ac.cn\nChinese Academy of Sciences\nWenjie Li\ncswjli@comp.polyu.edu.hk\nThe Hong Kong Polytechnic\nUniversity\nLiqiang Nie\nnieliqiang@gmail.com\nHarbin Institute of Technology\n(Shenzhen)\nXiangnan He\nxiangnanhe@gmail.com\nUniversity of Science and Technology\nof China\nTat-Seng Chua\ndcscts@nus.edu.sg\nNational University of Singapore\nABSTRACT\nWith the information explosion on the Web, search and recom-\nmendation are foundational infrastructures to satisfying users’ in-\nformation needs. As the two sides of the same coin, both revolve\naround the same core research problem, matching queries with\ndocuments or users with items. In the recent few decades, search\nand recommendation have experienced synchronous technologi-\ncal paradigm shifts, including machine learning-based and deep\nlearning-based paradigms.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2404.16924\\2404.16924.md",
+      "source_hash": "bddac65b8c80dc3db48bfb9b11cafc8cae153b0959678747ff514fa81f6d8e62",
+      "extraction_method": "section_router",
+      "confidence": 0.35
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "Page 6",
+      "start_char": 30792,
+      "end_char": 31992,
+      "quote": "## Page 6\n\nConference acronym ’XX, June 03–05, 2024, Woodstock, NY Li, et al.\nTable 2: Summary of the representative generative search methods.\nMethod Identifier Backbone Constrained\ngeneration Datasets\nGENRE [24] Titles BART-large Trie KILT\nDSI [133] Numeric ID T5-base, T5-large,\nT5-XL, T5-XXL Trie NQ10K, NQ100K, NQ320K\nSEAL [7] N-grams BART-large FM-index KILT, NQ10K, NQ\nNCI [147] Numeric ID T5-small, T5-base,\nT5-large Trie NQ320K, Trivia QA (subset)\nMINDER [76] Multiview BART-large FM-index NQ, TriviaQA, MSMARCO\nGENRET [125] Codebook T5-base Trie NQ320K, MSMARCO, BEIR\nTOME [113] Title-like (URLs) T5-large, T5-XL Trie NQ320K, MSMARCO\nLTRGR [75] Multiview BART-large FM-index NQ, TriviaQA, MSMARCO\nDGR [77] Multiview BART-large FM-index NQ, TriviaQA, MSMARCO, TREC DL\nDSI(scaling up) [105] Numeric ID T5-base, T5-large,\nT5-XL, T5-XXL Trie NQ320K, Trivia QA (subset), MSMARCO\nDSI-QG [179] Numeric ID T5-base, T5-large - NQ320K, XOR QA 100k\nDSI++ [98] Numeric ID T5-base, T5-large,\nT5-XL Trie NQ-inc, MSMARCO-inc\nGCoQA [74] Titles T5-small, T5-base,\nT5-large, T5-XL Trie TOPIOCQA, QRECC,ORQUAC\nGMR [62] Titles T5-base Trie HotpotQA\nCorpusBrain [16] Titles BART-large Trie KILT\nUGR [14] N-grams",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2404.16924\\2404.16924.md",
+      "source_hash": "bddac65b8c80dc3db48bfb9b11cafc8cae153b0959678747ff514fa81f6d8e62",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

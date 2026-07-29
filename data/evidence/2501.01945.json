@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2501.01945",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2501.01945_大模型冷启动推荐综述\\2501.01945.md",
+  "source_hash": "25d79bc17a86c29cbcbfbc50aaa0b27d39590a129e49f369d6ee01e971068714",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 INTRODUCTION",
+      "start_char": 9151,
+      "end_char": 10351,
+      "quote": "en these motivations, the cold-start problem has driven the exploration of innovative approaches that leverage diverse external knowledge sources. By incorporating information beyond traditional user-item interactions [66, 204], such as content features [183], social information [36], or pretrained LLM knowledge [122], these methods enrich the representation and modeling of cold-start entities, enabling recommender systems to perform efectively even under sparse data conditions. As such, solving the cold-start problem is not merely a technical challenge—it is a strategic necessity for building fair, engaging, and sustainable recommendation platforms in an ever-changing digital landscape.\n\nEarly cold-start attempts adopt content-based approaches [133, 181] and focus on categorical textual features, such as item genres, item titles, and user profiles, which play a crucial role in representing cold entities. Then, with the advances of graph mining techniques [101, 225, 231], high-order relations derived from graph structures,\n\n![](images/819ccef4ac94af9fbf2e338711e71267da6b08cbc13cdbf7691992eeaa132ca1.jpg)  \nFig. 1. Illustrations of the knowledge scope discussed in this survey.\n\nJ. AC",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2501.01945_大模型冷启动推荐综述\\2501.01945.md",
+      "source_hash": "25d79bc17a86c29cbcbfbc50aaa0b27d39590a129e49f369d6ee01e971068714",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "1.2 Survey Methodology",
+      "start_char": 16352,
+      "end_char": 17552,
+      "quote": "## 1.2 Survey Methodology\n\nTo comprehensively cover the papers in the cold-start recommendation. We adopted a semi-systematic survey methodology to identify the relevant papers. Initially, we queried prominent academic databases such as Google Scholar and Web of Science with pre-defined searching keywords such as \"cold-start recommendation\", \"coldstart recommender systems\", \"strict cold-start\", \"zero-shot recommendation\", and \"few-shot recommendation\". Additionally, we screen specialized conference proceedings, including KDD, WWW, SIGIR, CIKM, WSDM, and RecSys. The search results were filtered by analyzing titles, abstracts, and experiments to evaluate relevance. Then, the relevant papers were further reviewed thoroughly, and their references were used as seeds for a snowballing approach to identify additional papers. The final collection comprised studies categorized into four core areas based on their contributions, as illustrated in the taxonomy diagram. These areas include content features, graph relations, domain information, and world knowledge from LLMs, as summarized in Figure 3. The majority of these works describe technical approaches or propose novel frameworks, with a s",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2501.01945_大模型冷启动推荐综述\\2501.01945.md",
+      "source_hash": "25d79bc17a86c29cbcbfbc50aaa0b27d39590a129e49f369d6ee01e971068714",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "7.5 Benchmark and Unified Evaluation",
+      "start_char": 104817,
+      "end_char": 106017,
+      "quote": "## 7.5 Benchmark and Unified Evaluation\n\nResearch on cold start recommendation systems has made significant progress. However, evaluations for existing cold start recommendation systems are currently diverse and inconsistent. Thus, it would be promising and meaningful to develop a unified and fair evaluation benchmark for the community. Specifically, there are multiple problem settings for cold-start recommendations, such as strict cold-start, non-strict cold-start, and long-tail cold-start, and each setting needs to be evaluated fairly. This raises the following three main issues: (i) Diferent benchmark datasets. Diferent papers rarely overlap in the datasets they use, making it dificult for researchers to conduct unified comparisons across several related datasets. A promising approach for the future would be to encourage the community to focus on a selection of high-quality datasets for comparative experiments. Further, only part of the papers adopts datasets with real cold users/items in industrial platforms. We encourage the community to release these datasets for open research, which is very meaningful for the development of the community. (ii) Diferent evaluation settings. T",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2501.01945_大模型冷启动推荐综述\\2501.01945.md",
+      "source_hash": "25d79bc17a86c29cbcbfbc50aaa0b27d39590a129e49f369d6ee01e971068714",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

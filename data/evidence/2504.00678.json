@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2504.00678",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.00678_LLM增强的多阶段推荐系统\\2504.00678.md",
+  "source_hash": "66342440bff76cc15662f93c70d73f22ff8bf2a9ec93894933a0eeecbcf24abe",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "I. INTRODUCTION",
+      "start_char": 2240,
+      "end_char": 3440,
+      "quote": "## I. INTRODUCTION\n\nOVER the past decade, device-free passive detection [1] has gradually evolved from an emerging technology that allows for the detection of entities without carrying any equipment. To ensure the safety of people’s lives and properties, device-free passive detection has been studied and applied in many fields, including intrusion detection, human behavior pattern recognition, and detecting the presence of living organisms in hazardous environments. With the popularity of vehicles, the serious consequences for children or animals due to retention in vehicles have received widespread attention worldwide [2]–[7]. The European New Car Assessment Programme (Euro NCAP) has put forward regulatory requirements for child presence detection (CPD) systems in 2023 [8]. Vehicles equipped with presence detection systems can detect and alert children or pets left alone in the vehicle to avoid heatstroke or even life threatening incidents.\n\nCurrently, numerous technological solutions are being applied for device-free passive presence detection systems. Early systems for detecting the presence of living organisms were usually based on contact weight or pressure sensors [9]–[11]. D",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.00678_LLM增强的多阶段推荐系统\\2504.00678.md",
+      "source_hash": "66342440bff76cc15662f93c70d73f22ff8bf2a9ec93894933a0eeecbcf24abe",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "A. Methodology",
+      "start_char": 33379,
+      "end_char": 34579,
+      "quote": "## A. Methodology\n\nImplementation: As shown in Fig. 7, we used a hardware platform based on Infineon’s commercial Wi-Fi chipsets CYW8x459 developed by Desay SV with dual bands at 2.4 and 5 GHz and with additional PCB antennas. RapidPD is deployed on two separate hardware platforms, each carrying a Wi-Fi chip that sends and receives data by programming different customized firmware. An antenna is set up on Rx to receive packets transmitted by two antennas of Tx at a 20 Hz sampling rate operating on a channel with a center frequency of 5775 MHz (channel 155), which has a bandwidth of 80 MHz and contains 234 obtainable subcarriers. As shown in Fig. 8, Tx antennas are located at the handles above the rear doors on each side of the vehicle, and the Rx antenna is located on the side of the center console adjacent to the glove box.\n\n![](images/53ba57dbd93654adeaf849d6e6fbd236eaeffa1541e8f903421efdf8ab0c409a.jpg)  \nFig. 7. Hardware platform with additional PCB antennas.\n\n![](images/d9f1057bb3a3115c9a2eaf4bf4aa3e2a2ff869d3aac523f315d3250d18175516.jpg)  \n(a) Tx.\n\n![](images/29f6c080000eb5b1607b46682c91902c79059fcdcc381d99b8af8ecbe5786f04.jpg)  \n(b) Rx.  \nFig. 8. Position of the antenna.\n\nRap",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.00678_LLM增强的多阶段推荐系统\\2504.00678.md",
+      "source_hash": "66342440bff76cc15662f93c70d73f22ff8bf2a9ec93894933a0eeecbcf24abe",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "IV. EVALUATION",
+      "start_char": 33170,
+      "end_char": 33379,
+      "quote": "## IV. EVALUATION\n\nTo comprehensively evaluate RapidPD, we conducted extensive experiments in a typical car and with real infants, children, pets, and adults to validate the detection performance of RapidPD.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2504.00678_LLM增强的多阶段推荐系统\\2504.00678.md",
+      "source_hash": "66342440bff76cc15662f93c70d73f22ff8bf2a9ec93894933a0eeecbcf24abe",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "arxiv_id": "2505.05196",
+  "title": "Stealthy LLM-Driven Data Poisoning Attacks Against Embedding-Based Retrieval-Augmented Recommender Systems",
+  "authors": [
+    "Fatemeh Nazary",
+    "Yashar Deldjoo",
+    "Tommaso Di Noia",
+    "Eugenio Di Sciascio"
+  ],
+  "published": "2025-05-08",
+  "year": 2025,
+  "arxiv_url": "https://arxiv.org/abs/2505.05196",
+  "pdf_url": "https://arxiv.org/pdf/2505.05196",
+  "categories": ["cs.IR"],
+  "primary_category": "cs.IR"
+}

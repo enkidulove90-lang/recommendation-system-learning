@@ -1,0 +1,683 @@
+{
+  "$defs": {
+    "AblationFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "title": "Component",
+          "type": "string"
+        },
+        "finding": {
+          "title": "Finding",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "component",
+        "finding"
+      ],
+      "title": "AblationFinding",
+      "type": "object"
+    },
+    "AgentDesignProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "applicability": {
+          "default": "",
+          "title": "Applicability",
+          "type": "string"
+        },
+        "design_lessons": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Design Lessons",
+          "type": "array"
+        },
+        "source_type": {
+          "default": "project_analysis",
+          "enum": [
+            "paper_fact",
+            "project_analysis",
+            "mixed"
+          ],
+          "title": "Source Type",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "title": "AgentDesignProfile",
+      "type": "object"
+    },
+    "DatasetReference": {
+      "additionalProperties": false,
+      "properties": {
+        "registry_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Registry Id"
+        },
+        "paper_name": {
+          "title": "Paper Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "paper_name"
+      ],
+      "title": "DatasetReference",
+      "type": "object"
+    },
+    "ExperimentImplementation": {
+      "additionalProperties": false,
+      "properties": {
+        "hardware": {
+          "items": {
+            "$ref": "#/$defs/HardwareSpec"
+          },
+          "title": "Hardware",
+          "type": "array"
+        },
+        "framework": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Framework"
+        },
+        "optimizer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Optimizer"
+        },
+        "hyperparameters": {
+          "additionalProperties": true,
+          "title": "Hyperparameters",
+          "type": "object"
+        },
+        "unreported_fields": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unreported Fields",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "title": "ExperimentImplementation",
+      "type": "object"
+    },
+    "ExperimentProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "datasets": {
+          "items": {
+            "$ref": "#/$defs/DatasetReference"
+          },
+          "title": "Datasets",
+          "type": "array"
+        },
+        "protocol": {
+          "$ref": "#/$defs/ExperimentProtocol"
+        },
+        "implementation": {
+          "$ref": "#/$defs/ExperimentImplementation"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/ExperimentResult"
+          },
+          "title": "Results",
+          "type": "array"
+        },
+        "results_summary": {
+          "default": "",
+          "title": "Results Summary",
+          "type": "string"
+        },
+        "ablations": {
+          "items": {
+            "$ref": "#/$defs/AblationFinding"
+          },
+          "title": "Ablations",
+          "type": "array"
+        },
+        "reproducibility": {
+          "$ref": "#/$defs/ReproducibilityInfo"
+        }
+      },
+      "title": "ExperimentProfile",
+      "type": "object"
+    },
+    "ExperimentProtocol": {
+      "additionalProperties": false,
+      "properties": {
+        "task": {
+          "default": "not_reported",
+          "title": "Task",
+          "type": "string"
+        },
+        "split": {
+          "default": "not_reported",
+          "title": "Split",
+          "type": "string"
+        },
+        "metrics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Metrics",
+          "type": "array"
+        },
+        "baselines": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Baselines",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "title": "ExperimentProtocol",
+      "type": "object"
+    },
+    "ExperimentResult": {
+      "additionalProperties": false,
+      "properties": {
+        "dataset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Dataset"
+        },
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "setting": {
+          "default": "",
+          "title": "Setting",
+          "type": "string"
+        },
+        "comparison": {
+          "default": "",
+          "title": "Comparison",
+          "type": "string"
+        },
+        "delta": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Delta"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "metric"
+      ],
+      "title": "ExperimentResult",
+      "type": "object"
+    },
+    "HardwareSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Count"
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "title": "HardwareSpec",
+      "type": "object"
+    },
+    "MethodComponent": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "role": {
+          "default": "",
+          "title": "Role",
+          "type": "string"
+        },
+        "mechanism": {
+          "default": "",
+          "title": "Mechanism",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "MethodComponent",
+      "type": "object"
+    },
+    "PaperClassification": {
+      "additionalProperties": false,
+      "properties": {
+        "research_directions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Research Directions",
+          "type": "array"
+        },
+        "pipeline_stages": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Pipeline Stages",
+          "type": "array"
+        },
+        "problems": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Problems",
+          "type": "array"
+        },
+        "technical_paradigms": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Technical Paradigms",
+          "type": "array"
+        },
+        "modalities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Modalities",
+          "type": "array"
+        },
+        "maturity": {
+          "default": "research_prototype",
+          "title": "Maturity",
+          "type": "string"
+        },
+        "proposed_tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Proposed Tags",
+          "type": "array"
+        }
+      },
+      "title": "PaperClassification",
+      "type": "object"
+    },
+    "PaperIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "default": "",
+          "title": "Title",
+          "type": "string"
+        },
+        "chinese_title": {
+          "default": "",
+          "title": "Chinese Title",
+          "type": "string"
+        },
+        "authors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Authors",
+          "type": "array"
+        },
+        "published_date": {
+          "default": "",
+          "title": "Published Date",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceReference"
+        },
+        "paper_type": {
+          "default": "experiment",
+          "title": "Paper Type",
+          "type": "string"
+        }
+      },
+      "title": "PaperIdentity",
+      "type": "object"
+    },
+    "ProfileProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "parser": {
+          "default": "unknown",
+          "title": "Parser",
+          "type": "string"
+        },
+        "summarizer_model": {
+          "default": "",
+          "title": "Summarizer Model",
+          "type": "string"
+        },
+        "generated_at": {
+          "default": "",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "source_path": {
+          "default": "",
+          "title": "Source Path",
+          "type": "string"
+        },
+        "source_hash": {
+          "default": "",
+          "title": "Source Hash",
+          "type": "string"
+        },
+        "summary_path": {
+          "default": "",
+          "title": "Summary Path",
+          "type": "string"
+        },
+        "summary_hash": {
+          "default": "",
+          "title": "Summary Hash",
+          "type": "string"
+        }
+      },
+      "title": "ProfileProvenance",
+      "type": "object"
+    },
+    "ProfileQuality": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "default": "needs_review",
+          "enum": [
+            "validated",
+            "needs_review",
+            "stale",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "grade": {
+          "default": "C",
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "title": "Grade",
+          "type": "string"
+        },
+        "confidence": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "issues": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Issues",
+          "type": "array"
+        },
+        "validated_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Validated At"
+        }
+      },
+      "title": "ProfileQuality",
+      "type": "object"
+    },
+    "ReproducibilityInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "code_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code Url"
+        },
+        "data_access": {
+          "default": "not_reported",
+          "title": "Data Access",
+          "type": "string"
+        },
+        "reproducibility_grade": {
+          "default": "C",
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "title": "Reproducibility Grade",
+          "type": "string"
+        }
+      },
+      "title": "ReproducibilityInfo",
+      "type": "object"
+    },
+    "ResearchClaim": {
+      "additionalProperties": false,
+      "properties": {
+        "problem": {
+          "default": "",
+          "title": "Problem",
+          "type": "string"
+        },
+        "one_sentence_contribution": {
+          "default": "",
+          "title": "One Sentence Contribution",
+          "type": "string"
+        },
+        "method_overview": {
+          "default": "",
+          "title": "Method Overview",
+          "type": "string"
+        },
+        "method_components": {
+          "items": {
+            "$ref": "#/$defs/MethodComponent"
+          },
+          "title": "Method Components",
+          "type": "array"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        }
+      },
+      "title": "ResearchClaim",
+      "type": "object"
+    },
+    "SourceReference": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "default": "arxiv",
+          "title": "Type",
+          "type": "string"
+        },
+        "url": {
+          "default": "",
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "title": "SourceReference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "2.0",
+      "default": "2.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "paper_id": {
+      "title": "Paper Id",
+      "type": "string"
+    },
+    "identity": {
+      "$ref": "#/$defs/PaperIdentity"
+    },
+    "classification": {
+      "$ref": "#/$defs/PaperClassification"
+    },
+    "research_claim": {
+      "$ref": "#/$defs/ResearchClaim"
+    },
+    "experiment": {
+      "$ref": "#/$defs/ExperimentProfile"
+    },
+    "agent_design": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AgentDesignProfile"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "quality": {
+      "$ref": "#/$defs/ProfileQuality"
+    },
+    "provenance": {
+      "$ref": "#/$defs/ProfileProvenance"
+    }
+  },
+  "required": [
+    "paper_id"
+  ],
+  "title": "ResearchProfileV2",
+  "type": "object"
+}

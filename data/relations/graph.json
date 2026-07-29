@@ -1,0 +1,4930 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-24T07:08:49.162026+00:00",
+  "profile_count": 26,
+  "edges": [
+    {
+      "edge_id": "rel_9927ebcb0693182f",
+      "source_id": "2403.06447",
+      "target_id": "2404.16924",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: cold_start",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_b13ff5241cdbb8de",
+      "source_id": "2403.06447",
+      "target_id": "2501.01945",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, efficiency, long_tail, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "long_tail",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_348a6ed8a3185ad2",
+      "source_id": "2403.06447",
+      "target_id": "2504.16420",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: cold_start, efficiency, sparsity",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_f9cf4316e8e86c07",
+      "source_id": "2403.06447",
+      "target_id": "2505.09777",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, efficiency, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm, rag",
+        "Shared modality: behavior_sequence, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_6534fcd50baea74e",
+      "source_id": "2403.06447",
+      "target_id": "2505.20773",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_27bad51091739e92",
+      "source_id": "2403.06447",
+      "target_id": "2507.02626",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, sparsity",
+        "Shared technical paradigm: llm, reinforcement_learning",
+        "Shared modality: behavior_sequence, text",
+        "Shared metric: F1"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ],
+        "metrics": [
+          "F1"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_d771e72f1c93ba40",
+      "source_id": "2403.06447",
+      "target_id": "2510.22049",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, text",
+        "Shared metric: AUC"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ],
+        "metrics": [
+          "AUC"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_74f515a70d77b90a",
+      "source_id": "2403.06447",
+      "target_id": "2512.21526",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, long_tail, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, text",
+        "Shared metric: AUC"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "long_tail",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ],
+        "metrics": [
+          "AUC"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_6f702a92782e0d9a",
+      "source_id": "2404.16924",
+      "target_id": "2503.16734",
+      "relation_type": "shared_topic",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared research direction: generative_recommendation",
+        "Shared pipeline stage: evaluation, ranking",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "generative_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_f18ae748fc09f6fe",
+      "source_id": "2404.16924",
+      "target_id": "2504.16420",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.815,
+      "score": 0.6625,
+      "reasons": [
+        "Shared research direction: generative_recommendation",
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: cold_start",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "generative_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_91c764af0d69190d",
+      "source_id": "2404.16924",
+      "target_id": "2507.21117",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.785,
+      "score": 0.5875,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, retrieval_index",
+        "Shared research problem: cold_start",
+        "Shared technical paradigm: collaborative_filtering, llm, transformer",
+        "Shared modality: behavior_sequence, text",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "retrieval_index"
+        ],
+        "problems": [
+          "cold_start"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_bb284a26a88742d4",
+      "source_id": "2404.16924",
+      "target_id": "2602.21756",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.775,
+      "score": 0.5625,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, retrieval_index",
+        "Shared research problem: cold_start",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: text",
+        "Shared metric: MRR"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "retrieval_index"
+        ],
+        "problems": [
+          "cold_start"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ],
+        "metrics": [
+          "MRR"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9af75cfda66d3455",
+      "source_id": "2404.16924",
+      "target_id": "2603.10673",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.785,
+      "score": 0.5875,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking",
+        "Shared research problem: cold_start",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, text",
+        "Shared metric: MRR"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ],
+        "metrics": [
+          "MRR"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_5c94438b9f8895cc",
+      "source_id": "2404.16924",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.785,
+      "score": 0.5875,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, retrieval_index",
+        "Shared research problem: cold_start",
+        "Shared technical paradigm: collaborative_filtering, llm, transformer",
+        "Shared modality: text, video",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "retrieval_index"
+        ],
+        "problems": [
+          "cold_start"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "text",
+          "video"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9dbc2c3c921ad919",
+      "source_id": "2501.01945",
+      "target_id": "2503.16734",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared pipeline stage: evaluation, user_modeling",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9af1d989ee96bbdd",
+      "source_id": "2501.01945",
+      "target_id": "2505.05196",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_f3cefc56b3cf9144",
+      "source_id": "2501.01945",
+      "target_id": "2505.20773",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, knowledge_graph, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "knowledge_graph",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_df1eba479eee541c",
+      "source_id": "2501.01945",
+      "target_id": "2506.07261",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.745,
+      "score": 0.4875,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering",
+        "Shared modality: image"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering"
+        ],
+        "modalities": [
+          "image"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_6f5402dcd0c0299c",
+      "source_id": "2501.01945",
+      "target_id": "2509.13179",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, efficiency, fairness, robustness, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "fairness",
+          "robustness",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_412aed658be95aa5",
+      "source_id": "2501.01945",
+      "target_id": "2510.22049",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_43538e0717738420",
+      "source_id": "2501.01945",
+      "target_id": "2602.21756",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency, fairness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_c68b511ac72cfc81",
+      "source_id": "2501.01945",
+      "target_id": "2604.12965",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.71,
+      "score": 0.4,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9a24330e7e0d9dd7",
+      "source_id": "2501.01945",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency, fairness, long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "fairness",
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2d3487bf2835d72d",
+      "source_id": "2501.01945",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_8c21b1f6f5120ece",
+      "source_id": "2501.01945",
+      "target_id": "2606.26859",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.765,
+      "score": 0.5375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_446a22eae982a735",
+      "source_id": "2503.16734",
+      "target_id": "2504.16420",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: agent_recommendation, generative_recommendation",
+        "Shared pipeline stage: online_learning, ranking",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation",
+          "generative_recommendation"
+        ],
+        "pipeline_stages": [
+          "online_learning",
+          "ranking"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_b98f9189fb43b335",
+      "source_id": "2503.16734",
+      "target_id": "2505.05196",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking, user_modeling",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text, video"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_4fb725ee1340b96a",
+      "source_id": "2503.16734",
+      "target_id": "2603.10673",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.83,
+      "score": 0.7,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: evaluation, online_learning, ranking, user_modeling",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "online_learning",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_b30aedf6bda23169",
+      "source_id": "2503.16734",
+      "target_id": "2607.07108",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.815,
+      "score": 0.6625,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: evaluation, ranking, user_modeling",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_d7f37f3429d5af86",
+      "source_id": "2504.16420",
+      "target_id": "2503.16734",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.7125,
+      "reasons": [
+        "2504.16420 explicitly references 2503.16734",
+        "Shared research direction: agent_recommendation, generative_recommendation",
+        "Shared pipeline stage: online_learning, ranking",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation",
+          "generative_recommendation"
+        ],
+        "pipeline_stages": [
+          "online_learning",
+          "ranking"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "source:2504.16420:citation:2503.16734"
+      ]
+    },
+    {
+      "edge_id": "rel_a4aa19d410e71dec",
+      "source_id": "2504.16420",
+      "target_id": "2505.05196",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.785,
+      "score": 0.5875,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text, video",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_ffad519f93514006",
+      "source_id": "2504.16420",
+      "target_id": "2505.09777",
+      "relation_type": "evaluation_comparable",
+      "directed": false,
+      "confidence": 0.915,
+      "score": 0.9125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation",
+        "Shared research problem: cold_start, efficiency, explainability, fairness, sparsity",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text, video",
+        "Shared dataset: movielens, steam, yelp",
+        "Shared metric: HITRATE, NDCG"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ],
+        "datasets": [
+          "movielens",
+          "steam",
+          "yelp"
+        ],
+        "metrics": [
+          "HITRATE",
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_3897cb1304c3f299",
+      "source_id": "2504.16420",
+      "target_id": "2507.00715",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared research direction: generative_recommendation",
+        "Shared research problem: efficiency, sparsity",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "generative_recommendation"
+        ],
+        "problems": [
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2ec0dd2e6282ad66",
+      "source_id": "2504.16420",
+      "target_id": "2507.02097",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.855,
+      "score": 0.7625,
+      "reasons": [
+        "Shared research direction: agent_recommendation, multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: efficiency, explainability, fairness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation",
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2fb75b60d3a4a88e",
+      "source_id": "2504.16420",
+      "target_id": "2507.02626",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: cold_start, efficiency, explainability, sparsity",
+        "Shared technical paradigm: llm",
+        "Shared modality: audio, behavior_sequence, image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "audio",
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_894bbde93d74fa47",
+      "source_id": "2504.16420",
+      "target_id": "2507.21117",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: cold_start, efficiency, explainability, fairness, robustness, sparsity",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness",
+          "robustness",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_0438afc42d7295f4",
+      "source_id": "2504.16420",
+      "target_id": "2511.15141",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.775,
+      "score": 0.5625,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation",
+        "Shared research problem: cold_start, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_6bdeec273759f988",
+      "source_id": "2504.16420",
+      "target_id": "2512.20916",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: HITRATE"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "HITRATE"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_7339d06187791737",
+      "source_id": "2504.16420",
+      "target_id": "2602.21756",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: cold_start, efficiency, explainability, fairness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_187c96614b1c1bce",
+      "source_id": "2504.16420",
+      "target_id": "2603.10673",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: online_learning, ranking",
+        "Shared research problem: cold_start, explainability, fairness, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: audio, behavior_sequence, image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "online_learning",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability",
+          "fairness",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "audio",
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_775c275a3bc1c9bf",
+      "source_id": "2504.16420",
+      "target_id": "2606.09595",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: efficiency, explainability, fairness, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: audio, behavior_sequence, image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "fairness",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "audio",
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_37337d2147690b50",
+      "source_id": "2504.16420",
+      "target_id": "2606.26859",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.765,
+      "score": 0.5375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, online_learning, ranking",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "online_learning",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_76510602decfeb72",
+      "source_id": "2504.16420",
+      "target_id": "2607.07108",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_288b571c6a5ab3d4",
+      "source_id": "2505.05196",
+      "target_id": "2507.21117",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.81,
+      "score": 0.65,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm, rag, transformer",
+        "Shared modality: image, text",
+        "Shared metric: NDCG, RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "rag",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG",
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_737c4dbf37617be0",
+      "source_id": "2505.05196",
+      "target_id": "2512.21526",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: llm_ranking",
+        "Shared pipeline stage: evaluation, ranking, reranking",
+        "Shared research problem: long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "llm_ranking"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_c93e91a8e0c91878",
+      "source_id": "2505.05196",
+      "target_id": "2603.10673",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9f7a6dc98c8640c6",
+      "source_id": "2505.05196",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.865,
+      "score": 0.7875,
+      "reasons": [
+        "Shared research direction: llm_ranking",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm, rag, transformer",
+        "Shared modality: image, text, video",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "llm_ranking"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "rag",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_80857d83b628a5ba",
+      "source_id": "2505.09777",
+      "target_id": "2506.07261",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering",
+        "Shared modality: image, video"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering"
+        ],
+        "modalities": [
+          "image",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_a01cf75d181d1e09",
+      "source_id": "2505.09777",
+      "target_id": "2507.00715",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: evaluation, user_modeling",
+        "Shared research problem: efficiency, sparsity",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_3da357fb0fe173b6",
+      "source_id": "2505.09777",
+      "target_id": "2507.02097",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: efficiency, explainability, fairness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_1c123933a8b739d5",
+      "source_id": "2505.09777",
+      "target_id": "2507.02626",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency, explainability, sparsity",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_5651a1e5ccedc0e2",
+      "source_id": "2505.09777",
+      "target_id": "2507.21117",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency, explainability, fairness, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm, rag, transformer",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "rag",
+          "transformer"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_7bf9a0678547dc53",
+      "source_id": "2505.09777",
+      "target_id": "2510.22049",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm, transformer",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_7d0312b07b455fd3",
+      "source_id": "2505.09777",
+      "target_id": "2511.15141",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_0b34ca05ec2bc05c",
+      "source_id": "2505.09777",
+      "target_id": "2512.20916",
+      "relation_type": "evaluation_comparable",
+      "directed": false,
+      "confidence": 0.91,
+      "score": 0.9,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared dataset: microlens",
+        "Shared metric: HITRATE"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "datasets": [
+          "microlens"
+        ],
+        "metrics": [
+          "HITRATE"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9b4af65d83609c97",
+      "source_id": "2505.09777",
+      "target_id": "2602.21756",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency, explainability, fairness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_d2bcae6979e53738",
+      "source_id": "2505.09777",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, user_modeling",
+        "Shared research problem: cold_start, efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_040dd3704b50757c",
+      "source_id": "2505.09777",
+      "target_id": "2606.09595",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency, explainability, fairness",
+        "Shared technical paradigm: llm, rag, transformer",
+        "Shared modality: behavior_sequence, image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag",
+          "transformer"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_000675c4145845c5",
+      "source_id": "2505.20773",
+      "target_id": "2501.01945",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.7125,
+      "reasons": [
+        "2505.20773 explicitly references 2501.01945",
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, knowledge_graph, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "knowledge_graph",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "source:2505.20773:citation:2501.01945"
+      ]
+    },
+    {
+      "edge_id": "rel_34abd08ae7ba48f8",
+      "source_id": "2505.20773",
+      "target_id": "2509.13179",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.855,
+      "score": 0.7625,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: cold_start, efficiency, explainability, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text",
+        "Shared metric: NDCG@10, RECALL@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10",
+          "RECALL@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_eb5af299ce4e2174",
+      "source_id": "2505.20773",
+      "target_id": "2511.15141",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2e6880d2b938d505",
+      "source_id": "2505.20773",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.865,
+      "score": 0.7875,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_40f74593e35a3390",
+      "source_id": "2505.20773",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_e240293bb7df5bd3",
+      "source_id": "2505.20773",
+      "target_id": "2606.09595",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.81,
+      "score": 0.65,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: efficiency, explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: NDCG@10, RECALL@10"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10",
+          "RECALL@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_bd643185ca075e30",
+      "source_id": "2505.20773",
+      "target_id": "2606.26859",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.765,
+      "score": 0.5375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_e60a8d5ba06a1969",
+      "source_id": "2505.20773",
+      "target_id": "2607.07108",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_bd6179e9ef41b567",
+      "source_id": "2506.07261",
+      "target_id": "2507.00715",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.745,
+      "score": 0.4875,
+      "reasons": [
+        "Shared research direction: efficient_retrieval",
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared modality: image"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "efficient_retrieval"
+        ],
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_6c78899d1e6a770c",
+      "source_id": "2506.07261",
+      "target_id": "2509.13179",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering",
+        "Shared modality: image, video"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering"
+        ],
+        "modalities": [
+          "image",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_bfd3f1efa50447cb",
+      "source_id": "2506.07261",
+      "target_id": "2604.12965",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared research direction: efficient_retrieval",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency",
+        "Shared modality: image, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "efficient_retrieval"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_fe406c836053ae61",
+      "source_id": "2506.07261",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering",
+        "Shared modality: image, video"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering"
+        ],
+        "modalities": [
+          "image",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2d083c4384d1cb04",
+      "source_id": "2507.00715",
+      "target_id": "2404.16924",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.65,
+      "reasons": [
+        "2507.00715 explicitly references 2404.16924",
+        "Shared research direction: generative_recommendation",
+        "Shared pipeline stage: evaluation",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: id, text",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "generative_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "id",
+          "text"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "source:2507.00715:citation:2404.16924"
+      ]
+    },
+    {
+      "edge_id": "rel_3d4a9bd92593b21f",
+      "source_id": "2507.00715",
+      "target_id": "2507.02626",
+      "relation_type": "evaluation_comparable",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared pipeline stage: evaluation, user_modeling",
+        "Shared research problem: efficiency, sparsity",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text",
+        "Shared dataset: movielens_1m",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "datasets": [
+          "movielens_1m"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_bce1ea4593ae797d",
+      "source_id": "2507.00715",
+      "target_id": "2507.21117",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.81,
+      "score": 0.65,
+      "reasons": [
+        "Shared pipeline stage: evaluation, user_modeling",
+        "Shared research problem: efficiency, sparsity",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: image, text",
+        "Shared metric: NDCG, RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "user_modeling"
+        ],
+        "problems": [
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG",
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_cb0eead4f6b19e72",
+      "source_id": "2507.00715",
+      "target_id": "2509.13179",
+      "relation_type": "shared_dataset",
+      "directed": false,
+      "confidence": 0.82,
+      "score": 0.675,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency, sparsity",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: image, text",
+        "Shared dataset: movielens_1m"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "datasets": [
+          "movielens_1m"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_21bc560e0e70eb8e",
+      "source_id": "2507.00715",
+      "target_id": "2510.22049",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_b3a348a26e6e0312",
+      "source_id": "2507.00715",
+      "target_id": "2604.12965",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared research direction: efficient_retrieval",
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared modality: image, text",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "efficient_retrieval"
+        ],
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_4844ea327d8a80b5",
+      "source_id": "2507.00715",
+      "target_id": "2606.09595",
+      "relation_type": "shared_dataset",
+      "directed": false,
+      "confidence": 0.8,
+      "score": 0.625,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: image, text",
+        "Shared dataset: movielens_1m"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "datasets": [
+          "movielens_1m"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_aa2fe34c9d8a4336",
+      "source_id": "2507.02097",
+      "target_id": "2507.02626",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, user_modeling",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2b2c90514823ab3a",
+      "source_id": "2507.02097",
+      "target_id": "2512.20916",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_b6e6d359e9502659",
+      "source_id": "2507.02097",
+      "target_id": "2603.10673",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: evaluation, ranking, user_modeling",
+        "Shared research problem: explainability, fairness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9df4e87da7c2f54b",
+      "source_id": "2507.02097",
+      "target_id": "2606.09595",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency, explainability, fairness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text, video"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_770ea7869a903f18",
+      "source_id": "2507.02097",
+      "target_id": "2607.07108",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.815,
+      "score": 0.6625,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, user_modeling",
+        "Shared research problem: explainability",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_37964d1c09425045",
+      "source_id": "2507.02626",
+      "target_id": "2507.21117",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: cold_start, efficiency, explainability, sparsity",
+        "Shared technical paradigm: llm, reinforcement_learning",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_0283e2dc47a64ea9",
+      "source_id": "2507.02626",
+      "target_id": "2509.13179",
+      "relation_type": "evaluation_comparable",
+      "directed": false,
+      "confidence": 0.835,
+      "score": 0.7125,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: cold_start, efficiency, explainability, sparsity",
+        "Shared technical paradigm: llm",
+        "Shared modality: audio, image, text, video",
+        "Shared dataset: movielens_1m",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "audio",
+          "image",
+          "text",
+          "video"
+        ],
+        "datasets": [
+          "movielens_1m"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_a9499b9ed769d65b",
+      "source_id": "2507.02626",
+      "target_id": "2511.15141",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.775,
+      "score": 0.5625,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, explainability",
+        "Shared technical paradigm: llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_043457a5e0ef1fc3",
+      "source_id": "2507.02626",
+      "target_id": "2512.20916",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm, reinforcement_learning",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_644b6e5575dfd3e5",
+      "source_id": "2507.02626",
+      "target_id": "2604.12965",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.725,
+      "score": 0.4375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency",
+        "Shared modality: image, text, video",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_0a6a1c37dffeee25",
+      "source_id": "2507.02626",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.865,
+      "score": 0.7875,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: cold_start, efficiency",
+        "Shared technical paradigm: llm, reinforcement_learning",
+        "Shared modality: audio, behavior_sequence, image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "audio",
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_af7bdfcdfccb451e",
+      "source_id": "2507.02626",
+      "target_id": "2606.09595",
+      "relation_type": "evaluation_comparable",
+      "directed": false,
+      "confidence": 0.895,
+      "score": 0.8625,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm",
+        "Shared modality: audio, behavior_sequence, image, text, video",
+        "Shared dataset: movielens_1m",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "audio",
+          "behavior_sequence",
+          "image",
+          "text",
+          "video"
+        ],
+        "datasets": [
+          "movielens_1m"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_2d95c6c8fb8a844e",
+      "source_id": "2507.21117",
+      "target_id": "2403.06447",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.65,
+      "reasons": [
+        "2507.21117 explicitly references 2403.06447",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, long_tail, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm, rag, reinforcement_learning",
+        "Shared modality: behavior_sequence, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "long_tail",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "rag",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "source:2507.21117:citation:2403.06447"
+      ]
+    },
+    {
+      "edge_id": "rel_766e70f3800183b1",
+      "source_id": "2507.21117",
+      "target_id": "2510.22049",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.755,
+      "score": 0.5125,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm, transformer",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_cf03b6cfcc94830f",
+      "source_id": "2507.21117",
+      "target_id": "2511.15141",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_40675fb80e615ff1",
+      "source_id": "2507.21117",
+      "target_id": "2512.21526",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, long_tail, robustness, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "long_tail",
+          "robustness",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_3803bd12a70a6fb3",
+      "source_id": "2507.21117",
+      "target_id": "2602.21756",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, retrieval_index, user_modeling",
+        "Shared research problem: cold_start, efficiency, explainability, fairness",
+        "Shared technical paradigm: collaborative_filtering, llm, reinforcement_learning",
+        "Shared modality: image, text",
+        "Shared metric: NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "retrieval_index",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_5031fad823365240",
+      "source_id": "2507.21117",
+      "target_id": "2604.12965",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.725,
+      "score": 0.4375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, retrieval_index",
+        "Shared research problem: efficiency",
+        "Shared modality: image, text",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "retrieval_index"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_93b035e0cec35ae7",
+      "source_id": "2507.21117",
+      "target_id": "2606.26859",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.765,
+      "score": 0.5375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_ab13666a65dfbde7",
+      "source_id": "2507.21117",
+      "target_id": "2607.07108",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, user_modeling",
+        "Shared research problem: explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_d07b512ef8f51e12",
+      "source_id": "2509.13179",
+      "target_id": "2512.21526",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking",
+        "Shared research problem: cold_start, efficiency, robustness, sparsity",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness",
+          "sparsity"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_f355b6404cff40f2",
+      "source_id": "2509.13179",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.87,
+      "score": 0.8,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: cold_start, efficiency, explainability, fairness, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm, transformer",
+        "Shared modality: image, text, video",
+        "Shared metric: HITRATE@10, NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "fairness",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ],
+        "metrics": [
+          "HITRATE@10",
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_49a24babe901e319",
+      "source_id": "2509.13179",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.865,
+      "score": 0.7875,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: cold_start, efficiency, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: audio, image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "audio",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_04f2115374ac3fdf",
+      "source_id": "2509.13179",
+      "target_id": "2606.09595",
+      "relation_type": "evaluation_comparable",
+      "directed": false,
+      "confidence": 0.855,
+      "score": 0.7625,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency, explainability, fairness, robustness",
+        "Shared technical paradigm: llm, transformer",
+        "Shared modality: audio, image, text, video",
+        "Shared dataset: movielens_1m",
+        "Shared metric: NDCG@10, RECALL@10"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability",
+          "fairness",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "transformer"
+        ],
+        "modalities": [
+          "audio",
+          "image",
+          "text",
+          "video"
+        ],
+        "datasets": [
+          "movielens_1m"
+        ],
+        "metrics": [
+          "NDCG@10",
+          "RECALL@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9007d9cf0ba9ac3a",
+      "source_id": "2509.13179",
+      "target_id": "2606.26859",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.765,
+      "score": 0.5375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_43fb471bd5ff1e51",
+      "source_id": "2510.22049",
+      "target_id": "2512.21526",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.77,
+      "score": 0.55,
+      "reasons": [
+        "Shared pipeline stage: evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: behavior_sequence, image, text",
+        "Shared metric: AUC"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "AUC"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_495b0fe67f3638b4",
+      "source_id": "2511.15141",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: cold_start, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_0b9810dd40ceac37",
+      "source_id": "2512.20916",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.83,
+      "score": 0.7,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency",
+        "Shared technical paradigm: llm, reinforcement_learning",
+        "Shared modality: behavior_sequence, id, image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "id",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_07332f1991cb0df5",
+      "source_id": "2512.20916",
+      "target_id": "2606.09595",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation",
+        "Shared research problem: efficiency, explainability",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: behavior_sequence, image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation"
+        ],
+        "problems": [
+          "efficiency",
+          "explainability"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "behavior_sequence",
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_715111f2e3ce9902",
+      "source_id": "2512.21526",
+      "target_id": "2602.21756",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.79,
+      "score": 0.6,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_4c5e5b15848f8561",
+      "source_id": "2512.21526",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: llm_ranking",
+        "Shared pipeline stage: evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, long_tail, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "llm_ranking"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "long_tail",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_b37943b25e8953ad",
+      "source_id": "2512.21526",
+      "target_id": "2606.26859",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.765,
+      "score": 0.5375,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: text"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_d31f9b31dff5cece",
+      "source_id": "2602.21756",
+      "target_id": "2603.10673",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.81,
+      "score": 0.65,
+      "reasons": [
+        "Shared pipeline stage: evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: cold_start, explainability, fairness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text",
+        "Shared metric: MRR, NDCG"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "explainability",
+          "fairness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "MRR",
+          "NDCG"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_c6762b428cb9c06e",
+      "source_id": "2602.21756",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.805,
+      "score": 0.6375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: cold_start, efficiency",
+        "Shared technical paradigm: collaborative_filtering, llm, reinforcement_learning",
+        "Shared modality: image, text",
+        "Shared metric: HR"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm",
+          "reinforcement_learning"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "HR"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_4cefe8dccd218fe9",
+      "source_id": "2603.10673",
+      "target_id": "2607.07108",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: evaluation, ranking, user_modeling",
+        "Shared research problem: explainability, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text",
+        "Shared metric: MRR"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "MRR"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_9778e29e3ca280f0",
+      "source_id": "2604.12965",
+      "target_id": "2604.16318",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.725,
+      "score": 0.4375,
+      "reasons": [
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, retrieval_index",
+        "Shared research problem: efficiency",
+        "Shared modality: image, text, video",
+        "Shared metric: RECALL"
+      ],
+      "shared_features": {
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "retrieval_index"
+        ],
+        "problems": [
+          "efficiency"
+        ],
+        "modalities": [
+          "image",
+          "text",
+          "video"
+        ],
+        "metrics": [
+          "RECALL"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_6f2729dd33a67583",
+      "source_id": "2604.16318",
+      "target_id": "2505.20773",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.7875,
+      "reasons": [
+        "2604.16318 explicitly references 2505.20773",
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: cold_start, efficiency, explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "source:2604.16318:citation:2505.20773"
+      ]
+    },
+    {
+      "edge_id": "rel_dc9e574e39ba80d5",
+      "source_id": "2604.16318",
+      "target_id": "2605.25007",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.865,
+      "score": 0.7875,
+      "reasons": [
+        "Shared research direction: cold_start",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking, user_modeling",
+        "Shared research problem: cold_start, efficiency, robustness",
+        "Shared technical paradigm: collaborative_filtering, llm",
+        "Shared modality: image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "cold_start"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "cold_start",
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "collaborative_filtering",
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_dd1a24d0c0c5ba2e",
+      "source_id": "2605.25007",
+      "target_id": "2606.09595",
+      "relation_type": "shared_problem",
+      "directed": false,
+      "confidence": 0.85,
+      "score": 0.75,
+      "reasons": [
+        "Shared research direction: multimodal_recommendation",
+        "Shared pipeline stage: candidate_generation, evaluation, ranking, reranking",
+        "Shared research problem: efficiency, robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: audio, behavior_sequence, image, text",
+        "Shared metric: NDCG@10"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "multimodal_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "evaluation",
+          "ranking",
+          "reranking"
+        ],
+        "problems": [
+          "efficiency",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "audio",
+          "behavior_sequence",
+          "image",
+          "text"
+        ],
+        "metrics": [
+          "NDCG@10"
+        ]
+      },
+      "evidence_refs": [
+        "ev-contribution-01",
+        "ev-method-01"
+      ]
+    },
+    {
+      "edge_id": "rel_ce269c688d05e3e1",
+      "source_id": "2607.07108",
+      "target_id": "2503.16734",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.6625,
+      "reasons": [
+        "2607.07108 explicitly references 2503.16734",
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: evaluation, ranking, user_modeling",
+        "Shared research problem: robustness",
+        "Shared technical paradigm: llm",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "evaluation",
+          "ranking",
+          "user_modeling"
+        ],
+        "problems": [
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "source:2607.07108:citation:2503.16734"
+      ]
+    },
+    {
+      "edge_id": "rel_a862154bf7e5781c",
+      "source_id": "2607.07108",
+      "target_id": "2504.16420",
+      "relation_type": "method_extension",
+      "directed": true,
+      "confidence": 0.98,
+      "score": 0.75,
+      "reasons": [
+        "2607.07108 explicitly references 2504.16420",
+        "Shared research direction: agent_recommendation",
+        "Shared pipeline stage: candidate_generation, ranking",
+        "Shared research problem: explainability, robustness",
+        "Shared technical paradigm: llm, rag",
+        "Shared modality: image, text"
+      ],
+      "shared_features": {
+        "research_directions": [
+          "agent_recommendation"
+        ],
+        "pipeline_stages": [
+          "candidate_generation",
+          "ranking"
+        ],
+        "problems": [
+          "explainability",
+          "robustness"
+        ],
+        "technical_paradigms": [
+          "llm",
+          "rag"
+        ],
+        "modalities": [
+          "image",
+          "text"
+        ]
+      },
+      "evidence_refs": [
+        "source:2607.07108:citation:2504.16420"
+      ]
+    }
+  ]
+}

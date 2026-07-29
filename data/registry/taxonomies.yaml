@@ -1,0 +1,115 @@
+schema_version: "1.0"
+
+research_directions:
+  agent_recommendation:
+    aliases: [agent recommendation, agentic recommender, recommendation agent, 智能体推荐, 推荐智能体]
+  multimodal_recommendation:
+    aliases: [multimodal recommendation, multimodal recommender, 多模态推荐]
+  llm_retrieval:
+    aliases: [llm retrieval, llm recall, language model retrieval, 大模型召回, LLM召回]
+  llm_ranking:
+    aliases: [llm ranking, llm reranking, language model ranking, 大模型排序, LLM重排]
+  generative_recommendation:
+    aliases: [generative recommendation, generative retrieval, 生成式推荐, 生成式检索]
+  rag_recommendation:
+    aliases: [retrieval augmented recommendation, rag recommendation, RAG推荐, 检索增强推荐]
+  cold_start:
+    aliases: [cold-start recommendation, cold start recommendation, 冷启动推荐]
+  efficient_retrieval:
+    aliases: [efficient retrieval, efficient recommendation, 高效检索, 推荐加速]
+
+pipeline_stages:
+  candidate_generation:
+    aliases: [candidate generation, recall, retrieval, 召回, 候选生成]
+  pre_ranking:
+    aliases: [pre-ranking, pre ranking, 粗排, 预排序]
+  ranking:
+    aliases: [ranking, ranker, 排序, 精排]
+  reranking:
+    aliases: [reranking, re-ranking, reranker, 重排]
+  retrieval_index:
+    aliases: [retrieval index, indexing, index structure, 检索索引, 索引结构]
+  user_modeling:
+    aliases: [user modeling, user profile, preference modeling, 用户建模, 用户画像]
+  online_learning:
+    aliases: [online learning, feedback loop, self-iteration, 在线学习, 反馈闭环, 自迭代]
+  evaluation:
+    aliases: [evaluation, benchmark, experiment, 评估, 基准, 实验]
+
+problems:
+  cold_start:
+    aliases: [cold start, cold-start, 冷启动]
+  long_tail:
+    aliases: [long tail, long-tail, 长尾]
+  sparsity:
+    aliases: [sparsity, sparse interaction, 稀疏]
+  debiasing:
+    aliases: [debiasing, bias mitigation, 去偏, 偏差缓解]
+  fairness:
+    aliases: [fairness, fair recommendation, 公平]
+  efficiency:
+    aliases: [efficiency, latency, throughput, cost, 效率, 延迟, 吞吐, 成本]
+  robustness:
+    aliases: [robustness, robust, adversarial, poisoning, 鲁棒, 对抗, 投毒]
+  missing_modality:
+    aliases: [missing modality, incomplete modality, modality missing, 缺失模态, 模态缺失]
+  explainability:
+    aliases: [explainability, interpretable, explanation, 可解释]
+
+technical_paradigms:
+  collaborative_filtering:
+    aliases: [collaborative filtering, CF, 协同过滤]
+  gnn:
+    aliases: [graph neural network, GNN, 图神经网络]
+  transformer:
+    aliases: [transformer, self-attention, 自注意力]
+  llm:
+    aliases: [large language model, LLM, 大语言模型, 大模型]
+  rag:
+    aliases: [retrieval augmented generation, retrieval-augmented, RAG, 检索增强生成]
+  reinforcement_learning:
+    aliases: [reinforcement learning, RL, 强化学习]
+  causal_inference:
+    aliases: [causal inference, causal recommendation, 因果推断, 因果推荐]
+  contrastive_learning:
+    aliases: [contrastive learning, 对比学习]
+  diffusion:
+    aliases: [diffusion model, diffusion-based, 扩散模型]
+
+modalities:
+  id:
+    aliases: [item id, user id, ID特征]
+  text:
+    aliases: [text, textual, language, 文本, 语言]
+  image:
+    aliases: [image, visual, thumbnail, 图像, 视觉, 缩略图]
+  video:
+    aliases: [video, trailer, movie, 视频, 预告片]
+  audio:
+    aliases: [audio, acoustic, 音频]
+  knowledge_graph:
+    aliases: [knowledge graph, KG, 知识图谱]
+  behavior_sequence:
+    aliases: [behavior sequence, interaction sequence, sequential, 行为序列, 交互序列]
+
+paper_type:
+  survey:
+    aliases: [survey, review, overview, 综述]
+  experiment:
+    aliases: [experiment, empirical, 实验]
+  system:
+    aliases: [system, platform, industrial, 系统, 平台, 工业]
+  benchmark:
+    aliases: [benchmark, leaderboard, 基准]
+  dataset:
+    aliases: [dataset, corpus, 数据集]
+  theory:
+    aliases: [theory, theoretical, theorem, 理论, 定理]
+
+maturity:
+  research_prototype:
+    aliases: [prototype, research prototype, 原型]
+  industrial_validation:
+    aliases: [industrial, production, online experiment, a/b test, 工业, 线上实验]
+  conceptual:
+    aliases: [conceptual, position paper, 概念, 观点]

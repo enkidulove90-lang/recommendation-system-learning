@@ -1,0 +1,176 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2605.25007",
+  "identity": {
+    "title": "Meta-Modal Agent: Sequential Evidence Routing for Missing-Modality Candidate Reranking",
+    "chinese_title": "元模态智能体：缺失模态候选重排序",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2605.25007"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "multimodal_recommendation",
+      "cold_start"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking",
+      "reranking",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "efficiency",
+      "robustness",
+      "missing_modality"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "gnn",
+      "llm",
+      "reinforcement_learning"
+    ],
+    "modalities": [
+      "id",
+      "text",
+      "image",
+      "audio",
+      "behavior_sequence"
+    ],
+    "maturity": "research_prototype",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文提出Meta-Modal Agent (MMA)，将冷启动推荐中的模态缺失问题从静态表示学习重新定义为顺序证据路由问题。",
+    "one_sentence_contribution": "本文提出Meta-Modal Agent (MMA)，将冷启动推荐中的模态缺失问题从静态表示学习重新定义为顺序证据路由问题。",
+    "method_overview": "MMA采用基于LLM的智能体框架，将重排序过程建模为POMDP。智能体通过调用文本、图像、图结构等工具收集证据，将Null返回值作为观测更新历史。使用PPO算法在7种缺失模式片段上训练，奖励函数结合最终排序NDCG和工具调用成本。训练后，智能体在推理时仅通过上下文自适应路由。",
+    "method_components": [
+      {
+        "name": "将冷启动缺失模态问题形式化为部分可观测马尔可夫决策过程(POMDP)",
+        "role": "reported_innovation",
+        "mechanism": "将冷启动缺失模态问题形式化为部分可观测马尔可夫决策过程(POMDP)，将失败的工具调用视为观测信号而非静默特征丢弃，使模型能从Null返回值中学习路由策略。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "提出平衡缺失任务训练方法",
+        "role": "reported_innovation",
+        "mechanism": "提出平衡缺失任务训练方法，通过均匀采样不同缺失模式（如单模态、双模态缺失）的片段，确保模型在罕见但关键的冷启动场景下也能获得充分训练。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计无oracle的候选评分与融合协议",
+        "role": "reported_innovation",
+        "mechanism": "设计无oracle的候选评分与融合协议，MMA仅对第一阶段检索器提供的固定候选池进行评分，并通过验证集选择的融合权重与检索分数结合，严格隔离了重排序与检索的贡献。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [
+      "## 5 Conclusion and Limitations We introduced the Meta-Modal Agent, a candidate-pool reranking framework that reframes missing modalities in cold-start recom mendation from a static representation learning task to a sequential evidence-routing problem."
+    ],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01",
+      "ev-limitation-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon-Baby"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon-Sports"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp (2022 release)"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon-Baby、Amazon-Sports、Yelp (2022 release)；任务：Experiments We organize the evaluation around five questions: • RQ1: Does the oracle-free MMA-Auto improve OOMA reranking over strong static completion baselines?",
+      "split": "not_reported",
+      "metrics": [
+        "HR",
+        "RECALL@100",
+        "NDCG@10"
+      ],
+      "baselines": [
+        "## 4 Experiments We organize the evaluation around five questions: • RQ1: Does the oracle-free MMA-Auto improve OOMA reranking over strong static completion baselines?；Baselines.；(3) Completion and contrastive baselines: DGMRec [8], GRE-MC [11], and MACL [3]."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [
+        {
+          "model": "A100",
+          "count": null
+        }
+      ],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在OOMA（仅单模态可用）设置下，MMA-Auto在Baby、Sports、Yelp上NDCG@10分别提升3.5%、4.0%、4.8%，平均提升4.0%（从0.1645到0.1711）。全目录重排序中，MMA-Auto在固定检索池上平均NDCG@10从0.0178提升至0.0201（相对提升12.7%），HR@10从0.0385提升至0.0427。与确定性路由基线RuleRouter-Fuse相比，MMA-Auto平均OOMA NDCG@10从0.1578提升至0.1711。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发有重要借鉴价值：1) 算法设计：将缺失模态视为可观测的失败信号而非静默丢弃，可启发Agent在工具调用失败时的鲁棒决策机制；2) 评估方法：OOMA协议和固定池全目录重排序为评估Agent在冷启动场景下的重排序能力提供了严格基准；3) 系统架构：MMA的模块化设计（候选池接口、证据路由、评分融合）可复用于构建多工具协作的推荐Agent；4) 训练策略：平衡缺失任务训练确保Agent在罕见但关键的缺失模式下也能表现良好。",
+    "design_lessons": [
+      "对推荐系统Agent开发有重要借鉴价值",
+      "算法设计：将缺失模态视为可观测的失败信号而非静默丢弃，可启发Agent在工具调用失败时的鲁棒决策机制；",
+      "评估方法：OOMA协议和固定池全目录重排序为评估Agent在冷启动场景下的重排序能力提供了严格基准；",
+      "系统架构：MMA的模块化设计（候选池接口、证据路由、评分融合）可复用于构建多工具协作的推荐Agent；",
+      "训练策略：平衡缺失任务训练确保Agent在罕见但关键的缺失模式下也能表现良好。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.211868+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.933542+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2605.25007_元模态智能体：缺失模态候选重排序\\2605.25007.md",
+    "source_hash": "6d7b783dfe5d9c787129ae71caf4ff4fcbf5b61f49519ca119a63f2d6f9b726a",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2605.25007_summary.md",
+    "summary_hash": "f8a725c1e6753fca028b8228dae9ee2d74e8b2606b7b515017ddc0845b288629"
+  }
+}

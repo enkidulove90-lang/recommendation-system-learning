@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2503.00987",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.00987_多模态大模型推荐系统综述\\2503.00987.md",
+  "source_hash": "065c8f0fcf2bab8cf93268db3458e86b57e13a3e8df3836f3f073716450e85ab",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 1602,
+      "end_char": 2802,
+      "quote": "## 1 Introduction\n\nThe flow of a fluid is known to display diferent behaviour depending on the assumptions on the fluid and the shape of the geometry traversed. We focus on plane Couette flow, or flow along a pipe, and the transition to turbulence starting from an initially laminar state [18]. Recently, this area has been connected to directed percolation, a classical area of probability theory. It is known that the transition to turbulence crucially depends upon the Reynolds number, i.e., on the ratio between inertial and viscous forces in a fluid. From a mathematical perspective, studying the transition to turbulence directly in the Euler or Navier-Stokes equations turns out to be extremely dificult. Yet, quite recently, other simplified models have been proposed and directly validated against experiments.\n\nThe first model proposed in [1, 2] is defined by two coupled stochastic partial diferential equations (SPDEs) with second-order dissipation, an advection term, and multiplicative degenerate Itô noise [25]. The solution of this system may display structures labeled as slugs for high Reynolds numbers, and the turbulent state covers the whole pipe in finite time with a high proba",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.00987_多模态大模型推荐系统综述\\2503.00987.md",
+      "source_hash": "065c8f0fcf2bab8cf93268db3458e86b57e13a3e8df3836f3f073716450e85ab",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "5 Comparison of methods",
+      "start_char": 90994,
+      "end_char": 92194,
+      "quote": "## 5 Comparison of methods\n\nIn the previous sections, we have studied lower bounds to the probability of turbulence onset in system (2.1) under diferent noise assumptions. Namely, we considered time-white noise in Itô sense, in Section 3, and time-white or time-red noise in Stratonovich sense, in Section 4. Throughout the paper, the noise is assumed to be white in space along fixed modes. The techniques employed in the two sections difer in nature yet manage to capture similar characteristics of the system.\n\nWe first discuss the rise of turbulence under Itô noise. Lemma 3.1 and Lemma 3.2 were based on methods introduced in [23, 24]. The key idea is to counter the drift efect on the solution of (2.3) by applying a convolution operator through the fundamental solution of the cable equation, reserved in time. A stark diference with the assumptions in [23, 24] is that their work studies the heat equation, $\\mathrm { i . e . , } \\alpha = 0$ . In fact, under strong linear drift dissipation, the left-hand side term in (3.11) can be negative, even for large values of $T ,$ thus rendering the inequality trivial. This is in contrast with [23], where the lower bound increases with T . In [23,",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.00987_多模态大模型推荐系统综述\\2503.00987.md",
+      "source_hash": "065c8f0fcf2bab8cf93268db3458e86b57e13a3e8df3836f3f073716450e85ab",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "1 Introduction",
+      "start_char": 1602,
+      "end_char": 2802,
+      "quote": "## 1 Introduction\n\nThe flow of a fluid is known to display diferent behaviour depending on the assumptions on the fluid and the shape of the geometry traversed. We focus on plane Couette flow, or flow along a pipe, and the transition to turbulence starting from an initially laminar state [18]. Recently, this area has been connected to directed percolation, a classical area of probability theory. It is known that the transition to turbulence crucially depends upon the Reynolds number, i.e., on the ratio between inertial and viscous forces in a fluid. From a mathematical perspective, studying the transition to turbulence directly in the Euler or Navier-Stokes equations turns out to be extremely dificult. Yet, quite recently, other simplified models have been proposed and directly validated against experiments.\n\nThe first model proposed in [1, 2] is defined by two coupled stochastic partial diferential equations (SPDEs) with second-order dissipation, an advection term, and multiplicative degenerate Itô noise [25]. The solution of this system may display structures labeled as slugs for high Reynolds numbers, and the turbulent state covers the whole pipe in finite time with a high proba",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.00987_多模态大模型推荐系统综述\\2503.00987.md",
+      "source_hash": "065c8f0fcf2bab8cf93268db3458e86b57e13a3e8df3836f3f073716450e85ab",
+      "extraction_method": "section_router",
+      "confidence": 0.35
+    }
+  ]
+}

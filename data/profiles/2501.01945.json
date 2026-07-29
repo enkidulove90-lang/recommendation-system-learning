@@ -1,0 +1,152 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2501.01945",
+  "identity": {
+    "title": "Cold-Start Recommendation towards the Era of Large Language Models (LLMs): A Comprehensive Survey and Roadmap",
+    "chinese_title": "大模型冷启动推荐综述",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2501.01945"
+    },
+    "paper_type": "survey"
+  },
+  "classification": {
+    "research_directions": [
+      "cold_start"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "user_modeling",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "long_tail",
+      "sparsity",
+      "fairness",
+      "efficiency",
+      "robustness"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "knowledge_graph",
+      "behavior_sequence"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文是首个系统性地综述大语言模型（LLM）在冷启动推荐（CSR）中应用的论文。",
+    "one_sentence_contribution": "本文是首个系统性地综述大语言模型（LLM）在冷启动推荐（CSR）中应用的论文。",
+    "method_overview": "采用半系统性综述方法，通过查询Google Scholar、Web of Science等数据库以及KDD、WWW等顶级会议论文集，筛选与冷启动推荐相关的论文。使用滚雪球法扩展文献，最终将论文按知识来源分类为四个核心领域，并分析了其动机、数据需求和技术方法。",
+    "method_components": [
+      {
+        "name": "提出了首个针对LLM时代冷启动推荐的系统性分类法",
+        "role": "reported_innovation",
+        "mechanism": "提出了首个针对LLM时代冷启动推荐的系统性分类法，将方法按知识范围（内容特征、图关系、域信息、LLM世界知识）进行组织，提供了独特的分析视角。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "首次明确定义了九种冷启动推荐任务（包括长尾、用户/物品冷启动、严格冷启动、零样本",
+        "role": "reported_innovation",
+        "mechanism": "首次明确定义了九种冷启动推荐任务（包括长尾、用户/物品冷启动、严格冷启动、零样本/少样本等），为不同研究提供了统一的问题定义框架。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "建立了标准化的评估基准和协议",
+        "role": "reported_innovation",
+        "mechanism": "建立了标准化的评估基准和协议，指出了当前评估中数据集、设置和开源框架不一致的问题，并鼓励社区采用统一的高质量数据集和评估代码库。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "未明确列出具体数据集，但提及了Recbole、Elliot、BARS等开源推荐评估框架"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：未明确列出具体数据集，但提及了Recbole、Elliot、BARS等开源推荐评估框架；任务：7.5 Benchmark and Unified Evaluation Research on cold start recommendation systems has made significant progress.",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [
+        "Diferent papers rarely overlap in the datasets they use, making it dificult for researchers to conduct unified comparisons across several related datasets."
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": "RecBole",
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "本文为综述论文，未提供新的实验。但系统总结了现有LLM方法在零样本、少样本和微调范式下的性能，指出LLM作为推荐系统或知识增强器能有效缓解冷启动问题，并强调需要统一的基准来公平比较不同方法。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": "https://github.com/YuanchenBei/Awesome-Cold-Start-Recommendation",
+      "data_access": "public",
+      "reproducibility_grade": "B"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发有重要借鉴价值：1）算法设计上，可参考LLM作为推荐系统（如Prompt策略、模型微调）和知识增强器（如表示增强、关系增强）两种范式，用于Agent的冷启动推理；2）评估方法上，本文提出的统一评估协议和任务定义（如零样本、少样本）可直接用于Agent的标准化测试；3）系统架构上，LLM与推荐模型的融合方式（如知识蒸馏、对比学习）可为Agent的模块化设计提供思路；4）数据处理上，利用LLM的世界知识进行特征对齐和关系增强，可提升Agent在稀疏数据下的泛化能力。",
+    "design_lessons": [
+      "对推荐系统Agent开发有重要借鉴价值",
+      "算法设计上，可参考LLM作为推荐系统（如Prompt策略、模型微调）和知识增强器（如表示增强、关系增强）两种范式，用于Agent的冷启动推理；",
+      "评估方法上，本文提出的统一评估协议和任务定义（如零样本、少样本）可直接用于Agent的标准化测试；",
+      "系统架构上，LLM与推荐模型的融合方式（如知识蒸馏、对比学习）可为Agent的模块化设计提供思路；",
+      "数据处理上，利用LLM的世界知识进行特征对齐和关系增强，可提升Agent在稀疏数据下的泛化能力。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:47.873383+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.495046+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2501.01945_大模型冷启动推荐综述\\2501.01945.md",
+    "source_hash": "25d79bc17a86c29cbcbfbc50aaa0b27d39590a129e49f369d6ee01e971068714",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2501.01945_summary.md",
+    "summary_hash": "077ce5c9febc37cb1902d982786155ef1e58f8f383544e0e8ecd7e152d2fc50d"
+  }
+}

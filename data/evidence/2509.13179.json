@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2509.13179",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2509.13179_基于BPE令牌级嵌入的冷启动推荐\\2509.13179.md",
+  "source_hash": "b8336fed38b351596d0adf5c3c62915600f17a8416e085e9fcaa21a4f9d74ece",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "I. INTRODUCTION",
+      "start_char": 2803,
+      "end_char": 4003,
+      "quote": "ollaborative Filtering (CF) models[1]. Traditional hybrid techniques, mixing CF with content-based features, have difficulties in approximating semantic relations with much subtlety, particularly in the face of sparse metadata, or linguistically demanding metadata[2]. Recent Large\n\nLanguage Models (LLMs) have allowed contextual representation learning based on textual inputs, yet current practice tends to use sentence-level embeddings which mask subword-level semantics which are important in personalization[3].\n\nTo alleviate this, we present an approach that utilizes a Byte Pair Encoding (BPE) tokenization step to subword decomposition mechanism and learnt embeddings through a pre-trained LLM. Given a textual input x, we tokenize it into BPE tokens $\\{ t 1 , t 2 , \\ldots , t n \\}$ <sub>.</sub> Each token ti is mapped to an embedding $\\mathbf { e i } = \\mathrm { L L M } ( t i )$ , and the item or user representation vx is computed as:\n\n$$\nv x = (1 / n) * \\Sigma e i\n$$\n\nThis vector vx maps to the cold-start embedding, to calculate recommendation scores by dot product with previously trained entity embeddings. It is architecture-agnostic and can fit directly into any matrix factorizat",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2509.13179_基于BPE令牌级嵌入的冷启动推荐\\2509.13179.md",
+      "source_hash": "b8336fed38b351596d0adf5c3c62915600f17a8416e085e9fcaa21a4f9d74ece",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3.2 Model Selection",
+      "start_char": 7820,
+      "end_char": 8515,
+      "quote": "## 3.2 Model Selection\n\nWe employ a transformer-based encoder, specifically a frozen version of DistilBERT or RoBERTa, to avoid computational overhead. Let the BPE tokenizer output a token sequence $T = \\{ t 1 , t 2 , \\dots , t n \\}$ for a given input text $x \\in \\mathbb { R } ^ { \\wedge } d$ . Each token <sub>??</sub> is mapped to an embedding <sub>??</sub> $\\in \\ \\mathbb { R } ^ { \\wedge } h$ using: ei = LLM <sub>(??).</sub> The item or user representation <sub>??</sub> is then computed via a mean pooling strategy: $v x = ( 1 / n ) * \\Sigma e i$ This representation <sub>??</sub> $\\in \\ \\mathbb { R } ^ { \\wedge } h$ becomes the cold-start vector used in downstream recommendation tasks.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2509.13179_基于BPE令牌级嵌入的冷启动推荐\\2509.13179.md",
+      "source_hash": "b8336fed38b351596d0adf5c3c62915600f17a8416e085e9fcaa21a4f9d74ece",
+      "extraction_method": "section_router",
+      "confidence": 0.74
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.1 Experimental Setup",
+      "start_char": 10362,
+      "end_char": 11562,
+      "quote": "## 4.1 Experimental Setup\n\nIn order to comprehensively test our strategy, we experiment on two benchmark datasets: MovieLens 1M and Amazon Books, that are commonly used in the research on recommender systems. To model the cold-start objective, we exclude the sets of users and items that have interacted before, and generate evaluation sets of users and items which have never been seen before[15].\n\nAlong with collaborative filtering and sentence-based embedding baselines, it is important to include more formal cold-start baselines. Comparative baselines should be provided, e.g., with models based on graph embedding (e.g., GraphSAGE, LightGCN) or meta-learning (e.g., MeLU, MAML-based cold-start recommenders) or using attribute expansion. Their addition would enable us to evaluate the robustness of BPE-LLM embeddings at various levels of sparsity and a heterogeneous metadata structure[16]. As an example, graph-based models utilize the topology of the useritem interaction, whereas meta-learning methods can rapidly learn to represent previously unseen users/items with few examples. Attribute-expansion techniques exploit additional attributes, e.g., demographics or item attributes, to cir",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2509.13179_基于BPE令牌级嵌入的冷启动推荐\\2509.13179.md",
+      "source_hash": "b8336fed38b351596d0adf5c3c62915600f17a8416e085e9fcaa21a4f9d74ece",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "FUTURE WORK",
+      "start_char": 21455,
+      "end_char": 22655,
+      "quote": "## FUTURE WORK\n\nThere are several possible directions, which could be viewed as the fruitful extensions of this study. On the first point, our approach used static BPE aggregation; we could in the future differentiate fine-tuned LLMs (e.g., with lightweight adapters; e.g., LoRA or BitFit) to more tailor the embedding space in a global manner, without access to large-scale finetuning. Second, global and local semantics points of view might be crossed by introducing hybrid token-sentence attention frameworks that potentially improve downstream task performance. In this instance it would also be practicable upon such AU form as dialogue-based recommender systems, where context/history plays a larger role. Third, it will be exciting to identify the option of considering the addition of the contextual user aspects (the recent searches, the platform activity or the time trends), along with the token representations, to enrich the user-item relationships at the initial phases of the onboarding procedure. And finally, new experiments over multilingual datasets, practise-dependent cold-start tasks (e.g., clinical recommendations, financial products), and reinforcement-based ranks of ranking",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2509.13179_基于BPE令牌级嵌入的冷启动推荐\\2509.13179.md",
+      "source_hash": "b8336fed38b351596d0adf5c3c62915600f17a8416e085e9fcaa21a4f9d74ece",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

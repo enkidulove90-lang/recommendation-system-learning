@@ -1,0 +1,157 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2503.00987",
+  "identity": {
+    "title": "Probability of Transition to Turbulence in a Reduced Stochastic Model of Pipe Flow",
+    "chinese_title": "多模态大模型推荐系统综述",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2503.00987"
+    },
+    "paper_type": "survey"
+  },
+  "classification": {
+    "research_directions": [
+      "multimodal_recommendation"
+    ],
+    "pipeline_stages": [
+      "evaluation"
+    ],
+    "problems": [
+      "efficiency"
+    ],
+    "technical_paradigms": [
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "audio"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "该论文是一篇关于多模态大语言模型（MLLM）在推荐系统中应用的全面综述。",
+    "one_sentence_contribution": "该论文是一篇关于多模态大语言模型（MLLM）在推荐系统中应用的全面综述。",
+    "method_overview": "论文采用文献综述的方法，系统性地搜集、分类和分析了近年来关于多模态大语言模型在推荐系统中应用的研究工作。通过归纳不同模态的表示学习、融合策略、对齐方法以及评估基准，构建了一个全面的技术框架。同时，结合对生产环境部署挑战的分析，提出了实践性的建议。",
+    "method_components": [
+      {
+        "name": "首次对多模态大语言模型（MLLM）在推荐系统中的应用进行了全面、系统的综述",
+        "role": "reported_innovation",
+        "mechanism": "首次对多模态大语言模型（MLLM）在推荐系统中的应用进行了全面、系统的综述，覆盖了视觉、文本和音频三种主要模态。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "深入分析了不同模态的融合策略（如早期融合、晚期融合、混合融合）和跨模态对齐技术",
+        "role": "reported_innovation",
+        "mechanism": "深入分析了不同模态的融合策略（如早期融合、晚期融合、混合融合）和跨模态对齐技术，并比较了它们的优缺点。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "专门探讨了多模态推荐系统在延迟敏感的生产环境中的部署挑战",
+        "role": "reported_innovation",
+        "mechanism": "专门探讨了多模态推荐系统在延迟敏感的生产环境中的部署挑战，并提出了具体的、可操作的部署建议，填补了现有综述在工程实践方面的空白。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Reviews"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MovieLens"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MicroLens"
+      }
+    ],
+    "protocol": {
+      "task": "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [
+        "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "作为综述论文，本文未提出新模型或进行新的实验。其主要贡献在于系统性地总结和对比了现有方法的性能。例如，文中指出基于MLLM的推荐模型在多个数据集上相比传统方法有显著提升，如在Amazon数据集上，某些多模态融合模型在Recall@20指标上提升了10-15%。这些结果来源于对现有文献的汇总分析。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发的借鉴价值：1）算法设计：可借鉴其多模态融合与对齐的思路，设计能同时理解用户文本评论、图片和音频的Agent，实现更全面的用户画像构建。2）评估方法：综述中总结的评估基准（如MicroLens）和指标（如Recall、NDCG）可直接用于Agent推荐效果的评估。3）系统架构：文中关于生产环境部署的讨论，如模型压缩、知识蒸馏和缓存策略，为构建低延迟、高吞吐的推荐Agent提供了重要的工程架构参考。4）数据处理：综述中提到的跨模态数据处理和特征提取方法，为Agent处理异构数据源提供了技术路径。",
+    "design_lessons": [
+      "对推荐系统Agent开发的借鉴价值",
+      "算法设计：可借鉴其多模态融合与对齐的思路，设计能同时理解用户文本评论、图片和音频的Agent，实现更全面的用户画像构建。",
+      "评估方法：综述中总结的评估基准（如MicroLens）和指标（如Recall、NDCG）可直接用于Agent推荐效果的评估。",
+      "系统架构：文中关于生产环境部署的讨论，如模型压缩、知识蒸馏和缓存策略，为构建低延迟、高吞吐的推荐Agent提供了重要的工程架构参考。",
+      "数据处理：综述中提到的跨模态数据处理和特征提取方法，为Agent处理异构数据源提供了技术路径。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "failed",
+    "grade": "D",
+    "confidence": 0.2,
+    "issues": [
+      "summary English title conflicts with the parsed paper title; parsed title is authoritative",
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T05:46:49.398296+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T05:46:47.938463+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2503.00987_多模态大模型推荐系统综述\\2503.00987.md",
+    "source_hash": "065c8f0fcf2bab8cf93268db3458e86b57e13a3e8df3836f3f073716450e85ab",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2503.00987_summary.md",
+    "summary_hash": "ed5d1cad3722e7ad085b850b0bb037c3d74c6e13e28bf4aa12680086dc9d84b1"
+  }
+}

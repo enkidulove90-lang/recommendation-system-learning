@@ -1,0 +1,159 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2512.21526",
+  "identity": {
+    "title": "Selective LLM-Guided Regularization for Enhancing Recommendation Models",
+    "chinese_title": "选择性LLM引导正则化",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2512.21526"
+    },
+    "paper_type": "experiment"
+  },
+  "classification": {
+    "research_directions": [
+      "llm_ranking"
+    ],
+    "pipeline_stages": [
+      "ranking",
+      "reranking",
+      "evaluation"
+    ],
+    "problems": [
+      "cold_start",
+      "long_tail",
+      "sparsity",
+      "efficiency",
+      "robustness"
+    ],
+    "technical_paradigms": [
+      "collaborative_filtering",
+      "llm"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "behavior_sequence"
+    ],
+    "maturity": "conceptual",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "提出一种模型无关、计算高效的框架S-LLMR，通过可训练的门控机制，仅在LLM预测可靠时（基于用户历史长度、物品流行度、模型不确定性）激活LLM成对排序监督，避免全局蒸馏的弊端。",
+    "one_sentence_contribution": "提出一种模型无关、计算高效的框架S-LLMR，通过可训练的门控机制，仅在LLM预测可靠时（基于用户历史长度、物品流行度、模型不确定性）激活LLM成对排序监督，避免全局蒸馏的弊端。",
+    "method_overview": "采用模型无关的训练框架，离线使用GPT-4o-mini生成软相关性分数，在线训练时通过可学习门控网络（输入为冷启动、长尾、不确定性指标）控制成对排序正则化损失的权重，与基础推荐模型联合优化。",
+    "method_components": [
+      {
+        "name": "提出选择性门控机制",
+        "role": "reported_innovation",
+        "mechanism": "提出选择性门控机制，利用用户历史长度、物品流行度和模型不确定性三个信号，通过可学习的单层网络动态决定是否激活LLM监督，实现可靠性感知的知识迁移。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "设计LLM引导的成对排序正则化损失",
+        "role": "reported_innovation",
+        "mechanism": "设计LLM引导的成对排序正则化损失，鼓励推荐模型在LLM可靠时对齐其排序，同时通过门控权重自动抑制不可靠LLM预测的影响。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "构建离线LLM评分流水线",
+        "role": "reported_innovation",
+        "mechanism": "构建离线LLM评分流水线，为冷启动用户和长尾物品生成合成候选集，扩展监督覆盖范围，且不增加在线推理开销。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Sports & Outdoors"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Beauty"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Toys & Games"
+      }
+    ],
+    "protocol": {
+      "task": "数据集：Amazon Sports & Outdoors、Amazon Beauty、Amazon Toys & Games；任务：Experimental Setup ## 4.2 Datasets We evaluate S-LLMR on three domains of the Amazon Review dataset [2], consistent with widely used recommendation bench marks.",
+      "split": "not_reported",
+      "metrics": [
+        "AUC"
+      ],
+      "baselines": [],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [],
+    "results_summary": "在DeepFM、xDeepFM、AutoInt、DCNv1、DCNv2、DIN六种骨干上，S-LLMR在三个Amazon域均取得最佳AUC。例如在Sports域，DeepFM上AUC从0.7990提升至0.8176（+1.86%），AutoInt上从0.8003提升至0.8161（+1.58%）。冷启动和长尾场景提升更显著，AUC提升可达+0.02至+0.04。消融实验显示全局LLM损失会损害长尾性能（如Beauty域从0.7702降至0.7330），而门控成对正则化持续提升。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐Agent开发有重要借鉴价值：1) 算法设计：可学习门控机制为Agent提供动态决策能力，根据上下文判断是否采纳外部知识源（如LLM）的建议，避免盲目信任；2) 评估方法：论文对冷启动和长尾子群体的分层评估，为Agent在稀疏场景下的鲁棒性测试提供范式；3) 系统架构：离线LLM评分+在线轻量门控的分离设计，平衡了知识丰富度与推理效率，适合Agent在资源受限环境部署；4) 数据处理：合成候选集策略可启发Agent主动探索未知领域，通过外部知识弥补数据稀疏。",
+    "design_lessons": [
+      "对推荐Agent开发有重要借鉴价值",
+      "算法设计：可学习门控机制为Agent提供动态决策能力，根据上下文判断是否采纳外部知识源（如LLM）的建议，避免盲目信任；",
+      "评估方法：论文对冷启动和长尾子群体的分层评估，为Agent在稀疏场景下的鲁棒性测试提供范式；",
+      "系统架构：离线LLM评分+在线轻量门控的分离设计，平衡了知识丰富度与推理效率，适合Agent在资源受限环境部署；",
+      "数据处理：合成候选集策略可启发Agent主动探索未知领域，通过外部知识弥补数据稀疏。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "validated",
+    "grade": "B",
+    "confidence": 0.82,
+    "issues": [
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T07:08:48.133515+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T07:08:46.830546+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.21526_选择性LLM引导正则化\\2512.21526.md",
+    "source_hash": "6a388f1c42293e4e62fb05f1f6fe9f6783bfa73fb71d0186408d8f781c620e56",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2512.21526_summary.md",
+    "summary_hash": "848951a6a51f31e134eba646d636024241f340c137888a5cdf59f6f28594d494"
+  }
+}

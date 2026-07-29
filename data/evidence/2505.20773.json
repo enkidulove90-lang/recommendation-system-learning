@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2505.20773",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.20773_冷启动推荐的知识引导检索增强生成\\2505.20773.md",
+  "source_hash": "c54bd1952fea01f2e621d1294fd1c1d6d935667bde26e5359729c305bde428fb",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 1719,
+      "end_char": 2919,
+      "quote": "uced user satisfaction, and ultimately revenue loss (Huang et al., 2023; Zhang et al., 2025). To tackle this challenge, recent works have explored two main directions: (i) KG–based methods that construct structured representations of the item catalog (Wang et al., 2019b; Guo et al., 2020), and (ii) LLM-based methods that leverage LLMs as training-free recommenders, typically prompting on user histories with a small set of candidate items (Sanner et al., 2023; Hou et al., 2024).\n\nHowever, both directions face critical limitations in practical deployment (Lin et al., 2025). Static KGs are expensive to construct and maintain, and they quickly become outdated as items, attributes, and relations change (Wang et al., 2019a). Updating these graphs to reflect catalog changes typically requires substantial offline engineering and cannot keep up with real-time changes. LLM-based approaches, meanwhile, are usually formulated as re-rankers over a pre-filtered candidate set rather than as end-to-end retrieval systems (Hou et al., 2024). Because LLMs operate under bounded context windows and token budgets, only a curated subset of items and a truncated user history can be included in the prompt,",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.20773_冷启动推荐的知识引导检索增强生成\\2505.20773.md",
+      "source_hash": "c54bd1952fea01f2e621d1294fd1c1d6d935667bde26e5359729c305bde428fb",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "3 Proposed Method",
+      "start_char": 6109,
+      "end_char": 6688,
+      "quote": "## 3 Proposed Method\n\nWe present ColdRAG, a retrieval-augmented generation framework for cold-start recommendation.\n\nColdRAG equips an LLM with a dynamically constructed KG that enables semantic reasoning and adaptively builds candidate items for context-aware and controllable recommendation. The overall framework is illustrated in Figure 1. For the problem setting, we follow the sequential recommendation task, where each user u has an interaction history $H _ { u } = [ i _ { 1 } , i _ { 2 } , \\dotsc , i _ { n - 1 } ]$ and the goal is to recommend the next item $i _ { n }$",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.20773_冷启动推荐的知识引导检索增强生成\\2505.20773.md",
+      "source_hash": "c54bd1952fea01f2e621d1294fd1c1d6d935667bde26e5359729c305bde428fb",
+      "extraction_method": "section_router",
+      "confidence": 0.66
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.1.2 Baselines",
+      "start_char": 16434,
+      "end_char": 17633,
+      "quote": "## 4.1.2 Baselines\n\nWe compare ColdRAG with representative baselines spanning both training-based and trainingfree paradigms. Among training-based models, UniSRec (Hou et al., 2022) fine-tunes a universal sequence encoder with contrastive objectives, CLCRec (Wei et al., 2021) trains a contrastive framework to preserve collaborative signals for cold items, and TDRO (Lin et al., 2024) applies distributionally robust optimization to handle temporal shifts. For training-free methods, we include a plain LLM that ranks randomly sampled candidates without retrieval grounding; LLM-Rank (Hou et al., 2024), which provides sequential (S), recency (R), and in-context (I) prompting variants for zero-shot re-ranking; TaxRec (Liang et al., 2025), which injects taxonomy cues to guide LLM reasoning; and KALM4Rec (Kieu et al., 2025), which uses keyword-level retrieval to support coldstart recommendation. Among the training-based baselines, UniSRec fine-tunes a pretrained model, whereas CLCRec and TDRO are trained from scratch. The remainings are training-free methods that operate entirely without parameter updates, relying on LLM inference for reasoning and retrieval. Together, they provide a broad",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.20773_冷启动推荐的知识引导检索增强生成\\2505.20773.md",
+      "source_hash": "c54bd1952fea01f2e621d1294fd1c1d6d935667bde26e5359729c305bde428fb",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    },
+    {
+      "evidence_id": "ev-limitation-01",
+      "claim_type": "limitation",
+      "section": "Limitations",
+      "start_char": 26376,
+      "end_char": 27362,
+      "quote": "## Limitations\n\nWhile ColdRAG demonstrates strong performance, it faces several practical constraints. First, its reliance on repeated LLM queries during knowledge graph construction and multi-hop reasoning introduces notable computational cost and latency, posing challenges for large-scale or real-time deployment. Moreover, although ColdRAG can operate with both open- and closed-source LLMs, reliance on closed-sourced models such as the GPT series can make reproduction costly and less consistent across environments. Another limitation lies in ColdRAG’s limited adaptability. Several key hyperparameters, such as edge scoring thresholds and candidate pool sizes, are manually set and static across domains. This rigidity may constrain performance under varying data distributions or interaction sparsity. A more adaptive, agentic framework could dynamically adjust these parameters and query strategies, improving both efficiency and generalization in diverse real-world settings.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.20773_冷启动推荐的知识引导检索增强生成\\2505.20773.md",
+      "source_hash": "c54bd1952fea01f2e621d1294fd1c1d6d935667bde26e5359729c305bde428fb",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

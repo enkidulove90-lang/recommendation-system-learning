@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2512.21526",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.21526_选择性LLM引导正则化\\2512.21526.md",
+  "source_hash": "6a388f1c42293e4e62fb05f1f6fe9f6783bfa73fb71d0186408d8f781c620e56",
+  "parser": "mineru",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "1 Introduction",
+      "start_char": 2122,
+      "end_char": 3322,
+      "quote": "menders, and graph-based models achieve strong performance when user interaction histories are suficiently dense. However, their efectiveness deteriorates in sparse regimes, such as cold-start users, long-tail items, and scenarios where user preferences are weakly expressed.\n\nLarge language models (LLMs) have emerged as powerful auxiliary knowledge sources for recommendation, ofering rich semantic priors and strong reasoning capabilities that enable preference inference even from minimal user interaction data [10]. This makes them particularly promising in cold-start and sparsely observed regions where traditional recommenders tend to underperform. However, existing approaches to leveraging LLM signals remain fundamentally limited. Directly deploying LLMs as recommenders is prohibitively expensive and prone to issues such as position bias and hallucinated predictions. Meanwhile, global knowledge transfer methods [15, 20] require the downstream model to imitate LLM outputs uniformly across the entire user–item space, regardless of whether the LLM is reliable for a given instance. Recent attempts to distill LLM knowledge into classical models partially alleviate these issues, but the",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.21526_选择性LLM引导正则化\\2512.21526.md",
+      "source_hash": "6a388f1c42293e4e62fb05f1f6fe9f6783bfa73fb71d0186408d8f781c620e56",
+      "extraction_method": "section_router",
+      "confidence": 0.58
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "4.1 Backbone Models",
+      "start_char": 15996,
+      "end_char": 17196,
+      "quote": "## 4.1 Backbone Models\n\nTo evaluate the model-agnostic nature of S-LLMR, we integrate it with six widely adopted and architecturally diverse recommendation backbones: DeepFM [1], xDeepFM [12], AutoInt [18], DCNv1 [21], DCNv2 [22], and DIN [25]. These models span a broad spectrum of interaction modeling strategies, including factorization-machine style feature crossing (DeepFM), vector-wise compressed interactions (xDeepFM), self-attentive feature learning (AutoInt), explicit cross layers (DCNv1/DCNv2), and attention over user behavior sequences (DIN). This diversity enables a comprehensive assessment of how selectively injected LLM signals generalize across diferent inductive biases.\n\nTo contextualize S-LLMR within the landscape of LLM-assisted recommendation, we compare against three representative paradigms:\n\n• <sup>KD</sup> <sup>Distillation</sup> <sup>Baseline</sup> Following prior work [10, 15],the soft logits from a fine-tuned LLaMA2-7B model into each backbone, representing the standard global LLM-to-recommender imitation approach.\n\n<sub>•</sub> KAR (Knowledge-Augmented Recommendation) <sub>KAR</sub> [13] aligns user and item representations with LLM-derived open-world knowl",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.21526_选择性LLM引导正则化\\2512.21526.md",
+      "source_hash": "6a388f1c42293e4e62fb05f1f6fe9f6783bfa73fb71d0186408d8f781c620e56",
+      "extraction_method": "section_router",
+      "confidence": 0.5
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "4.2 Datasets",
+      "start_char": 18511,
+      "end_char": 19205,
+      "quote": "## 4.2 Datasets\n\nWe evaluate S-LLMR on three domains of the Amazon Review dataset [2], consistent with widely used recommendation bench marks. Dataset statistics are shown in Table 1. We use the <sup>Sports</sup> & Outdoors<sub>,</sub> Beauty<sub>,</sub> <sub>and</sub> Toys & Games <sub>subsets.</sub>\n\nAcross all domains, the data exhibit significant sparsity: nearly half of all interactions originate from cold-start users, and roughly 20% of items fall into the long-tail. These characteristics make the datasets particularly suitable for evaluating algorithms designed to improve performance in sparse regimes—precisely where LLM based semantic guidance is expected to be most beneficial.",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2512.21526_选择性LLM引导正则化\\2512.21526.md",
+      "source_hash": "6a388f1c42293e4e62fb05f1f6fe9f6783bfa73fb71d0186408d8f781c620e56",
+      "extraction_method": "section_router",
+      "confidence": 0.95
+    }
+  ]
+}

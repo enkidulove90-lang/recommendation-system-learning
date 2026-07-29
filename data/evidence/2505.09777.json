@@ -1,0 +1,45 @@
+{
+  "schema_version": "1.0",
+  "paper_id": "2505.09777",
+  "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.09777\\2505.09777.md",
+  "source_hash": "91096303b4f04329da4a956b1ccae692b894c16719bf4a901012467d492190e9",
+  "parser": "local_pypdf",
+  "items": [
+    {
+      "evidence_id": "ev-contribution-01",
+      "claim_type": "contribution",
+      "section": "Page 1",
+      "start_char": 139,
+      "end_char": 1338,
+      "quote": "## Page 1\n\nA Survey on Large Language Models in Multimodal\nRecommender Systems\nAlejo López-Ávila\nvonnegut31416@gmail.com\nJinhua Du\njinhua.du@huawei.com\nHuawei London Research Centre\nABSTRACT\nMultimodal recommender systems (MRS) integrate heterogeneous\nuser and item data, such as text, images, and structured information,\nto enhance recommendation performance. The emergence of large\nlanguage models (LLMs) introduces new opportunities for MRS\nby enabling semantic reasoning, in-context learning, and dynamic\ninput handling. Compared to earlier pre-trained language models\n(PLMs), LLMs offer greater flexibility and generalisation capabilities\nbut also introduce challenges related to scalability and model ac-\ncessibility. This survey presents a comprehensive review of recent\nwork at the intersection of LLMs and MRS, focusing on prompting\nstrategies, fine-tuning methods, and data adaptation techniques.\nWe propose a novel taxonomy to characterise integration patterns,\nidentify transferable techniques from related recommendation do-\nmains, provide an overview of evaluation metrics and datasets, and\npoint to possible future directions. We aim to clarify the emerging\nrole of LLMs in multimodal",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.09777\\2505.09777.md",
+      "source_hash": "91096303b4f04329da4a956b1ccae692b894c16719bf4a901012467d492190e9",
+      "extraction_method": "section_router",
+      "confidence": 0.51
+    },
+    {
+      "evidence_id": "ev-method-01",
+      "claim_type": "method",
+      "section": "Page 1",
+      "start_char": 240,
+      "end_char": 1439,
+      "quote": "egut31416@gmail.com\nJinhua Du\njinhua.du@huawei.com\nHuawei London Research Centre\nABSTRACT\nMultimodal recommender systems (MRS) integrate heterogeneous\nuser and item data, such as text, images, and structured information,\nto enhance recommendation performance. The emergence of large\nlanguage models (LLMs) introduces new opportunities for MRS\nby enabling semantic reasoning, in-context learning, and dynamic\ninput handling. Compared to earlier pre-trained language models\n(PLMs), LLMs offer greater flexibility and generalisation capabilities\nbut also introduce challenges related to scalability and model ac-\ncessibility. This survey presents a comprehensive review of recent\nwork at the intersection of LLMs and MRS, focusing on prompting\nstrategies, fine-tuning methods, and data adaptation techniques.\nWe propose a novel taxonomy to characterise integration patterns,\nidentify transferable techniques from related recommendation do-\nmains, provide an overview of evaluation metrics and datasets, and\npoint to possible future directions. We aim to clarify the emerging\nrole of LLMs in multimodal recommendation and support future\nresearch in this rapidly evolving field.\n1 INTRODUCTION\nMultimodal",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.09777\\2505.09777.md",
+      "source_hash": "91096303b4f04329da4a956b1ccae692b894c16719bf4a901012467d492190e9",
+      "extraction_method": "section_router",
+      "confidence": 0.43
+    },
+    {
+      "evidence_id": "ev-experiment-01",
+      "claim_type": "experiment",
+      "section": "Page 4",
+      "start_char": 17289,
+      "end_char": 18489,
+      "quote": "## Page 4\n\nAlejo López-Ávila and Jinhua Du\nOther methods increase complexity or modularity in prompt-\ning. For example, Xi et al . [129] introduce factorisation prompt-\ning, which decomposes recommendation reasoning into smaller\nsubtasks—each encoded via a separate sub-prompt. This modular\napproach improves interpretability and enables better task general-\nisation.\nA third group of works focuses on deriving prompts directly from\nuser behaviours or historical data. Lyu et al. [79] utilizes summari-\nsation, paraphrasing, recommendation-driven, and engagement-\nguided prompts to enhance item description generation; Yin et al.\n[139] encodes heterogeneous, multi-type user behaviour logs into\nunified text templates; and Paischer et al. [87] designs per-timestep\nprompts based on sequential interaction histories and reviews.\nBeyond individual prompting strategies, some works analyze the\nbroader implications of prompt design choices. Deldjoo [18] con-\nducts a comparative evaluation of different hard prompting strate-\ngies, such as accuracy-focused prompts, diversification prompts,\nand reasoning-based formats like CoT and ICL, in the context of\nprovider fairness and diversity.\nReasoning-Based",
+      "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.09777\\2505.09777.md",
+      "source_hash": "91096303b4f04329da4a956b1ccae692b894c16719bf4a901012467d492190e9",
+      "extraction_method": "section_router",
+      "confidence": 0.51
+    }
+  ]
+}

@@ -1,0 +1,706 @@
+{
+  "generated_at": "2026-07-24T10:17:40.012012",
+  "seed": {
+    "title": "AgentX: Towards Agent-Driven Self-Iteration of Industrial Recommender Systems",
+    "authors": [
+      "Changxin Lao",
+      "Fei Pan",
+      "Guozhuang Ma",
+      "Han Li",
+      "Huihuang Lin",
+      "Jijun Shi",
+      "Kangzhi Zhao",
+      "Kun Gai",
+      "Mo Zhou",
+      "Qinqin Zhou",
+      "Quan Chen",
+      "Ruochen Yang",
+      "Shifu Bie",
+      "Shijie Yi",
+      "Shuang Yang",
+      "Shuo Yang",
+      "Wenhao Li",
+      "Wentao Xie",
+      "Xiao Lv",
+      "Xuming Wang",
+      "Yijun Wang",
+      "Yiming Chen",
+      "Yusheng Huang",
+      "Zhongyuan Wang",
+      "Zibo Zhao",
+      "Zijie Zhuang",
+      "Baoning Xia",
+      "Chao Liu",
+      "Chaoyi Ma",
+      "Chubo He",
+      "Dawei Cong",
+      "Feng Jiang",
+      "Gang Wang",
+      "Guilin Xia",
+      "Hanwen Xu",
+      "Jiahong Xie",
+      "Jiahui Qiao",
+      "Jian Liang",
+      "Jiangfan Yue",
+      "Jing Wang",
+      "Jinghan Yang",
+      "Jinghui Jia",
+      "Kan Qin",
+      "Lei Wang",
+      "Ming Li",
+      "Peilin Song",
+      "Pengbo Xu",
+      "Qiang Luo",
+      "Ruiming Tang",
+      "Shiyang Liu",
+      "Shuxian Jin",
+      "Tao Wang",
+      "Tao Zhang",
+      "Xiang Gao",
+      "Xianghan Li",
+      "Yingsong Luo",
+      "Yiwen Ning",
+      "Yongcheng Liu",
+      "Yueyang Liu",
+      "Yuan Guo",
+      "Zhaojie Liu",
+      "Zhenkai Cui"
+    ],
+    "abstract": "Recommendation algorithm iteration is moving from an artisanal, engineer-bound process toward an industrialized research loop, but this transition remains blocked by a structural execution bottleneck: the idea-to-launch cycle still depends on human engineers to generate hypotheses, modify production code, launch A/B experiments, and attribute online results. Innovation therefore scales linearly with headcount rather than compounding with evidence, compute, and accumulated experimental knowledge. We present AgentX, a production-deployed multi-agent system that fundamentally restructures this production function. AgentX operates as a self-evolving development engine: it autonomously generates, implements, evaluates, and learns from recommendation experiments at a scale and pace that no manual workflow can sustain. The system orchestrates four tightly coupled stages in a closed loop. A Brainstorm Agent synthesizes evidence from historical experiments, system architecture, data analysis, and external research into ranked, executable proposals. A Developing Agent translates each proposal into production-ready code through repository-grounded generation and multi-dimensional reliability verification. An Evaluation Agent conducts safe online rollout with guardrail-vetoed A/B judgment, converting both successes and failures into structured knowledge assets. A Harness Evolution layer (SGPO) then distills execution trajectories into semantic-gradient updates that continuously sharpen the agents themselves -- making the system not merely automated, but self-improving.",
+    "published": "2026-06-25",
+    "updated": "2026-06-26",
+    "year": 2026,
+    "pdf_url": "https://arxiv.org/pdf/2606.26859",
+    "arxiv_url": "https://arxiv.org/abs/2606.26859",
+    "arxiv_id": "2606.26859",
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.IR"
+    ],
+    "comment": "",
+    "primary_category": "cs.AI"
+  },
+  "candidate_count": 11,
+  "recommendation_count": 8,
+  "queries": [
+    {
+      "name": "agent-recommender-systems",
+      "query": "all:\"agent\" AND (all:\"recommendation\" OR all:\"recommender system\") AND (cat:cs.IR OR cat:cs.AI)",
+      "description": "Agent 技术与推荐系统交叉"
+    },
+    {
+      "name": "llm-recommendation-iteration",
+      "query": "all:\"large language model\" AND (all:\"recommendation\" OR all:\"recommender system\") AND (all:\"ranking\" OR all:\"rerank\" OR all:\"evaluation\" OR all:\"feedback\") AND (cat:cs.IR OR cat:cs.AI OR cat:cs.CL)",
+      "description": "LLM 参与推荐排序、评估和反馈迭代"
+    },
+    {
+      "name": "industrial-recommender-evaluation",
+      "query": "(all:\"industrial recommender\" OR all:\"online experiment\" OR all:\"A/B test\") AND (all:\"recommendation\" OR all:\"recommender system\") AND (cat:cs.IR OR cat:cs.AI)",
+      "description": "工业推荐、在线实验与评估闭环"
+    },
+    {
+      "name": "automated-recommender-research",
+      "query": "(all:\"automated\" OR all:\"self-improving\" OR all:\"self-iteration\") AND (all:\"recommendation\" OR all:\"recommender system\") AND (cat:cs.IR OR cat:cs.AI)",
+      "description": "自动化推荐算法迭代"
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "RecSys Arena: Pair-wise Recommender System Evaluation with Large Language Models",
+      "authors": [
+        "Zhuo Wu",
+        "Qinglin Jia",
+        "Chuhan Wu",
+        "Zhaocheng Du",
+        "Shuai Wang",
+        "Zan Wang",
+        "Zhenhua Dong"
+      ],
+      "abstract": "Evaluating the quality of recommender systems is critical for algorithm design and optimization. Most evaluation methods are computed based on offline metrics for quick algorithm evolution, since online experiments are usually risky and time-consuming. However, offline evaluation usually cannot fully reflect users' preference for the outcome of different recommendation algorithms, and the results may not be consistent with online A/B test. Moreover, many offline metrics such as AUC do not offer sufficient information for comparing the subtle differences between two competitive recommender systems in different aspects, which may lead to substantial performance differences in long-term online serving. Fortunately, due to the strong commonsense knowledge and role-play capability of large language models (LLMs), it is possible to obtain simulated user feedback on offline recommendation results. Motivated by the idea of LLM Chatbot Arena, in this paper we present the idea of RecSys Arena, where the recommendation results given by two different recommender systems in each session are evaluated by an LLM judger to obtain fine-grained evaluation feedback. More specifically, for each sample we use LLM to generate a user profile description based on user behavior history or off-the-shelf profile features, which is used to guide LLM to play the role of this user and evaluate the relative preference for two recommendation results generated by different models. Through extensive experiments on two recommendation datasets in different scenarios, we demonstrate that many different LLMs not only provide general evaluation results that are highly consistent with canonical offline metrics, but also provide rich insight in many subjective aspects. Moreover, it can better distinguish different algorithms with comparable performance in terms of AUC and nDCG.",
+      "published": "2024-12-15",
+      "updated": "2024-12-15",
+      "year": 2024,
+      "pdf_url": "https://arxiv.org/pdf/2412.11068",
+      "arxiv_url": "https://arxiv.org/abs/2412.11068",
+      "arxiv_id": "2412.11068",
+      "categories": [
+        "cs.IR",
+        "cs.AI"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "llm-recommendation-iteration"
+      ],
+      "relevance_score": 93.3,
+      "relevance_factors": {
+        "matched_themes": {
+          "recommender": [
+            "recommendation",
+            "recommender"
+          ],
+          "industrial_loop": [
+            "online",
+            "a/b",
+            "experiment",
+            "evaluation",
+            "feedback"
+          ],
+          "llm": [
+            "large language model",
+            "llm",
+            "language model"
+          ]
+        },
+        "seed_term_overlap": [
+          "each",
+          "evaluation",
+          "evolution",
+          "experiments",
+          "generate",
+          "knowledge",
+          "online",
+          "present",
+          "results",
+          "that",
+          "this"
+        ],
+        "overlap_score": 19.8,
+        "recency_score": 2.0,
+        "category_score": 12.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "llm-recommendation-iteration"
+        ]
+      },
+      "recommendation_reason": "与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: each, evaluation, evolution, experiments, generate",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2412.11068.pdf"
+    },
+    {
+      "title": "Breaking the Barrier: Utilizing Large Language Models for Industrial Recommendation Systems through an Inferential Knowledge Graph",
+      "authors": [
+        "Qian Zhao",
+        "Hao Qian",
+        "Ziqi Liu",
+        "Gong-Duo Zhang",
+        "Lihong Gu"
+      ],
+      "abstract": "Recommendation systems are widely used in e-commerce websites and online platforms to address information overload. However, existing systems primarily rely on historical data and user feedback, making it difficult to capture user intent transitions. Recently, Knowledge Base (KB)-based models are proposed to incorporate expert knowledge, but it struggle to adapt to new items and the evolving e-commerce environment. To address these challenges, we propose a novel Large Language Model based Complementary Knowledge Enhanced Recommendation System (LLM-KERec). It introduces an entity extractor that extracts unified concept terms from item and user information. To provide cost-effective and reliable prior knowledge, entity pairs are generated based on entity popularity and specific strategies. The large language model determines complementary relationships in each entity pair, constructing a complementary knowledge graph. Furthermore, a new complementary recall module and an Entity-Entity-Item (E-E-I) weight decision model refine the scoring of the ranking model using real complementary exposure-click samples. Extensive experiments conducted on three industry datasets demonstrate the significant performance improvement of our model compared to existing approaches. Additionally, detailed analysis shows that LLM-KERec enhances users' enthusiasm for consumption by recommending complementary items. In summary, LLM-KERec addresses the limitations of traditional recommendation systems by incorporating complementary knowledge and utilizing a large language model to capture user intent transitions, adapt to new items, and enhance recommendation efficiency in the evolving e-commerce landscape.",
+      "published": "2024-02-21",
+      "updated": "2024-02-21",
+      "year": 2024,
+      "pdf_url": "https://arxiv.org/pdf/2402.13750",
+      "arxiv_url": "https://arxiv.org/abs/2402.13750",
+      "arxiv_id": "2402.13750",
+      "categories": [
+        "cs.IR",
+        "cs.AI",
+        "cs.CL"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "llm-recommendation-iteration"
+      ],
+      "relevance_score": 89.5,
+      "relevance_factors": {
+        "matched_themes": {
+          "recommender": [
+            "recommendation",
+            "ranking",
+            "recall"
+          ],
+          "industrial_loop": [
+            "industrial",
+            "online",
+            "experiment",
+            "feedback"
+          ],
+          "llm": [
+            "large language model",
+            "llm",
+            "language model"
+          ]
+        },
+        "seed_term_overlap": [
+          "analysis",
+          "data",
+          "each",
+          "experiments",
+          "historical",
+          "industrial",
+          "knowledge",
+          "making",
+          "online",
+          "that"
+        ],
+        "overlap_score": 18.0,
+        "recency_score": 2.0,
+        "category_score": 14.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "llm-recommendation-iteration"
+        ]
+      },
+      "recommendation_reason": "与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: analysis, data, each, experiments, historical",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2402.13750.pdf"
+    },
+    {
+      "title": "A Multi-Agent Conversational Recommender System",
+      "authors": [
+        "Jiabao Fang",
+        "Shen Gao",
+        "Pengjie Ren",
+        "Xiuying Chen",
+        "Suzan Verberne",
+        "Zhaochun Ren"
+      ],
+      "abstract": "Due to strong capabilities in conducting fluent, multi-turn conversations with users, Large Language Models (LLMs) have the potential to further improve the performance of Conversational Recommender System (CRS). Unlike the aimless chit-chat that LLM excels at, CRS has a clear target. So it is imperative to control the dialogue flow in the LLM to successfully recommend appropriate items to the users. Furthermore, user feedback in CRS can assist the system in better modeling user preferences, which has been ignored by existing studies. However, simply prompting LLM to conduct conversational recommendation cannot address the above two key challenges. In this paper, we propose Multi-Agent Conversational Recommender System (MACRS) which contains two essential modules. First, we design a multi-agent act planning framework, which can control the dialogue flow based on four LLM-based agents. This cooperative multi-agent framework will generate various candidate responses based on different dialogue acts and then choose the most appropriate response as the system response, which can help MACRS plan suitable dialogue acts. Second, we propose a user feedback-aware reflection mechanism which leverages user feedback to reason errors made in previous turns to adjust the dialogue act planning, and higher-level user information from implicit semantics. We conduct extensive experiments based on user simulator to demonstrate the effectiveness of MACRS in recommendation and user preferences collection. Experimental results illustrate that MACRS demonstrates an improvement in user interaction experience compared to directly using LLMs.",
+      "published": "2024-02-02",
+      "updated": "2024-02-02",
+      "year": 2024,
+      "pdf_url": "https://arxiv.org/pdf/2402.01135",
+      "arxiv_url": "https://arxiv.org/abs/2402.01135",
+      "arxiv_id": "2402.01135",
+      "categories": [
+        "cs.IR",
+        "cs.CL"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "agent-recommender-systems"
+      ],
+      "relevance_score": 88.5,
+      "relevance_factors": {
+        "matched_themes": {
+          "agent": [
+            "agent",
+            "multi-agent"
+          ],
+          "recommender": [
+            "recommendation",
+            "recommender"
+          ],
+          "industrial_loop": [
+            "experiment",
+            "feedback"
+          ],
+          "llm": [
+            "large language model",
+            "llm",
+            "language model"
+          ]
+        },
+        "seed_term_overlap": [
+          "agents",
+          "experimental",
+          "experiments",
+          "four",
+          "generate",
+          "multi-agent",
+          "results",
+          "that",
+          "then",
+          "this"
+        ],
+        "overlap_score": 18.0,
+        "recency_score": 2.0,
+        "category_score": 10.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "agent-recommender-systems"
+        ]
+      },
+      "recommendation_reason": "覆盖 Agent / 自迭代方向；与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: agents, experimental, experiments, four, generate",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2402.01135.pdf"
+    },
+    {
+      "title": "RecoAtlas: From Semantic Plausibility to Set-Level Utility in LLM Recommendation Agents",
+      "authors": [
+        "Imad Aouali",
+        "Flavian Vasile",
+        "Otmane Sakhi",
+        "Alexandre Gilotte",
+        "Benjamin Heymann"
+      ],
+      "abstract": "LLM recommendation agents increasingly produce structured recommendation reports: sets of items accompanied by natural-language justifications. Yet existing evaluations often reduce this setting to reranking small shortlisted candidate sets or judge reports mainly by semantic plausibility. We introduce Recommendation Atlas (Agentic Tool-Level Assessment for Shopping), or RecoAtlas, a benchmark and toolkit for evaluating shopping agents with behavior-grounded metrics. RecoAtlas complements held-out interaction metrics with learned utility proxies for relevance, complementarity, and diversity derived from interaction data, while separately measuring semantic coherence and explanation quality. Its controlled tool environment exposes agents to either semantic, behavior-aligned, or faulty tools, enabling diagnosis of whether performance gains arise from stronger reasoning, better signals, or more effective tool-use policies. Across controlled experiments, we show that RecoAtlas exhibits key properties of a meaningful benchmark for agentic systems: performance scales with model capacity and test-time compute, improves with stronger and better-aligned tools, degrades under noisy or misaligned signals, and reveals that semantic plausibility does not necessarily capture behavior-grounded utility. RecoAtlas provides a foundation for developing and evaluating shopping assistants that optimize not only for plausible recommendations, but also for coherent, behaviorally grounded recommendation sets.",
+      "published": "2026-05-11",
+      "updated": "2026-05-11",
+      "year": 2026,
+      "pdf_url": "https://arxiv.org/pdf/2605.18805",
+      "arxiv_url": "https://arxiv.org/abs/2605.18805",
+      "arxiv_id": "2605.18805",
+      "categories": [
+        "cs.IR",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "agent-recommender-systems"
+      ],
+      "relevance_score": 87.7,
+      "relevance_factors": {
+        "matched_themes": {
+          "agent": [
+            "agent",
+            "agentic"
+          ],
+          "recommender": [
+            "recommendation",
+            "ranking",
+            "rerank"
+          ],
+          "industrial_loop": [
+            "experiment",
+            "evaluation"
+          ],
+          "llm": [
+            "llm",
+            "reasoning"
+          ]
+        },
+        "seed_term_overlap": [
+          "agents",
+          "compute",
+          "data",
+          "developing",
+          "experiments",
+          "scales",
+          "structured",
+          "that",
+          "this"
+        ],
+        "overlap_score": 16.2,
+        "recency_score": 6.0,
+        "category_score": 12.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "agent-recommender-systems"
+        ]
+      },
+      "recommendation_reason": "覆盖 Agent / 自迭代方向；与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: agents, compute, data, developing, experiments",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2605.18805.pdf"
+    },
+    {
+      "title": "CFaiRLLM: Consumer Fairness Evaluation in Large-Language Model Recommender System",
+      "authors": [
+        "Yashar Deldjoo",
+        "Tommaso di Noia"
+      ],
+      "abstract": "This work takes a critical stance on previous studies concerning fairness evaluation in Large Language Model (LLM)-based recommender systems, which have primarily assessed consumer fairness by comparing recommendation lists generated with and without sensitive user attributes. Such approaches implicitly treat discrepancies in recommended items as biases, overlooking whether these changes might stem from genuine personalization aligned with the true preferences of users. Moreover, these earlier studies typically address single sensitive attributes in isolation, neglecting the complex interplay of intersectional identities. In response to these shortcomings, we introduce CFaiRLLM, an enhanced evaluation framework that not only incorporates true preference alignment but also rigorously examines intersectional fairness by considering overlapping sensitive attributes. Additionally, CFaiRLLM introduces diverse user profile sampling strategies-random, top-rated, and recency-focused-to better understand the impact of profile generation fed to LLMs in light of inherent token limitations in these systems. Given that fairness depends on accurately understanding users' tastes and preferences, these strategies provide a more realistic assessment of fairness within RecLLMs. To validate the efficacy of CFaiRLLM, we conducted extensive experiments using MovieLens and LastFM datasets, applying various sampling strategies and sensitive attribute configurations. The evaluation metrics include both item similarity measures and true preference alignment considering both hit and ranking (Jaccard Similarity and PRAG), thereby conducting a multifaceted analysis of recommendation fairness.",
+      "published": "2024-03-08",
+      "updated": "2025-02-20",
+      "year": 2024,
+      "pdf_url": "https://arxiv.org/pdf/2403.05668",
+      "arxiv_url": "https://arxiv.org/abs/2403.05668",
+      "arxiv_id": "2403.05668",
+      "categories": [
+        "cs.IR"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "llm-recommendation-iteration"
+      ],
+      "relevance_score": 75.7,
+      "relevance_factors": {
+        "matched_themes": {
+          "recommender": [
+            "recommendation",
+            "recommender",
+            "ranking"
+          ],
+          "industrial_loop": [
+            "experiment",
+            "evaluation"
+          ],
+          "llm": [
+            "large language model",
+            "llm",
+            "language model"
+          ]
+        },
+        "seed_term_overlap": [
+          "analysis",
+          "attribute",
+          "both",
+          "depends",
+          "evaluation",
+          "experiments",
+          "generation",
+          "that",
+          "this"
+        ],
+        "overlap_score": 16.2,
+        "recency_score": 2.0,
+        "category_score": 8.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "llm-recommendation-iteration"
+        ]
+      },
+      "recommendation_reason": "与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: analysis, attribute, both, depends, evaluation",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2403.05668.pdf"
+    },
+    {
+      "title": "Research on Conversational Recommender System Considering Consumer Types",
+      "authors": [
+        "Yaying Luo",
+        "Hui Fang",
+        "Zhu Sun"
+      ],
+      "abstract": "Conversational Recommender Systems (CRS) provide personalized services through multi-turn interactions, yet most existing methods overlook users' heterogeneous decision-making styles and knowledge levels, which constrains both accuracy and efficiency. To address this gap, we propose CT-CRS (Consumer Type-Enhanced Conversational Recommender System), a framework that integrates consumer type modeling into dialogue recommendation. Based on consumer type theory, we define four user categories--dependent, efficient, cautious, and expert--derived from two dimensions: decision-making style (maximizers vs. satisficers) and knowledge level (high vs. low). CT-CRS employs interaction histories and fine-tunes the large language model to automatically infer user types in real time, avoiding reliance on static questionnaires. We incorporate user types into state representation and design a type-adaptive policy that dynamically adjusts recommendation granularity, diversity, and attribute query complexity. To further optimize the dialogue policy, we adopt Inverse Reinforcement Learning (IRL), enabling the agent to approximate expert-like strategies conditioned on consumer type. Experiments on LastFM, Amazon-Book, and Yelp show that CTCRS improves recommendation success rate and reduces interaction turns compared to strong baselines. Ablation studies confirm that both consumer type modeling and IRL contribute significantly to performance gains. These results demonstrate that CT-CRS offers a scalable and interpretable solution for enhancing CRS personalization through the integration of psychological modeling and advanced policy optimization.",
+      "published": "2025-08-16",
+      "updated": "2025-09-09",
+      "year": 2025,
+      "pdf_url": "https://arxiv.org/pdf/2508.13209",
+      "arxiv_url": "https://arxiv.org/abs/2508.13209",
+      "arxiv_id": "2508.13209",
+      "categories": [
+        "cs.IR",
+        "cs.AI",
+        "cs.SI"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "agent-recommender-systems"
+      ],
+      "relevance_score": 74.5,
+      "relevance_factors": {
+        "matched_themes": {
+          "agent": [
+            "agent"
+          ],
+          "recommender": [
+            "recommendation",
+            "recommender"
+          ],
+          "industrial_loop": [
+            "experiment"
+          ],
+          "llm": [
+            "large language model",
+            "language model"
+          ]
+        },
+        "seed_term_overlap": [
+          "agent",
+          "attribute",
+          "both",
+          "experiments",
+          "four",
+          "knowledge",
+          "research",
+          "results",
+          "that",
+          "this"
+        ],
+        "overlap_score": 18.0,
+        "recency_score": 4.0,
+        "category_score": 12.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "agent-recommender-systems"
+        ]
+      },
+      "recommendation_reason": "覆盖 Agent / 自迭代方向；与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: agent, attribute, both, experiments, four",
+      "local_pdf_path": null
+    },
+    {
+      "title": "ReasoningRec: Bridging Personalized Recommendations and Human-Interpretable Explanations through LLM Reasoning",
+      "authors": [
+        "Millennium Bismay",
+        "Xiangjue Dong",
+        "James Caverlee"
+      ],
+      "abstract": "This paper presents ReasoningRec, a reasoning-based recommendation framework that leverages Large Language Models (LLMs) to bridge the gap between recommendations and human-interpretable explanations. In contrast to conventional recommendation systems that rely on implicit user-item interactions, ReasoningRec employs LLMs to model users and items, focusing on preferences, aversions, and explanatory reasoning. The framework utilizes a larger LLM to generate synthetic explanations for user preferences, subsequently used to fine-tune a smaller LLM for enhanced recommendation accuracy and human-interpretable explanation. Our experimental study investigates the impact of reasoning and contextual information on personalized recommendations, revealing that the quality of contextual and personalized data significantly influences the LLM's capacity to generate plausible explanations. Empirical evaluations demonstrate that ReasoningRec surpasses state-of-the-art methods by up to 12.5\\% in recommendation prediction while concurrently providing human-intelligible explanations. The code is available here: https://github.com/millenniumbismay/reasoningrec.",
+      "published": "2024-10-30",
+      "updated": "2024-10-30",
+      "year": 2024,
+      "pdf_url": "https://arxiv.org/pdf/2410.23180",
+      "arxiv_url": "https://arxiv.org/abs/2410.23180",
+      "arxiv_id": "2410.23180",
+      "categories": [
+        "cs.IR",
+        "cs.AI"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "llm-recommendation-iteration"
+      ],
+      "relevance_score": 64.3,
+      "relevance_factors": {
+        "matched_themes": {
+          "recommender": [
+            "recommendation"
+          ],
+          "industrial_loop": [
+            "experiment",
+            "evaluation"
+          ],
+          "llm": [
+            "large language model",
+            "llm",
+            "language model",
+            "reasoning"
+          ]
+        },
+        "seed_term_overlap": [
+          "code",
+          "data",
+          "experimental",
+          "generate",
+          "that",
+          "this"
+        ],
+        "overlap_score": 10.8,
+        "recency_score": 2.0,
+        "category_score": 12.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "llm-recommendation-iteration"
+        ]
+      },
+      "recommendation_reason": "与推荐召回/排序/重排直接相关；包含工业实验、反馈或评估闭环信号；包含 LLM 或推理增强推荐线索；与种子论文关键词重叠: code, data, experimental, generate, that",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2410.23180.pdf"
+    },
+    {
+      "title": "Can Recommender Systems Teach Themselves? A Recursive Self-Improving Framework with Fidelity Control",
+      "authors": [
+        "Luankang Zhang",
+        "Hao Wang",
+        "Zhongzhou Liu",
+        "Mingjia Yin",
+        "Yonghao Huang",
+        "Jiaqi Li",
+        "Wei Guo",
+        "Yong Liu",
+        "Huifeng Guo",
+        "Defu Lian",
+        "Enhong Chen"
+      ],
+      "abstract": "The scarcity of high-quality training data presents a fundamental bottleneck to scaling machine learning models. This challenge is particularly acute in recommendation systems, where extreme sparsity in user interactions leads to rugged optimization landscapes and poor generalization. We propose the Recursive Self-Improving Recommendation (RSIR) framework, a paradigm in which a model bootstraps its own performance without reliance on external data or teacher models. RSIR operates in a closed loop: the current model generates plausible user interaction sequences, a fidelity-based quality control mechanism filters them for consistency with user's approximate preference manifold, and a successor model is augmented on the enriched dataset. Our theoretical analysis shows that RSIR acts as a data-driven implicit regularizer, smoothing the optimization landscape and guiding models toward more robust solutions. Empirically, RSIR yields consistent, cumulative gains across multiple benchmarks and architectures. Notably, even smaller models benefit, and weak models can generate effective training curricula for stronger ones. These results demonstrate that recursive self-improvement is a general, model-agnostic approach to overcoming data sparsity, suggesting a scalable path forward for recommender systems and beyond. Our anonymized code is available at https://github.com/USTC-StarTeam/RSIR.",
+      "published": "2026-02-17",
+      "updated": "2026-05-09",
+      "year": 2026,
+      "pdf_url": "https://arxiv.org/pdf/2602.15659",
+      "arxiv_url": "https://arxiv.org/abs/2602.15659",
+      "arxiv_id": "2602.15659",
+      "categories": [
+        "cs.IR"
+      ],
+      "comment": "",
+      "primary_category": "cs.IR",
+      "matched_queries": [
+        "automated-recommender-research"
+      ],
+      "relevance_score": 60.5,
+      "relevance_factors": {
+        "matched_themes": {
+          "agent": [
+            "self-improving"
+          ],
+          "recommender": [
+            "recommendation",
+            "recommender"
+          ]
+        },
+        "seed_term_overlap": [
+          "analysis",
+          "bottleneck",
+          "closed",
+          "code",
+          "data",
+          "external",
+          "generate",
+          "generates",
+          "loop",
+          "operates",
+          "results",
+          "self-improving"
+        ],
+        "overlap_score": 20.0,
+        "recency_score": 6.0,
+        "category_score": 8.0,
+        "matched_query_score": 2.5,
+        "matched_queries": [
+          "automated-recommender-research"
+        ]
+      },
+      "recommendation_reason": "覆盖 Agent / 自迭代方向；与推荐召回/排序/重排直接相关；与种子论文关键词重叠: analysis, bottleneck, closed, code, data",
+      "local_pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2602.15659.pdf"
+    }
+  ],
+  "downloaded": [
+    {
+      "arxiv_id": "2412.11068",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2412.11068.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2412.11068",
+      "file_size": 1419001,
+      "downloaded": false,
+      "error": null
+    },
+    {
+      "arxiv_id": "2402.13750",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2402.13750.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2402.13750",
+      "file_size": 1556376,
+      "downloaded": false,
+      "error": null
+    },
+    {
+      "arxiv_id": "2402.01135",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2402.01135.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2402.01135",
+      "file_size": 1170143,
+      "downloaded": false,
+      "error": null
+    },
+    {
+      "arxiv_id": "2605.18805",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2605.18805.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2605.18805",
+      "file_size": 819554,
+      "downloaded": false,
+      "error": null
+    },
+    {
+      "arxiv_id": "2403.05668",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2403.05668.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2403.05668",
+      "file_size": 1003170,
+      "downloaded": false,
+      "error": null
+    },
+    {
+      "arxiv_id": "2508.13209",
+      "pdf_path": null,
+      "pdf_url": "https://arxiv.org/pdf/2508.13209",
+      "file_size": 0,
+      "downloaded": false,
+      "error": "HTTP 404"
+    },
+    {
+      "arxiv_id": "2410.23180",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2410.23180.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2410.23180",
+      "file_size": 1043989,
+      "downloaded": true,
+      "error": null
+    },
+    {
+      "arxiv_id": "2602.15659",
+      "pdf_path": "D:\\recommendation-system-learning\\data\\papers\\2602.15659.pdf",
+      "pdf_url": "https://arxiv.org/pdf/2602.15659",
+      "file_size": 843675,
+      "downloaded": true,
+      "error": null
+    }
+  ]
+}

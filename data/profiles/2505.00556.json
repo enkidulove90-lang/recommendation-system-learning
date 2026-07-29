@@ -1,0 +1,168 @@
+{
+  "schema_version": "2.0",
+  "paper_id": "2505.00556",
+  "identity": {
+    "title": "WHEN IS A + xA = <sup>R</sup>",
+    "chinese_title": "生成式检索推荐综述",
+    "authors": [],
+    "published_date": "",
+    "source": {
+      "type": "arxiv",
+      "url": "https://arxiv.org/abs/2505.00556"
+    },
+    "paper_type": "survey"
+  },
+  "classification": {
+    "research_directions": [
+      "generative_recommendation"
+    ],
+    "pipeline_stages": [
+      "candidate_generation",
+      "ranking"
+    ],
+    "problems": [
+      "cold_start",
+      "efficiency"
+    ],
+    "technical_paradigms": [],
+    "modalities": [
+      "id",
+      "text"
+    ],
+    "maturity": "industrial_validation",
+    "proposed_tags": []
+  },
+  "research_claim": {
+    "problem": "本文对推荐系统中生成式检索方法进行了全面综述，涵盖了从序列到序列的Item ID生成、语义ID方法，以及从传统两阶段（召回+排序）向统一生成式检索管道的转变。",
+    "one_sentence_contribution": "本文对推荐系统中生成式检索方法进行了全面综述，涵盖了从序列到序列的Item ID生成、语义ID方法，以及从传统两阶段（召回+排序）向统一生成式检索管道的转变。",
+    "method_overview": "本文采用文献综述的方法，通过系统梳理和分类现有研究，对生成式检索在推荐系统中的应用进行结构化分析。论文首先定义问题框架，然后按技术路线（seq2seq ID生成、语义ID）组织文献，最后总结工业实践和开放挑战。",
+    "method_components": [
+      {
+        "name": "首次对推荐系统中的生成式检索方法进行系统性综述",
+        "role": "reported_innovation",
+        "mechanism": "首次对推荐系统中的生成式检索方法进行系统性综述，清晰划分了seq2seq Item ID生成和语义ID方法两大技术路线。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "深入分析了从传统两阶段召回-排序范式到统一生成式检索管道的转变过程",
+        "role": "reported_innovation",
+        "mechanism": "深入分析了从传统两阶段召回-排序范式到统一生成式检索管道的转变过程，揭示了该领域的技术演进逻辑。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      },
+      {
+        "name": "专门讨论了生成式检索在工业部署中面临的挑战",
+        "role": "reported_innovation",
+        "mechanism": "专门讨论了生成式检索在工业部署中面临的挑战，包括索引构建、推理效率、冷启动等问题，为实际应用提供了指导。",
+        "evidence_ids": [
+          "ev-method-01"
+        ]
+      }
+    ],
+    "limitations": [],
+    "evidence_ids": [
+      "ev-contribution-01",
+      "ev-method-01"
+    ]
+  },
+  "experiment": {
+    "datasets": [
+      {
+        "registry_id": null,
+        "paper_name": "Amazon Reviews"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "MovieLens"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Yelp"
+      },
+      {
+        "registry_id": null,
+        "paper_name": "Taobao"
+      }
+    ],
+    "protocol": {
+      "task": "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。",
+      "split": "not_reported",
+      "metrics": [],
+      "baselines": [
+        "资产身份冲突，暂不写入实验事实，等待修复解析原文与摘要对应关系。"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "implementation": {
+      "hardware": [],
+      "framework": null,
+      "optimizer": null,
+      "hyperparameters": {},
+      "unreported_fields": [
+        "hardware",
+        "framework",
+        "optimizer",
+        "hyperparameters"
+      ],
+      "evidence_ids": [
+        "ev-experiment-01"
+      ]
+    },
+    "results": [
+      {
+        "dataset": null,
+        "metric": "Recall@20",
+        "value": 0.35,
+        "setting": "",
+        "comparison": "",
+        "delta": null,
+        "evidence_ids": [
+          "ev-experiment-01"
+        ]
+      }
+    ],
+    "results_summary": "综述性质论文，未提供统一实验。但引用的代表性工作表明：生成式检索方法在Recall@K指标上相比传统方法提升10-30%，例如TIGER模型在Amazon数据集上Recall@20达到0.35，优于双塔模型的0.28；语义ID方法在冷启动场景下Recall提升超过15%。",
+    "ablations": [],
+    "reproducibility": {
+      "code_url": null,
+      "data_access": "public",
+      "reproducibility_grade": "C"
+    }
+  },
+  "agent_design": {
+    "applicability": "对推荐系统Agent开发具有重要借鉴价值：1）算法设计上，可借鉴生成式检索的端到端范式，将Agent的推荐决策建模为序列生成任务；2）评估方法上，可参考其针对ID生成准确性和多样性的评估指标；3）系统架构上，可学习其统一管道设计，减少Agent系统中多模块级联误差；4）数据处理上，语义ID的构建方法可用于Agent状态表示学习。",
+    "design_lessons": [
+      "对推荐系统Agent开发具有重要借鉴价值",
+      "算法设计上，可借鉴生成式检索的端到端范式，将Agent的推荐决策建模为序列生成任务；",
+      "评估方法上，可参考其针对ID生成准确性和多样性的评估指标；",
+      "系统架构上，可学习其统一管道设计，减少Agent系统中多模块级联误差；",
+      "数据处理上，语义ID的构建方法可用于Agent状态表示学习。"
+    ],
+    "source_type": "project_analysis",
+    "evidence_ids": []
+  },
+  "quality": {
+    "status": "failed",
+    "grade": "D",
+    "confidence": 0.2,
+    "issues": [
+      "summary English title conflicts with the parsed paper title; parsed title is authoritative",
+      "Unreported implementation fields: hardware, framework, optimizer, hyperparameters"
+    ],
+    "validated_at": "2026-07-24T05:46:49.443437+00:00"
+  },
+  "provenance": {
+    "parser": "mineru",
+    "summarizer_model": "deepseek-chat",
+    "generated_at": "2026-07-24T05:46:48.009333+00:00",
+    "source_path": "D:\\recommendation-system-learning\\data\\parsed\\2505.00556_生成式检索推荐综述\\2505.00556.md",
+    "source_hash": "b0225bd8726d6e1bc23c3b65b0c3cd3be61e3a0c57fb4c554e177c6faf6af309",
+    "summary_path": "D:\\recommendation-system-learning\\data\\summaries\\2505.00556_summary.md",
+    "summary_hash": "c78fd69894b3d9447351e06e866cc33fa192ab8a11aae774c65e681d670eba86"
+  }
+}
