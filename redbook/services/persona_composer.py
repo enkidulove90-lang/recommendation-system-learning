@@ -31,6 +31,8 @@ class ContentPersona:
 @dataclass(frozen=True)
 class PostDraft:
     persona_id: str
+    requested_persona_id: str
+    persona_selection_reason: str
     title: str
     body: str
     topics: tuple[str, ...]
@@ -40,6 +42,8 @@ class PostDraft:
     def as_dict(self) -> dict[str, Any]:
         return {
             "persona_id": self.persona_id, "title": self.title, "body": self.body,
+            "requested_persona_id": self.requested_persona_id,
+            "persona_selection_reason": self.persona_selection_reason,
             "topics": list(self.topics), "comment_prompt": self.comment_prompt,
             "generation_prompt": self.generation_prompt,
         }
@@ -81,6 +85,15 @@ class PersonaPostComposer:
 
     def __init__(self, catalog: PersonaCatalog | None = None) -> None:
         self.catalog = catalog or PersonaCatalog()
+
+    def _resolve_persona(self, requested_persona_id: str, github_url: str) -> tuple[ContentPersona, str]:
+        """Avoid a reproduction-first framing when the paper has no official code."""
+        if requested_persona_id == "implementation_reviewer" and not github_url.strip():
+            return (
+                self.catalog.load("research_translator"),
+                "无官方代码：从复现审稿人自动切换为论文解读，避免制造可复现性预期。",
+            )
+        return self.catalog.load(requested_persona_id), "使用请求的人设。"
 
     @staticmethod
     def _evidence_policy() -> str:
@@ -146,7 +159,7 @@ class PersonaPostComposer:
 
     def compose(self, summary: str, arxiv_id: str, persona_id: str = "research_translator", github_url: str = "",
                 paper_title: str = "") -> PostDraft:
-        persona = self.catalog.load(persona_id)
+        persona, selection_reason = self._resolve_persona(persona_id, github_url)
         facts = self._sections(summary)
         title_source = paper_title or self._title_from_summary(summary)
         short_title = self._short_title(title_source)
@@ -161,7 +174,7 @@ class PersonaPostComposer:
             github=f"\nGitHub：{github_url}" if github_url else "\nGitHub：暂无官方代码",
         )
         formats = {
-            "research_translator": f"📌 先说结论\n{problem}\n\n它在解决什么？\n{problem}\n\n怎么做？\n{method}\n\n证据是什么？\n{evidence}\n\n对我有什么启发？\n{relevance}",
+            "research_translator": f"🎓 论文在解决什么？\n{problem}\n\n✨ 核心亮点\n• {problem}\n• {method}\n\n🧠 方法拆解\n{method}\n\n📊 关键实验\n{evidence}\n\n📝 阅读注释\n{relevance}\n\n💻 代码状态\n{'已提供官方 GitHub，见文末链接。' if github_url else '暂无官方代码；不要把匿名数据或第三方仓库当作官方实现。'}",
             "implementation_reviewer": f"🔍 复现判断\n{problem}\n\n核心模块\n{method}\n\n实验依据\n{evidence}\n\n复现信息\n{reproducibility}\n\n⚠️ 边界\n没有明示的参数、代码或数据，不补写推测。",
             "industry_analyst": f"一个问题：这条路线为什么值得关注？\n{problem}\n\n我会先问三个问题\n1. 它要替换或补强哪一环？\n2. 方法怎么落到系统里？\n3. 证据是否支撑这个判断？\n\n论文的回答\n{method}\n\n已验证的证据\n{evidence}\n\n可能的影响（推断）\n{relevance}",
             "study_coach": f"读这篇前，先抓四件事\n\n① 问题\n{problem}\n\n② 方法\n{method}\n\n③ 证据\n{evidence}\n\n④ 读完后可迁移什么\n{relevance}\n\n建议：带着‘它比什么基线好、为何会更好’回到原图和实验表核对。",
@@ -170,6 +183,7 @@ class PersonaPostComposer:
         }
         body = f"{formats[persona.id]}\n\n📎 论文与代码\n{links}"
         return PostDraft(
-            persona_id=persona.id, title=title, body=body, topics=persona.topics,
+            persona_id=persona.id, requested_persona_id=persona_id, persona_selection_reason=selection_reason,
+            title=title, body=body, topics=persona.topics,
             comment_prompt=persona.comment_prompt, generation_prompt=self.build_generation_prompt(persona, facts, title_source),
         )

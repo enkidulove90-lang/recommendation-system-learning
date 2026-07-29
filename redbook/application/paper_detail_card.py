@@ -16,7 +16,8 @@ class PaperDetailCardRenderer:
     def _font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
         candidates = (
             (r"C:\Windows\Fonts\msyhbd.ttc", r"C:\Windows\Fonts\simhei.ttf")
-            if bold else (r"C:\Windows\Fonts\msyh.ttc", r"C:\Windows\Fonts\simsun.ttc")
+            if bold
+            else (r"C:\Windows\Fonts\msyh.ttc", r"C:\Windows\Fonts\simsun.ttc")
         )
         for candidate in candidates:
             if Path(candidate).is_file():
@@ -24,8 +25,16 @@ class PaperDetailCardRenderer:
         return ImageFont.load_default()
 
     @staticmethod
-    def _wrapped(draw: ImageDraw.ImageDraw, text: str, x: int, y: int, width: int,
-                 font: ImageFont.FreeTypeFont, color: str, gap: int = 8) -> int:
+    def _wrapped(
+        draw: ImageDraw.ImageDraw,
+        text: str,
+        x: int,
+        y: int,
+        width: int,
+        font: ImageFont.FreeTypeFont,
+        color: str,
+        gap: int = 8,
+    ) -> int:
         chars_per_line = max(12, width // max(10, font.size))
         lines: list[str] = []
         for paragraph in text.splitlines() or [text]:
@@ -40,7 +49,7 @@ class PaperDetailCardRenderer:
         lineage: dict[str, Any] = json.loads(lineage_evidence.read_text(encoding="utf-8"))
         image = Image.new("RGB", self.size, "#F7F9FC")
         draw = ImageDraw.Draw(image)
-        title, body, small = self._font(42, True), self._font(27), self._font(20)
+        title, small = self._font(42, True), self._font(20)
         x, y, width = 64, 56, 952
 
         draw.text((x, y), "知识图谱 · 论文详情", font=title, fill="#102A43")
@@ -48,7 +57,12 @@ class PaperDetailCardRenderer:
         draw.text((x, y), "引用锚点，不等同于严格因果发展链", font=small, fill="#526D82")
         y += 58
         draw.rounded_rectangle((x, y, x + width, y + 126), radius=24, fill="#153E75")
-        draw.text((x + 28, y + 20), "2026 · Agentic Recommender Systems", font=self._font(26, True), fill="white")
+        draw.text(
+            (x + 28, y + 20),
+            f"{paper.get('published', '2026')[:4]} · {paper.get('topic', '论文研究图谱')}",
+            font=self._font(26, True),
+            fill="white",
+        )
         self._wrapped(draw, paper["title"], x + 28, y + 59, width - 56, self._font(20), "#DCEBFF", 2)
         y += 164
 
@@ -71,7 +85,7 @@ class PaperDetailCardRenderer:
         y = self._wrapped(draw, f"论文：{paper['source_url']}", x, y, width, small, "#245B93", 5)
         y = self._wrapped(draw, f"PDF：{paper['pdf_url']}", x, y, width, small, "#245B93", 5)
         self._wrapped(draw, f"代码：{paper['github_status']}", x, y, width, small, "#526D82", 5)
-        draw.text((x, 1388), "图谱关系、论文链接与代码状态均来自本地解析与官方来源核验。", font=self._font(16), fill="#748AA0")
+        draw.text((x, 1388), "图谱关系、论文链接与代码状态均来自本地解析及官方来源核验。", font=self._font(16), fill="#748AA0")
         output.parent.mkdir(parents=True, exist_ok=True)
         image.save(output, quality=95, subsampling=0)
         return output

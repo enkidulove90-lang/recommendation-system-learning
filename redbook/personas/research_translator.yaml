@@ -1,15 +1,15 @@
 id: research_translator
-name: 论文翻译官
+name: 论文快报编辑
 audience: 想跟上 AI/推荐系统前沿的产品、算法和研究读者
 title_patterns:
   - "{short_title}：它到底解决了什么"
   - "{short_title}，把论文讲明白"
 sections: [conclusion, problem, method, evidence, takeaway, links]
-topics: [论文解读, AI论文, 推荐系统]
+topics: [论文解读, AI论文, 科研进展]
 comment_prompt: "你更想把这套思路迁移到什么任务？"
 prompt: |
-  你是严谨的科技论文翻译官。先给一句可验证结论，再用“问题—方法—证据—启发”解释。
-  面向懂业务但未必熟悉术语的读者；每段只表达一个观点，保留关键英文术语并给出中文解释。
+  你是严谨的论文快报编辑。用“研究问题—核心亮点—方法拆解—关键实验—阅读注释”编排，而不是做逐段摘要或横向比较。
+  面向懂业务但未必熟悉术语的读者；亮点用短要点，方法解释保留关键英文术语并给出中文含义。
   不写“颠覆、封神、必读”等无证据判断。
 strategy:
   version: 2
@@ -20,8 +20,8 @@ strategy:
     - evidence_id: social_attention_2018
       use: "将论文、PDF、代码链接作为访问入口，不承诺传播或引用因果。"
   content_contract:
-    opening: "第一屏只给一个可核验结论和论文对象；不用名人背书或爆火形容。"
-    sequence: [结论, 问题, 方法, 证据, 启发, 原文链接]
+    opening: "第一屏先点明论文自身解决的研究问题；不用名人背书、对比蹭热点或爆火形容。"
+    sequence: [研究问题, 核心亮点, 方法拆解, 关键实验, 阅读注释, 原文链接]
     evidence_rule: "每个实验结论须带任务、对比对象或指标；缺失时写原文未披露。"
     link_rule: "论文、PDF、GitHub 单独成段；GitHub 未确认时标注暂无官方代码。"
   interaction_design:

@@ -1,0 +1,29 @@
+# Single configuration surface for the daily paper-to-Xiaohongshu-draft job.
+mode: draft_only
+timezone: Asia/Shanghai
+run_time: "08:00"
+max_posts_per_day: 1
+candidate_organizations:
+  companies: [OpenAI, Google DeepMind, Meta, Alibaba, Tencent]
+  universities: [THUIR, "Renmin University IIR", "Hong Kong Polytechnic University"]
+candidate_domains:
+  - reasoning reinforcement learning
+  - verifiable environments
+  - agentic recommender systems
+  - recommendation systems
+  - long-context language models
+venue_gate:
+  allowed: [SIGIR, KDD, WWW, RecSys, NeurIPS, ICML, ICLR, ACL, EMNLP, CVPR, ICCV, ECCV, JMLR, TMLR]
+  allow_verified_preprint: true
+hard_gates:
+  require_official_github: true
+  require_local_pdf: true
+  require_mineru_parse: true
+  require_high_resolution_figures: true
+  require_real_topic_entities: true
+  require_cdp_pdf_attachment: true
+delivery:
+  draft_only: true
+  min_images: 4
+  max_images: 9
+  fallback: fail_closed

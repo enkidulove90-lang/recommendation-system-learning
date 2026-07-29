@@ -1,0 +1,35 @@
+\section{Experiments}
+\label{sec:experiments}
+\subsection{Experimental Setup}
+\label{sec:exp_setup}
+\paragraph{Models.}
+Main experiments are conducted on two 14B backbones: DeepSeek-R1-Distill-Qwen-14B and Qwen3-14B.
+To reduce computational cost, analysis experiments are conducted on Qwen3-4B-Instruct-2507. 
+All models are trained using the same pool of 300 verifiable environments described in Section \ref{sec:atomic}.
+
+\paragraph{Evaluation}
+Models are evaluated on six benchmarks: LiveCodeBench~\citep{jain2025livecodebench}, AIME 2024/2025~\citep{AIME2024I,AIME2025I}, Enigmata~\citep{chen2026enigmata}, IFEval~\citep{zhou2023instruction}, and LongBench-v2~\citep{bai-etal-2025-longbench}.
+These benchmarks encompass code generation, mathematical reasoning, logic reasoning, instruction following, and long-context understanding.
+None of these benchmarks are used in RACES. Consequently, improvements on these challenging benchmarks indicate genuine reasoning generalization.
+To mitigate test randomness, each benchmark is evaluated multiple times (32 times for AIME 2024/2025 and 4 times for other benchmarks), and the average score is reported.
+
+\paragraph{Data Construction.}
+Two configurations sharing the same environment pool are compared: an individual-environment baseline that samples instances directly from the pool, and RACES, which samples a composition operator, a composition size, and domain-compatible environments to form a composite. Composition sizes are uniformly drawn from $[2,12]$ for \textsc{SEQUENTIAL} and \textsc{PARALLEL}, and $[2,6]$ for \textsc{SORT} and \textsc{SELECT}. In the analysis experiments, these ranges are reduced to $[2,6]$ for \textsc{SEQUENTIAL} and \textsc{PARALLEL}, and $[2,3]$ for \textsc{SORT}. An anonymized subset is available at \url{https://anonymous.4open.science/r/Submission_of_NIPS2026_34776-B7FD}.
+
+\paragraph{Training Details.}
+All RL experiments are implemented with VERL on a 32 × NVIDIA A100 80GB cluster and vLLM for rollout generation. Optimization is performed with GRPO~\citep{shao2024deepseekmathpushinglimitsmathematical} using a clip ratio of 0.28 and no KL regularization to a reference policy. For the main experiments, each configuration is trained for 300 steps using 12,800 training instances, a batch size of 128, a learning rate of 2e-6, 8 rollouts per problem, and a maximum sequence length of 32K tokens. For the analysis experiments, Qwen3-4B-Instruct-2507 is trained for 200 steps using 6,400 instances, a batch size of 64, and a maximum sequence length of 16K tokens. \textsc{Select} is excluded from the analysis as it yields near-zero rewards on this smaller backbone.
+
+\subsection{Main Results}
+\label{sec:main_results}
+\input{Tables/Main_results}
+
+Table~\ref{tab:main_results} presents a comparison between RL on RACES ($RL_{RACES}$) and RL on individual environments ($RL_{individual}$).
+$RL_{RACES}$ and $RL_{individual}$ are initialized from the same environment pool and utilize identical RL data scales.
+Across both model families, RACES consistently demonstrates superior performance.
+For DeepSeek-R1-Distill-Qwen-14B, $RL_{individual}$ increases the average score marginally, from 48.2 to 48.8.
+In contrast, RACES improves the average score to 51.3, outperforming $RL_{individual}$ by 2.5 points.
+For Qwen3-14B, RACES also surpasses $RL_{individual}$, increasing the average score from 60.1 to 61.1.
+Performance gains are consistent across all benchmarks for both backbones.
+
+$RL_{individual}$ exposes the model to isolated environments, whereas $RL_{RACES}$ trains the model on composed environments that require chaining transformations, maintaining intermediate states, and inferring valid operation orders or subsets.
+The consistent advantage of RACES indicates that environmental composition offers a more effective training signal than sampling instances from the original environment pool, resulting in stronger transfer on unseen reasoning benchmarks.

@@ -69,6 +69,15 @@ class FigureWorkflowTests(unittest.TestCase):
         self.assertNotEqual(coach.title, auditor.title)
         self.assertGreaterEqual(len(PersonaCatalog().list()), 6)
 
+    def test_missing_official_code_avoids_reproduction_persona(self) -> None:
+        summary = "# 示例\n\n## 主要贡献\n\n一个可验证方法。\n\n## 核心方法\n\n组合模块。\n\n## 实验结果\n\n平均分提升。"
+        draft = PersonaPostComposer().compose(summary, "2607.00002", "implementation_reviewer")
+        self.assertEqual(draft.persona_id, "research_translator")
+        self.assertEqual(draft.requested_persona_id, "implementation_reviewer")
+        self.assertIn("无官方代码", draft.persona_selection_reason)
+        self.assertNotIn("复现判断", draft.body)
+        self.assertIn("核心亮点", draft.body)
+
 
 if __name__ == "__main__":
     unittest.main()
