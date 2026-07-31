@@ -21,5 +21,3 @@
 ## PDF说明
 
 本文发表于CIKM 2025，无arXiv preprint。代码仓库为匿名提交(anonymous.4open.science)。
----
-*由 Claude 生成*
