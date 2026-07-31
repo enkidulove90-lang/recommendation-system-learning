@@ -4,6 +4,7 @@
 **会议**: CIKM 2025
 **代码**: https://anonymous.4open.science/r/DPRec-4D15
 **arXiv**: 无（仅ACM出版）
+**GitHub**: 待查
 **创新评估**: ⭐⭐⭐ (中等) — 双路径架构+跨模态补偿，与CAMMSR同为CIKM 2025
 
 ---
@@ -21,3 +22,11 @@
 ## PDF说明
 
 本文发表于CIKM 2025，无arXiv preprint。代码仓库为匿名提交(anonymous.4open.science)。
+
+
+## 基线方法
+待补充
+
+
+## Benchmark 与数据集
+待补充
