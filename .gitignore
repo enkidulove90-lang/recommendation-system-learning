@@ -44,3 +44,15 @@ Thumbs.db
 # Redbook CLI (installed via pip, cloned for reference only)
 redbook/xhs-cli/
 redbook/mcp/*.exe
+
+# ===== Experiment large artifacts (cannot push to GitHub / regenerable) =====
+# LightGCNpp saved embeddings (~280MB, regenerated at runtime)
+baseline/LightGCNpp/code/embs/
+
+# Large multimodal feature arrays & cached adjacency
+# (regenerate via prep_amazon_sports.py / fetch_mm_data.py)
+*.npy
+*.npz
+
+# MixRAGRec: external reference clone (re-clone from upstream; heavy data excluded)
+baseline/MixRAGRec/
