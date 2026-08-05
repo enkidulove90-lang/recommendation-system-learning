@@ -1,21 +1,43 @@
 # idea2 知识对齐（align-then-fuse）多模态扩展 — 实验报告
 
-> **状态**: ⛔ **实验已中止（2026-08-05，用户取消继续）** — 代码与方法完整保留，**无最终指标**，结果表留空。
+> **状态**: 🔄 **实验进行中（2026-08-05 重启）** — 首轮实验发现**融合层尺度失配缺陷**并已修复，正用修复后代码重跑。
 > **基座**: `baseline/LightGCNpp/`（RecSys 2024，α/β/γ 三参数改进）
 > **迁移源**: `baseline/MixRAGRec/`（KDD 2026，Knowledge Alignment Agent）
 > **设计依据**: `docs/lightgcnpp_migration_design.md` §2（路线 2：公开多模态基线数据）
+> **数据**: `data/amazon-baby-mmssl/` — **真实 MMSSL 特征**（image 18357×4096 float32 + text 18357×384 float32），非合成
 > **代码**: `baseline/LightGCNpp/code/{mm_align.py, model.py, dataloader.py, run_idea2.py, aggregate_idea2.py, prep_amazon_sports.py}`
-> **接手者注意**: 本报告仅记录**方法设计与实现**；第 6 节结果表为空是因为实验在跑出指标前被取消，并非数据丢失。如需结论，按第 9 节命令重跑即可（约 3 种子 × 20 epoch，CPU 数小时）。
 
 ---
 
-> ## ⛔ 实验中止说明
+> ## 🔍 首轮实验的关键负面发现：融合层尺度失配（已修复）
 >
-> - **中止时间**: 2026-08-05。用户在换电脑交接前决定**不再继续** idea2 多模态实验。
-> - **已完成**: 全部 idea2 代码（`mm_align.py` 三级对齐 + `model.py`/`dataloader.py`/`parse.py`/`world.py`/`register.py`/`main.py` 接入 + `prep_amazon_sports.py`/`fetch_mm_data.py`/`run_idea2.py`/`aggregate_idea2.py` 驱动）、数据管线（合成特征已生成）、以及本方法文档。
-> - **未执行**: 3 种子 × 20 epoch 的完整训练与指标聚合。仅留下 seed2024 的早期片段日志（无 test 指标），**不可作为结论**。
-> - **代码去向**: 全部已提交并推送到 `experiments` 分支（`origin`, commit `7a6f7bf`），接手者在任意机器 `git clone` 后即可复现。
-> - **为何保留本报告**: 方法章节（§1–§5、§8–§9）是完整的设计/实现记录，对后续若重开该方向有价值的参考；仅结果章节（§6–§7）因无数据而留空。
+> 首轮（修复前）在 amazon-baby-mmssl 真实特征上，idea2 相对 baseline **同种子配对增益为负**（seed2024：R@20 −1.83%、N@20 −1.31%）。诊断过程与结论如下。
+>
+> **观测**：训练收敛后置信门控 `conf_mean = 0.088` —— 模型只放行 **8.8%** 的多模态知识；类型门控本身正常（image 0.288 / text 0.712）。初始化时 `conf_mlp` 为 xavier + zero-bias，即 `σ(0)=0.5`；训练后 σ 输入均值降到 **−2.34**，说明是 BPR 主动把 c 压下去的，不是初始化问题。
+>
+> **根因（实现缺陷，非语义问题）**：`fuse()` 中 `pooled` 经 `F.normalize` 后**模长恒为 1.000、18357 个物品完全相同**；而 `id_emb`（`normal(0, 0.1)`, dim=64）模长 ≈ **0.798 且随流行度分化**（std 0.069）。残差融合 `fused = id_emb + c·(pooled − id_emb)` 在 c→1 时会把物品表示的模长**强行拉成常数 1**，抹平全部流行度信号。数值验证 `corr(‖id_emb‖, ‖fused‖)`：
+>
+> | c | 修复前 | 修复后 |
+> |---|---|---|
+> | 0.25 | 0.860 | **0.919** |
+> | 0.50 | 0.497 | **0.814** |
+> | 1.00 | **−0.016**（信息全毁） | **1.000**（完整保留） |
+>
+> 又因 `computer()` 中 `embs_zero = embs[0]` **绕过逐层 L2 归一化**，以 `light_out = γ·embs_zero + (1−γ)·embs_prop`（γ=0.2）直通最终表示 —— 被污染的 layer-0 占最终表示 20% 权重。BPR 面对「引入语义方向 = 损失流行度排序能力」的取舍，把 c 压到 0.088 是**理性自保**，而非"图文语义确实不符"。
+>
+> **修复（范数对齐，`mm_align.py: fuse()`）**：让多模态只提供**方向**，模长沿用该物品自身的 ID 嵌入模长：
+> ```python
+> id_scale = id_emb.norm(dim=-1, keepdim=True).detach()   # [n,1]，detach 防模型缩小 id_emb 走捷径
+> pooled_scaled = pooled * id_scale                        # 同模长，仅换方向
+> fused = id_emb + c * (pooled_scaled - id_emb)
+> ```
+> 修复后 c=1 时融合模长分布与 ID 嵌入完全一致（0.798 ± 0.069），与 baseline 的 layer-0 尺度行为对齐，采纳多模态不再有"代价"。
+>
+> **验证指标**：重跑后应观察 `conf_mean` 是否从 0.088 显著回升；若仍偏低，则可判定为真实的图文语义不匹配（数据层面），而非实现缺陷。
+>
+> **方法论教训**：首轮聚合器曾用**非配对**均值比较（baseline 2 seed vs idea2 1 seed）得出 "+1.74%" 的假增益，而同种子配对实为 **−1.83%**，方向相反。`aggregate_idea2.py` 已加入 `paired_gain()`，所有结论**只用双方共同跑完的种子**计算。
+>
+> **修复前日志归档**：`baseline/LightGCNpp/code/logs/_archive_prefix_scalebug/`（避免与修复后结果混入同一 append 文件被聚合器取 max）。
 
 ---
 

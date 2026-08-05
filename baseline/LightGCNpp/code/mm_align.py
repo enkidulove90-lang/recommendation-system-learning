@@ -147,15 +147,23 @@ class MultiModalAligner(nn.Module):
 
         # G3 置信度门控: c_i = σ(cos(P(v_i), e_i^ID))
         id_det = self._l2(id_emb.detach())
-        v_norm = self._l2(pooled)
+        v_norm = pooled                                            # 146 行已 L2 归一化
         cos = (v_norm * id_det).sum(-1, keepdim=True)              # [n,1]
         conf_in = torch.cat([v_norm, id_det], dim=-1)              # [n, 2d]
         conf_logit = self.conf_mlp(conf_in)                        # [n,1]
         # 让余弦相似度本身也参与门控信号(可解释): c = σ(conf_logit + 2*cos)
         c = torch.sigmoid(conf_logit + 2.0 * cos)                 # [n,1] ∈ (0,1)
 
+        # 范数对齐(尺度修复): pooled 经 L2 后模长恒为 1 且全物品相同,
+        # 而 id_emb 模长≈0.8 且随流行度分化. 直接残差会让 c→1 抹掉流行度信息、
+        # 与 CF 方向冲突, 迫使 BPR 把 c 压到极小(实测 conf_mean=0.088).
+        # 这里只让多模态提供"方向", 模长沿用该物品自身的 ID 嵌入模长
+        # (detach 防止模型通过缩小 id_emb 范数走捷径).
+        id_scale = id_emb.norm(dim=-1, keepdim=True).detach()      # [n,1]
+        pooled_scaled = pooled * id_scale                          # [n,d] 同模长, 仅换方向
+
         # 残差融合: 图文相符(c→1)则引入视觉; 不符(c→0)则退化为纯 ID
-        fused = id_emb + c * (pooled - id_emb)
+        fused = id_emb + c * (pooled_scaled - id_emb)
 
         info = {
             'conf_mean': float(c.mean().item()),
