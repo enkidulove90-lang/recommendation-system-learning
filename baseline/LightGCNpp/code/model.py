@@ -261,6 +261,7 @@ class LightGCN(BasicModel):
     
     def getEmbedding(self, users, pos_items, neg_items):
         all_users, all_items, _users, _items = self.computer()
+        self._items = _items   # 缓存逐层 item 嵌入, 供 bpr_loss 的 idea2 梯度通路复用
         users_emb = all_users[users]
         pos_emb = all_items[pos_items]
         neg_emb = all_items[neg_items]
@@ -276,16 +277,13 @@ class LightGCN(BasicModel):
     
     def bpr_loss(self, users, pos, neg):
         (users_emb, pos_emb, neg_emb,
-        userEmb0,  posEmb0, negEmb0) = self.getEmbedding(users.long(), pos.long(), neg.long())
+         userEmb0,  posEmb0, negEmb0) = self.getEmbedding(users.long(), pos.long(), neg.long())
         reg_loss = (1/2)*(userEmb0.norm(2).pow(2) +
                          posEmb0.norm(2).pow(2)  +
                          negEmb0.norm(2).pow(2))/float(len(users))
-        pos_scores = torch.mul(users_emb, pos_emb)
-        pos_scores = torch.sum(pos_scores, dim=1)
-        neg_scores = torch.mul(users_emb, neg_emb)
-        neg_scores = torch.sum(neg_scores, dim=1)
-
-        loss = torch.mean(torch.nn.functional.softplus(neg_scores - pos_scores))
+        pos_scores = torch.sum(users_emb * pos_emb, dim=1)
+        neg_scores = torch.sum(users_emb * neg_emb, dim=1)
+        bpr_term = torch.mean(torch.nn.functional.softplus(neg_scores - pos_scores))
 
         # ---- P1: NLGCL contrastive loss (idea4) ----
         if self.use_cl:
@@ -296,41 +294,56 @@ class LightGCN(BasicModel):
                 embs_list = [torch.cat([_users[:, l, :], _items[:, l, :]], dim=0)
                              for l in range(self.n_layers + 1)]
             cl = self.neighbor_cl_loss(embs_list, users.long(), pos.long())
-            loss = loss + self.cl_reg * cl
+            bpr_term = bpr_term + self.cl_reg * cl
 
-        # ---- idea2: 多模态对齐对比损失(视图一致性) ----
-        # ---- idea2/idea3: 置信度判别正则 + 成本感知门控(挂 G3 置信度门控) ----
+        # ---- idea2/idea3: 多模态对齐(梯度通路 v3) ----
         if getattr(self, 'use_mm', 0):
-            # 本 batch 参与计算的物品(正+负). 传 feats 让对齐器对这批物品
-            # **重新做带梯度投影** —— 这是 proj 头唯一的梯度来源:
-            # 全量投影已改为 no_grad 缓存(避免 94 batch × 2502ms 的不可接受开销),
-            # 只有这里的 batch 子集(约 2048 物品, 约 280ms)带梯度.
-            idx = torch.cat([pos.long(), neg.long()]).unique()
-            cl_mm = self.mm_aligner.contrastive_loss(idx, feats=self.mm_feats)
-            loss = loss + self.mm_reg * cl_mm
+            cat_pn = torch.cat([pos.long(), neg.long()])
+            idx, inverse = cat_pn.unique(return_inverse=True)
+            # 带梯度融合 e^(0)_item(仅 batch 子集), BPR 梯度经此回到 proj 头;
+            # 投影结果同时缓存给下方 InfoNCE 复用.
+            fused_idx, c_idx = self.mm_aligner.fuse_subset(
+                self.mm_feats, self.embedding_item.weight, idx)
+            c = None
+            if fused_idx is not None:
+                pos_map = inverse[: pos.shape[0]]
+                neg_map = inverse[pos.shape[0]:]
+                fused_pos = fused_idx[pos_map]
+                fused_neg = fused_idx[neg_map]
+                c_pos = c_idx[pos_map]
+                c_neg = c_idx[neg_map]
+                # light_out 的 gamma·embs_zero 项替换为带梯度融合结果,
+                # (1-gamma)·embs_prop 仍取 computer() 的无梯度传播项(无需 proj 梯度).
+                ep_pos = self._items[pos.long(), 1:, :].mean(dim=1)
+                ep_neg = self._items[neg.long(), 1:, :].mean(dim=1)
+                pos_emb2 = self.gamma * fused_pos + (1 - self.gamma) * ep_pos
+                neg_emb2 = self.gamma * fused_neg + (1 - self.gamma) * ep_neg
+                pos_scores2 = torch.sum(users_emb * pos_emb2, dim=1)
+                neg_scores2 = torch.sum(users_emb * neg_emb2, dim=1)
+                bpr_term = torch.mean(torch.nn.functional.softplus(neg_scores2 - pos_scores2))
+                c = torch.cat([c_pos, c_neg], dim=0).squeeze(-1)
 
-            c_vec = self.mm_info.get('conf_vec', None)
-            if c_vec is not None:
-                c = c_vec[idx].squeeze(-1)                    # [B] 本 batch 物品的知识引入权重
+            # 视图一致性 InfoNCE(复用 fuse_subset 缓存的子集投影, 无二次开销)
+            cl_mm = self.mm_aligner.contrastive_loss(idx)
+            bpr_term = bpr_term + self.mm_reg * cl_mm
 
-                # idea2 置信度判别正则(消除死代码 conf_reg): 鼓励 c 有区分度
-                # (远离全 0 / 全 1 极端). 实测 conf_mean=0.088 过低, 多模态信号被门控掐断,
-                # 该项把 c 往 0.5 拉, 让更多图文知识真正进入 e^(0)_item.
+            if c is None:
+                c_vec = self.mm_info.get('conf_vec', None)
+                if c_vec is not None:
+                    c = c_vec[idx].squeeze(-1)
+            if c is not None:
+                # idea2 置信度判别正则(消除死代码 conf_reg): 鼓励 c 有区分度(远离全0/全1极端)
                 if self.mm_conf_reg_w > 0:
-                    loss = loss + self.mm_conf_reg_w * (1.0 - torch.abs(2.0 * c - 1.0)).mean()
-
-                # idea3 成本感知:
-                #  - cost_target == 0 -> 纯征税(原语义): 引入知识有代价, 过高则退化为纯 ID.
-                #  - cost_target  > 0 -> 预算式: 鼓励平均引入率稳定在目标值附近,
-                #    既不过度压低(避免 idea3 退化为 baseline), 也不过度放开.
-                #    这是针对"纯征税在 conf 已偏低时自相矛盾"缺陷的重构.
+                    bpr_term = bpr_term + self.mm_conf_reg_w * (1.0 - torch.abs(2.0 * c - 1.0)).mean()
+                # idea3 成本感知: cost_target==0 纯征税; >0 预算式
                 if self.mm_cost_w > 0:
                     if self.cost_target > 0:
                         cost_loss = self.mm_cost_w * (c - self.cost_target).pow(2).mean()
                     else:
                         cost_loss = self.mm_cost_w * c.mean()
-                    loss = loss + cost_loss
+                    bpr_term = bpr_term + cost_loss
 
+        loss = bpr_term
         return loss, reg_loss
        
     def forward(self, users, items):

@@ -110,10 +110,13 @@ class MultiModalAligner(nn.Module):
         94 batch × 2502ms = +235s/epoch(单轮从 132s 涨到 367s, +178%), 不可接受.
 
         ## proj 头的梯度从哪来
-        由 project_subset() 在每个 batch 上对「本 batch 参与 loss 的物品(pos+neg)」
-        重新做带梯度的投影(约 2048 物品, 约 280ms), 接进对比损失.
-        这样 proj 头的梯度步数从每 epoch 1 步恢复到每 batch 1 步(20 -> 1880 步),
-        而开销只有 +20% 而非 +178%.
+        v2 的实现里 project_subset 只接进了 contrastive_loss(InfoNCE, 权重 1e-3),
+        而 BPR 用的 e^(0)_item 来自本方法返回的 no_grad 缓存 -> BPR 完全够不到 proj 头,
+        proj 头 100% 由 InfoNCE 驱动, conf_mean 反而跌到 0.026(实测).
+        v3 修复: fuse_subset() 用 project_subset 对本 batch 子集做带梯度融合,
+        并把结果拼回 light_out 的 gamma·embs_zero 项, BPR 梯度即可沿直通路回到 proj 头;
+        type_emb / conf_mlp 也借此收梯度. 开销: project_subset 每 batch 只算一次(~280ms),
+        InfoNCE 与 BPR 复用同一份子集投影.
 
         ## 历史缺陷记录
         原实现返回 detach 缓存却仍把「刷新 batch」的带梯度结果透出, 导致 proj 头
@@ -210,6 +213,39 @@ class MultiModalAligner(nn.Module):
         }
         return fused, info
 
+    def fuse_subset(self, feats, id_emb, idx):
+        """对本 batch 参与 loss 的物品(pos+neg 去重后)做**带梯度**的融合 e^(0)_item,
+        并把投影结果缓存供 contrastive_loss 复用(避免二次 project_subset).
+
+        ## 关键: 这是 BPR 梯度回到 proj 头 / type_emb / conf_mlp 的唯一通道
+        v2 只用 project() 的 no_grad 全量缓存喂 fuse(), 导致 BPR 完全够不到投影头,
+        投影头 100% 由权重仅 1e-3 的 InfoNCE 驱动 -> conf_mean 反而跌到 0.026.
+        这里用 project_subset(带梯度)重算 batch 子集的 e^(0)_item, 拼回
+        light_out 的 gamma·embs_zero 项, BPR 梯度即可沿这条直通路回到 proj 头.
+        开销: project_subset 每 batch 仅算一次(约 280ms), InfoNCE 与 BPR 复用同一结果."""
+        proj_feats = self.project_subset(feats, idx)        # 带梯度, [len(idx), d]
+        if not proj_feats:
+            return None, None
+        # 缓存供 contrastive_loss 复用
+        self._subset_proj_feats = proj_feats
+        self._subset_idx = idx
+
+        gates = self.gate_weights(proj_feats)               # type_emb 在此收梯度
+        pooled = sum(gates[t] * proj_feats[t] for t in proj_feats.keys())
+        pooled = self._l2(pooled)
+
+        id_det = self._l2(id_emb[idx].detach())
+        v_norm = pooled
+        cos = (v_norm * id_det).sum(-1, keepdim=True)
+        conf_in = torch.cat([v_norm, id_det], dim=-1)
+        conf_logit = self.conf_mlp(conf_in)                # conf_mlp 在此收梯度
+        c = torch.sigmoid(conf_logit + 2.0 * cos)
+
+        id_scale = id_emb[idx].norm(dim=-1, keepdim=True).detach()
+        pooled_scaled = pooled * id_scale
+        fused = id_emb[idx] + c * (pooled_scaled - id_emb[idx])   # 带梯度
+        return fused, c
+
     def contrastive_loss(self, idx=None, feats=None):
         """视图一致性 InfoNCE(训练损失项) —— 同时是 proj 头的梯度入口.
 
@@ -221,7 +257,14 @@ class MultiModalAligner(nn.Module):
                    (project_subset), 使 proj 头每个 batch 都收到梯度;
                    为 None 时退化为读 fuse() 的 no_grad 缓存(无梯度, 仅兼容旧调用).
         """
-        if feats is not None and idx is not None and idx.numel() > 1:
+        # 优先复用 fuse_subset 已算好的带梯度子集(避免二次 project_subset)
+        cache = getattr(self, '_subset_proj_feats', None)
+        cache_idx = getattr(self, '_subset_idx', None)
+        if cache is not None and cache_idx is not None and idx is not None \
+                and cache_idx.shape == idx.shape and torch.equal(cache_idx, idx):
+            proj_feats = cache
+            sub = None
+        elif feats is not None and idx is not None and idx.numel() > 1:
             proj_feats = self.project_subset(feats, idx)   # 带梯度, 已按 idx 取子集
             sub = None
         else:
