@@ -1,10 +1,21 @@
 # idea2 知识对齐（align-then-fuse）多模态扩展 — 实验报告
 
-> **生成时间**: 2026-08-04（进行中，结果待补全）
+> **状态**: ⛔ **实验已中止（2026-08-05，用户取消继续）** — 代码与方法完整保留，**无最终指标**，结果表留空。
 > **基座**: `baseline/LightGCNpp/`（RecSys 2024，α/β/γ 三参数改进）
 > **迁移源**: `baseline/MixRAGRec/`（KDD 2026，Knowledge Alignment Agent）
 > **设计依据**: `docs/lightgcnpp_migration_design.md` §2（路线 2：公开多模态基线数据）
 > **代码**: `baseline/LightGCNpp/code/{mm_align.py, model.py, dataloader.py, run_idea2.py, aggregate_idea2.py, prep_amazon_sports.py}`
+> **接手者注意**: 本报告仅记录**方法设计与实现**；第 6 节结果表为空是因为实验在跑出指标前被取消，并非数据丢失。如需结论，按第 9 节命令重跑即可（约 3 种子 × 20 epoch，CPU 数小时）。
+
+---
+
+> ## ⛔ 实验中止说明
+>
+> - **中止时间**: 2026-08-05。用户在换电脑交接前决定**不再继续** idea2 多模态实验。
+> - **已完成**: 全部 idea2 代码（`mm_align.py` 三级对齐 + `model.py`/`dataloader.py`/`parse.py`/`world.py`/`register.py`/`main.py` 接入 + `prep_amazon_sports.py`/`fetch_mm_data.py`/`run_idea2.py`/`aggregate_idea2.py` 驱动）、数据管线（合成特征已生成）、以及本方法文档。
+> - **未执行**: 3 种子 × 20 epoch 的完整训练与指标聚合。仅留下 seed2024 的早期片段日志（无 test 指标），**不可作为结论**。
+> - **代码去向**: 全部已提交并推送到 `experiments` 分支（`origin`, commit `7a6f7bf`），接手者在任意机器 `git clone` 后即可复现。
+> - **为何保留本报告**: 方法章节（§1–§5、§8–§9）是完整的设计/实现记录，对后续若重开该方向有价值的参考；仅结果章节（§6–§7）因无数据而留空。
 
 ---
 
@@ -118,7 +129,7 @@ if getattr(self, 'use_mm', 0):
 
 ## 6. 结果
 
-> 下方表格由 `aggregate_idea2.py` 在后台运行（baseline task `96VKrV`、idea2 task `uKHQ9k`）完成后填充。
+> ⛔ **本实验已中止，下表无数据。** 原计划的 3 种子（2024/2025/2026）× 20 epoch 训练与 `aggregate_idea2.py` 聚合**未执行**（用户在换电脑交接前取消继续）。表格结构保留，供接手者重跑后直接回填。
 
 ### 表 1 — 各种子明细
 
@@ -146,11 +157,12 @@ if getattr(self, 'use_mm', 0):
 
 ---
 
-## 7. 分析与结论（待填充）
+## 7. 分析与结论（无数据，无法填充）
 
-- 待结果回填后，判定 idea2 相对纯 ID 基线的增益方向与幅度。
-- 结合 `conf_mean` 判断是否出现「图文不符物品自动退化」的预期行为。
-- 与 idea1/idea3/idea4 的协同：对齐后的视觉可作为 idea1 自适应传播的额外信号；与 idea4 NLGCL 层间对比互补。
+- 因实验中止、无最终指标，**无法**判定 idea2 相对纯 ID 基线的增益方向与幅度。
+- 无法结合 `conf_mean` 验证「图文不符物品自动退化」的预期行为。
+- 与 idea1/idea3/idea4 的协同关系见 §8、§9 及设计文档，属**未经验证的设计推测**，重开时需实测确认。
+- 已验证的部分（见 §1–§5）：端到端管线跑通、对齐模块随模型加载、损失函数形状正常（2-epoch 冒烟：baseline loss 0.404→0.265，idea2 loss 0.428→0.291 且对齐器正确加载 CNN 4096 + CLIP 64 双特征）。**这仅证明实现可运行，不代表效果增益。**
 
 ---
 
