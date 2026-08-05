@@ -136,6 +136,8 @@ def main():
                     help='dataset dir under ../data/ (e.g. amazon-sports | amazon-baby-mmssl)')
     ap.add_argument('--cost_reg', type=float, default=0.01,
                     help='idea3 cost weight on knowledge-introduction rate; ignored unless --only idea3')
+    ap.add_argument('--cost_target', type=float, default=0.0,
+                    help='idea3 budget target rate for c_i.mean(); 0=pure tax, >0=budget mode')
     args = ap.parse_args()
     global DATASET
     DATASET = args.dataset
@@ -149,6 +151,7 @@ def main():
         COMMON.extend(['--epochs', str(args.epochs)])
     seeds = [int(s) for s in args.seeds.split(',')]
     cr_str = f"{args.cost_reg:.6g}"
+    ct_str = f"{args.cost_target:.6g}"
 
     results = {'dataset': DATASET, 'epochs': args.epochs, 'seeds': seeds, 'configs': {}}
 
@@ -184,8 +187,10 @@ def main():
     if args.only == 'idea3':
         if args.cost_reg <= 0:
             print("ERROR: --only idea3 requires --cost_reg > 0"); sys.exit(1)
-        run_block('idea3_cost', 'cost',
-                  ['--use_mm', '1', '--mm_reg', '1e-3', '--cost_reg', cr_str])
+        extra = ['--use_mm', '1', '--mm_reg', '1e-3', '--cost_reg', cr_str]
+        if args.cost_target > 0:
+            extra += ['--cost_target', ct_str]
+        run_block('idea3_cost', 'cost', extra)
 
     # ---- 汇总 ----
     cfgs = results['configs']

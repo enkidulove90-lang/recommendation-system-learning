@@ -40,6 +40,8 @@ if world.args.use_mm:
     # idea3: reflect cost-aware weight so idea2 vs idea2+cost don't collide
     if world.args.cost_reg and world.args.cost_reg > 0:
         config += f'_cr{world.args.cost_reg}'
+        if world.args.cost_target and world.args.cost_target > 0:
+            config += f'_ct{world.args.cost_target}'
 
 log_path = f'logs/{config}.txt'
 emb_path = f'embs/{config}.pkl'

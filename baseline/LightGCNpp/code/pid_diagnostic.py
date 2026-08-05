@@ -184,11 +184,40 @@ def build_item_adj(data_dir):
     ii = (ui.T @ ui).tocsr()
     ii.setdiag(0)
     ii.eliminate_zeros()
-    # 2-hop = ii @ ii
+    # 截断每行 top-k 邻居, 防止 2-hop 展开后极度稠密 OOM
+    ii = _cap_rows(ii, 20)
+    # 2-hop = ii @ ii (截断后仍可能偏密, 再截断一次)
     ii2 = (ii @ ii).tocsr()
     ii2.setdiag(0)
     ii2.eliminate_zeros()
+    ii2 = _cap_rows(ii2, 20)
     return ii2
+
+
+def _cap_rows(mat, k):
+    """每行仅保留 top-k 最大元素, 返回新的 csr_matrix (控制 2-hop 展开密度)。"""
+    mat = mat.tocsr()
+    rows, cols, vals = [], [], []
+    for i in range(mat.shape[0]):
+        s = slice(mat.indptr[i], mat.indptr[i + 1])
+        idx = mat.indices[s]
+        v = mat.data[s]
+        if len(v) > k:
+            order = np.argsort(v)[-k:]
+            idx = idx[order]
+            v = v[order]
+        rows.append(np.full(len(idx), i, dtype=np.int64))
+        cols.append(idx)
+        vals.append(v)
+    if rows:
+        rows = np.concatenate(rows)
+        cols = np.concatenate(cols)
+        vals = np.concatenate(vals)
+    else:
+        rows = np.array([], dtype=np.int64)
+        cols = np.array([], dtype=np.int64)
+        vals = np.array([])
+    return sparse.csr_matrix((vals, (rows, cols)), shape=mat.shape)
 
 
 def build_expert_signals(data_dir, k, knn):
@@ -214,15 +243,25 @@ def build_expert_signals(data_dir, k, knn):
     # 也 PCA 到 k (已是 k 维, 仅中心化)
     E3 = E3 - E3.mean(axis=0, keepdims=True)
 
-    # E4: 跨模态 synergy 残差 = 组合嵌入 - (在 img_p, txt_p 子空间上的回归重构)
-    comb = pca_reduce(np.concatenate([img_p, txt_p], axis=1), k)
-    basis = np.concatenate([img_p, txt_p], axis=1)  # 2k 维基
-    coeffs, *_ = np.linalg.lstsq(basis, comb, rcond=None)  # 2k×k
-    recon = basis @ coeffs
-    E4 = comb - recon
-    E4 = E4 - E4.mean(axis=0, keepdims=True)
+    # E4: 跨模态 synergy 特征 = comb 去掉在 img_p 子空间与 txt_p 子空间各自的投影
+    #      (留下去除两路单独表达后仍无法解释的部分 = 真正需两路协同的方向)
+    E4 = synergy_feature(img_p, txt_p, k)
 
     return {"E1": E1, "E2": E2, "E3": E3, "E4": E4}, (img_p, txt_p)
+
+
+def synergy_feature(img_p, txt_p, k):
+    """构造跨模态 synergy 特征: 组合嵌入减去各自模态子空间投影的残差。
+    与 '用全 concat 做 lstsq' 不同, 这里分别投影到 img / txt 子空间再减,
+    留下的即只有两路协同才能表达的方向 (PID 的 Syn 分量在特征空间的近似)。"""
+    comb = pca_reduce(np.concatenate([img_p, txt_p], axis=1), k)
+    coef_i, *_ = np.linalg.lstsq(img_p, comb, rcond=None)   # 16×16
+    coef_t, *_ = np.linalg.lstsq(txt_p, comb, rcond=None)   # 16×16
+    proj_img = img_p @ coef_i
+    proj_txt = txt_p @ coef_t
+    e4 = comb - proj_img - proj_txt
+    e4 = e4 - e4.mean(axis=0, keepdims=True)
+    return e4
 
 
 # --------------------------------------------------------------------------
@@ -264,6 +303,21 @@ def run_diagnostic(data_dir, k=16, knn=20, prism_path=None):
     print(f"    Unq(text)   = {pid['Unq_Y']:.4f} ({pid['Unq_Y']/tot*100:.1f}%)")
     print(f"    Synergy     = {pid['Syn']:.4f} ({pid['Syn']/tot*100:.1f}%)")
     print(f"    (对比: 旧合成数据 Pearson=0.9915 => Synergy≈0)")
+
+    # [M1b] 阳性对照: 用真实 synergy 特征构造目标, 验证工具能检出 synergy
+    # T_syn = synergy_feature 的第一维 (它 ⊥ img 子空间 且 ⊥ txt 子空间,
+    #        但 ∈ 两路组合的 span) => 单路不可预测、联合可预测 => PID 应给 Syn>0
+    e4 = synergy_feature(img_p, txt_p, k)
+    t_syn = e4[:, 0:1]
+    pid_syn = pid_2src(img_p, txt_p, t_syn)
+    tot_s = pid_syn["Red"] + pid_syn["Unq_X"] + pid_syn["Unq_Y"] + pid_syn["Syn"]
+    print(f"  [阳性对照] T=真实synergy特征 => PID: Syn={pid_syn['Syn']:.4f}"
+          f"({pid_syn['Syn']/tot_s*100:.1f}%), Unq_img={pid_syn['Unq_X']:.4f},"
+          f" Unq_txt={pid_syn['Unq_Y']:.4f}")
+    if pid_syn["Syn"] > 0.01 * tot_s:
+        print(f"    => ✅ 工具可正确检出 synergy (证明 'popularity 下 Synergy=0' 是数据事实, 非工具缺陷)")
+    else:
+        print(f"    => ⚠️ 阳性对照未检出 synergy, 工具或构造待查")
 
     # ---- M3: 4 专家 PID 归因 (真实 + 代理) ----
     print("\n[M3] 4 专家 PID 归因 (E1..E4) — (a) 信号构造")

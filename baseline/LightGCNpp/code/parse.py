@@ -52,10 +52,13 @@ def parse_args():
     parser.add_argument('--mm_proj', type=int, default=256, help='idea2 projection-head hidden dim')
     parser.add_argument('--mm_temp', type=float, default=0.1, help='idea2 view-consistency InfoNCE temperature')
     parser.add_argument('--mm_reg', type=float, default=1e-3, help='idea2 contrastive-loss weight')
-    parser.add_argument('--mm_conf_reg', type=float, default=0.01, help='idea2 confidence-discrimination reg weight (reserved)')
+    parser.add_argument('--mm_conf_reg', type=float, default=0.01, help='idea2 confidence-discrimination reg weight (wired into bpr_loss)')
 
     # ---- idea3: cost-aware knowledge introduction (attaches to idea2's G3 gate) ----
     parser.add_argument('--cost_reg', type=float, default=0.0,
-                        help='idea3 cost weight on knowledge-introduction rate c_i.mean(); 0 disables')
+                        help='idea3 cost weight on knowledge-introduction rate; 0 disables')
+    parser.add_argument('--cost_target', type=float, default=0.0,
+                        help='idea3 budget target rate for c_i.mean(); 0=pure tax (legacy), '
+                             '>0=budget mode penalizing |c-target| (avoids suppressing already-low conf)')
 
     return parser.parse_args()

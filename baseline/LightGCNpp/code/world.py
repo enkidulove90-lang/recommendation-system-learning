@@ -69,6 +69,7 @@ config['mm_reg'] = args.mm_reg
 config['mm_conf_reg'] = args.mm_conf_reg
 # ---- idea3: cost-aware knowledge introduction ----
 config['cost_reg'] = args.cost_reg
+config['cost_target'] = args.cost_target
 
 GPU = torch.cuda.is_available()
 device = torch.device(f'cuda:{args.gpu}' if GPU else "cpu")

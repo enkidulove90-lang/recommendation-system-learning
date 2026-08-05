@@ -52,8 +52,10 @@ class MultiModalAligner(nn.Module):
                 nn.Dropout(dropout),
                 nn.Linear(proj_hidden, id_dim),
             )
-            # 每个类型一个可学习原型嵌入, 用于类型感知门控打分
-            self.type_emb[t] = nn.Parameter(torch.zeros(id_dim))
+            # 每个类型一个可学习原型嵌入, 用于类型感知门控打分.
+            # 注意: 不能初始化为 0 —— F.normalize(0)=0 会使 gate_scores 恒为 0,
+            # softmax 退化为均匀平均(门控失效). 用小幅随机初始化让各类型起步即有区分.
+            self.type_emb[t] = nn.Parameter(torch.randn(id_dim) * 0.1)
 
         # ---- G3 置信度头: 由 (视觉表示 - ID嵌入) 预测对齐置信度 ----
         self.conf_mlp = nn.Sequential(
@@ -63,13 +65,15 @@ class MultiModalAligner(nn.Module):
         )
 
         self._init_weights()
-        # epoch 级投影缓存: 真实 4096 维特征在 CPU 上每次全量投影过慢,
-        # 故每 epoch 只重算一次(刷新 batch 带梯度, 其余 batch 复用 detach 缓存)
+
+        # 全量投影的 epoch 级缓存(no_grad, 仅供图传播读取).
+        # proj 头的梯度不走这条路, 而由 project_subset() 每 batch 提供, 见 project() 注释.
         self._proj_cache = None
         self._proj_epoch = -1
         self._epoch = 0
 
     def set_epoch(self, e):
+        """由 model.mm_new_epoch() 在每个训练 epoch 开始时调用, 触发全量投影缓存刷新."""
         self._epoch = e
 
     def _init_weights(self):
@@ -98,16 +102,46 @@ class MultiModalAligner(nn.Module):
         return out
 
     def project(self, feats, epoch=None):
-        """带 epoch 缓存的投影. 刷新 epoch 时返回带梯度的新投影(训练 proj),
-        其余 batch 返回 detach 缓存(省算力, proj 仅在刷新 batch 更新)."""
+        """全量投影(no_grad + epoch 级缓存), 仅供 fuse() 生成全部物品的 e^(0) 给图传播.
+
+        ## 为什么这里不带梯度
+        图传播需要全部 n_items 个物品的投影. 本数据集 18357 物品 × 4096 维 CNN 特征,
+        单线程 CPU 实测一次带梯度的全量 fwd+bwd 约 2502ms; 若每 batch 都算,
+        94 batch × 2502ms = +235s/epoch(单轮从 132s 涨到 367s, +178%), 不可接受.
+
+        ## proj 头的梯度从哪来
+        由 project_subset() 在每个 batch 上对「本 batch 参与 loss 的物品(pos+neg)」
+        重新做带梯度的投影(约 2048 物品, 约 280ms), 接进对比损失.
+        这样 proj 头的梯度步数从每 epoch 1 步恢复到每 batch 1 步(20 -> 1880 步),
+        而开销只有 +20% 而非 +178%.
+
+        ## 历史缺陷记录
+        原实现返回 detach 缓存却仍把「刷新 batch」的带梯度结果透出, 导致 proj 头
+        20 个 epoch 全程只走 20 个 Adam step, 等效冻结; 而 conf_mlp / type_emb / id_emb
+        每 batch 都更新(1880 步). 门控因此在 5 个 epoch 内就把 c 从 0.5 压到 0.09
+        —— 它关掉的确实是一堆近似随机的投影噪声. 这才是 idea2 零增益的根因
+        (尺度失配虽真实存在, 修复后 conf_mean 仅 0.093 -> 0.091, 并非主因).
+        """
         if epoch is None:
             epoch = self._epoch
         if self._proj_cache is None or self._proj_epoch != epoch:
-            fresh = self._compute_proj(feats)
-            self._proj_cache = {t: v.detach() for t, v in fresh.items()}
+            with torch.no_grad():
+                self._proj_cache = self._compute_proj(feats)
             self._proj_epoch = epoch
-            return fresh
         return self._proj_cache
+
+    def project_subset(self, feats, idx):
+        """仅对本 batch 参与 loss 的物品做**带梯度**的新鲜投影 —— proj 头唯一的梯度来源.
+
+        成本与 len(idx) 成正比: 2048 物品约 280ms(全量 18357 是 2502ms).
+        注意必须重新前向, 不能从 self._proj_cache 里切片(那是 no_grad 结果, 无梯度).
+        """
+        out = {}
+        for t in self.types:
+            if t not in feats or feats[t] is None:
+                continue
+            out[t] = self._l2(self.proj[t](feats[t][idx].float()))   # [len(idx), d]
+        return out
 
     def gate_weights(self, proj_feats):
         """G2 类型感知门控: 不简单平均.
@@ -176,17 +210,24 @@ class MultiModalAligner(nn.Module):
         }
         return fused, info
 
-    def contrastive_loss(self, idx=None):
-        """视图一致性 InfoNCE(训练损失项).
+    def contrastive_loss(self, idx=None, feats=None):
+        """视图一致性 InfoNCE(训练损失项) —— 同时是 proj 头的梯度入口.
+
         同一物品的不同类型视图互为正例, batch 内其他物品为负例.
-        使用 fuse() 缓存的投影结果(按 idx 取 batch 子集), 避免全量 n^2.
-        若只有 1 种类型或缓存为空, 返回 0.
+
         Args:
-            idx: 长整型张量, 指定参与对比的物品下标(通常是本 batch 的 pos+neg 物品);
-                 为 None 时使用全部物品(慎用于大 n).
+            idx:   长整型张量, 本 batch 参与 loss 的物品下标(pos+neg 去重后).
+            feats: 原始特征字典. **传入时**对 idx 重新做带梯度投影
+                   (project_subset), 使 proj 头每个 batch 都收到梯度;
+                   为 None 时退化为读 fuse() 的 no_grad 缓存(无梯度, 仅兼容旧调用).
         """
-        proj_feats = getattr(self, '_last_proj_feats', None)
-        if proj_feats is None:
+        if feats is not None and idx is not None and idx.numel() > 1:
+            proj_feats = self.project_subset(feats, idx)   # 带梯度, 已按 idx 取子集
+            sub = None
+        else:
+            proj_feats = getattr(self, '_last_proj_feats', None)
+            sub = idx
+        if not proj_feats:
             return torch.tensor(0.0, device=next(self.parameters()).device)
         types = list(proj_feats.keys())
         if len(types) < 2:
@@ -194,7 +235,7 @@ class MultiModalAligner(nn.Module):
 
         def _get(t):
             v = proj_feats[t]
-            return v[idx] if idx is not None else v
+            return v[sub] if sub is not None else v
 
         a = self._l2(_get(types[0]))     # [B, d] anchor
         b = self._l2(_get(types[1]))     # [B, d] positive(同 item)
@@ -211,12 +252,5 @@ class MultiModalAligner(nn.Module):
             loss += F.cross_entropy(logits, labels)
         return loss / 2.0
 
-    def conf_reg(self, feats, id_emb):
-        """置信度正则: 防止模型把所有物品都当成 c≈1(退化为无对齐).
-        用熵正则鼓励置信度有区分度; 同时用融合表示与 ID 的互信息一致性."""
-        fused, info = self.fuse(feats, id_emb)
-        c = torch.sigmoid(self.conf_mlp(
-            torch.cat([self._l2(fused.detach()), self._l2(id_emb.detach())], dim=-1)))
-        # 熵正则: 越接近 0.5 熵越大 → 鼓励区分; 这里用 1 - |2c-1| 惩罚极端一致
-        diff = torch.abs(2 * c - 1).mean()
-        return (1.0 - diff), fused, info  # 返回 (reg_value, fused, info)
+    # 注: 原 conf_reg() 方法已移除. 置信度判别正则改在 model.py 的 bpr_loss 中
+    # 用缓存的 conf_vec 内联实现(避免对 fuse() 的二次调用, 见 model.py 注释).

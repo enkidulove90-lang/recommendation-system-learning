@@ -1,6 +1,6 @@
 # idea2 知识对齐（align-then-fuse）多模态扩展 — 实验报告
 
-> **状态**: 🔄 **实验进行中（2026-08-05 重启）** — 首轮实验发现**融合层尺度失配缺陷**并已修复，正用修复后代码重跑。
+> **状态**: 🔄 **实验进行中（2026-08-05 二次重启）** — 首轮发现**融合层尺度失配**（已修复，但证伪为非主因），二次诊断定位真实根因 **投影头梯度饥饿**（已修复），正用修复后代码重跑。
 > **基座**: `baseline/LightGCNpp/`（RecSys 2024，α/β/γ 三参数改进）
 > **迁移源**: `baseline/MixRAGRec/`（KDD 2026，Knowledge Alignment Agent）
 > **设计依据**: `docs/lightgcnpp_migration_design.md` §2（路线 2：公开多模态基线数据）
@@ -9,7 +9,7 @@
 
 ---
 
-> ## 🔍 首轮实验的关键负面发现：融合层尺度失配（已修复）
+> ## 🔍 关键负面发现 ①：融合层尺度失配（已修复，但**证伪为非主因**）
 >
 > 首轮（修复前）在 amazon-baby-mmssl 真实特征上，idea2 相对 baseline **同种子配对增益为负**（seed2024：R@20 −1.83%、N@20 −1.31%）。诊断过程与结论如下。
 >
@@ -33,11 +33,67 @@
 > ```
 > 修复后 c=1 时融合模长分布与 ID 嵌入完全一致（0.798 ± 0.069），与 baseline 的 layer-0 尺度行为对齐，采纳多模态不再有"代价"。
 >
-> **验证指标**：重跑后应观察 `conf_mean` 是否从 0.088 显著回升；若仍偏低，则可判定为真实的图文语义不匹配（数据层面），而非实现缺陷。
+> **结果：假设被证伪。** 修复后重跑到同一 epoch5，`conf_mean` 从 **0.093 → 0.091**，几乎无变化。尺度失配是真实缺陷（数值验证成立、值得保留修复），但**不是** idea2 零增益的主因。这促成了第二轮诊断。
 >
 > **方法论教训**：首轮聚合器曾用**非配对**均值比较（baseline 2 seed vs idea2 1 seed）得出 "+1.74%" 的假增益，而同种子配对实为 **−1.83%**，方向相反。`aggregate_idea2.py` 已加入 `paired_gain()`，所有结论**只用双方共同跑完的种子**计算。
 >
 > **修复前日志归档**：`baseline/LightGCNpp/code/logs/_archive_prefix_scalebug/`（避免与修复后结果混入同一 append 文件被聚合器取 max）。
+
+---
+
+> ## 🔍 关键负面发现 ②：投影头梯度饥饿（**真实根因**，已修复）
+>
+> 尺度修复无效后，改从「谁在训练、谁没在训练」的角度复核，定位到 `mm_align.py: project()` 的缓存实现缺陷。
+>
+> **缺陷**：原实现为省算力做 epoch 级缓存，仅在**每 epoch 第 1 个 batch** 返回带梯度的新鲜投影，其余 93 个 batch 返回 `detach()` 缓存。后果是各模块的 Adam 更新步数严重失衡（20 epoch × 94 batch）：
+>
+> | 模块 | 梯度步数 | 说明 |
+> |---|---|---|
+> | `proj[image/text]`（G1 投影头，4096→256→64） | **20** | 每 epoch 仅 1 步，等效冻结 |
+> | `conf_mlp`（G3 置信度头） | **1880** | 每 batch 更新 |
+> | `type_emb`（G2 门控原型） | **1880** | 每 batch 更新 |
+> | `embedding_item`（ID 嵌入） | **1880** | 每 batch 更新 |
+>
+> 相差 **94 倍**。更糟的是 `contrastive_loss()` 读的是 `fuse()` 缓存的 `_last_proj_feats`——94 个 batch 里有 93 个是 detach 缓存，**本该独立训练投影头的 InfoNCE 完全没有梯度回传**。
+>
+> **因果链**：投影头近似随机 → `pooled` 是随机方向的噪声 → BPR 的最快降损路径就是**关掉门控**（c 从 0.5 掉到 0.09 只用了 5 个 epoch）→ `conf_mean≈0.09`。也就是说，门控关掉的确实是噪声，它做得没错；错的是"投影头从未被训练"。这同时解释了为什么修尺度没用——尺度对齐让"采纳多模态"不再有代价，但被采纳的东西本身仍是噪声。
+>
+> **附带缺陷**：`type_emb` 初始化为 `zeros` → `F.normalize(0)=0` → 门控打分恒为 0 → softmax 退化为均匀平均，G2 类型感知门控实际失效。已改为 `randn(id_dim)*0.1`。
+>
+> **修复（混合梯度路径）**：不能简单改成"每 batch 全量带梯度投影"——实测全量投影 fwd+bwd 单次 **2502 ms**，94 batch 即 **+235 s/epoch（单轮 132→367 s，+178%）**，不可接受。采用的方案是把「图传播需要的全量投影」与「投影头需要的梯度」拆开：
+>
+> ```python
+> # ① 全量投影: no_grad + epoch 缓存, 只供 fuse() 生成全部 n_items 的 e^(0) 给图传播
+> def project(self, feats, epoch=None):
+>     if self._proj_cache is None or self._proj_epoch != epoch:
+>         with torch.no_grad():
+>             self._proj_cache = self._compute_proj(feats)
+>         self._proj_epoch = epoch
+>     return self._proj_cache
+>
+> # ② batch 子集重投影: 带梯度, proj 头唯一的梯度来源
+> def project_subset(self, feats, idx):          # idx = 本 batch pos+neg 去重, 约 2048
+>     return {t: self._l2(self.proj[t](feats[t][idx].float())) for t in self.types}
+> ```
+> `bpr_loss` 侧把原始特征一并传入，让对比损失走带梯度路径：
+> ```python
+> idx = torch.cat([pos.long(), neg.long()]).unique()
+> cl_mm = self.mm_aligner.contrastive_loss(idx, feats=self.mm_feats)
+> ```
+>
+> **开销与收益**（`_bench_proj.py` / `_smoke_gradfix.py` 实测）：
+>
+> | 方案 | proj 梯度步数 | 每 epoch 额外耗时 |
+> |---|---|---|
+> | 修复前（epoch 缓存 + 刷新 batch） | 20 | 0 |
+> | 每 batch 全量带梯度 | 1880 | +235 s（**+178%**，不可行） |
+> | **本方案（no_grad 全量缓存 + batch 子集带梯度）** | **1880** | **+33.5 s（+25%）** |
+>
+> 冒烟测试 5 项全部通过：缓存确为 `no_grad` 且跨 batch 复用、`contrastive_loss(feats=)` 给出 `|g_image|=1211.6 / |g_text|=160.3` 的投影头梯度、旧调用路径确认无梯度（证明梯度确实来自新路径）、`fuse()` 仍正常训练 `type_emb`/`conf_mlp`/`id_emb`、初始 `conf_mean=0.489`（≈σ(0)，符合预期）。
+>
+> **待验证**：重跑后 `conf_mean` 若从 ~0.09 显著回升，则确认根因判断正确；若仍被压到 0.1 以下，才可归因为真实的图文语义不匹配（数据层面）。
+>
+> **修复前日志归档**：`logs/_archive_gradstarve/`（尺度已修但投影头仍饥饿的那一版）。
 
 ---
 
@@ -110,9 +166,16 @@ $$\mathcal L_{\text{mm}} = \frac{1}{2}\sum_{(a,b)\in\{(t_1,t_2),(t_2,t_1)\}} \te
 
 这作用在「模态轴」，与 idea4 NLGCL 的「层轴」对比互补，互不冲突。
 
-### 工程要点：epoch 级投影缓存
+### 工程要点：双路径投影（全量 no_grad 缓存 + batch 子集带梯度）
 
-4096 维特征在 CPU 上每个 batch 全量投影过慢，故 `project()` 做 **epoch 级缓存**：每 epoch 刷新一次带梯度的投影（该 batch 训练投影头），其余 batch 复用 detach 缓存。兼顾训练信号与算力。
+4096 维特征在 CPU 上全量投影一次 fwd+bwd 约 2.5 s，每 batch 全量带梯度会让单轮从 132 s 涨到 367 s（+178%）。但**图传播需要全部 n_items 的投影，而梯度只需要本 batch 参与 loss 的物品**——两者可以拆开：
+
+- `project(feats)`：全量投影，`torch.no_grad()` + **epoch 级缓存**，只供 `fuse()` 生成所有物品的 $e^{(0)}$ 喂给图传播。每 epoch 算 1 次。
+- `project_subset(feats, idx)`：只对本 batch 的 pos+neg 物品（约 2048 个）**重新做带梯度投影**，接进视图一致性 InfoNCE——这是投影头唯一的梯度来源。约 280 ms/batch。
+
+结果：投影头梯度步数 20 → 1880（每 batch 1 步），额外开销仅 +25%。
+
+> ⚠️ 早期实现只在「每 epoch 第 1 个 batch」返回带梯度投影，导致投影头 20 个 epoch 只走 20 步而门控走 1880 步，是 idea2 首轮零增益的根因，详见文首「关键负面发现 ②」。`project_subset` 必须**重新前向**，不能从 `_proj_cache` 切片（那是 no_grad 结果）。
 
 ---
 
@@ -121,7 +184,7 @@ $$\mathcal L_{\text{mm}} = \frac{1}{2}\sum_{(a,b)\in\{(t_1,t_2),(t_2,t_1)\}} \te
 | 文件 | 改动 |
 | --- | --- |
 | `dataloader.py` | 新增 `_load_mm_feats(path)`：`glob *.npy`（跳过 `s_pre_adj*`）→ `dataset.mm_feats` 字典（键=文件名去扩展名） |
-| `model.py` | `__init_weight` 构建 `MultiModalAligner`（读 `use_mm`/`mm_feats`）；`computer()` 在 `items_emb` 后注入融合视觉；`bpr_loss` 按 batch idx 加 `mm_reg·L_mm`；`mm_new_epoch()` 刷新 epoch 缓存 |
+| `model.py` | `__init_weight` 构建 `MultiModalAligner`（读 `use_mm`/`mm_feats`）；`computer()` 在 `items_emb` 后注入融合视觉；`bpr_loss` 传 `feats=self.mm_feats` 让对比损失走 `project_subset`（投影头每 batch 拿梯度）并加 `mm_reg·L_mm` + 置信度判别正则；`mm_new_epoch()` 刷新全量 no_grad 缓存 |
 | `main.py` | `--use_mm` 时 config 名加 `_mm_mr{mm_reg}_mt{mm_temp}`；epoch 开始调 `mm_new_epoch()`；每 5 epoch 打印 `conf_mean`/`gate_mean` |
 | `world.py`/`parse.py`/`register.py` | 新增 `use_mm/mm_proj/mm_temp/mm_reg/mm_conf_reg` 配置；`amazon-sports`/`amazon-beauty` 加入白名单 |
 

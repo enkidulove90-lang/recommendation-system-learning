@@ -146,18 +146,20 @@ class LightGCN(BasicModel):
             self.mm_reg = self.config.get('mm_reg', 1e-3)
             self.mm_conf_reg_w = self.config.get('mm_conf_reg', 0.01)
             self.mm_cost_w = self.config.get('cost_reg', 0.0)
-            self._mm_epoch = 0
+            # idea3 预算式成本: 鼓励平均引入率稳定在 cost_target 附近.
+            # =0 时为纯征税(原语义); >0 时激活预算式, 避免把已偏低的 conf 压到 0.
+            self.cost_target = self.config.get('cost_target', 0.0)
             print(f"[idea2] MultiModalAligner ON: types={list(feat_dims)}, dims={feat_dims}, "
                   f"mm_reg={self.mm_reg}"
                   + (f", idea3 cost_reg={self.mm_cost_w}" if self.mm_cost_w > 0 else ""))
 
     def mm_new_epoch(self):
-        """每个训练 epoch 开始时调用, 使对齐器按 epoch 刷新投影缓存."""
+        """每个训练 epoch 开始时调用, 触发对齐器刷新「全量投影缓存」(no_grad).
+        缓存只供图传播读取; proj 头的梯度由 contrastive_loss 里的
+        project_subset(本 batch pos+neg 物品, 带梯度)每 batch 提供."""
         if getattr(self, 'use_mm', 0):
-            self._mm_epoch += 1
+            self._mm_epoch = getattr(self, '_mm_epoch', 0) + 1
             self.mm_aligner.set_epoch(self._mm_epoch)
-
-        print(f"lgn is already to go(dropout:{self.config['dropout']})")
 
     def __dropout_x(self, x, keep_prob):
         size = x.size()
@@ -258,13 +260,18 @@ class LightGCN(BasicModel):
         return rating
     
     def getEmbedding(self, users, pos_items, neg_items):
-        all_users, all_items, _, _ = self.computer()        
+        all_users, all_items, _users, _items = self.computer()
         users_emb = all_users[users]
         pos_emb = all_items[pos_items]
         neg_emb = all_items[neg_items]
         users_emb_ego = self.embedding_user(users)
         pos_emb_ego = self.embedding_item(pos_items)
         neg_emb_ego = self.embedding_item(neg_items)
+        # 缓存逐层嵌入供 NLGCL 对比损失复用, 避免 bpr_loss 再调用一次 computer()
+        # (原实现在 use_cl 时二次全量图传播+对齐器, 双倍算力).
+        if self.use_cl:
+            self._cl_embs_list = [torch.cat([_users[:, l, :], _items[:, l, :]], dim=0)
+                                  for l in range(self.n_layers + 1)]
         return users_emb, pos_emb, neg_emb, users_emb_ego, pos_emb_ego, neg_emb_ego
     
     def bpr_loss(self, users, pos, neg):
@@ -282,28 +289,46 @@ class LightGCN(BasicModel):
 
         # ---- P1: NLGCL contrastive loss (idea4) ----
         if self.use_cl:
-            # reuse the per-layer embeddings already produced by computer() inside getEmbedding
-            all_users, all_items, _users, _items = self.computer()
-            embs_list = [torch.cat([_users[:, l, :], _items[:, l, :]], dim=0)
-                         for l in range(self.n_layers + 1)]
+            # 复用 getEmbedding 中缓存的逐层嵌入(不再二次调用 computer())
+            embs_list = getattr(self, '_cl_embs_list', None)
+            if embs_list is None:
+                all_users, all_items, _users, _items = self.computer()
+                embs_list = [torch.cat([_users[:, l, :], _items[:, l, :]], dim=0)
+                             for l in range(self.n_layers + 1)]
             cl = self.neighbor_cl_loss(embs_list, users.long(), pos.long())
             loss = loss + self.cl_reg * cl
 
         # ---- idea2: 多模态对齐对比损失(视图一致性) ----
-        # ---- idea3: 成本感知门控(约束外部知识引入率, 挂 idea2 的 G3 置信度门控) ----
+        # ---- idea2/idea3: 置信度判别正则 + 成本感知门控(挂 G3 置信度门控) ----
         if getattr(self, 'use_mm', 0):
-            # 本 batch 参与计算的物品(正+负), 用缓存投影做 batch 内 InfoNCE
+            # 本 batch 参与计算的物品(正+负). 传 feats 让对齐器对这批物品
+            # **重新做带梯度投影** —— 这是 proj 头唯一的梯度来源:
+            # 全量投影已改为 no_grad 缓存(避免 94 batch × 2502ms 的不可接受开销),
+            # 只有这里的 batch 子集(约 2048 物品, 约 280ms)带梯度.
             idx = torch.cat([pos.long(), neg.long()]).unique()
-            cl_mm = self.mm_aligner.contrastive_loss(idx)
+            cl_mm = self.mm_aligner.contrastive_loss(idx, feats=self.mm_feats)
             loss = loss + self.mm_reg * cl_mm
 
-            # idea3: 对"知识引入权重" c_i 的均值征税 => 引入外部知识有代价.
-            # 模型仅在推荐收益足以抵消成本时才引入; 成本过高则退化为纯 ID, 自动实现成本-效果权衡.
-            if self.mm_cost_w > 0:
-                c_vec = self.mm_info.get('conf_vec', None)
-                if c_vec is not None:
-                    c_batch = c_vec[idx]                      # [B, 1] 本 batch 物品的知识引入权重
-                    cost_loss = self.mm_cost_w * c_batch.mean()
+            c_vec = self.mm_info.get('conf_vec', None)
+            if c_vec is not None:
+                c = c_vec[idx].squeeze(-1)                    # [B] 本 batch 物品的知识引入权重
+
+                # idea2 置信度判别正则(消除死代码 conf_reg): 鼓励 c 有区分度
+                # (远离全 0 / 全 1 极端). 实测 conf_mean=0.088 过低, 多模态信号被门控掐断,
+                # 该项把 c 往 0.5 拉, 让更多图文知识真正进入 e^(0)_item.
+                if self.mm_conf_reg_w > 0:
+                    loss = loss + self.mm_conf_reg_w * (1.0 - torch.abs(2.0 * c - 1.0)).mean()
+
+                # idea3 成本感知:
+                #  - cost_target == 0 -> 纯征税(原语义): 引入知识有代价, 过高则退化为纯 ID.
+                #  - cost_target  > 0 -> 预算式: 鼓励平均引入率稳定在目标值附近,
+                #    既不过度压低(避免 idea3 退化为 baseline), 也不过度放开.
+                #    这是针对"纯征税在 conf 已偏低时自相矛盾"缺陷的重构.
+                if self.mm_cost_w > 0:
+                    if self.cost_target > 0:
+                        cost_loss = self.mm_cost_w * (c - self.cost_target).pow(2).mean()
+                    else:
+                        cost_loss = self.mm_cost_w * c.mean()
                     loss = loss + cost_loss
 
         return loss, reg_loss
