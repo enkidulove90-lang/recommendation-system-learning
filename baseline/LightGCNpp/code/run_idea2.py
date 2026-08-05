@@ -57,6 +57,11 @@ def config_name(extra):
             cr = extra[i + 1]
             if float(cr) > 0:
                 cfg += f"_cr{cr}"
+        if '--force_c' in extra:
+            i = extra.index('--force_c')
+            fc = extra[i + 1]
+            if float(fc) > 0:
+                cfg += f"_fc{fc}"
     return cfg
 
 
@@ -138,20 +143,24 @@ def main():
                     help='idea3 cost weight on knowledge-introduction rate; ignored unless --only idea3')
     ap.add_argument('--cost_target', type=float, default=0.0,
                     help='idea3 budget target rate for c_i.mean(); 0=pure tax, >0=budget mode')
+    ap.add_argument('--force_c', type=float, default=0.0,
+                    help='E1 forced-fusion: freeze c=force_c; 0=learned (default)')
     args = ap.parse_args()
     global DATASET
     DATASET = args.dataset
     COMMON[COMMON.index('--dataset') + 1] = DATASET
+    seeds = [int(s) for s in args.seeds.split(',')]
+    cr_str = f"{args.cost_reg:.6g}"
+    ct_str = f"{args.cost_target:.6g}"
+    fc_str = f"{args.force_c:.6g}"
     # 单实例锁: 防止框架重复启动多份 runner 竞争写同一日志
-    lock_key = f"{DATASET}__{args.only or 'all'}"
+    # force_c 感知: 不同 force_c 视为不同实验, 互不锁定(否则 E1 并行会被串行化)
+    lock_key = f"{DATASET}__{args.only or 'all'}" + (f"_fc{fc_str}" if args.force_c > 0 else "")
     acquire_lock(lock_key)
     if '--epochs' in COMMON:
         COMMON[COMMON.index('--epochs') + 1] = str(args.epochs)
     else:
         COMMON.extend(['--epochs', str(args.epochs)])
-    seeds = [int(s) for s in args.seeds.split(',')]
-    cr_str = f"{args.cost_reg:.6g}"
-    ct_str = f"{args.cost_target:.6g}"
 
     results = {'dataset': DATASET, 'epochs': args.epochs, 'seeds': seeds, 'configs': {}}
 
@@ -183,13 +192,24 @@ def main():
     if args.only in ('', 'baseline'):
         run_block('baseline', 'base', [])
     if args.only in ('', 'idea2'):
-        run_block('idea2_mm', 'mm', ['--use_mm', '1', '--mm_reg', '1e-3'])
+        extra = ['--use_mm', '1', '--mm_reg', '1e-3']
+        if args.force_c > 0:
+            extra += ['--force_c', fc_str]
+            # force_c 感知 label/key, 避免与 v3 learned-c idea2 的子日志(run_idea2_mm_*)互相覆盖
+            lbl = f'mm_fc{fc_str}'
+            key = f'idea2_mm_fc{fc_str}'
+        else:
+            lbl = 'mm'
+            key = 'idea2_mm'
+        run_block(key, lbl, extra)
     if args.only == 'idea3':
         if args.cost_reg <= 0:
             print("ERROR: --only idea3 requires --cost_reg > 0"); sys.exit(1)
         extra = ['--use_mm', '1', '--mm_reg', '1e-3', '--cost_reg', cr_str]
         if args.cost_target > 0:
             extra += ['--cost_target', ct_str]
+        if args.force_c > 0:
+            extra += ['--force_c', fc_str]
         run_block('idea3_cost', 'cost', extra)
 
     # ---- 汇总 ----

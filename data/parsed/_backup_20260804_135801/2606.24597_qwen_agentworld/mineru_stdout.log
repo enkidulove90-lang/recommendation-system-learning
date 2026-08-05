@@ -1,0 +1,12 @@
+{
+  "arxiv_id": "2606.24597",
+  "title": "Qwen-AgentWorld: Language World Models for General Agents",
+  "pdf_url": "https://arxiv.org/pdf/2606.24597",
+  "paper_url": "https://arxiv.org/abs/2606.24597",
+  "github_url": "https://github.com/QwenLM/Qwen-AgentWorld",
+  "ready": true,
+  "markdown_path": "D:\\recommendation-system-learning\\data\\parsed\\2606.24597_qwen_agentworld\\2606.24597.md",
+  "json_path": null,
+  "text_length": null,
+  "error": null
+}

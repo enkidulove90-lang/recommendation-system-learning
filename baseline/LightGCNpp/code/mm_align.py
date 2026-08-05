@@ -23,7 +23,8 @@ import torch.nn.functional as F
 
 class MultiModalAligner(nn.Module):
     def __init__(self, n_items, id_dim, feat_dims, proj_hidden=256,
-                 temperature=0.1, conf_hidden=64, dropout=0.1, types_order=None):
+                 temperature=0.1, conf_hidden=64, dropout=0.1, types_order=None,
+                 force_c=0.0):
         """
         Args:
             n_items:    物品数(= dataset.m_items)
@@ -39,6 +40,9 @@ class MultiModalAligner(nn.Module):
         self.id_dim = id_dim
         self.types = types_order or list(feat_dims.keys())
         self.temperature = temperature
+        # E1 强制融合开关: >0 时冻结置信度 c=force_c(绕过 conf_mlp 学习),
+        # 仅验证"多模态特征本身"在固定引入率下是否有用. 0 = 原行为(学习 c).
+        self.force_c = force_c
 
         # ---- G1 类型级: 每种类型独立投影头 + 可学习类型嵌入 ----
         # 投影: 视觉特征 → ID 空间(两层 MLP + L2 归一化, 对齐尺度)
@@ -191,6 +195,10 @@ class MultiModalAligner(nn.Module):
         # 让余弦相似度本身也参与门控信号(可解释): c = σ(conf_logit + 2*cos)
         c = torch.sigmoid(conf_logit + 2.0 * cos)                 # [n,1] ∈ (0,1)
 
+        # E1 强制融合开关: 冻结 c 为常数, 绕过 conf_mlp 学习, 仅验证特征本身.
+        if self.force_c > 0:
+            c = torch.full_like(c, self.force_c).detach()
+
         # 范数对齐(尺度修复): pooled 经 L2 后模长恒为 1 且全物品相同,
         # 而 id_emb 模长≈0.8 且随流行度分化. 直接残差会让 c→1 抹掉流行度信息、
         # 与 CF 方向冲突, 迫使 BPR 把 c 压到极小(实测 conf_mean=0.088).
@@ -240,6 +248,10 @@ class MultiModalAligner(nn.Module):
         conf_in = torch.cat([v_norm, id_det], dim=-1)
         conf_logit = self.conf_mlp(conf_in)                # conf_mlp 在此收梯度
         c = torch.sigmoid(conf_logit + 2.0 * cos)
+
+        # E1 强制融合开关: 冻结 c 为常数, 绕过 conf_mlp 学习(供判别实验).
+        if self.force_c > 0:
+            c = torch.full_like(c, self.force_c).detach()
 
         id_scale = id_emb[idx].norm(dim=-1, keepdim=True).detach()
         pooled_scaled = pooled * id_scale

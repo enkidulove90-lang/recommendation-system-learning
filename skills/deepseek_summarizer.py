@@ -120,6 +120,7 @@ class DeepSeekSummarizer(BaseSkill):
         title: str = kwargs.get("title", "")
         abstract: str = kwargs.get("abstract", "")
         full_text: str = kwargs.get("full_text", "")
+        figure_descriptions: str = kwargs.get("figure_descriptions", "")
         output_dir: str = kwargs.get("output_dir", "")
         max_retries: int = kwargs.get("max_retries", 3)
 
@@ -144,9 +145,10 @@ class DeepSeekSummarizer(BaseSkill):
         out_path.mkdir(parents=True, exist_ok=True)
 
         md_path = out_path / f"{arxiv_id}_summary.md"
+        json_path = out_path / f"{arxiv_id}_summary.json"
         # ---- 构建 Prompt ----
         system_prompt = self._build_system_prompt()
-        user_prompt = self._build_user_prompt(title, abstract, trimmed_text)
+        user_prompt = self._build_user_prompt(title, abstract, trimmed_text, figure_descriptions)
 
         # ---- 调用 API（含重试） ----
         for attempt in range(1, max_retries + 1):
@@ -173,14 +175,15 @@ class DeepSeekSummarizer(BaseSkill):
                 summary_data["full_summary_text"] = raw_output
                 summary_data["generated_at"] = datetime.now().isoformat()
 
-                # 保存到文件
-                self._save_summary(summary_data, md_path)
+                # 保存到文件（.md + .json 双格式）
+                self._save_summary(summary_data, md_path, json_path)
 
                 return {
                     "ready": True,
                     "arxiv_id": arxiv_id,
                     "summary": summary_data,
                     "summary_path": str(md_path),
+                    "summary_json_path": str(json_path),
                     "error": None,
                 }
 
@@ -280,50 +283,93 @@ class DeepSeekSummarizer(BaseSkill):
 
     @staticmethod
     def _build_system_prompt() -> str:
-        """构建系统提示词。"""
-        return """你是一位顶级的推荐系统研究科学家。你的任务是对学术论文进行深度解读。
+        """构建系统提示词（11 维度模板）。"""
+        return """你是一位顶级的推荐系统研究科学家。你的任务是对学术论文进行深度解读，按照 11 维度模板生成结构化总结。
+
+## 防幻觉三条铁律
+1. 每条结论须标注来源（章节号/图表号/公式号/页码）。
+2. 论文未提及的字段填「论文未提及」，不得用通识补全。个人判断须标注 [阅读者判断]。
+3. 数字一律抄录原文，不做推算合并。
 
 请严格按照以下 JSON 格式输出（确保是合法 JSON）：
 
 ```json
 {
-  "chinese_title": "论文的中文标题翻译（简洁准确，15字以内）",
-  "main_contribution": "论文的主要贡献（100-200字中文概括）",
-  "innovation_points": [
-    "创新点1：具体描述",
-    "创新点2：具体描述",
-    "创新点3：具体描述"
-  ],
-  "methodology": "论文采用的方法论简述（50-150字）",
-  "benchmark_datasets": [
-    "数据集/基准名称1",
-    "数据集/基准名称2"
-  ],
-  "experimental_conditions": {
-    "task_and_data": "实验任务、数据规模、预处理与训练/验证/测试划分",
-    "baselines": "主要对比方法、基线和消融设置",
-    "metrics": "评价指标及其计算口径",
-    "implementation": "硬件、软件、模型版本、训练/推理参数；原文未披露时明确说明"
+  "title_zh": "论文中文标题翻译（简洁准确，15字以内）",
+  "title_en": "论文英文原标题",
+  "paper_type": "长文/短文/工业界/综述/复现 + 贡献类型(方法创新/理论创新/训练策略创新/数据集评测创新/应用系统创新)",
+  "venue": "发表会议/期刊名+届次（论文未提及则填'论文未提及'）",
+  "year": "发表年份",
+  "one_line_summary": "用<=30字概括这篇论文做了什么",
+  "problem_definition": {
+    "task_type": "评分预测/Top-K排序/序列推荐/CTR预估/召回/重排/冷启动/多模态等",
+    "input": "用户特征/物品特征/交互历史/上下文/辅助信息",
+    "output": "预测分数/排序列表/概率/嵌入",
+    "source": "来源章节号"
   },
-  "experimental_results": "关键实验效果总结，包含主要指标数值对比（100-200字）",
-  "agent_relevance": "对推荐系统Agent开发的借鉴价值：算法设计思路、评估方法、系统架构、数据处理等方面（100-200字）"
+  "innovations": [
+    {"point": "创新点描述", "category": "方法/理论/训练/数据/评测/系统", "source": "来源章节号"},
+    {"point": "与最接近工作的区别", "category": "方法", "source": "来源章节号"}
+  ],
+  "modules": [
+    {"name": "模块名称", "role": "作用", "input": "输入张量/特征", "output": "产出", "source": "公式号/图号"}
+  ],
+  "training": {
+    "loss": "主损失类型(BPR/CE/Hinge/InfoNCE等)+多任务loss+辅助loss+正则项",
+    "negative_sampling": "正样本定义+负样本策略+比例+mask策略",
+    "optimizer": "优化器/学习率/warmup/衰减/batch_size/epochs/早停",
+    "pretrain": "是否两阶段(预训练->微调)+预训练数据来源（论文未提及则填'论文未提及'）",
+    "source": "来源章节号/超参表号"
+  },
+  "datasets": [
+    {"name": "数据集名称", "users": "用户数", "items": "物品数", "interactions": "交互数", "split": "切分方式", "source": "表格号"}
+  ],
+  "benchmark": {
+    "metrics": ["Recall@K", "NDCG@K", "AUC等"],
+    "baselines": ["基线方法1", "基线方法2"],
+    "main_results": "主结果表关键列：数据集×指标×方法×提升幅度",
+    "significance": "统计显著性检验结果（论文未提及则填'论文未提及'）",
+    "online_ab": "在线A/B实验设置与结论（论文未提及则填'论文未提及'）",
+    "source": "表格号/章节号"
+  },
+  "related_papers": [
+    {"ref_id": "引文编号[12]", "relation": "对标/改进/理论依据/同期", "summary": "一句话概括"}
+  ],
+  "reproducibility": {
+    "code_open": false,
+    "data_open": false,
+    "hyperparams_complete": false,
+    "seed": "随机种子（论文未提及则填'论文未提及'）"
+  },
+  "limitations": "论文自承局限+[阅读者判断]风险（须标注个人判断）",
+  "summary_criteria_check": {
+    "accuracy": true,
+    "completeness": true,
+    "reproducibility_oriented": true,
+    "critical": true
+  }
 }
 ```
 
 要求:
-1. innovation_points 至少列出 3 个创新点，每个用 1-2 句话描述
-2. benchmark_datasets 列出论文使用的所有数据集和评估基准
-3. experimental_conditions 必须覆盖数据与划分、基线、指标、实现环境和关键参数
-4. 对原文没有披露的实验条件明确写“原文未披露”，不得猜测
-5. experimental_results 要包含具体的性能提升百分比或数值
-6. agent_relevance 要具体说明可借鉴的算法设计、评估方法、系统架构等
-7. 所有中文回答，专业术语可保留英文
-8. 只输出 JSON，不要有其他内容"""
-        return system_prompt
+1. innovations 至少列出 3 个创新点，每个必须有 source 标注
+2. modules 逐模块记录，论文未显式拆分则记录为"未显式拆分"并尽量从架构图还原
+3. training 必须覆盖 loss/负采样/优化器/预训练，原文未披露的字段填"论文未提及"
+4. datasets 数字必须抄录论文表格原文，不做心算合并
+5. benchmark.baselines 列出全部基线，标注是否重跑
+6. related_papers 至少列出 3 篇核心关联论文
+7. reproducibility 各布尔字段根据论文是否披露判断
+8. 所有中文回答，专业术语可保留英文
+9. 只输出 JSON，不要有其他内容"""
 
     @staticmethod
-    def _build_user_prompt(title: str, abstract: str, full_text: str) -> str:
-        """构建用户提示词（包含论文内容）。"""
+    def _build_user_prompt(
+        title: str,
+        abstract: str,
+        full_text: str,
+        figure_descriptions: str = "",
+    ) -> str:
+        """构建用户提示词（包含论文内容 + 图表视觉描述）。"""
         prompt_parts = ["请分析以下论文:\n"]
 
         if title:
@@ -333,10 +379,14 @@ class DeepSeekSummarizer(BaseSkill):
             prompt_parts.append(f"## 摘要\n{abstract}\n")
 
         if full_text:
-            # 如果全文很短，直接全部传入
             prompt_parts.append(f"## 全文（可能已截断关键部分）\n{full_text}\n")
 
-        prompt_parts.append("请输出上述 JSON 格式的分析结果。")
+        if figure_descriptions:
+            prompt_parts.append(
+                f"## 图表视觉理解结果（由 Qwen3.5 视觉模型生成）\n{figure_descriptions}\n"
+            )
+
+        prompt_parts.append("请按照 11 维度模板输出上述 JSON 格式的分析结果。每条结论标注来源。")
         return "\n".join(prompt_parts)
 
     # ------------------------------------------------------------------
@@ -442,18 +492,26 @@ class DeepSeekSummarizer(BaseSkill):
 
     @staticmethod
     def _parse_response(raw: str, arxiv_id: str, title: str) -> dict[str, Any]:
-        """解析 DeepSeek 返回的 JSON 响应。"""
+        """解析 DeepSeek 返回的 11 维度 JSON 响应。"""
         default = {
             "paper_id": arxiv_id,
             "title": title,
-            "chinese_title": "",
-            "main_contribution": "",
-            "innovation_points": [],
-            "benchmark_datasets": [],
-            "experimental_conditions": DeepSeekSummarizer._empty_experimental_conditions(),
-            "experimental_results": "",
-            "agent_relevance": "",
-            "methodology": "",
+            "title_zh": "",
+            "title_en": title,
+            "paper_type": "",
+            "venue": "",
+            "year": "",
+            "one_line_summary": "",
+            "problem_definition": {},
+            "innovations": [],
+            "modules": [],
+            "training": {},
+            "datasets": [],
+            "benchmark": {},
+            "related_papers": [],
+            "reproducibility": {},
+            "limitations": "",
+            "summary_criteria_check": {},
         }
 
         try:
@@ -473,83 +531,189 @@ class DeepSeekSummarizer(BaseSkill):
             return {
                 "paper_id": arxiv_id,
                 "title": title,
-                "chinese_title": str(data.get("chinese_title", "")),
-                "main_contribution": str(data.get("main_contribution", "")),
-                "innovation_points": [str(p) for p in data.get("innovation_points", [])],
-                "benchmark_datasets": [str(d) for d in data.get("benchmark_datasets", [])],
-                "experimental_conditions": DeepSeekSummarizer._normalize_experimental_conditions(
-                    data.get("experimental_conditions", {})
-                ),
-                "experimental_results": str(data.get("experimental_results", "")),
-                "agent_relevance": str(data.get("agent_relevance", "")),
-                "methodology": str(data.get("methodology", "")),
+                "title_zh": str(data.get("title_zh", data.get("chinese_title", ""))),
+                "title_en": str(data.get("title_en", title)),
+                "paper_type": str(data.get("paper_type", "")),
+                "venue": str(data.get("venue", "")),
+                "year": str(data.get("year", "")),
+                "one_line_summary": str(data.get("one_line_summary", "")),
+                "problem_definition": data.get("problem_definition", {}),
+                "innovations": data.get("innovations", []),
+                "modules": data.get("modules", []),
+                "training": data.get("training", {}),
+                "datasets": data.get("datasets", []),
+                "benchmark": data.get("benchmark", {}),
+                "related_papers": data.get("related_papers", []),
+                "reproducibility": data.get("reproducibility", {}),
+                "limitations": str(data.get("limitations", "")),
+                "summary_criteria_check": data.get("summary_criteria_check", {}),
             }
         except (json.JSONDecodeError, ValueError, KeyError) as exc:
             logger.warning("[DeepSeek] JSON parse failed: %s. Using raw text.", exc)
             return {
                 **default,
-                "main_contribution": raw[:500] if raw else "",
-                "innovation_points": [],
-                "agent_relevance": "",
+                "one_line_summary": raw[:500] if raw else "",
+                "limitations": "JSON parsing failed; raw text preserved.",
             }
 
     @staticmethod
-    def _save_summary(summary_data: dict, md_path: Path) -> None:
-        """Save one DeepSeek paper summary as Markdown."""
-        # Markdown 格式
-        md_content = f"""# {summary_data.get('chinese_title', '') or summary_data.get('title', 'Unknown Title')}
+    def _save_summary(summary_data: dict, md_path: Path, json_path: Path | None = None) -> None:
+        """Save summary as Markdown (.md) + JSON (.json) dual format."""
+        # ---- JSON 格式（机器可读）----
+        if json_path is None:
+            json_path = md_path.with_suffix(".json")
+        json_path.write_text(
+            json.dumps(summary_data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        logger.info("[DeepSeek] Summary JSON saved -> %s", json_path.name)
 
-**英文标题**: {summary_data.get('title', 'Unknown Title')}
-**arXiv ID**: {summary_data.get('paper_id', '')}
+        # ---- Markdown 格式（人类可读，按 11 维度排版）----
+        title_zh = summary_data.get("title_zh", "") or summary_data.get("title", "Unknown Title")
+        title_en = summary_data.get("title_en", summary_data.get("title", ""))
+        paper_id = summary_data.get("paper_id", "")
+        paper_type = summary_data.get("paper_type", "")
+        venue = summary_data.get("venue", "")
+        year = summary_data.get("year", "")
+        one_line = summary_data.get("one_line_summary", "")
+
+        md_content = f"""# {title_zh}
+
+**英文标题**: {title_en}
+**arXiv ID**: {paper_id}
+**论文类型**: {paper_type or '论文未提及'}
+**venue**: {venue or '论文未提及'}
+**年份**: {year or '论文未提及'}
+**一句话概括**: {one_line or 'N/A'}
 **生成时间**: {summary_data.get('generated_at', '')}
 
 ---
 
-## 主要贡献
+## 维度 0: 元信息
 
-{summary_data.get('main_contribution', 'N/A')}
+| 字段 | 内容 |
+|------|------|
+| 论文标题 | {title_zh} |
+| 英文标题 | {title_en} |
+| arXiv ID | {paper_id} |
+| 论文类型 | {paper_type or '论文未提及'} |
+| venue | {venue or '论文未提及'} |
+| 年份 | {year or '论文未提及'} |
 
-## 创新点
+## 维度 1: 论文类型
+
+{paper_type or '论文未提及'}
+
+## 维度 2: 研究背景与问题定义
 
 """
-        for i, point in enumerate(summary_data.get("innovation_points", []), 1):
-            md_content += f"{i}. {point}\n"
 
-        md_content += f"""
-## 方法论
+        # 问题定义
+        prob_def = summary_data.get("problem_definition", {})
+        if isinstance(prob_def, dict):
+            md_content += f"- **任务类型**: {prob_def.get('task_type', '论文未提及')}\n"
+            md_content += f"- **输入**: {prob_def.get('input', '论文未提及')}\n"
+            md_content += f"- **输出**: {prob_def.get('output', '论文未提及')}\n"
+            md_content += f"- **来源**: {prob_def.get('source', '')}\n"
+        else:
+            md_content += f"{prob_def}\n"
 
-{summary_data.get('methodology', 'N/A')}
+        # 创新点
+        md_content += "\n## 维度 3: 主要创新点\n\n"
+        innovations = summary_data.get("innovations", [])
+        if isinstance(innovations, list):
+            for i, inv in enumerate(innovations, 1):
+                if isinstance(inv, dict):
+                    md_content += f"{i}. **{inv.get('point', '')}**\n"
+                    md_content += f"   - 分类: {inv.get('category', '')}\n"
+                    md_content += f"   - 来源: {inv.get('source', '')}\n"
+                else:
+                    md_content += f"{i}. {inv}\n"
+        else:
+            md_content += f"{innovations}\n"
 
-## Benchmark 与数据集
+        # 模块
+        md_content += "\n## 维度 4: 方法与模块\n\n"
+        modules = summary_data.get("modules", [])
+        if isinstance(modules, list) and modules:
+            md_content += "| 模块名称 | 作用 | 输入 | 输出 | 来源 |\n"
+            md_content += "|----------|------|------|------|------|\n"
+            for mod in modules:
+                if isinstance(mod, dict):
+                    md_content += f"| {mod.get('name', '')} | {mod.get('role', '')} | {mod.get('input', '')} | {mod.get('output', '')} | {mod.get('source', '')} |\n"
+                else:
+                    md_content += f"| {mod} | | | | |\n"
+        else:
+            md_content += "论文未提及或未显式拆分\n"
 
-"""
-        for ds in summary_data.get("benchmark_datasets", []):
-            md_content += f"- {ds}\n"
+        # 训练策略
+        md_content += "\n## 维度 5: 训练策略\n\n"
+        training = summary_data.get("training", {})
+        if isinstance(training, dict):
+            md_content += f"- **损失函数**: {training.get('loss', '论文未提及')}\n"
+            md_content += f"- **正负样本构造**: {training.get('negative_sampling', '论文未提及')}\n"
+            md_content += f"- **优化与训练流程**: {training.get('optimizer', '论文未提及')}\n"
+            md_content += f"- **预训练**: {training.get('pretrain', '论文未提及')}\n"
+            md_content += f"- **来源**: {training.get('source', '')}\n"
+        else:
+            md_content += f"{training}\n"
 
-        conditions = DeepSeekSummarizer._normalize_experimental_conditions(
-            summary_data.get("experimental_conditions", {})
-        )
-        md_content += f"""
-## 实验条件
+        # 数据集
+        md_content += "\n## 维度 6: 数据集选择\n\n"
+        datasets = summary_data.get("datasets", [])
+        if isinstance(datasets, list) and datasets:
+            md_content += "| 名称 | 用户数 | 物品数 | 交互数 | 切分方式 | 来源 |\n"
+            md_content += "|------|--------|--------|--------|---------|------|\n"
+            for ds in datasets:
+                if isinstance(ds, dict):
+                    md_content += f"| {ds.get('name', '')} | {ds.get('users', '')} | {ds.get('items', '')} | {ds.get('interactions', '')} | {ds.get('split', '')} | {ds.get('source', '')} |\n"
+                else:
+                    md_content += f"| {ds} | | | | | |\n"
+        else:
+            md_content += "论文未提及\n"
 
-- **数据与任务设置**：{conditions['task_and_data']}
-- **基线与对照**：{conditions['baselines']}
-- **评价指标**：{conditions['metrics']}
-- **实现环境与关键参数**：{conditions['implementation']}
+        # 实验与 Benchmark
+        md_content += "\n## 维度 7: 实验与 Benchmark\n\n"
+        benchmark = summary_data.get("benchmark", {})
+        if isinstance(benchmark, dict):
+            metrics = benchmark.get("metrics", [])
+            md_content += f"- **评测指标**: {', '.join(metrics) if isinstance(metrics, list) else metrics}\n"
+            baselines = benchmark.get("baselines", [])
+            md_content += f"- **基线方法**: {', '.join(baselines) if isinstance(baselines, list) else baselines}\n"
+            md_content += f"- **主结果**: {benchmark.get('main_results', '论文未提及')}\n"
+            md_content += f"- **显著性**: {benchmark.get('significance', '论文未提及')}\n"
+            md_content += f"- **在线实验**: {benchmark.get('online_ab', '论文未提及')}\n"
+            md_content += f"- **来源**: {benchmark.get('source', '')}\n"
+        else:
+            md_content += f"{benchmark}\n"
 
-## 实验效果
+        # 关联论文
+        md_content += "\n## 维度 8: 关联论文\n\n"
+        related = summary_data.get("related_papers", [])
+        if isinstance(related, list) and related:
+            for rp in related:
+                if isinstance(rp, dict):
+                    md_content += f"- [{rp.get('ref_id', '')}] {rp.get('relation', '')}: {rp.get('summary', '')}\n"
+                else:
+                    md_content += f"- {rp}\n"
+        else:
+            md_content += "论文未提及\n"
 
-{summary_data.get('experimental_results', 'N/A')}
+        # 复现性
+        md_content += "\n## 维度 9: 复现性\n\n"
+        repro = summary_data.get("reproducibility", {})
+        if isinstance(repro, dict):
+            md_content += f"- 代码开源: {'是' if repro.get('code_open') else '否/论文未提及'}\n"
+            md_content += f"- 数据公开: {'是' if repro.get('data_open') else '否/论文未提及'}\n"
+            md_content += f"- 超参完整: {'是' if repro.get('hyperparams_complete') else '否/论文未提及'}\n"
+            md_content += f"- 随机种子: {repro.get('seed', '论文未提及')}\n"
+        else:
+            md_content += f"{repro}\n"
 
-## 对推荐系统 Agent 开发的借鉴
+        # 局限性
+        md_content += f"\n## 维度 10: 局限性\n\n{summary_data.get('limitations', '论文未提及')}\n"
 
-{summary_data.get('agent_relevance', 'N/A')}
-
----
-
-*由 DeepSeek ({settings.DEEPSEEK_MODEL}) 自动生成*
-"""
+        md_content += f"\n---\n\n*由 DeepSeek ({settings.DEEPSEEK_MODEL}) 自动生成 | 11 维度模板*\n"
 
         md_path.write_text(md_content, encoding="utf-8")
-
-        logger.info("[DeepSeek] Summary saved -> %s", md_path.name)
+        logger.info("[DeepSeek] Summary MD saved -> %s", md_path.name)

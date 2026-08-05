@@ -1,0 +1,31 @@
+\begin{table}[!t]
+\centering
+\caption{Results of RACES and individual RL on the initial environment pool with different sizes.}
+\resizebox{0.8\linewidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+Setting & LCB & Enigmata & LBench-V2 & IFEval & AIME & Avg. \\
+\midrule
+\multicolumn{7}{l}
+{\textcolor{gray}{\textit{Qwen3-4B-Instruct-2507 as base model}}}\\
+\noalign{\vskip 0.11cm}
+\textsc{BASE} & 32.4 & 36.5 & 41.3 & 82.2 & 53.7 & 49.2 \\
+$RL_{individual}$ (50 envs)  & 32.7 & 38.6 & 41.6 & 82.9 & 55.1 & 50.2  \\
+$RL_{individual}$ (300 envs) & 31.5 & 39.3 & 41.9 & 83.5 & 55.6 & 50.4  \\
+$RL_{RACES}$ (50 envs)       & 33.2 & 38.7 & 42.4 & 82.8 & 57.0 & 50.8  \\
+$RL_{RACES}$ (300 envs)      & \textbf{34.0} & \textbf{39.5} & \textbf{42.7} & \textbf{85.2} & \textbf{58.3} & \textbf{51.9} \\
+\noalign{\vskip 0.11cm}
+\hdashline
+\noalign{\vskip 0.11cm}
+\multicolumn{7}{l}
+{\textcolor{gray}{\textit{DeepSeek-R1-Distill-Qwen-14B as base model}}}\\
+\noalign{\vskip 0.11cm}
+\textsc{Base} & 47.2 & 32.3 & 32.5 & 70.6 & 58.5 & 48.2 \\
+$RL_{individual}$ (300 envs) & 46.9 & 34.2 & 33.7 & 69.3 & 59.8 & 48.8 \\
+$RL_{RACES}$ (50 envs)       & \textbf{47.4} & \textbf{34.7} & \textbf{35.7} & \textbf{73.0} & \textbf{60.3} & \textbf{50.2} \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:env_efficiency}
+\vspace{-10pt}
+\end{table}

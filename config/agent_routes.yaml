@@ -1,0 +1,88 @@
+# Agent Routes Configuration
+# 多 Agent 推荐路由配置
+# 参考 MixRAGRec Expert Selector 设计，初期使用规则路由，后期可引入 RL
+
+routes:
+  - name: direction_match
+    agent: A
+    description: 方向匹配 Agent — 基于 research_direction + technical_paradigm 计算论文间相似度
+    trigger_keywords:
+      - 推荐
+      - 方向
+      - 领域
+      - research
+      - direction
+      - topic
+      - 相似
+      - 相关
+    weight: 0.45
+    max_candidates: 10
+
+  - name: pipeline_complement
+    agent: B
+    description: 管线互补 Agent — 基于 pipeline_stage 找上下游论文
+    trigger_keywords:
+      - 流程
+      - 管线
+      - pipeline
+      - 召回
+      - 排序
+      - 重排
+      - 上游
+      - 下游
+      - 学习路径
+    weight: 0.20
+    max_candidates: 10
+
+  - name: dataset_comparison
+    agent: C
+    description: 数据集共享 Agent — 基于相同数据集找可比论文
+    trigger_keywords:
+      - 数据集
+      - dataset
+      - 对比
+      - 比较
+      - benchmark
+      - 复现
+      - 可比
+    weight: 0.10
+    max_candidates: 10
+
+  - name: kg_reasoning
+    agent: D
+    description: 知识图谱推理 Agent — 基于 knowledge_subgraph 做跨论文实体路径推理
+    trigger_keywords:
+      - 关联
+      - 关系
+      - 知识图谱
+      - graph
+      - relation
+      - 路径
+      - 子图
+      - 连通
+    weight: 0.15
+    max_candidates: 10
+
+# 默认路由策略
+default:
+  agents: [A, B]  # 默认启用方向匹配 + 管线互补
+  max_total_candidates: 20
+  recency_weight: 0.10  # 全局排序因子
+  profile_quality_weight: 0.05  # 全局排序因子
+
+# 多样性约束（与 recommendation_weights.yaml 一致）
+diversity:
+  max_same_method_family: 2
+  preferred_roles: [foundation, direct_comparison, method_extension, evaluation_benchmark]
+  merge_strategy: weighted_union
+
+# 后期 RL 路由配置（预留）
+rl_router:
+  enabled: false
+  state_dim: 64
+  hidden_dims: [256, 128]
+  learning_rate: 0.0003
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay: 0.995
+  # 参考 MixRAGRec Expert Selector (agents/expert_selector.py)

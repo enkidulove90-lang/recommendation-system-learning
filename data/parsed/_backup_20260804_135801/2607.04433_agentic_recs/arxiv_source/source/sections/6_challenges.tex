@@ -1,0 +1,46 @@
+\section{Open Challenges and Opportunities}
+
+
+Agentic recommender systems introduce new capabilities beyond traditional recommendation pipelines, yet they also expose several unresolved challenges. We organize the open problems and opportunities from three complementary perspectives: the modeling perspective (Section~\ref{subsec:challenge_modeling}), the user perspective (Section~\ref{subsec:challenge_user}), and the system perspective (Section~\ref{subsec:challenge_system}).
+
+\subsection{Modeling Perspective}\label{subsec:challenge_modeling}
+
+\subsubsection{Lifelong User Modeling}
+A fundamental challenge lies in capturing a user's evolving interests across long time horizons. Existing agentic systems often treat user representations as short-term context, which limits their ability to retain stable preferences while adapting to new signals. Agents may overfit to recent interactions or lose information about inactive users.
+An opportunity is to design lifelong memory mechanisms that distinguish persistent preferences from transient behaviors. This can be operationalized through hierarchical memory blocks, user-specific episodic buffers, or retrieval-augmented preference summaries. Another direction is to define a new evaluation task on lifelong preference retention, allowing systematic assessment of how well an agent maintains user identity across continual updates.
+
+\subsubsection{Contextual Modeling}
+Recommendation relevance depends strongly on context, yet most current agent workflows do not differentiate between short-term triggers, mid-term sessions, and long-term routines. Agents often rely on raw history, which mixes signals of varying importance and introduces noise.
+A promising opportunity is to adopt context engineering principles that help the agent identify, compress, and structure contextual information before reasoning. This includes context abstraction modules that re-write user history into semantically meaningful summaries, as well as context-selection tasks where the agent must choose an optimal subset of history for the downstream recommendation. Such mechanisms encourage structured reasoning and reduce reliance on long unfiltered sequences.
+
+\subsubsection{Multimodal Modeling}
+Modern recommendation scenarios incorporate text, images, video, and audio. Agents face two major challenges: building unified multimodal representations and aligning these signals with user preferences. Naïve fusion often leads to inconsistent semantics and weak cross-modal grounding.
+Opportunities include designing multimodal tokenization schemes that convert heterogeneous content into a shared token space, enabling smoother reasoning. Cross-modal alignment modules can be integrated into the agent workflow to enforce consistency between modalities. In addition, multimodal reasoning tasks can be formulated to benchmark how well the agent interprets visual and textual cues jointly. These tasks can guide the development of agents that can explain recommendations grounded in both semantics and appearance.
+
+\subsection{User Perspective}\label{subsec:challenge_user}
+
+\subsubsection{Controllability}
+Users often lack clarity on how an agent arrives at a decision. Current agentic systems offer limited control over the decision process or the ability to steer recommendations through explicit feedback.
+Opportunities arise in designing interfaces and agent workflows that expose intermediate decisions. Decision-process visibility can be supported by traceable reasoning graphs. Feedback-based control modules can allow users to adjust preference dimensions or veto specific reasoning paths. This improves both personalization and system transparency.
+
+\subsubsection{Explainability and Trustworthiness}
+Agentic recommender systems rely on multi-step reasoning, but these chains may introduce errors, hallucinations, or unsupported claims. Users may find it difficult to trust an opaque reasoning process.
+Agents can incorporate self-verification modules that check consistency across reasoning steps. Structured explanation templates can enforce factual grounding and avoid speculative statements. Defining trustworthiness benchmarks for agentic recommendation—for instance, accuracy of reasoning chains or stability across perturbations—would help standardize evaluation and guide future development.
+
+\subsubsection{Privacy Preservation}
+Agents operate on large contextual windows and may inadvertently expose sensitive information during reasoning or tool use. Maintaining user privacy across memory, retrieval, and agent-to-agent communication is challenging.
+Opportunities include privacy-aware memory architectures that control what information is stored or exposed, and fine-grained permission protocols that regulate tool usage. Developing privacy-preserving reasoning tasks would further encourage models to separate preference inference from identifiable personal details.
+
+\subsection{System Perspective}\label{subsec:challenge_system}
+
+\subsubsection{Scalability}
+Agentic systems often require multiple agents or repeated workflow iterations to complete a task, which leads to scalability issues in large-scale recommendation environments. It remains unclear when specialized agents are necessary or how to coordinate multi-agent collaboration.
+A solution is to introduce agent orchestration frameworks that determine when to call which agent, based on task complexity or user state. Designing adaptive workflow planners that limit unnecessary reasoning cycles can further improve scalability. A benchmark for multi-agent recommendation settings would also help identify the optimal structure for different scenarios.
+
+\subsubsection{Efficiency in Training and Inference}
+Training and serving agentic models can be computationally expensive due to long context windows, multi-step reasoning, and external tool calls. Inference latencies may restrict real-world adoption.
+Opportunities lie in designing efficient training paradigms, such as distilling multi-step reasoning into shorter latent plans, storing reusable intermediate states, or learning compact preference embeddings. For inference, caching partial reasoning results and developing fast verification modules can significantly reduce latency. Clear system-level metrics that capture efficiency–performance trade-offs will guide deployment decisions.
+
+\subsubsection{API and Interaction-Level Efficiency}
+Many agentic systems rely on external APIs for search, item retrieval, or environment interaction. Excessive calls can bottleneck performance and increase costs.
+One opportunity is to develop local proxy tools or lightweight internal knowledge stores that reduce dependency on external APIs. Another is to design agent–tool protocols that batch operations or estimate when tool calls are unnecessary. These improvements can stabilize real-time recommendation workloads.

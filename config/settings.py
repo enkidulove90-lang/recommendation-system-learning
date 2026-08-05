@@ -64,11 +64,61 @@ class Settings:
 
     @property
     def MODELSCOPE_BASE_URL(self) -> str:
-        return os.getenv("MODELSCOPE_BASE_URL", "https://api-inference.modelscope.ai/v1")
+        return os.getenv("MODELSCOPE_BASE_URL", "https://api-inference.modelscope.cn/v1")
 
     @property
     def MODELSCOPE_VISION_MODEL(self) -> str:
         return os.getenv("MODELSCOPE_VISION_MODEL", "Qwen/Qwen3.5-397B-A17B")
+
+    # ---- SiliconFlow (硅基流动) ----
+    @property
+    def SILICONFLOW_API_KEY(self) -> str:
+        return os.getenv("SILICONFLOW_API_KEY", "")
+
+    @property
+    def SILICONFLOW_BASE_URL(self) -> str:
+        return os.getenv("SILICONFLOW_BASE_URL", "https://api.siliconflow.cn/v1")
+
+    @property
+    def SILICONFLOW_VISION_MODEL(self) -> str:
+        return os.getenv("SILICONFLOW_VISION_MODEL", "Pro/Qwen/Qwen2.5-VL-72B-Instruct")
+
+    # ---- Zhipu AI (智谱) ----
+    @property
+    def ZHIPU_API_KEY(self) -> str:
+        return os.getenv("ZHIPU_API_KEY", "")
+
+    @property
+    def ZHIPU_BASE_URL(self) -> str:
+        return os.getenv("ZHIPU_BASE_URL", "https://open.bigmodel.cn/api/paas/v4")
+
+    @property
+    def ZHIPU_VISION_MODEL(self) -> str:
+        return os.getenv("ZHIPU_VISION_MODEL", "glm-4v-flash")
+
+    # ---- Vision providers (multi-provider fallback) ----
+    @property
+    def VISION_PROVIDERS(self) -> list[dict[str, str]]:
+        """
+        返回视觉模型 provider 列表，按优先级排序。
+        每个 provider 是一个 dict: {name, api_key, base_url, model}
+        仅返回已配置 api_key 的 provider。
+        """
+        providers = []
+        for name, key_prop, url_prop, model_prop in [
+            ("ModelScope", "MODELSCOPE_API_KEY", "MODELSCOPE_BASE_URL", "MODELSCOPE_VISION_MODEL"),
+            ("SiliconFlow", "SILICONFLOW_API_KEY", "SILICONFLOW_BASE_URL", "SILICONFLOW_VISION_MODEL"),
+            ("Zhipu", "ZHIPU_API_KEY", "ZHIPU_BASE_URL", "ZHIPU_VISION_MODEL"),
+        ]:
+            api_key = getattr(self, key_prop)
+            if api_key:
+                providers.append({
+                    "name": name,
+                    "api_key": api_key,
+                    "base_url": getattr(self, url_prop),
+                    "model": getattr(self, model_prop),
+                })
+        return providers
 
     # ---- arXiv API ----
     @property

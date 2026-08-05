@@ -67,6 +67,7 @@ config['mm_proj'] = args.mm_proj
 config['mm_temp'] = args.mm_temp
 config['mm_reg'] = args.mm_reg
 config['mm_conf_reg'] = args.mm_conf_reg
+config['force_c'] = args.force_c
 # ---- idea3: cost-aware knowledge introduction ----
 config['cost_reg'] = args.cost_reg
 config['cost_target'] = args.cost_target

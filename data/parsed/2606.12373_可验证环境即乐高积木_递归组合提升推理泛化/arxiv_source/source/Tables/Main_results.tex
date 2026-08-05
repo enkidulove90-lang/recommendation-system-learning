@@ -1,0 +1,28 @@
+\begin{table}[!t]
+\centering
+\caption{\textbf{Main results.} LCBench and LBench-V2 denote LiveCodeBench and LongBench-V2; AIME is the average score on AIME 2024 and AIME 2025. Both RL settings use the same number of training instances and steps.}
+\resizebox{0.8\linewidth}{!}{
+\begin{tabular}{lcccccc}
+\toprule
+Model & LCBench & Enigmata & LBench-V2 & IFEval & AIME & Avg. \\
+\midrule
+\multicolumn{7}{l}
+{\textcolor{gray}{\textit{DeepSeek-R1-Distill-Qwen-14B as base model}}}\\
+\noalign{\vskip 0.11cm}
+Base & 47.2 & 32.3 & 32.5 & 70.6 & 58.5 & 48.2 \\
+$RL_{individual}$ & 46.9 & 34.2 & 33.7 & 69.3 & 59.8 & 48.8 \\
+$RL_{RACES}$ & \textbf{48.8} & \textbf{35.4} & \textbf{36.0} & \textbf{74.6} & \textbf{61.7} & \textbf{51.3} \\
+\noalign{\vskip 0.11cm}
+\hdashline
+\noalign{\vskip 0.11cm}
+\multicolumn{7}{l}
+{\textcolor{gray}{\textit{Qwen3-14B as base model}}}\\
+\noalign{\vskip 0.11cm}
+Base & 55.0 & 47.4 & 32.5 & 84.5 & 74.8 & 58.8 \\
+$RL_{individual}$ & 56.3 & 48.2 & 34.1 & 85.7 & 76.0 & 60.1 \\
+$RL_{RACES}$ & \textbf{57.0} & \textbf{49.2} & \textbf{35.5} & \textbf{86.7} & \textbf{77.0} & \textbf{61.1} \\
+\bottomrule
+\end{tabular}
+}
+\label{tab:main_results}
+\end{table}

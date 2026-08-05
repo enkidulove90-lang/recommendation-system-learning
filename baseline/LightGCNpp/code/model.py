@@ -142,6 +142,7 @@ class LightGCN(BasicModel):
                 proj_hidden=self.config.get('mm_proj', 256),
                 temperature=self.config.get('mm_temp', 0.1),
                 conf_hidden=self.config.get('mm_conf', 64),
+                force_c=self.config.get('force_c', 0.0),
             ).to(world.device)
             self.mm_reg = self.config.get('mm_reg', 1e-3)
             self.mm_conf_reg_w = self.config.get('mm_conf_reg', 0.01)
@@ -151,7 +152,8 @@ class LightGCN(BasicModel):
             self.cost_target = self.config.get('cost_target', 0.0)
             print(f"[idea2] MultiModalAligner ON: types={list(feat_dims)}, dims={feat_dims}, "
                   f"mm_reg={self.mm_reg}"
-                  + (f", idea3 cost_reg={self.mm_cost_w}" if self.mm_cost_w > 0 else ""))
+                  + (f", idea3 cost_reg={self.mm_cost_w}" if self.mm_cost_w > 0 else "")
+                  + (f", E1 force_c={self.config.get('force_c', 0.0)}" if self.config.get('force_c', 0.0) > 0 else ""))
 
     def mm_new_epoch(self):
         """每个训练 epoch 开始时调用, 触发对齐器刷新「全量投影缓存」(no_grad).

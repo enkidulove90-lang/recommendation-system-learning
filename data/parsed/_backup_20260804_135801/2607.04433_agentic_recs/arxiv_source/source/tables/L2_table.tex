@@ -1,0 +1,134 @@
+
+\begin{table*}[!t]
+\centering
+\caption{Unified Summary of Retrieval-Augmented Assistance, Tool-Driven Assistance, and Planning as Assistance.}
+\label{tab:unified_summary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{p{2.5cm} p{3cm} p{3.5cm} p{5cm} p{5cm}}
+\toprule
+\textbf{Category} & \textbf{Dimension} & \textbf{Sub-type} & \textbf{Representative Works} & \textbf{High-level Capabilities} \\
+\midrule
+
+% =======================
+% 1. Retrieval-Augmented Assistance
+% =======================
+\multirow{9}{=}{\textbf{Retrieval-Augmented Assistance}}
+
+& \multirow{3}{=}{\textbf{Functional Role} \newline (Why retrieval is invoked)}
+& Preference Grounding
+& RAH~\cite{shu2024rah}, iAgent~\cite{xu2025iagent}
+& \multirow{9}{=}{\textbf{Proactivity:} Reactive \newline
+\textbf{Context Awareness:} Memory (long-/short-term) \newline
+\textbf{Interaction:} Single-turn retrieval \newline
+\textbf{Adaptivity:} Static pipeline} \\
+
+& & Item Grounding
+& AgentCF~\cite{zhang2023agentcf}, AgentCF++~\cite{liu2025agentcf++}
+& \\
+
+& & Context Expansion
+& ARAG~\cite{maragheh2025arag}, iAgent~\cite{xu2025iagent}
+& \\
+
+\cmidrule{2-4}
+
+& \multirow{3}{=}{\textbf{Retrieved Content} \newline (What is retrieved)}
+& User Information
+& InteRecAgent~\cite{huang2024interecagent}, RAH~\cite{shu2024rah}, RecMind~\cite{wang2024recmind}, ARAG~\cite{maragheh2025arag}, AgentCF~\cite{zhang2023agentcf}, AgentDR~\cite{yang2025agentdr}
+& \\
+
+& & Item Semantics
+& AgentCF~\cite{zhang2023agentcf}, AgentCF++~\cite{liu2025agentcf++}
+& \\
+
+& & Auxiliary Knowledge
+& ARAG~\cite{maragheh2025arag}, iAgent~\cite{xu2025iagent}
+& \\
+
+\cmidrule{2-4}
+
+& \multirow{3}{=}{\textbf{Retrieval Flows} \newline (How retrieval is sequenced)}
+& Coarse-to-Fine
+& InteRecAgent~\cite{huang2024interecagent}, ARAG~\cite{maragheh2025arag}
+& \\
+
+& & Iterative with Reflection
+& InteRecAgent~\cite{huang2024interecagent}, iAgent~\cite{xu2025iagent}
+& \\
+
+& & Multi-source Fusion
+& AgentCF~\cite{zhang2023agentcf}, AgentCF++~\cite{liu2025agentcf++}
+& \\
+
+\midrule
+
+% =======================
+% 2. Tool-Driven Assistance
+% =======================
+\multirow{4}{=}{\textbf{Tool-Driven Assistance}}
+
+& \multirow{4}{=}{\textbf{Tool Taxonomy} \newline (What tools are used)}
+& RecTools
+& InteRecAgent~\cite{huang2024interecagent}, ToolRec~\cite{zhao2024toolrec}
+& \multirow{4}{=}{\textbf{Proactivity:} Proactive (tool invocation) \newline
+\textbf{Context Awareness:} Internal \& external memory \newline
+\textbf{Interaction:} Multi-turn \newline
+\textbf{Adaptivity:} Adaptive strategy} \\
+
+& & External Info Tools
+& iAgent~\cite{xu2025iagent}, RecMind~\cite{wang2024recmind}
+& \\
+
+& & Attribute-oriented Tools
+& ToolRec~\cite{zhao2024toolrec}
+& \\
+
+& & Multimodal Tools
+& HuggingGPT~\cite{shen2023hugginggpt}, Toolformer~\cite{schick2023toolformer}
+& \\[14pt]
+
+\midrule
+
+% =======================
+% 3. Planning as Assistance
+% =======================
+\multirow{8}{=}{\textbf{Planning as Assistance}}
+
+& \multirow{2}{=}{\textbf{Interaction} \newline \textbf{Planning}}
+& Reflective Plan Revision
+& InteRecAgent~\cite{huang2024interecagent}
+& \multirow{8}{=}{\textbf{Planning:} Goal decomposition, tool orchestration \newline
+\textbf{Reasoning:} Multi-step reasoning, reflection \newline
+\textbf{Adaptivity:} Dynamic memory \& plan updates \newline
+\textbf{Context Awareness:} Tools, history, interactions} \\
+
+& & Expectation-driven Steering
+& ECPO~\cite{feng2025expectation}
+& \\[4pt]
+
+\cmidrule{2-4}
+
+& \multirow{2}{=}{\textbf{Representation} \newline \textbf{Planning}}
+& Semantic Enrichment
+& AgentCF~\cite{zhang2023agentcf}
+& \\
+
+& & Cross-domain Transfer
+& AgentCF++~\cite{liu2025agentcf++}
+& \\[4pt]
+
+\cmidrule{2-4}
+
+& \multirow{2}{=}{\textbf{Ranking/Reranking} \newline \textbf{Planning}}
+& Reasoning-driven Reranking
+& Intelligent Agent~\cite{yu2025intelligent_agent}
+& \\
+
+& & Reflective Learning
+& Re2LLM~\cite{re2llm}, MoRE~\cite{more}, SRLF~\cite{srlf}, DRDT~\cite{drdt}
+& \\
+
+\bottomrule
+\end{tabular}
+}
+\end{table*}

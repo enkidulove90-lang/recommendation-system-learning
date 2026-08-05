@@ -1,0 +1,122 @@
+\section{Evaluation and Benchmarking}
+\label{sec:evaluation}
+
+Agentic recommender systems (ARS) should be evaluated as interactive systems rather than only as static rankers. In a conventional top-$N$ setting, the main evaluation object is a ranked list compared with held-out interactions. In an ARS, the object is often a trajectory that includes user inputs, internal state, memory reads and writes, tool calls, observations, intermediate rationales, final outputs, and feedback. A system can rank relevant items while using unsupported evidence, exposing sensitive profile attributes, or making repeated tool calls; conversely, a fluent dialogue can still fail to recommend useful items. Evaluation therefore has to separate final recommendation utility from the process that produced it.
+
+For an episode with $T$ turns, we write the trajectory as
+\[
+\tau=(u_1,s_1,a_1,o_1,y_1,\ldots,u_T,s_T,a_T,o_T,y_T),
+\]
+where $u_t$ is the user input, $s_t$ is the internal or environmental state, $a_t$ is the agent action, $o_t$ is an observation returned by a tool, memory, simulator, or another agent, and $y_t$ is the user-facing output. Classical metrics mainly evaluate the ranked list contained in $y_T$. Agentic evaluation instead requires a vector of measurements,
+\[
+m(\tau)=(m_{rec},m_{int},m_{gen},m_{ground},m_{tool},m_{mem},m_{safe},m_{cost}),
+\]
+where the components summarize recommendation utility, interaction quality, generated-output quality, grounding, tool and planning behavior, memory behavior, safety, and cost. The relevant components depend on both the role of the agent and its Level of Autonomy (LoA). L2 systems require retrieval and grounding checks; L3 systems require tool-use diagnostics; L4 systems require plan, memory, and reflection evaluation; and L5 systems require coordination and failure-attribution metrics. Likewise, agent-assisted recommenders evaluate the marginal value of agents around a classical pipeline, agent-as-recommenders evaluate end-to-end agent behavior, and agent-as-simulators evaluate both the simulator and the recommender policies tested with it.
+
+\input{tables/evaluation-matrix-table}
+
+
+
+\subsection{Targets, Protocols, and Metrics}
+\label{subsec:evaluation-taxonomy}
+
+A recurring ambiguity in ARS evaluation is the conflation of targets, protocols, and metrics as summarized in Table~\ref{tab:ars-eval-matrix}. A \emph{target} is the object being evaluated: the ranked list, conversation, explanation, RAG evidence, simulator, tool trace, memory update, multi-agent coordination process, or deployed service. A \emph{protocol} is the procedure used to evaluate the target: offline benchmark, simulation, user study, human annotation, LLM-as-judge, adversarial testing, case study, or online experiment. A \emph{metric} is the observable measurement produced by the protocol: NDCG, Recall, Success@K, average turns, BLEU, faithfulness, attack success rate, latency, token cost, or GMV. 
+
+
+The H0--H3 distinction also helps relate evaluation to LoA. At L2, the main additional target beyond ranking is retrieved evidence: whether user, item, or auxiliary knowledge is relevant and used faithfully. At L3, the target expands to tool traces: tool choice, argument validity, execution success, and recovery. At L4, the target includes plan quality, memory updates, and self-correction. At L5, the target includes communication, agreement, and contribution of each specialist agent. This level-wise view prevents a common mismatch in which a paper claims planning, memory, or multi-agent benefits but evaluates only the final ranked list.
+
+Offline evaluation remains useful because it is cheap, reproducible, and compatible with existing recommender baselines. It is not, however, sufficient evidence of agentic behavior. A high NDCG or HR score does not show that the agent selected the right tool, grounded claims in catalog evidence, maintained a consistent profile, asked useful clarifying questions, or satisfied latency constraints. Simulation, user studies, LLM-as-judge protocols, adversarial tests, and online experiments answer different questions and should be treated as complementary. Simulation tests controlled interaction; user studies test perceived utility; LLM judges scale qualitative assessment but require calibration; adversarial evaluation probes robustness; and online experiments provide causal evidence under deployment constraints.
+
+\subsection{Recommendation, Conversation, and Generated Output}
+\label{subsec:outcome-eval}
+
+Classical recommender metrics remain the foundation when the target is a final item choice or ranked list. Most agent-assisted and agent-as-recommender papers therefore report HR, Recall, Precision, NDCG, MRR, MAP, AUC, or CTR-like outcomes. InteRecAgent, ToolRec, AgentDR, MADREC, AgenticRAG, R4EC, and VRAgent-R1 retain top-$K$ or ranking metrics to show that agentic workflows do not reduce final-list relevance \cite{huang2025recommender,zhao2024toolrec,yang2025agentdr,park2025madrec,ma2025agenticrag,chen2025vragent,gu2025r}. These metrics should be interpreted with ablations. In L2 systems, gains may arise from better retrieval or prompt construction; in L3 systems, they may hide brittle tool routing; in L4 systems, they may depend on reflection prompts; and in L5 systems, they may reflect one useful specialist rather than effective coordination. Reporting should therefore include the candidate set, negative sampling protocol, split, baselines, LLM version, number of tool calls, memory size, reflection rounds, and repeated-run variance.
+
+
+
+Cold-start and sparse-data settings illustrate why classical metrics remain important. In these settings, agentic components may supply missing preference evidence, convert natural-language constraints into structured signals, or generate synthetic interactions. Ranking metrics can measure whether these additions improve downstream recommendation utility. They do not, however, establish why the improvement occurs. 
+
+
+Conversational ARS add an interaction layer between intent and recommendation. Evaluation must measure not only whether a target item appears, but also whether the agent elicits missing preferences, follows commands, adapts to feedback, remains coherent across turns, and stops at an appropriate time. Common metrics include success rate, Success@K, average turns, task completion, satisfaction, engagement, and willingness to reuse. MACRS and ECPO are representative because they evaluate multi-turn conversational recommendation and expectation confirmation rather than only static ranking \cite{fang2024multi,feng2025expectation}. RecBot, SmartEats, WeMusic-Agent, and AdaptJobRec further illustrate settings where command following, dietary constraints, music interaction, or job-preference elicitation make user experience part of the recommendation target \cite{tang2025interactive,liang2025smarteats,wang2025adaptjobrec, haller2026impress}.
+
+Explanations and other generated outputs require separate evaluation. A rationale can be fluent but unsupported, concise but unhelpful, or faithful to an item attribute but irrelevant to the user's current constraint. MADREC and REXHA evaluate explanation quality, CARTS focuses on recommendation textual summarization, and AgenticRAG combines recommendation with retrieval-grounded explanation \cite{park2025madrec,sun2025retrieval,chen2025carts,ma2025agenticrag}. Automatic text-overlap metrics such as BLEU, ROUGE, METEOR, and BERTScore are useful when references exist, but they do not establish factual support or user usefulness. Human or LLM judges should therefore score at least two axes: communicative quality (clarity, relevance, naturalness, personalization, usefulness) and evidence faithfulness (whether factual claims are supported by item metadata, user history, reviews, knowledge-base triples, or retrieved passages). Judge prompts, rubrics, visibility of evidence, identity masking, item-order randomization, and agreement statistics should be reported.
+
+\subsection{Grounded Retrieval and RAG Evaluation}
+\label{subsec:rag-eval}
+
+Retrieval-augmented generation is common in ARS because recommendation often depends on information outside model parameters: user profiles and histories, item attributes, reviews, knowledge graphs, web pages, policy rules, and domain constraints. In the LoA taxonomy, this is central to L2 systems and becomes a component of L3--L5 systems when retrieval is embedded in tools, planning, or multi-agent workflows. RAG evaluation should distinguish retrieval quality from grounded generation. A recommender can retrieve relevant items but generate an unsupported explanation, or retrieve weak evidence and still guess a plausible item.
+
+
+The evidence space has three sources:  \emph{user information}, \emph{item information}, and \emph{auxiliary knowledge}. 
+RA-Rec, CORAL, ARAG, and AgenticRAG illustrate retrieval-augmented recommendation and explanation settings where evidence quality should be checked separately from final ranking \cite{kemper2024retrieval,wu2024coral,maragheh2025arag,ma2025agenticrag}. 
+1) \textbf{Retriever diagnostics} should include Recall@K, Precision@K, MRR, NDCG, coverage of required attributes, diversity of evidence sources, and freshness when data changes over time. 
+2) \textbf{Generator diagnostics} should include answer relevance, claim-level citation accuracy, faithfulness, hallucination rate, contradiction rate, and consistency with the dialogue context. 
+3) \textbf{Robustness tests} should include insufficient evidence, conflicting evidence, poisoned item descriptions, and unsupported user requests.
+
+
+
+RAG evaluation should also report how the retrieved context is used. Merely retrieving a relevant review or item attribute does not guarantee that the generator used it correctly. Claim-level checking is preferable for user-facing rationales: each factual statement should be linked to a supporting user profile entry, item attribute, review, knowledge-graph fact, policy rule, or web/API result. When the system compares alternatives, the comparison should be checked against the same candidate set and the same time-sensitive values, such as price, availability, or distance. Negative controls are also useful: if evidence is removed or contradicted, the agent should either abstain, ask a clarification, or revise the claim rather than generate unsupported text.
+
+\subsection{Simulator Evaluation}
+\label{subsec:simulator-eval}
+
+Simulation is both a method for evaluating ARS and an object that must be evaluated~\cite{yoon2024evaluating, zhang2026exploring}. A simulator that improves downstream NDCG can still misrepresent real users, reveal labels too directly, collapse behavioral diversity, or reward policies that exploit simulator artifacts. Simulator evaluation should therefore distinguish \emph{downstream utility} from \emph{simulator validity}. 
+1) \textbf{Downstream utility} asks whether simulated interactions improve a recommender under HR, NDCG, Recall, reward, liking ratio, or inference-time metrics. Validity asks whether simulated users, creators, and environments behave like the intended population. 
+2) \textbf{Validity checks} should include distributional fidelity to logs, behavioral realism under persona constraints, diversity across personas, leakage of target items or labels, and calibration against human judgments or online treatment effects. Long-term environments should additionally report preference drift, novelty decay, provider exposure, diversity, retention, and feedback-loop effects. Without such checks, simulation may be useful for development but weak as evidence of real-world behavior.
+
+
+
+A useful simulator report should make the validity conditions explicit. If the simulator is calibrated on a particular domain, interaction type, or user population, the paper should not imply that its conclusions transfer automatically to other domains. It should also state what the simulator observes. A simulator with access to hidden target labels, full item metadata, or future interactions can produce overly optimistic results. A simulator that produces both implicit feedback and rationales should evaluate the two outputs separately, because plausible text does not imply realistic click or rating behavior. For long-horizon environments, the report should include stability checks over repeated interactions; otherwise small response-model errors may compound into misleading claims about retention, fairness, or filter bubbles.
+
+\subsection{Trace, Deployment, and Trustworthiness Evaluation}
+\label{subsec:trace-deployment-trust-eval}
+
+Agentic systems expose intermediate traces that should be evaluated directly. 
+1) For tool-driven agents, the trace should show whether the agent select the correct tool, supplied valid arguments, interpret the result correctly, recover from tool failures, and avoid unnecessary calls. ToolRec, RecMind, iAgent, AgentDR, and TAIRA motivate such diagnostics because their claimed contribution depends on explicit tool use, planning, shielding, or thought-pattern selection \cite{zhao2024toolrec,wang2024recmind,xu2025iagent,yang2025agentdr,yu2025thought}. For memory, evaluation should measure retrieval precision and recall, update faithfulness, stale-memory use, contradiction rate, and privacy leakage. 
+2) For planning, evaluation should check task decomposition, constraint coverage, step ordering, verification, and recovery. For multi-agent systems such as MACRS, MACRec, Collab-REC, MAP, and MATCHA, evaluation should include agreement, vote entropy, number of rounds, time-to-consensus, role ablations, deadlock frequency, and the marginal utility of each specialist agent \cite{fang2024multi,wang2024macrec,banerjee2025collab,lee2025map,hui2025matcha}.
+
+Deployment evaluation is where many agentic designs become difficult to justify. Customer-facing ARS need latency, token cost, inference cost, throughput, tool-call count, cache-hit rate, timeout rate, fallback rate, and reliability metrics, in addition to online outcomes such as CTR, CVR, retention, satisfaction, or GMV. ColdLLM is an example of combining offline cold-start metrics with online-style business evidence, while efficiency-aware RAG and cloud-device collaborative recommendation show that accuracy must be studied jointly with latency, cost, and system boundaries \cite{huang2025large,zhou2025efficiency,long2025cloud}. The most informative reports present trade-offs, such as NDCG versus latency or success rate versus tokens per episode, rather than a single best score. Parallelism should also be reported, since multi-agent systems may reduce wall-clock time while increasing total token cost and orchestration complexity.
+
+
+
+Deployment metrics should be reported with the same care as ranking metrics. Mean latency is insufficient without tail latency, since multi-step agents may fail through long-tail tool delays. Token cost should distinguish prompt, retrieval, reasoning, verifier, and explanation stages where possible. Tool-call count should be reported per episode and, for multi-agent systems, per role. Fallback behavior should also be measured: a system that silently falls back to a generic ranker after tool failure may appear reliable but no longer exercises the agentic workflow being studied. Online experiments should state traffic split, duration, confidence intervals, guardrail metrics, and whether users were exposed to generated explanations or only to final items.
+
+Trustworthiness should be a primary evaluation target. RAG exposes item descriptions and knowledge bases to poisoning; memory can be corrupted, stale, or privacy-sensitive; tool use can trigger unsafe API calls; and multi-agent communication can propagate inconsistent state. Robustness protocols should include adversarial item descriptions, shilling or poisoning attacks, prompt injection, memory perturbation, and corrupted retrieval evidence. The poisoning study on retrieval-augmented recommenders and the DrunkAgent memory-perturbation work illustrate these risks \cite{nazary2025stealthy,yang2025get,ning2024cheatagent, li2026agentattack, gu2026llm}. Privacy evaluation should measure what is stored, where it is stored, how it is retrieved, whether it can be deleted, and whether sensitive attributes are exposed to other agents or tools \cite{zhang2025towards,long2025cloud}. Fairness and diversity evaluation should consider users, items, creators, and providers; multi-stakeholder recommendation and long-term simulation show that exposure and diversity effects may appear only after repeated interaction \cite{banerjee2025collab,jannach2025rethinking,ye2025creagent,sukiennik2025simulating}.
+
+\begin{table*}[!t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.08}
+\caption{Minimum reporting checklist for ARS evaluation.}
+\vspace{-8pt}
+\label{tab:ars-reporting-checklist}
+\begin{tabularx}{\textwidth}{@{}p{0.17\textwidth}L@{}}
+\toprule
+\textbf{Evaluation component} & \textbf{Minimum information to report} \\
+\midrule
+Offline recommendation & Data split, candidate set, negative sampling, baselines, repeated runs, LLM/backbone version. \\
+Conversation and generation & User or simulator protocol, task definition, stopping criteria, judge rubric, prompt, evidence visibility, agreement statistics. \\
+RAG and grounding & Retrieval source, evidence granularity, freshness, retrieval budget, claim segmentation, faithfulness or contradiction checks. \\
+Tools and planning & Tool schema, tool-call logs, argument-validity checks, execution success, recovery policy, planner or verifier ablation. \\
+Memory & Memory type, update rule, retrieval budget, stale-memory policy, contradiction checks, privacy and deletion handling. \\
+Multi-agent coordination & Agent roles, message format, number of rounds, consensus rule, deadlock handling, role ablations, cost per role. \\
+Safety and privacy & Threat model, attack budget, policy test suite, defense baselines, sensitive attributes, leakage metric. \\
+Deployment & Hardware/API setup, latency distribution, token and inference cost, throughput, timeout/fallback rates, traffic split, confidence intervals. \\
+\bottomrule
+\vspace{-15pt}
+\end{tabularx}
+\end{table*}
+
+
+
+A practical evaluation stack should therefore be layered. Offline metrics provide fast regression tests for relevance. Trace metrics diagnose tools, memory, plans, and coordination. Grounding metrics audit factual support. Simulator metrics test controlled interaction and long-horizon effects, subject to calibration. Human or LLM judges assess aspects of communication that are difficult to reduce to item relevance. Deployment metrics test whether the design is feasible under latency, cost, and reliability constraints. Online experiments, when available, provide the strongest evidence for user and business impact. No single protocol is sufficient for all ARS claims.
+
+
+
+The checklist should be read as a minimum rather than a complete benchmark specification. Different applications may need additional domain-specific measurements. A travel planner may require route feasibility and weather or availability checks; a food recommender may require dietary and allergen constraints; a learning-path recommender may require prerequisite consistency; and a marketplace recommender may require provider exposure and inventory constraints. These domain-specific checks should be attached to the relevant target in Table~\ref{tab:ars-eval-matrix} rather than introduced as isolated metrics. This keeps the evaluation design interpretable: the reader can see which system claim is being tested, which protocol supports it, and which metric is used to report it.
+
+\subsection{Open Evaluation Gaps}
+\label{subsec:evaluation-future}
+
+The main evaluation gap is that architecture has advanced faster than measurement. Many papers introduce memory, tools, RAG, planning, reflection, or multiple agents, but still evaluate mainly with static ranking metrics. Future benchmarks should record full trajectories and compute layered metrics for recommendation utility, interaction quality, generated-output quality, grounding, tool correctness, memory behavior, safety, and cost. Calibrated simulation is another priority: simulator papers should report distributional fidelity, behavioral probes, leakage controls, diversity, uncertainty, and correlation with human or online outcomes. Finally, multi-agent evaluation should make coordination measurable through message-level diagnostics, specialist-agent ablations, contribution analysis, and cost-latency-quality trade-offs. These practices would make it clearer when agentic components improve recommendation and when a simpler agent-assisted or conventional pipeline is sufficient.

@@ -74,8 +74,8 @@ class PDFParser(BaseSkill):
         执行 PDF 精准解析（异步提交 + 轮询 + 下载）。
 
         参数:
-            pdf_url    (str): PDF 在线地址
-            pdf_path   (str): 本地 PDF 文件路径（暂不支持 v4 API 直接上传）
+            pdf_url    (str): PDF 在线地址（arXiv 等公开 URL）
+            pdf_path   (str): 本地 PDF 文件路径（通过 /api/v4/file-urls/batch 上传）
             arxiv_id   (str): arXiv ID
             title      (str): 论文标题，用于命名输出文件夹（会做文件名安全处理）
             output_dir (str): 输出目录，默认 data/parsed/
@@ -117,21 +117,49 @@ class PDFParser(BaseSkill):
         json_path = out_path / f"{arxiv_id}.json"
 
         # ---- Step 1: 提交解析任务 ----
-        logger.info("[MinerU] Submitting parse task | url=%s model=%s", pdf_url or pdf_path, self._model_version)
-        task_id = self._submit_task(pdf_url, pdf_path)
-        if not task_id:
+        if pdf_url:
+            logger.info("[MinerU] Submitting parse task | url=%s model=%s", pdf_url, self._model_version)
+            task_id = self._submit_task(pdf_url)
+            if not task_id:
+                return {
+                    "ready": True,
+                    "arxiv_id": arxiv_id,
+                    "markdown_path": None,
+                    "json_path": None,
+                    "content": None,
+                    "error": "Failed to submit MinerU task.",
+                }
+            logger.info("[MinerU] Task created | task_id=%s", task_id)
+
+            # ---- Step 2: 轮询等待完成 ----
+            download_url = self._poll_task(task_id)
+        elif pdf_path:
+            # 本地文件上传模式
+            logger.info("[MinerU] Uploading local file | path=%s model=%s", pdf_path, self._model_version)
+            batch_id = self._submit_task_upload(pdf_path, arxiv_id)
+            if not batch_id:
+                return {
+                    "ready": True,
+                    "arxiv_id": arxiv_id,
+                    "markdown_path": None,
+                    "json_path": None,
+                    "content": None,
+                    "error": "Failed to upload file to MinerU.",
+                }
+            logger.info("[MinerU] Upload complete | batch_id=%s", batch_id)
+
+            # ---- Step 2: 轮询等待完成 ----
+            download_url = self._poll_batch_task(batch_id)
+        else:
             return {
                 "ready": True,
                 "arxiv_id": arxiv_id,
                 "markdown_path": None,
                 "json_path": None,
                 "content": None,
-                "error": "Failed to submit MinerU task.",
+                "error": "Either pdf_url or pdf_path must be provided.",
             }
-        logger.info("[MinerU] Task created | task_id=%s", task_id)
 
-        # ---- Step 2: 轮询等待完成 ----
-        download_url = self._poll_task(task_id)
         if not download_url:
             return {
                 "ready": True,
@@ -139,11 +167,11 @@ class PDFParser(BaseSkill):
                 "markdown_path": None,
                 "json_path": None,
                 "content": None,
-                "error": f"Task {task_id} did not complete in time.",
+                "error": "MinerU task did not complete in time.",
             }
 
         # ---- Step 3: 下载并解压结果 ----
-        logger.info("[MinerU] Downloading result for task %s ...", task_id)
+        logger.info("[MinerU] Downloading result for %s ...", arxiv_id)
         success = self._download_and_extract(download_url, out_path, arxiv_id)
         if not success:
             return {
@@ -208,9 +236,12 @@ class PDFParser(BaseSkill):
     # 内部方法: 提交任务
     # ------------------------------------------------------------------
 
-    def _submit_task(self, pdf_url: str, pdf_path: str) -> str | None:
+    def _submit_task(self, pdf_url: str) -> str | None:
         """
-        提交解析任务到 MinerU v4 API。
+        提交解析任务到 MinerU v4 API（URL 模式）。
+
+        注意：/api/v4/extract/task 不支持文件直接上传，
+        本地文件请使用 _submit_task_upload() 方法。
 
         返回 task_id，失败返回 None。
         """
@@ -219,18 +250,10 @@ class PDFParser(BaseSkill):
             "Authorization": f"Bearer {self._api_key}",
         }
 
-        # 构建请求体
-        if pdf_url:
-            data: dict[str, Any] = {
-                "url": pdf_url,
-                "model_version": self._model_version,
-            }
-        else:
-            # v4 API 的本地文件上传需要不同方式，这里暂用 URL 模式
-            data = {
-                "url": f"file://{pdf_path}",
-                "model_version": self._model_version,
-            }
+        data: dict[str, Any] = {
+            "url": pdf_url,
+            "model_version": self._model_version,
+        }
 
         try:
             with httpx.Client(timeout=60.0) as client:
@@ -281,7 +304,7 @@ class PDFParser(BaseSkill):
             data = result.get("data", {})
             state = data.get("state", data.get("status", ""))
 
-            if state in ("done", "success", "completed", "ready"):
+            if state == "done":
                 # 任务完成，获取下载链接
                 # MinerU v4 API 返回 full_zip_url 字段
                 download_url = (
@@ -292,26 +315,176 @@ class PDFParser(BaseSkill):
                     or ""
                 )
                 if not download_url:
-                    # 某些版本直接在 data 中返回 markdown/json 字段
                     files = data.get("files", {})
                     download_url = files.get("zip", files.get("markdown", ""))
                 logger.info("[MinerU] Task completed | task_id=%s state=%s url=%s", task_id, state, download_url[:80] if download_url else "N/A")
                 return download_url if download_url else None
 
-            elif state in ("failed", "error", "cancelled"):
-                err_msg = data.get("error", data.get("message", "Unknown error"))
-                logger.error("[MinerU] Task failed | task_id=%s error=%s", task_id, err_msg)
+            elif state == "failed":
+                # 官方字段名为 err_msg
+                err_msg = data.get("err_msg", data.get("error", data.get("message", "Unknown error")))
+                logger.error("[MinerU] Task failed | task_id=%s err_msg=%s", task_id, err_msg)
                 return None
 
             else:
-                # 处理中: pending / processing / running
-                logger.info(
-                    "[MinerU] Poll %d/%d | task_id=%s state=%s",
-                    attempt, self._poll_max_retries, task_id, state,
-                )
+                # 处理中: pending / running / converting
+                progress = data.get("extract_progress", {})
+                if progress:
+                    logger.info(
+                        "[MinerU] Poll %d/%d | task_id=%s state=%s progress=%d/%d pages",
+                        attempt, self._poll_max_retries, task_id, state,
+                        progress.get("extracted_pages", 0), progress.get("total_pages", 0),
+                    )
+                else:
+                    logger.info(
+                        "[MinerU] Poll %d/%d | task_id=%s state=%s",
+                        attempt, self._poll_max_retries, task_id, state,
+                    )
                 time.sleep(self._poll_interval)
 
         logger.error("[MinerU] Poll timeout | task_id=%s after %d attempts", task_id, self._poll_max_retries)
+        return None
+
+    # ------------------------------------------------------------------
+    # 内部方法: 本地文件上传 (批量上传 API)
+    # ------------------------------------------------------------------
+
+    def _submit_task_upload(self, pdf_path: str, arxiv_id: str) -> str | None:
+        """
+        通过 MinerU v4 批量文件上传 API 提交本地 PDF。
+
+        流程:
+          1. POST /api/v4/file-urls/batch 申请上传链接
+          2. PUT 文件到返回的 URL
+        返回 batch_id，失败返回 None。
+        """
+        file_path = Path(pdf_path)
+        if not file_path.exists():
+            logger.error("[MinerU] Local file not found: %s", pdf_path)
+            return None
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self._api_key}",
+        }
+
+        # Step 1: 申请上传链接
+        batch_url = f"{MINERU_API_BASE}/api/v4/file-urls/batch"
+        data = {
+            "files": [
+                {"name": file_path.name, "data_id": arxiv_id}
+            ],
+            "model_version": self._model_version,
+            "enable_formula": True,
+            "enable_table": True,
+            "language": "ch",
+        }
+
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                resp = client.post(batch_url, headers=headers, json=data)
+                resp.raise_for_status()
+                result = resp.json()
+        except httpx.HTTPStatusError as exc:
+            logger.error("[MinerU] Upload request HTTP %d: %s", exc.response.status_code, exc.response.text[:500])
+            return None
+        except Exception as exc:
+            logger.error("[MinerU] Upload request error: %s", exc)
+            return None
+
+        batch_data = result.get("data", {})
+        batch_id = batch_data.get("batch_id", "")
+        file_urls = batch_data.get("file_urls", [])
+
+        if not batch_id or not file_urls:
+            logger.error("[MinerU] No batch_id or file_urls in response: %s", result)
+            return None
+
+        # Step 2: 上传文件
+        upload_url = file_urls[0]
+        logger.info("[MinerU] Uploading %s (%d bytes) to CDN...", file_path.name, file_path.stat().st_size)
+
+        try:
+            file_content = file_path.read_bytes()
+            with httpx.Client(timeout=httpx.Timeout(300.0, connect=30.0)) as client:
+                # 官方文档要求：上传时不要设置 Content-Type 请求头
+                # httpx 默认不会为 content= 设置 Content-Type，但显式移除以防万一
+                resp = client.put(upload_url, content=file_content, headers={"Content-Type": None})
+                if resp.status_code not in (200, 201, 204):
+                    logger.error("[MinerU] Upload PUT failed: HTTP %d %s", resp.status_code, resp.text[:300])
+                    return None
+            logger.info("[MinerU] File uploaded successfully")
+        except Exception as exc:
+            logger.error("[MinerU] Upload PUT error: %s", exc)
+            return None
+
+        return batch_id
+
+    def _poll_batch_task(self, batch_id: str) -> str | None:
+        """
+        轮询批量任务结果。
+
+        返回下载 URL，超时或失败返回 None。
+        """
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+        }
+        poll_url = f"{MINERU_API_BASE}/api/v4/extract-results/batch/{batch_id}"
+
+        for attempt in range(1, self._poll_max_retries + 1):
+            try:
+                with httpx.Client(timeout=30.0) as client:
+                    resp = client.get(poll_url, headers=headers)
+                    resp.raise_for_status()
+                    result = resp.json()
+            except Exception as exc:
+                logger.error("[MinerU] Batch poll attempt %d error: %s", attempt, exc)
+                time.sleep(self._poll_interval)
+                continue
+
+            data = result.get("data", {})
+            extract_results = data.get("extract_result", [])
+
+            if not extract_results:
+                # 可能还在处理中
+                state = data.get("state", "unknown")
+                logger.info("[MinerU] Batch poll %d/%d | batch_id=%s state=%s", attempt, self._poll_max_retries, batch_id, state)
+                time.sleep(self._poll_interval)
+                continue
+
+            # 取第一个结果（我们只上传了一个文件）
+            first_result = extract_results[0]
+            state = first_result.get("state", "")
+
+            if state == "done":
+                download_url = (
+                    first_result.get("full_zip_url")
+                    or first_result.get("download_url")
+                    or first_result.get("result_url")
+                    or ""
+                )
+                logger.info("[MinerU] Batch task completed | batch_id=%s state=%s url=%s", batch_id, state, download_url[:80] if download_url else "N/A")
+                return download_url if download_url else None
+
+            elif state == "failed":
+                err_msg = first_result.get("err_msg", "Unknown error")
+                logger.error("[MinerU] Batch task failed | batch_id=%s err_msg=%s", batch_id, err_msg)
+                return None
+
+            else:
+                # 处理中: waiting-file / pending / running / converting
+                progress = first_result.get("extract_progress", {})
+                if progress:
+                    logger.info(
+                        "[MinerU] Batch poll %d/%d | batch_id=%s state=%s progress=%d/%d pages",
+                        attempt, self._poll_max_retries, batch_id, state,
+                        progress.get("extracted_pages", 0), progress.get("total_pages", 0),
+                    )
+                else:
+                    logger.info("[MinerU] Batch poll %d/%d | batch_id=%s state=%s", attempt, self._poll_max_retries, batch_id, state)
+                time.sleep(self._poll_interval)
+
+        logger.error("[MinerU] Batch poll timeout | batch_id=%s after %d attempts", batch_id, self._poll_max_retries)
         return None
 
     # ------------------------------------------------------------------
@@ -410,7 +583,10 @@ class PDFParser(BaseSkill):
             zip_path.write_bytes(content)
             if not zipfile.is_zipfile(zip_path):
                 logger.error("[MinerU] Downloaded result is not a valid ZIP.")
-                zip_path.unlink(missing_ok=True)
+                try:
+                    zip_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
                 return False
             logger.info("[MinerU] Downloaded %d bytes -> %s", len(content), zip_path)
 
@@ -463,7 +639,10 @@ class PDFParser(BaseSkill):
                 if markdown_files:
                     canonical_markdown.write_bytes(markdown_files[0].read_bytes())
 
-            zip_path.unlink(missing_ok=True)
+            try:
+                zip_path.unlink(missing_ok=True)
+            except OSError:
+                logger.warning("[MinerU] Could not delete ZIP (sandbox restriction), leaving: %s", zip_path.name)
             return True
 
         except zipfile.BadZipFile as exc:

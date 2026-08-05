@@ -1,0 +1,22 @@
+\section{Related Work}
+\paragraph{RLVR}
+Reinforcement learning with verifiable rewards (RLVR) has become a leading approach for improving the reasoning capabilities of large language models~\citep{Guo2025, shao2024deepseekmathpushinglimitsmathematical, liu2025understanding}.
+RLVR depends on a substantial volume of verifiable data to provide effective learning signals.
+However, as model performance rapidly advances, even larger and harder curated datasets~\citep{he2026deepmathk} cannot keep up with the growing demand for high-quality training signals~\citep{villalobos2024position}.
+Although several studies aim to improve training algorithms for more efficient use of existing data, these approaches do not directly address the issue of diminishing data effectiveness~\citep{zhu2025the, yue2025vapoefficientreliablereinforcement, wang2025reinforcement}.
+Hence, automatic construction of verifiable training data has received considerable attention in recent years~\citep{zhao2025absolutezeroreinforcedselfplay, huang2026rzero, liang2026beyond}.
+
+\paragraph{Verifiable Environments}
+Generating training data via verifiable environments represents a promising direction in automatic data synthesis~\citep{jiang-etal-2025-logicpro}.
+RLVE~\citep{zeng2025rlvescalingreinforcementlearning} introduces hundreds of algorithmically verifiable environments with adaptive difficulty, demonstrating the effectiveness of the verifiable environment approach by surpassing the performance of much larger static datasets.
+SCALER~\citep{xu2026scalersyntheticscalableadaptivelearning} and RESYN~\citep{he2026resyn} further leverage LLMs to automatically generate reasoning environments equipped with verifiers, reducing the costs of manual environment construction.
+Despite these advancements, current approaches scale the environment pool individually and fail to scale the environments towards infinite scale.
+In contrast, RACES combines a finite set of environments to construct structurally diverse composites, inducing deeper and more varied reasoning patterns and scaling combinatorially with composition size.
+
+\paragraph{Problem Composition}
+Much research focuses on composing simple problems into more complex ones, thereby generating diverse training signals from limited data~\citep{pan2025reststresstestinglarge,zhou2025gsminfty,chen-etal-2024-sifo}.
+MathFusion~\citep{pei-etal-2025-mathfusion} introduces strategies for pairwise composition of mathematical problems, emphasizing the critical role of composition method design.
+H1~\citep{motwani2025h1bootstrappingllmsreason} composes GSM8K problems into extended dependency chains and applies curriculum reinforcement learning to enhance model capabilities.
+Composition-RL~\citep{xu2026compositionrlcomposeverifiableprompts} sequentially integrates multiple verifiable problems to create more challenging tasks.
+Although these methods show significant potential, they primarily focus on the question level, making it challenging to implement composition and resulting in shallow compositional depth. The full potential of composition remains unrealized~\citep{pei-etal-2025-mathfusion}.
+Unlike these problem-level composition methods, RACES natively supports programmatic, recursive composition of verifiable environments, eliminating the need for hand-crafted adapters between each pair of composed objects.

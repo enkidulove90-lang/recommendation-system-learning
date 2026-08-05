@@ -53,6 +53,9 @@ def parse_args():
     parser.add_argument('--mm_temp', type=float, default=0.1, help='idea2 view-consistency InfoNCE temperature')
     parser.add_argument('--mm_reg', type=float, default=1e-3, help='idea2 contrastive-loss weight')
     parser.add_argument('--mm_conf_reg', type=float, default=0.01, help='idea2 confidence-discrimination reg weight (wired into bpr_loss)')
+    parser.add_argument('--force_c', type=float, default=0.0,
+                        help='E1 forced-fusion: freeze confidence c=force_c (disables conf_mlp learning); '
+                             '0=learned (default). Used to test whether multimodal features help at all.')
 
     # ---- idea3: cost-aware knowledge introduction (attaches to idea2's G3 gate) ----
     parser.add_argument('--cost_reg', type=float, default=0.0,
