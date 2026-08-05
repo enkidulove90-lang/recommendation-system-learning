@@ -30,7 +30,7 @@ if not os.path.exists(FILE_PATH):
 
 
 config = {}
-all_dataset = ['lastfm', 'gowalla', 'yelp2018', 'amazon-book', 'ml-100k', 'ml-1m', 'yelp2018-ass', 'amazon-sports', 'amazon-beauty']
+all_dataset = ['lastfm', 'gowalla', 'yelp2018', 'amazon-book', 'ml-100k', 'ml-1m', 'yelp2018-ass', 'amazon-sports', 'amazon-beauty', 'amazon-baby-mmssl']
 all_models  = ['mf', 'lgn']
 # config['batch_size'] = 4096
 config['bpr_batch_size'] = args.bpr_batch
@@ -67,6 +67,8 @@ config['mm_proj'] = args.mm_proj
 config['mm_temp'] = args.mm_temp
 config['mm_reg'] = args.mm_reg
 config['mm_conf_reg'] = args.mm_conf_reg
+# ---- idea3: cost-aware knowledge introduction ----
+config['cost_reg'] = args.cost_reg
 
 GPU = torch.cuda.is_available()
 device = torch.device(f'cuda:{args.gpu}' if GPU else "cpu")

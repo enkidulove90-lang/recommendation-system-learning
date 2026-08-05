@@ -37,6 +37,9 @@ if world.args.use_cl:
 # idea2: reflect MM-alignment settings in config name
 if world.args.use_mm:
     config += f'_mm_mr{world.args.mm_reg}_mt{world.args.mm_temp}'
+    # idea3: reflect cost-aware weight so idea2 vs idea2+cost don't collide
+    if world.args.cost_reg and world.args.cost_reg > 0:
+        config += f'_cr{world.args.cost_reg}'
 
 log_path = f'logs/{config}.txt'
 emb_path = f'embs/{config}.pkl'

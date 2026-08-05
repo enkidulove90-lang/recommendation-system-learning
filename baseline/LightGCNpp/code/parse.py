@@ -54,4 +54,8 @@ def parse_args():
     parser.add_argument('--mm_reg', type=float, default=1e-3, help='idea2 contrastive-loss weight')
     parser.add_argument('--mm_conf_reg', type=float, default=0.01, help='idea2 confidence-discrimination reg weight (reserved)')
 
+    # ---- idea3: cost-aware knowledge introduction (attaches to idea2's G3 gate) ----
+    parser.add_argument('--cost_reg', type=float, default=0.0,
+                        help='idea3 cost weight on knowledge-introduction rate c_i.mean(); 0 disables')
+
     return parser.parse_args()

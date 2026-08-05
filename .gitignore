@@ -56,3 +56,6 @@ baseline/LightGCNpp/code/embs/
 
 # MixRAGRec: external reference clone (re-clone from upstream; heavy data excluded)
 baseline/MixRAGRec/
+
+# WorkBuddy 本地工作记忆 (个人日志, 不入库)
+.workbuddy/

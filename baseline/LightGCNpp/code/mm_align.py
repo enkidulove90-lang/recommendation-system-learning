@@ -164,6 +164,7 @@ class MultiModalAligner(nn.Module):
             'conf_max': float(c.max().item()),
             'gate_mean': {t: float(gates[t].mean().item()) for t in gates},
             'n_types': len(proj_feats),
+            'conf_vec': c,                 # [n_items, 1] 逐物品知识引入权重(供 idea3 成本项使用)
         }
         return fused, info
 

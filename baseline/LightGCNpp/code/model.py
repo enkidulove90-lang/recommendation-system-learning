@@ -145,9 +145,11 @@ class LightGCN(BasicModel):
             ).to(world.device)
             self.mm_reg = self.config.get('mm_reg', 1e-3)
             self.mm_conf_reg_w = self.config.get('mm_conf_reg', 0.01)
+            self.mm_cost_w = self.config.get('cost_reg', 0.0)
             self._mm_epoch = 0
             print(f"[idea2] MultiModalAligner ON: types={list(feat_dims)}, dims={feat_dims}, "
-                  f"mm_reg={self.mm_reg}")
+                  f"mm_reg={self.mm_reg}"
+                  + (f", idea3 cost_reg={self.mm_cost_w}" if self.mm_cost_w > 0 else ""))
 
     def mm_new_epoch(self):
         """每个训练 epoch 开始时调用, 使对齐器按 epoch 刷新投影缓存."""
@@ -287,12 +289,22 @@ class LightGCN(BasicModel):
             cl = self.neighbor_cl_loss(embs_list, users.long(), pos.long())
             loss = loss + self.cl_reg * cl
 
-        # ---- idea2: multi-modal alignment contrastive loss (视图一致性) ----
+        # ---- idea2: 多模态对齐对比损失(视图一致性) ----
+        # ---- idea3: 成本感知门控(约束外部知识引入率, 挂 idea2 的 G3 置信度门控) ----
         if getattr(self, 'use_mm', 0):
             # 本 batch 参与计算的物品(正+负), 用缓存投影做 batch 内 InfoNCE
             idx = torch.cat([pos.long(), neg.long()]).unique()
             cl_mm = self.mm_aligner.contrastive_loss(idx)
             loss = loss + self.mm_reg * cl_mm
+
+            # idea3: 对"知识引入权重" c_i 的均值征税 => 引入外部知识有代价.
+            # 模型仅在推荐收益足以抵消成本时才引入; 成本过高则退化为纯 ID, 自动实现成本-效果权衡.
+            if self.mm_cost_w > 0:
+                c_vec = self.mm_info.get('conf_vec', None)
+                if c_vec is not None:
+                    c_batch = c_vec[idx]                      # [B, 1] 本 batch 物品的知识引入权重
+                    cost_loss = self.mm_cost_w * c_batch.mean()
+                    loss = loss + cost_loss
 
         return loss, reg_loss
        
