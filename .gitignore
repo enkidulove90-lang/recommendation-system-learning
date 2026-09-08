@@ -14,6 +14,9 @@ venv/
 .venv/
 env/
 
+# Node dependencies
+node_modules/
+
 # IDE
 .vscode/
 .idea/
@@ -56,6 +59,27 @@ baseline/LightGCNpp/code/embs/
 
 # MixRAGRec: external reference clone (re-clone from upstream; heavy data excluded)
 baseline/MixRAGRec/
+
+# ===== Model weights / checkpoints (regenerable, exceed GitHub 100MB limit) =====
+# PRISM E15/E14 experiment checkpoints (~4.6GB of .pt)
+baseline/PRISM/outputs/
+# PRISM 数据副本中的 .pt 权重（数据集 txt 保留）
+baseline/PRISM/data/amazon-baby-mmssl/*.pt
+# 通用权重扩展名（实验训练产物，不入库）
+*.pt
+*.pth
+*.ckpt
+*.bin
+
+# ===== 本地运行时状态 / 一次性审计产物（非工作成果）=====
+_serve_live/
+_serve_live.log
+_serve_pq.json
+_serve_st.json
+.audit_guizang/
+.audit_htmlanything/
+.audit_xiaowan/
+time.log
 
 # WorkBuddy 本地工作记忆 (个人日志, 不入库)
 .workbuddy/

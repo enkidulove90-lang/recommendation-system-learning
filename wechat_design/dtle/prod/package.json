@@ -1,0 +1,14 @@
+{
+  "name": "dtle-btrack-prod",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DTLE 生产环境 B 轨渲染器：Satori(JSX→SVG) + @resvg/resvg-js(SVG→PNG)，确定性无浏览器",
+  "type": "commonjs",
+  "scripts": {
+    "render": "node btrack.js"
+  },
+  "dependencies": {
+    "satori": "^0.12.0",
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}

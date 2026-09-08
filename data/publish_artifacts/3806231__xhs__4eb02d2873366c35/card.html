@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>指标提升背后：多模态推荐中的自然邻层图… · recsys-blue</title>
+<style>body{margin:0;background:#e9edf2;}</style>
+</head>
+<body>
+<div style="width:1242px;min-height:1656px;background-color:#ffffff;box-sizing:border-box;padding:64px;margin:0 auto;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;display:flex;flex-direction:column"><div style="font-size:52px;font-weight:800px;color:#1a1a1a;line-height:1.3px;margin-bottom:8px">指标提升背后：多模态推荐中的自然邻层图…</div><div style="flex:1;display:flex;flex-direction:column"><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">指标提升背后：多模态推荐中的自然邻层图…</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">推荐系统里，多模态GNN骨干模型：提取用户和物品的模态特定表示（AND）。但Top-K排序；用户-物品交互图、物品多模态特征（视觉、文本、音频）；用户对物品的预测分数/排序列表；第1节、第3节（BUT）。因此我们提出 多模态推荐中的自然邻层图对比学习（THEREFORE）——用 多模态GNN骨干模型 把这个问题打穿。</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">最反直觉的 1 个数：例如，在Baby数据集上，MMGCN+NLGCL+(H)的Recall@10为0.0415，较MMGCN提升9.79%；。换算成直觉：相当于在 100 个相关结果里，精准多召回了好几个——而代价只是Top-K排序。</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">它没有解决一切。论文未明确自承局限。[阅读者判断]：NLGCL+依赖GNN层间表示质量，若骨干模型表示能力不足（如MMGCN），性能提升有限；多模态一致性度量可能受模态特征质量影响。</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">真正该问的是：在 数据分布漂移或冷启动 这种场景，它会不会失效？</div></div><div style="text-align:center;color:#8a94a6;font-size:22px;margin-top:24px;border-top-width:1px;border-top-color:#e3e8f0;border-top-style:solid;padding-top:16px">@RecSysLab</div></div>
+</body></html>

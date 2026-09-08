@@ -1,0 +1,12 @@
+# 排除仓库中的重数据与无关目录，仅保留 serve 运行所需源码
+**/__pycache__/
+**/*.pyc
+data/
+baseline/
+docs/
+paper_monitor/
+node_modules/
+.git/
+.workbuddy/
+_smoke_tmp/
+*.md

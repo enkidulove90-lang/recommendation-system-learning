@@ -1,0 +1,76 @@
+# OpenCLI delivery chain configuration
+#
+# This file makes OpenCLI the single supported publishing transport for the
+# project.  The previous `xhs-cli` reverse-engineered HTTP path is retained
+# only as a read-only fallback for metrics, never for writes.
+#
+# Verified 2026-08-04 against OpenCLI v1.8.6 / extension v1.0.22.
+
+runtime:
+  # Discovery is automatic (see redbook/infrastructure/opencli_runtime.py).
+  # These are recorded for reproducibility and can be exported as
+  # OPENCLI_NODE / OPENCLI_MAIN to bypass discovery.
+  node: C:\Users\xu.yan1\nodejs\node-v24.18.0-win-x64\node.exe
+  main: C:\Users\xu.yan1\nodejs\node-v24.18.0-win-x64\node_modules\@jackwener\opencli\dist\src\main.js
+  version: 1.8.6
+  extension_version: 1.0.22
+  daemon_port: 19825
+  # OpenCLI caps browser commands at 60s by default; creator-center automation
+  # needs far more.  Raised per-command via OPENCLI_BROWSER_COMMAND_TIMEOUT.
+  browser_command_timeout: 270
+
+chain:
+  # `opencli` is the only write transport. Do not re-enable xhs-cli for writes.
+  write_transport: opencli
+  read_transport: opencli
+  legacy_xhs_cli:
+    enabled: false
+    reason: >-
+      Reverse-engineered signing breaks on每次风控更新; OpenCLI drives the real
+      creator UI through the logged-in Chrome profile instead.
+
+channels:
+  xiaohongshu:
+    command: xiaohongshu
+    domain: creator.xiaohongshu.com
+    account: LoveForever
+    # Order is mandatory and enforced in code: topics must be bound while the
+    # composer is open, the PDF is attached afterwards, and only then is the
+    # note saved as a draft.
+    delivery_order:
+      - topics
+      - pdf
+      - draft
+    limits:
+      title_max_chars: 20
+      images_max: 9
+      image_formats: [jpg, jpeg, png, gif, webp]
+      # `--topics` accepts a comma-separated list without the leading '#'.
+      topics_recommended: 5
+      topics_max: 10
+    publish:
+      window: foreground     # topic picker + file dialog need a real window
+      site_session: ephemeral
+      keep_tab: false
+      draft: true            # never auto-publish; always stop at draft
+
+  weixin:
+    command: weixin
+    domain: mp.weixin.qq.com
+    # Populated once `weixin drafts` stops returning AUTH_REQUIRED.
+    account: null
+    limits:
+      title_max_chars: 64
+      author_max_chars: 8
+      summary_max_chars: 120
+    publish:
+      window: foreground
+      site_session: persistent   # MP session is expensive to re-establish
+      keep_tab: true
+      timeout: 180
+
+safety:
+  # Both channels stop at the draft stage. A human reviews and presses publish.
+  auto_publish: false
+  # Refuse to create a second draft for the same (paper, platform) pair.
+  idempotency_key: content_hash

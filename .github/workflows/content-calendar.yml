@@ -1,0 +1,51 @@
+name: Content Factory Calendar
+
+# 内容日历自动化（docs/content-factory-engineering.md §6.1 / M19）
+# 定时监测 data/summaries/ 中最新、且尚未生成审核包的论文，
+# 运行内容工厂，把故事化草稿+标题变体暂存到 publish_queue/（人工审核闸，绝不自动发布）。
+# 仅规则层运行（无需 API key）；LLM 润色需仓库 Secrets 配置 DEEPSEEK_API_KEY。
+
+on:
+  schedule:
+    - cron: "13 * * * *"      # 每小时第 13 分钟巡检
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "单次最多生成篇数"
+        required: false
+        default: "3"
+
+jobs:
+  content-factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pyyaml
+
+      - name: Run content factory (stage to publish_queue)
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          python content_factory/auto_runner.py --limit "${{ github.event.inputs.limit || 3 }}"
+
+      - name: Upload staged drafts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish_queue
+          path: publish_queue/
+          if-no-files-found: ignore

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>LightGCL：简单有效的图对比推荐学习</title></head>
+<body style="max-width:680px;margin:0 auto;padding:20px;font-family:sans-serif;">
+<h1>LightGCL：简单有效的图对比推荐学习</h1>
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\3862db6a20e5e817145a67b6e66468ca1fb6fb1ab4720cb907db378a5097871f.jpg" style="max-width:100%;margin:8px 0;">
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\71394ff61ff77205e4176b1f29ec4bd7a1ce2c6de9d070abb68bf7a82bcfdaf8.jpg" style="max-width:100%;margin:8px 0;">
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\176db88da1ce212701b5cf266a8d811adf95e5f8898e11f4e5200716d3b1663b.jpg" style="max-width:100%;margin:8px 0;">
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\0796ad5cf022e92aa23c216ed0f3029ee5039d53f4f37612ff2769af2c9cc509.jpg" style="max-width:100%;margin:8px 0;">
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\8fa3054b143ed264d5f34a95cd34febf5231d56b1452bbc58029d21fdab56e28.jpg" style="max-width:100%;margin:8px 0;">
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\24c1ea61eea7cb2827262156c634f4ddf0fbe6c92dfc7f3a9e5b2b382b97ece9.jpg" style="max-width:100%;margin:8px 0;">
+<img src="file:///C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2302.08191_LightGCL_简单有效的图对比推荐学习\images\772390236d09ad3594dfc1552d996335ef1d77541e5b9e3ce914fdb92020a3b1.jpg" style="max-width:100%;margin:8px 0;">
+
+<div style="white-space:pre-wrap;line-height:1.8;"># LightGCL：简单有效的图对比推荐学习
+
+## 背景
+任务类型：Top-K排序。输入为用户-物品交互图（用户特征、物品特征、交互历史）。用SVD增强图对比学习，注入全局协同信号提升推荐。
+
+## 方法
+1. 提出基于SVD的图增强方法，替代随机扰动或启发式增强，保留图的内在语义结构并注入全局协同关系
+2. 简化对比学习框架，直接对比SVD增强视图与主视图嵌入，避免传统三视图范式的复杂性
+3. 采用随机SVD算法，降低计算复杂度，提升训练效率
+
+核心模块：局部图依赖建模模块；全局协同关系学习模块；简化局部-全局对比学习模块。
+
+## 训练
+主损失：BPR损失（公式7中的L_r）；辅助损失：InfoNCE对比损失（公式6）；正则项：L2正则（公式7中的λ2项）
+
+## 实验
+数据集：Yelp、Gowalla、ML-10M、Amazon-book、Tmall。
+指标：Recall@20/NDCG@20/Recall@40/NDCG@40。
+对比基线：共 16 个（含 NCF、GCCF、LightGCN 等）。
+表1显示，在Yelp上LightGCL的R@20为0.0793，相比最强基线SimGCL（0.0718）提升10%；在Gowalla上R@20为0.1578，相比SimGCL（0.1357）提升16%；在ML-10M上R@20为0.2613，相比SimGCL（0.2265）提升15%；在Amazon上R@20为0.0585，相比SimGCL（0.0474）提升23%；在Tmall上R@20为0.0528，相比SimGCL（0.0473）提升11%
+表1中报告了p值，如Yelp上R@20的p值为7e-9，表明结果具有统计显著性
+
+## 局限性
+论文自承：未来工作将探索引入因果分析以缓解数据增强中的混杂效应。论文未提及模型在超大规模图上的可扩展性验证，且随机SVD的近似质量对性能的影响未深入分析
+
+## 实践启发
+- 把「提出基于SVD的图增强方法，替代随机扰动或启发式增强，保留图的内在语义结构并注入…」这一思路用起来——可直接迁移到自己的图模型管线。
+- 把「简化对比学习框架，直接对比SVD增强视图与主视图嵌入，避免传统三视图范式的复杂性…」这一思路简化它——可直接迁移到自己的图模型管线。
+- 把「采用随机SVD算法，降低计算复杂度，提升训练效率…」这一思路提速它——可直接迁移到自己的图模型管线。
+
+## 参考文献
+- 论文：https://arxiv.org/abs/2302.08191
+- PDF：https://arxiv.org/pdf/2302.08191
+- 代码：暂无官方代码（以论文复现为准）
+
+> 图表摘自论文，仅作学术解读。</div>
+<hr><p style="color:#888;font-size:0.9em;">图表摘自论文，仅作学术解读。</p>
+</body></html>

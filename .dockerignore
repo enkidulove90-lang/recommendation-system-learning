@@ -1,0 +1,14 @@
+# 仓库根 .dockerignore —— 供 content_events/deploy/Dockerfile 使用（构建上下文为仓库根）
+# 镜像仅 COPY 指定源码包，这里进一步排除体积/无关内容。
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+data/
+baseline/
+docs/
+paper_monitor/
+node_modules/
+.git/
+.workbuddy/
+_smoke_tmp/
+*.md

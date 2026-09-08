@@ -20,8 +20,13 @@ class SASRecModel(nn.Module):
 
         self.has_logged_module_order = False
 
-        self.fc_mean_image = nn.Linear(args.pretrain_emb_dim, args.hidden_size)
-        self.fc_mean_text = nn.Linear(args.pretrain_emb_dim, args.hidden_size)
+        self.fc_mean_image = nn.Linear(args.image_emb_dim, args.hidden_size)
+        self.fc_mean_text = nn.Linear(args.text_emb_dim, args.hidden_size)
+        # (P1) 论文原 clone 缺失的 4 个多模态 embedding 表，这里补齐（机械定义，不改任何前向/损失逻辑）
+        self.image_mean_embeddings = nn.Embedding(args.item_size, args.image_emb_dim, padding_idx=0)
+        self.image_cov_embeddings = nn.Embedding(args.item_size, args.image_emb_dim, padding_idx=0)
+        self.text_mean_embeddings = nn.Embedding(args.item_size, args.text_emb_dim, padding_idx=0)
+        self.text_cov_embeddings = nn.Embedding(args.item_size, args.text_emb_dim, padding_idx=0)
         self.interaction_expert_layer = Interaction_Expert_Layer(
             args = args,
             hidden_size = args.hidden_size,
@@ -43,20 +48,35 @@ class SASRecModel(nn.Module):
         self.text_cov_embeddings.weight.data[1:-1, :] = text_features_list
 
 
-    def add_position_embedding(self, sequence):
+    def add_position_embedding(self, sequence, syn_target=None):
         seq_length = sequence.size(1)
         position_ids = torch.arange(seq_length, dtype=torch.long, device=sequence.device)
         position_ids = position_ids.unsqueeze(0).expand_as(sequence)
         item_embeddings = self.item_embeddings(sequence)
-        
-        item_image_embeddings = self.fc_mean_image(self.image_mean_embeddings(sequence))
-        item_text_embeddings = self.fc_mean_text(self.text_mean_embeddings(sequence))
 
-        fusion_results = self.interaction_expert_layer(item_image_embeddings, item_text_embeddings)
-        interaction_emb = self.adaptive_fusion_layer(item_embeddings, fusion_results)
-        total_interaction_loss = fusion_results["interaction_losses"]
-        
-        item_embeddings = item_embeddings + interaction_emb.unsqueeze(1) + item_image_embeddings + item_text_embeddings          
+        if getattr(self.args, 'disable_mm', False):
+            # 纯 id SASRec 基线：跳过多模态特征与交互专家注入
+            total_interaction_loss = torch.zeros((), device=item_embeddings.device)
+        else:
+            item_image_embeddings = self.fc_mean_image(self.image_mean_embeddings(sequence))
+            item_text_embeddings = self.fc_mean_text(self.text_mean_embeddings(sequence))
+
+            fusion_results = self.interaction_expert_layer(item_image_embeddings, item_text_embeddings,
+                                                           syn_target=syn_target)
+            interaction_emb = self.adaptive_fusion_layer(item_embeddings, fusion_results)
+            total_interaction_loss = fusion_results["interaction_losses"]
+
+            item_embeddings = item_embeddings + interaction_emb.unsqueeze(1) + item_image_embeddings + item_text_embeddings
+
+            # E14-ter：comp_head 残差路由——syn 正交补经 comp_head 直接进入 item embedding，
+            # 使 syn 互补信号独立于 AFL 权重拿到推荐梯度（修复 E14-bis「syn 退化为装饰噪声」）。
+            # 仅当开启 lambda_comp **且** trainer 传入 syn_target(下一 item emb=y_proxy) 时生效；
+            # 否则 L_comp 与残差路由均不激活（安全：避免注入未训练的随机 syn 残差）。
+            # ⚠️ 最终接线需在 trainers.py::SASRecTrainer.iteration 构造 y_proxy 并传入
+            #    self.model.finetune(input_ids, syn_target=y_proxy)，见 docs/e14ter_synthetic_report.md §4。
+            if getattr(self.args, 'lambda_comp', 0.0) > 0 and syn_target is not None:
+                syn_perp = self.interaction_expert_layer.syn_complement(fusion_results["expert_embs"])
+                item_embeddings = item_embeddings + self.interaction_expert_layer.comp_head(syn_perp).unsqueeze(1)
 
         position_embeddings = self.position_embeddings(position_ids)
 
@@ -66,7 +86,7 @@ class SASRecModel(nn.Module):
 
         return sequence_emb, total_interaction_loss
 
-    def finetune(self, input_ids):
+    def finetune(self, input_ids, syn_target=None):
         attention_mask = (input_ids > 0).long()
         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2) # torch.int64
         max_len = attention_mask.size(-1)
@@ -81,7 +101,7 @@ class SASRecModel(nn.Module):
         extended_attention_mask = extended_attention_mask * subsequent_mask
         extended_attention_mask = extended_attention_mask.to(dtype=next(self.parameters()).dtype) # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
-        sequence_emb, total_interaction_loss = self.add_position_embedding(input_ids)
+        sequence_emb, total_interaction_loss = self.add_position_embedding(input_ids, syn_target=syn_target)
         item_encoded_layers = self.item_encoder(sequence_emb,
                                                 extended_attention_mask,
                                                 output_all_encoded_layers=True)

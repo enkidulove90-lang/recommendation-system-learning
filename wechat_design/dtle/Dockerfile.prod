@@ -1,0 +1,36 @@
+# DTLE 双轨排版引擎 —— 生产环境镜像
+# 后端：Python(Flask HTTP 服务) + Node(Satori+@resvg/resvg-js 确定性无浏览器 PNG)
+# B 轨 PNG 渲染走 Satori+resvg（DTLE_BTRACK_BACKEND=production），无需浏览器。
+#
+# 构建：docker build -t dtle-prod -f wechat_design/dtle/Dockerfile.prod .
+# 运行：docker run -p 8787:8787 -e DTLE_BTRACK_BACKEND=production dtle-prod
+#
+# 字体：Satori 必须显式提供 CJK 字体。镜像内置 fonts-noto-cjk（.ttc）作 best-effort；
+#       若 Satori 读取失败，请挂载一个 CJK .ttf 并设置 DTLE_FONT=/path/to/font.ttf。
+FROM python:3.13-slim
+
+# 安装 Node.js（Debian bookworm 仓库自带 nodejs≈18，满足 satori>=0.12 要求）
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends nodejs npm \
+ && apt-get install -y --no-install-recommends fonts-noto-cjk \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY wechat_design/ /app/wechat_design/
+
+# Python 侧：Flask（HTTP 服务）
+RUN pip install --no-cache-dir pyyaml flask
+
+# Node 侧：Satori + resvg 生产 B 轨渲染器
+WORKDIR /app/wechat_design/dtle/prod
+RUN npm install --no-audit --no-fund
+
+# CJK 字体候选路径（Noto CJK 为 .ttc，Satori 兼容时优先；否则用挂载的 .ttf）
+ENV DTLE_BTRACK_BACKEND=production
+ENV DTLE_FONT=/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc
+
+WORKDIR /app
+EXPOSE 8787
+
+CMD ["python", "wechat_design/dtle/cli.py", "serve", "--host", "0.0.0.0", "--port", "8787", "--server", "flask"]

@@ -115,7 +115,7 @@ class Trainer:
         self.model.to(self.device)
 
     def load(self, file_name):
-        self.model.load_state_dict(torch.load(file_name, map_location='cuda:0'))
+        self.model.load_state_dict(torch.load(file_name, map_location=self.device))
 
     def cross_entropy(self, seq_out, pos_ids, neg_ids):
         pos_emb = self.model.item_embeddings(pos_ids)
@@ -177,9 +177,15 @@ class SASRecTrainer(Trainer):
                 # 0. batch_data will be sent into the device(GPU or CPU)
                 batch = tuple(t.to(self.device) for t in batch)
                 _, input_ids, target_pos, target_neg, _ = batch
-                # Binary cross_entropy
-                # sequence_output, _ = self.model.finetune(input_ids)
-                sequence_output, _, total_interaction_loss = self.model.finetune(input_ids)
+                # E14-ter：构造 y_proxy = 下一 item embedding 作为互补损失 L_comp 的监督。
+                # 仅在开启 lambda_comp 时生效（TF/TE 组）；T/A/V 组 lambda_comp=0 → 走原函数签名，
+                # 安全闸门保证 L_comp 与残差路由不激活（避免注入未训练随机 syn 残差）。
+                # y_proxy 作为回归目标须 detach（与合成侧 c_syn 静态张量一致），否则 MSE 会把梯度回传到 item 嵌入表，造成循环训练。
+                if getattr(self.args, 'lambda_comp', 0.0) > 0:
+                    y_proxy = self.model.item_embeddings(target_pos[:, -1]).detach()  # [B, H]
+                    sequence_output, _, total_interaction_loss = self.model.finetune(input_ids, syn_target=y_proxy)
+                else:
+                    sequence_output, _, total_interaction_loss = self.model.finetune(input_ids)
                 loss, batch_auc = self.cross_entropy(sequence_output, target_pos, target_neg)
                 loss += total_interaction_loss
                 self.optim.zero_grad()

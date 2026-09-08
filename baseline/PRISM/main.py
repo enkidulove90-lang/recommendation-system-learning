@@ -8,7 +8,6 @@ from datasets import SASRecDataset, D,D_random, get_seqs_and_matrixes, DatasetFo
 from trainers import SASRecTrainer, STOSATrainer, InDiRecTrainer
 from STOSA import STOSA
 from SASRec import SASRecModel
-from InDiRec import InDiRec
 from utils import EarlyStopping, get_user_seqs, check_path, set_seed
 import time
 import os
@@ -44,11 +43,16 @@ def main():
     parser.add_argument('--image_emb_path', default=f'data/{data_name}/image_features_{data_name}.pt', type=str)
     parser.add_argument('--text_emb_path', default=f'data/{data_name}/text_features_{data_name}.pt', type=str)
     parser.add_argument("--pretrain_emb_dim", type=int, default=512, help="pretrain_emb_dim of clip model")
+    # (P2) 我方 baby 特征异构维度：图像 4096 / 文本 384（非 CLIP 512 同维），拆开传入
+    parser.add_argument("--image_emb_dim", type=int, default=4096, help="image feature dim (our baby data)")
+    parser.add_argument("--text_emb_dim", type=int, default=384, help="text feature dim (our baby data)")
+    parser.add_argument("--disable_mm", action="store_true", help="vanilla SASRec: skip multimodal + interaction injection")
     # parser.add_argument("--pretrain_emb_dim", type=int, default=768, help="pretrain_emb_dim of clip model")
     parser.add_argument("--prediction", type=bool, default=False, help="activate prediction mode")
     parser.add_argument("--lambda_uni", type=int, default=0.1, help="the weigth of uniqueness_losses")
     parser.add_argument("--lambda_syn", type=int, default=0.1, help="the weigth of synergy_loss")
     parser.add_argument("--lambda_red", type=int, default=0.1, help="the weigth of redundancy_loss")
+    parser.add_argument("--lambda_comp", type=float, default=0.0, help="E14-ter: weight of synergy complementary loss L_comp=MSE(comp_head(syn_perp), y_proxy)")
 
     # train args
     parser.add_argument("--lr", type=float, default=0.001, help="learning rate of adam")
@@ -134,6 +138,7 @@ def main():
         trainer = SASRecTrainer(model, train_dataloader, eval_dataloader,
                                 test_dataloader, args)
     else:
+        from InDiRec import InDiRec  # 惰性导入：仅在选用 InDiRec 骨架时加载（避免无 faiss 时崩溃）
         model = InDiRec(args=args)
         test_real_memory_usage(model, args, 'InDiRec')
         if args.without_segment:
@@ -230,7 +235,10 @@ def main():
     print(f"Total training time: {int(minutes):02d}:{int(seconds):02d}")
 
 def test_real_memory_usage(model, args, model_name):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    if not torch.cuda.is_available():
+        print("cpu mode: skip GPU memory profiling")
+        return
+    device = torch.device("cuda")
     model = model.to(device)
     model.train()
 

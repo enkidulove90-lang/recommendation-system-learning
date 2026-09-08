@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recall@200提升背后：RADA… · recsys-blue</title>
+<style>body{margin:0;background:#e9edf2;}</style>
+</head>
+<body>
+<div style="width:1242px;min-height:1656px;background-color:#ffffff;box-sizing:border-box;padding:64px;margin:0 auto;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;display:flex;flex-direction:column"><div style="font-size:52px;font-weight:800px;color:#1a1a1a;line-height:1.3px;margin-bottom:8px">Recall@200提升背后：RADA…</div><div style="flex:1;display:flex;flex-direction:column"><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">Recall@200提升背后：RADA…</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">推荐系统里，离线候选生成模块：使用现有高效检索方法（如Two Tower DNN、Content KNN、ItemCF等）为用户检索约50倍于在线规模的候选集（AND）。但RADAR键值存储模块：存储每个用户Top-200高分物品及其排序分数，供在线推理时低延迟读取；（BUT）。因此我们提出 RADAR：延迟异步检索增强召回（THEREFORE）——用 离线候选生成模块 把这个问题打穿。</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">最反直觉的 1 个数：Table 1: Recall@200 - DNN: 8.1%, Item-KNN: 7.2%, Content-KNN: 5.1%, RADAR: 16.5%（RADAR相对DNN提升约2倍）。换算成直觉：相当于在 100 个相关结果里，精准多召回了好几个——而代价只是RADAR键值存储模块。</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">它没有解决一切。论文自承局限：高度活跃用户获益较少（缓存列表快速耗尽，短期兴趣变化快），休眠用户无改善（无法推断兴趣且缓存过期）。[阅读者判断] 论文未披露具体数据集规模、模型架构细节和超参数，复现难度高；离线实验仅使用Recall@200单一指标，未报告其他检索指标（如NDCG、MRR）；在线A/B测试未报告具体统计检验方法。</div><div style="margin-bottom:14px;font-size:17px;line-height:1.8px;color:#3f3f3f">真正该问的是：在 数据分布漂移或冷启动 这种场景，它会不会失效？</div></div><div style="text-align:center;color:#8a94a6;font-size:22px;margin-top:24px;border-top-width:1px;border-top-color:#e3e8f0;border-top-style:solid;padding-top:16px">@RecSysLab</div></div>
+</body></html>

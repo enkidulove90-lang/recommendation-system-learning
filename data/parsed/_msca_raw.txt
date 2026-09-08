@@ -1,0 +1,2708 @@
+Multi-view Semantic Contrastive Alignment for Multimodal
+Recommendation
+Jiuqiang Li
+School of Computing and Artificial Intelligence, Southwest
+Jiaotong University
+Engineering Research Center of Sustainable Urban
+Intelligent Transportation, Ministry of Education
+Chengdu, China
+jiuqiangli@outlook.com
+Hongjun Wang∗
+School of Computing and Artificial Intelligence, Southwest
+Jiaotong University
+Engineering Research Center of Sustainable Urban
+Intelligent Transportation, Ministry of Education
+Chengdu, China
+wanghongjun@swjtu.edu.cn
+Abstract
+Multimodal recommendation advocates integrating the multimodal
+features of items with historical user behaviors to enhance recom-
+mendation accuracy across various online media platforms. The
+majority of existing methods concentrate on leveraging cross-modal
+learning over multimodal features to augment node representations.
+However, these approaches are confronted with two key challenges:
+i) augmented representations offer limited information gain for
+interactive prediction in the collaborative view, and ii) semantic dis-
+crepancy between the collaborative view and modality-augmented
+features remains inadequately addressed. To overcome these obsta-
+cles, we present a new Multi-view Semantic Contrastive Alignment
+(MSCA) approach for multimodal recommendation, which models
+and aligns node representations from multiple views. Specifically,
+we introduce a multi-view semantic pattern encoder that learns ba-
+sic embeddings from the collaborative view and independently cap-
+tures augmented semantic patterns from the item-item structural
+view and intra-modal view. Furthermore, a semantic contrastive
+alignment task is designed to mitigate the semantic divergence be-
+tween collaborative embeddings and augmented representations by
+maximizing the mutual consistency between them, thereby facili-
+tating an effective integration of both. Comprehensive experiments
+on three benchmark datasets confirm that the proposed MSCA
+consistently excels over diverse state-of-the-art baselines.
+CCS Concepts
+• Information systems →Recommender systems.
+Keywords
+Multimodal Recommendation, Contrastive Learning, Graph Neural
+Network
+ACM Reference Format:
+Jiuqiang Li and Hongjun Wang. 2026. Multi-view Semantic Contrastive
+Alignment for Multimodal Recommendation. In Proceedings of the ACM Web
+Conference 2026 (WWW ’26), April 13–17, 2026, Dubai, United Arab Emirates.
+ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/3774904.3792192
+∗Corresponding author
+This work is licensed under a Creative Commons Attribution 4.0 International License.
+WWW ’26, Dubai, United Arab Emirates.
+© 2026 Copyright held by the owner/author(s).
+ACM ISBN 979-8-4007-2307-0/2026/04
+https://doi.org/10.1145/3774904.3792192
+1
+Introduction
+Multimodal recommendation attempts to incorporate multimodal
+content (e.g., video, image, text) into the general ID-based collabo-
+rative filtering (CF) paradigm to improve the quality of recommen-
+dations [21, 61], which is widely used on web multimedia platforms
+(e.g., Amazon, TikTok) involving e-commerce and content shar-
+ing [2, 50]. While a few studies [56] have explored learning modality
+embeddings for recommendation without relying on item ID embed-
+dings, the more prevalent approach combines pre-extracted modal
+features (e.g., visual, textual) with user-item interaction behaviors
+to jointly learn item representations and user preferences [51, 64].
+In the early stages of multimodal recommendation, a series of
+studies improve recommendation performance by integrating multi-
+modal features into collaborative filtering frameworks using matrix
+factorization [12, 16] and attention mechanisms [5, 22]. With the
+impressive performance of graph neural networks (GNNs) in mod-
+eling high-level relationships [18, 48], recent research [38, 43, 44]
+explores the usage of GNNs on user-item bipartite graphs con-
+taining multimodal features to capture higher-order multimodal-
+enhanced representations. Subsequent efforts [55, 57, 63] seek to
+leverage auxiliary graphs constructed from multimodal content as
+mediators for message propagation to directly learn more nuanced
+user interests. However, faced with the inherent interaction sparsity
+issue [13, 40] in recommendation scenarios, GNNs that rely predom-
+inantly on substantial labeled supervision may exhibit performance
+constraints attributed to inadequate training signals. Leveraging the
+capability of self-supervised learning (SSL) to mitigate supervision
+scarcity [7, 45], recent collaborative filtering methods [45, 54, 59]
+propose to capture self-supervised signals to address the insufficient
+supervision caused by sparse interaction data. Building on this, a
+variety of SSL-based multimodal recommendation methods [11, 42]
+employ cross-modal self-supervised learning to augment node rep-
+resentations by aligning inter-modal feature spaces.
+Despite the commendable performance achievement, extant ad-
+vanced multimodal recommenders still face two critical challenges.
+(1) While cross-modal self-supervised learning facilitates effective
+inter-modal representation alignment, the resultant augmented
+node representations may offer limited benefit or even introduce
+detrimental noise to the primary task within the collaborative view.
+(2) Previous methods inadequately address the semantic gap be-
+tween collaborative representations and multimodal features, conse-
+quently encumbering performance during feature fusion and joint
+optimization. To handle these two constraints, we introduce a new
+Multi-view Semantic Contrastive Alignment (MSCA) paradigm for
+5941
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Jiuqiang Li and Hongjun Wang
+𝑢𝑢𝑃𝑃
+𝑖𝑖𝑄𝑄
+𝑖𝑖2
+𝑢𝑢2
+𝑢𝑢1
+𝑖𝑖3
+𝑖𝑖1
+𝑢𝑢3
+Historical User Behaviors
+Washer
+Detergent Basketball
+PC
+Functional Complementarity
+(a) Item-Item Structural View
+𝑢𝑢4
+This men’s sweatshirt offers exceptional 
+softness… all-day comfort and warmth.
+Built with double-needle stitching on 
+the neck and hems, this sweatshirt is 
+made for extra durability.
+𝑖𝑖4
+Thick, sturdy fleece keeps this crewneck 
+sweatshirt warm and cozy.
+Double-needle stitching at the neck and 
+armholes adds extra quality and 
+sturdiness to this men's sweatshirt.
+𝑖𝑖5
+(b) Item-Item Intra-modal View
+(Visual semantic)
+(Textual semantic)
+Figure 1: Illustrations of the item-item structural view and
+intra-modal view. (a) Items 𝑖1 and 𝑖2, both interacted with by
+users 𝑢1, 𝑢2, and 𝑢3, exhibit functional complementarity. (b)
+Item 𝑖5 is considered by user 𝑢4 as a latent interaction target
+due to its latent semantic relevance with item 𝑖4 (previously
+interacted by 𝑢4) in visual and textual modalities.
+multimodal recommendation, which explores modeling node em-
+beddings from diverse semantic perspectives and employs semantic
+contrastive alignment to potentiate representation fusion. Specifi-
+cally, to overcome the first limitation, we propose the multi-view
+semantic pattern encoder that concurrently extracts foundational
+collaborative semantics from user-item interaction view while learn-
+ing augmented node representations through item-item structural
+relations and intra-modal correlations. As illustrated in Figure 1
+(a), items with higher co-interaction frequency (e.g., items 𝑖1 and 𝑖2,
+both of which are co-interacted with by users 𝑢1, 𝑢2, 𝑢3) typically
+manifest more pronounced structural semantic patterns (e.g., func-
+tional complementarity). Furthermore, Figure 1 (b) shows that items
+sharing intra-modal similarities are frequently folded into the in-
+terest scope of users with analogous interaction histories (e.g., after
+purchasing item 𝑖4, user 𝑢4 adds item 𝑖5 to cart, an item that pos-
+sesses latent intra-modal semantic affinity to 𝑖4). Consequently, dual
+inter-item graphs (structural and intra-modal) are constructed to
+model semantically augmented item embeddings. The learned item
+embeddings propagate through collaborative interactions to derive
+augmented user representations, effectively achieving greater in-
+formation gain in the augmented representations for interactive
+prediction. Regarding the second issue, the semantic contrastive
+alignment task is introduced to reduce the semantic divergence
+between collaborative embeddings and augmented representations.
+Building upon multi-view modeling, MSCA promotes synergistic
+representation fusion from both collaborative and modality-aware
+view by respectively maximizing the semantic consistency between
+basic collaborative embeddings and augmented structural represen-
+tations as well as intra-modal representations.
+To encapsulate, the primary contributions of our research are
+highlighted below:
+• We present a multi-view semantic pattern encoder that learns
+augmented node representations from various semantic patterns
+observed across multiple views.
+• We introduce a semantic contrastive alignment component to
+alleviate the semantic discrepancy between multi-view represen-
+tations and facilitate their effective fusion.
+• Empirical evaluations on benchmark datasets confirm that MSCA
+substantially surpasses compared baselines by effectively lever-
+aging multi-view semantic modeling and alignment.
+2
+Related Work
+2.1
+Graph-based Recommender Systems
+Graph neural networks (GNNs) [18, 35] have emerged as a pow-
+erful paradigm for modeling intricate relationships between users
+and items from historical interactions [6, 20, 24]. In particular,
+NGCF [40] and LightGCN [13] explicitly encode high-order col-
+laborative signals in user–item interactions through GNNs-based
+embedding propagation layers. To leverage rich information be-
+yond historical interactions, GNNs have been extensively utilized
+in graph-based recommendation to capture diverse relations within
+various recommendation contexts [1, 9, 47]. For instance, DiffNet [46],
+GraphRec [8], and DGNN [49] employ GNNs over social relation
+graphs to capture social influence and enhance user representations.
+In bundle recommendation, models such as BGCN [3], MIDGN [60],
+and MultiCBR [23] perform representation learning on multiple
+relational views. For knowledge graph-enhanced recommendation,
+KGCN [37], KGNN-LS [36], and KGAT [39] exploit semantic as-
+sociations among items in knowledge graphs. In multimodal rec-
+ommendation, approaches like MMGCN [44], GRCN [43], and Du-
+alGNN [38] propagate multimodal features over user–item inter-
+action graphs to model latent information. Inspired by these, our
+MSCA leverages GNNs to model high-order collaborative relation-
+ships and capture contextual semantics from multiple views.
+2.2
+Contrastive Learning for Recommendation
+To mitigate the inherent issue of label sparsity in recommender
+systems, contrastive learning (CL) is widely adopted in collabo-
+rative filtering methods by introducing auxiliary tasks [15, 29].
+SGL [45] employs various graph augmentation operations to gen-
+erate contrastive views and constructs self-supervised tasks to
+alleviate long-tail problems. SimGCL [54] and XSimGCL [53] im-
+prove upon SGL by replacing graph augmentation with the addition
+of uniform noise to learned embeddings to construct contrastive
+views. BIGCF [58] designs graph contrastive regularization by con-
+structing dual intents (personal and collective) to enhance model
+robustness. MixRec [59] utilizes a dual mixing strategy across indi-
+vidual and collective scales to build contrastive learning tasks to
+improve efficiency. In multimodal recommendation, SLMRec [32]
+leverages diverse data augmentation operations on multimodal fea-
+tures to construct contrastive tasks and explore latent cross-modal
+correlations. BM3 [64] generates contrastive views through sim-
+ple message missing and employs contrastive learning under both
+inter-modal and intra-modal settings to achieve efficient enhance-
+ment. LGMRec [11] refines global interests across multiple modal-
+ities via cross-modal hypergraph contrastive learning. However,
+cross-modal contrastive learning methods that refine distinct modal
+representations may introduce inevitable noise due to the seman-
+tic gap between collaborative embeddings and modality-specific
+representations. In contrast, we introduce a semantic contrastive
+alignment task to bridge this semantic discrepancy across multi-
+view representations and enable coherent integration.
+2.3
+Multimodal Recommendation
+Multimodal recommendation integrates features from pre-trained
+encoders into collaborative filtering paradigm to boost performance.
+5942
+Multi-view Semantic Contrastive Alignment for Multimodal Recommendation
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Early approaches like VBPR [12] and DVBPR [16] combine pre-
+extracted visual features with ID embeddings to augment item repre-
+sentations. Building on GNNs, MMGCN [44] and GRCN [43] propa-
+gate various modal features through user-item interaction graphs to
+learn enriched representations. Works such as DualGNN [38], LAT-
+TICE [57], and FREEDOM [63] further explore single-node graph
+structures to capture latent enhancement signals. MGCN [55] and
+DA-MRS [52] correlate user feedback with modal information to
+denoise multimodal features or user behaviors. Furthermore, LGM-
+Rec [11] constructs hypergraph structures to capture users’ global
+interests. TMLP [14] employs multi-layer perceptrons to enhance
+the modeling and denoising of topologically pruned item relations.
+In this work, our MSCA extracts latent multi-view semantics and
+separately employs dual-view semantic contrastive alignment to
+promote the integration of multi-view representations.
+3
+Methodology
+3.1
+Task Formulation
+Within multimodal recommender systems, let U and I denote the
+sets of users and items, with cardinalities 𝑃and 𝑄, respectively.
+When an interaction is observed between user 𝑢and item 𝑖, an edge
+is established in the user-item interaction graph G𝑟= {(𝑢,𝑖)|𝑢∈
+U,𝑖∈I} connecting them. In addition, all items are characterized
+by multimodal features F = {f𝑚
+𝑖
+∈R𝑄×𝑑𝑚|𝑚∈M} (e.g., visual fea-
+ture f𝑣
+𝑖, textual feature f𝑡
+𝑖), where f𝑚
+𝑖represents the original features
+of all items with modality 𝑚and 𝑑𝑚denotes the dimension corre-
+sponding to modality 𝑚. Following prior work [14, 64], we focus
+exclusively on the visual and textual aspects and define the modality
+set as M = {𝑣,𝑡}. However, our MSCA enables its seamless exten-
+sion to recommendation scenarios with various other modalities. In
+our multimodal recommendation framework, given the historical
+user behaviors G𝑟along with the pre-extracted multimodal infor-
+mation F, we seek to construct a function FΘ(𝑢,𝑖) that encodes
+the underlying relationship between users and items by learning
+modality-aware user preferences and predicts the likelihood of a
+user’s interaction with an item.
+The architecture of our proposed MSCA is illustrated in Fig-
+ure 2. MSCA primarily incorporates trainable embedding param-
+eters E(0)
+𝑢
+∈R𝑃×𝑑for users and E(0)
+𝑖
+∈R𝑄×𝑑for items. Here, 𝑑
+represents the embedding size.
+3.2
+Multi-view Semantic Pattern Encoder
+Previous research [55, 64] demonstrates that the incorporation of
+collaborative signals and multimodal semantics leads to substantial
+performance gains. Building upon the exceptional capability of
+LightGCN [13] in modeling high-order collaborative relationships,
+we propose a multi-view semantic pattern encoder to comprehen-
+sively capture the semantic information across diverse views. It
+extracts interactive semantics from the user-item collaborative view,
+identifies hidden co-occurrence patterns between items through
+the item-item structural view, and learns latent semantics among
+multimodal information by the item-item intra-modal view.
+3.2.1
+User-Item Collaborative View. To extract high-level interac-
+tive semantics within the user-item interaction graph, we design
+an interaction-centric message propagation module composed of
+GNNs, which iteratively refines user and item embeddings by the
+propagation and aggregation of neighboring signals along interac-
+tion edges. Specifically,
+E(𝑙)
+𝑢
+=
+1
+√︁
+|N UI
+𝑢
+|
+∑︁
+𝑖∈NUI
+𝑢
+1
+√︃
+|N UI
+𝑖
+|
+E(𝑙−1)
+𝑖
+,
+(1)
+E(𝑙)
+𝑖
+=
+1
+√︃
+|N UI
+𝑖
+|
+∑︁
+𝑢∈NUI
+𝑖
+1
+√︁
+|N UI
+𝑢
+|
+E(𝑙−1)
+𝑢
+.
+(2)
+Here, E(𝑙)
+𝑢
+and E(𝑙)
+𝑖
+represent the obtained representations of the
+corresponding interaction graph after the 𝑙-th iteration of graph
+message passing. And E(0)
+𝑢
+and E(0)
+𝑖
+are randomly initialized as
+learnable embedding parameters. N UI
+𝑢
+= {𝑖∈I | (𝑢,𝑖) ∈G𝑟}
+and N UI
+𝑖
+= {𝑢∈U | (𝑢,𝑖) ∈G𝑟} represent the sets of neighbor-
+ing items of user 𝑢and neighboring users of item 𝑖in G𝑟, respec-
+tively. To effectively aggregate embeddings from different layers,
+our MSCA employs layer-wise average pooling to derive the final
+representations (¯E𝑢∈R𝑃×𝑑and ¯E𝑖∈R𝑄×𝑑) of all nodes:
+¯E𝑢= 1
+𝐿
+𝐿
+∑︁
+𝑙=1
+E(𝑙)
+𝑢,
+¯E𝑖= 1
+𝐿
+𝐿
+∑︁
+𝑙=1
+E(𝑙)
+𝑖,
+(3)
+where 𝐿denotes the number of propagation layers. Importantly,
+we intentionally exclude the embeddings of the 0-th layer in the
+aggregation process. Consequently, the final node representations
+are purely derived from propagated neighborhood signals, which
+essentially encode the refined semantic patterns of nodes within
+the user-item collaborative view.
+3.2.2
+Item-Item Structural View. In recommendation scenarios,
+items interacted with by the same users regularly exhibit latent
+relational patterns (e.g., attribute alignment, or functional comple-
+mentarity). To explicitly model such item-item relationships, we
+construct an item-item structural graph ˜G𝑠= (I, ˜
+A𝑠), in which
+the matrix
+˜
+A𝑠= { ˜
+A𝑠
+𝑖,𝑖′ | 𝑖,𝑖′ ∈I} encodes the co-occurrence
+relationships computed from shared user interactions. However,
+for the sparse user-item interaction graph, item pairs frequently
+lack sufficient common interactors. To mitigate this limitation, 𝑘NN
+sparsification [4, 38, 52] is applied to each item 𝑖∈I, retaining
+edges to items 𝑖′ with the highest co-occurrence frequency while
+discarding other edges. The specific expression is as follows:
+˜
+A𝑠
+𝑖,𝑖′ = 1{(𝑖=𝑖′) ∨(𝑒𝑖,𝑖′ ∈top-𝑘( ˆ𝑒𝑖))}.
+(4)
+Here, 𝑒𝑖,𝑖′ denotes the number of common users for item pair (𝑖,𝑖′).
+Based on this, we define ˆ𝑒𝑖= {𝑒𝑖,𝑖′ | 𝑖≠𝑖′,𝑒𝑖,𝑖′ > 1} as the set
+of common user counts between item 𝑖and all other items where
+the count is greater than 1. 1 is the indicator function. To jointly
+extract the item node representations and latent user preferences
+in the item-item structural view, we employ a single-layer sparse
+graph convolutional network for efficient message passing. This
+process is formally defined as:
+˜E𝑖= (D
+−1
+2
+𝑠
+˜
+A𝑠D
+−1
+2
+𝑠
+) · E(0)
+𝑖
+,
+(5)
+˜E𝑢=
+1
+√︁
+|N UI
+𝑢
+|
+∑︁
+𝑖∈NUI
+𝑢
+1
+√︃
+|N UI
+𝑖
+|
+˜E𝑖.
+(6)
+Here, ˜E𝑢(˜E𝑖) represents the refined user (item) embeddings learned
+through message propagation in the item-item structural view.
+5943
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Jiuqiang Li and Hongjun Wang
+෨𝐄𝐄𝑖𝑖
+෨𝐄𝐄𝑢𝑢
+ത𝐄𝐄𝑢𝑢
+⋅
+⋅
+⋅
+⋅
+Visual 
+Encoder
+Average 
+Pooling
+𝑢𝑢𝑃𝑃
+𝑖𝑖𝑄𝑄
+𝑖𝑖2
+𝑢𝑢2
+𝑢𝑢1
+𝑖𝑖3
+𝑖𝑖1
+𝑢𝑢3
+Image
+Text
+LARGE CAPACITY: Combination bags include 2 
+Reusable Grocery Bags +1 Insulated Cooler Bag…
+Safety in Mind —
+Our Press & Go car 
+toy is designed with 
+rounded edges and 
+smooth surfaces, 
+making it safe for 
+babies…
+This tunics for 
+women are perfect-
+have a nice shape 
+and flow, so it look 
+lovely on and hide 
+all your bumps and 
+bulges and go great 
+with denim pants…
+Made of premium 
+rubber that is designed 
+to withstand both 
+indoor and outdoor 
+play, ensuring that you 
+can enjoy the basketball 
+anytime, anywhere.
+Senston basketball is 
+designed to provide 
+excellent grip …
+Textual
+Encoder
+Frozen
+𝐟𝐟𝑖𝑖
+𝑣𝑣
+𝐟𝐟𝑖𝑖
+𝑡𝑡
+Historical User Behaviors
+𝒢𝒢𝑟𝑟
+𝐄𝐄𝑖𝑖
+0
+𝐄𝐄𝑢𝑢
+0
+𝒩𝒩𝑢𝑢2
+𝑈𝑈𝑈𝑈
+𝐄𝐄𝑖𝑖1
+0
+𝐄𝐄𝑖𝑖2
+0
+𝐄𝐄𝑖𝑖3
+0
+𝐄𝐄𝑢𝑢2
+1
+𝒩𝒩𝑖𝑖1
+𝑈𝑈𝑈𝑈
+𝐄𝐄𝑢𝑢1
+0
+𝐄𝐄𝑢𝑢2
+0
+𝐄𝐄𝑢𝑢3
+0
+𝐄𝐄𝑖𝑖1
+1
+𝐄𝐄𝑖𝑖
+0
+𝐿𝐿
+Construct
+⋅
+𝐃𝐃𝑠𝑠
+−1
+2
+̃
+𝒜𝒜𝑠𝑠
+𝐃𝐃𝑠𝑠
+−1
+2 ⋅
+෨𝐄𝐄𝑖𝑖
+෨𝐄𝐄𝑖𝑖1
+෨𝐄𝐄𝑖𝑖2
+෨𝐄𝐄𝑖𝑖3
+෨𝐄𝐄𝑢𝑢2
+𝑙𝑙= 1
+𝒩𝒩𝑢𝑢2
+𝑈𝑈𝑈𝑈
+𝒩𝒩𝑖𝑖𝑞𝑞
+𝑈𝑈𝑈𝑈
+𝒢𝒢𝑟𝑟
+ത𝐄𝐄𝑖𝑖
+User-Item Collaborative View
+Item-Item Structural View
+𝑘𝑘NN Sparsification
+Premium Material -- This crossbody hobo bag is made 
+of high quality corduroy fabric and sturdy polyester …
+Multimodal Content
+𝐄𝐄𝑖𝑖
+0
+𝜎𝜎⋅
+𝜎𝜎⋅
+𝐃𝐃𝑣𝑣
+−1
+2
+෨ℛ𝑣𝑣
+𝐃𝐃𝑣𝑣
+−1
+2
+𝐄𝐄𝑖𝑖
+𝑣𝑣
+𝐃𝐃𝑡𝑡
+−1
+2
+෨ℛ𝑡𝑡
+𝐃𝐃𝑡𝑡
+−1
+2
+𝐄𝐄𝑖𝑖
+𝑡𝑡
+cos ⋅
+cos ⋅
+𝑘𝑘NN
+𝑘𝑘NN
+̃𝒢𝒢𝑣𝑣
+̃𝒢𝒢𝑡𝑡
+̃𝐟𝐟𝑖𝑖
+𝑣𝑣
+̃𝐟𝐟𝑖𝑖
+𝑡𝑡
+(𝐖𝐖1
+𝑣𝑣, 𝐛𝐛1
+𝑣𝑣) (𝐖𝐖2
+𝑣𝑣, 𝐛𝐛2
+𝑣𝑣)
+(𝐖𝐖1
+𝑡𝑡, 𝐛𝐛1
+𝑡𝑡) (𝐖𝐖2
+𝑡𝑡, 𝐛𝐛2
+𝑡𝑡)
+𝐄𝐄𝑖𝑖1
+𝑣𝑣
+𝐄𝐄𝑖𝑖2
+𝑣𝑣
+𝐄𝐄𝑖𝑖3
+𝑣𝑣
+𝐄𝐄𝑢𝑢2
+𝑣𝑣
+𝒩𝒩𝑢𝑢2
+𝑈𝑈𝑈𝑈
+𝒩𝒩𝑖𝑖𝑞𝑞
+𝑈𝑈𝑈𝑈
+𝒢𝒢𝑟𝑟
+𝐄𝐄𝑢𝑢𝑣𝑣
+𝐄𝐄𝑖𝑖1
+𝑡𝑡
+𝐄𝐄𝑖𝑖2
+𝑡𝑡
+𝐄𝐄𝑖𝑖3
+𝑡𝑡
+𝐄𝐄𝑢𝑢2
+𝑡𝑡
+𝒩𝒩𝑢𝑢2
+𝑈𝑈𝑈𝑈
+𝒩𝒩𝑖𝑖𝑞𝑞
+𝑈𝑈𝑈𝑈
+𝒢𝒢𝑟𝑟
+𝐄𝐄𝑢𝑢𝑡𝑡
+Agg.
+Agg.
+Agg.
+Item-Item Intra-Modal View
+𝒩𝒩𝑖𝑖𝑞𝑞
+𝑈𝑈𝑈𝑈
+𝒩𝒩𝑢𝑢𝑝𝑝
+𝑈𝑈𝑈𝑈
+ℳ= {𝑣𝑣, 𝑡𝑡, … }
+𝐄𝐄𝑖𝑖
+𝑣𝑣
+𝐄𝐄𝑖𝑖
+𝑡𝑡
+ത𝐄𝐄
+Prediction
+ො𝑦𝑦𝑢𝑢𝑢𝑢
+෨𝐄𝐄
+𝐄𝐄𝑣𝑣
+𝐄𝐄𝑡𝑡
+𝐄𝐄𝑟𝑟
+෠𝐄𝐄
+ℒ𝐵𝐵𝐵𝐵𝐵𝐵
+ℒ𝑢𝑢𝐶𝐶
+ℒ𝑖𝑖
+𝐶𝐶
+ℒ𝑢𝑢𝑣𝑣
+ℒ𝑖𝑖
+𝑣𝑣
+ℒ𝑖𝑖
+𝑡𝑡
+ℒ𝑢𝑢𝑡𝑡
+𝐄𝐄𝑢𝑢∗
+𝐄𝐄𝑖𝑖
+∗
+𝛼𝛼
+Multi-view Adaptive Fusion
+ℎ⋅
+Softmax
+(𝐖𝐖3, 𝐛𝐛3)
+(𝐖𝐖4, )
+Attention
+𝑔𝑔(𝑥𝑥)
+redundancy
+de-redundancy
+Fusion
+Multi-view Semantic Pattern Encoder
+𝐄𝐄∗
+de-redundant features
+ℒ𝑢𝑢𝑀𝑀= ℒ𝑢𝑢𝑣𝑣+ ℒ𝑢𝑢𝑡𝑡,
+ℒ𝑖𝑖
+𝑀𝑀= ℒ𝑖𝑖
+𝑣𝑣+ ℒ𝑖𝑖
+𝑡𝑡.
+CCA: ℒ𝑢𝑢𝐶𝐶, ℒ𝑖𝑖
+𝐶𝐶.
+Semantic Contrastive 
+Alignment (SCA)
+MCA:
+̃𝒢𝒢𝑠𝑠
+Figure 2: Architecture of our proposed Multi-view Semantic Contrastive Alignment (MSCA) framework.
+˜
+A𝑠∈R𝑄×𝑄signifies the adjacency matrix of the item-item struc-
+tural graph ˜G𝑠, while D𝑠∈R𝑄×𝑄represents the degree matrix of
+˜
+A𝑠. The aggregated item representations of ˜G𝑠are subsequently
+injected into the interaction graph G𝑟, propagating high-level col-
+laborative signals to derive enhanced user representations.
+3.2.3
+Item-Item Intra-Modal View. Beyond modeling the structural
+semantics between items in interactions, complementary semantic
+information derived from the intra-modal context of items empow-
+ers node representations with significantly enriched features. To
+discover latent modality-specific patterns among items, we first
+compute the inter-item semantic affinity R𝑚= {R𝑚
+𝑖,𝑖′ | 𝑖,𝑖′ ∈I}
+within each modality 𝑚using cosine similarity on the raw modal
+features, which captures intra-modal feature-level correlations be-
+tween items. Subsequently, we implement 𝑘NN sparsification to
+obtain the modality-specific item-item graph ˜G𝑚= (I, ˜R𝑚) within
+modality 𝑚. Specifically,
+R𝑚
+𝑖,𝑖′ = cos(f𝑚
+𝑖, f𝑚
+𝑖′ ) = f𝑚
+𝑖
+⊤· f𝑚
+𝑖′ /(∥f𝑚
+𝑖∥2 · ∥f𝑚
+𝑖′ ∥2),
+(7)
+˜R𝑚
+𝑖,𝑖′ = 1{R𝑚
+𝑖,𝑖′ ∈top-𝑘( ˆR𝑚
+𝑖)},
+(8)
+where ˜R𝑚∈R𝑄×𝑄represents the modality-specific item-item ma-
+trix. ˆR𝑚
+𝑖
+= { ˜R𝑚
+𝑖,𝑖′ | 𝑖,𝑖′ ∈I} denotes the set of cosine similarities
+between item 𝑖and all items. We then project the raw modal fea-
+tures f𝑚
+𝑖through a transformation layer into ˜f𝑚
+𝑖
+∈R𝑄×𝑑to facilitate
+better integration between item IDs and modal features:
+˜f𝑚
+𝑖
+= E(0)
+𝑖
+⊙𝜎((f𝑚
+𝑖W𝑚
+1
+⊤+ b𝑚
+1 )W𝑚
+2
+⊤+ b𝑚
+2 ).
+(9)
+Here, W𝑚
+1 ∈R𝑑×𝑑𝑚, W𝑚
+2 ∈R𝑑×𝑑, and b𝑚
+1 , b𝑚
+2 ∈R𝑑are trainable
+parameters. ⊙signifies the Hadamard product and 𝜎(·) denotes
+the sigmoid function. We then propagate the projected modal fea-
+tures ˜f𝑚
+𝑖
+via a single-layer graph convolutional network on ˜R𝑚to
+produce the semantically augmented item representations E𝑚
+𝑖:
+E𝑚
+𝑖= (D
+−1
+2
+𝑚
+˜R𝑚D
+−1
+2
+𝑚) · ˜f𝑚
+𝑖,
+(10)
+where D𝑚∈R𝑄×𝑄is the degree matrix of ˜R𝑚, employed to nor-
+malize ˜R𝑚to alleviate the imbalance in the degree distributions of
+the nodes. Subsequently, we propagate E𝑚
+𝑖through the user-item
+interaction graph G𝑟to obtain modality-aware augmented user
+representations E𝑚
+𝑢:
+E𝑚
+𝑢=
+1
+√︁
+|N UI
+𝑢
+|
+∑︁
+𝑖∈NUI
+𝑢
+1
+√︃
+|N UI
+𝑖
+|
+E𝑚
+𝑖,
+(11)
+which enables cross-view alignment by reducing the representa-
+tional discrepancy between modality and behavior space.
+3.2.4
+Multi-view Adaptive Fusion. To integrate node representa-
+tions learned from multiple sources and alleviate the noise caused
+by redundant information between different views, we design a
+multi-view adaptive fusion module, which employs an attention
+mechanism [41, 55] to adaptively model redundant representations
+E𝑟∈R(𝑃+𝑄)×𝑑across multiple views. Then, the de-redundant repre-
+sentations ˆE ∈R(𝑃+𝑄)×𝑑are obtained by removing this redundancy
+from the combined representations. This process is formalized as
+follows:
+𝑔(𝑥) = Softmax((ℎ(𝑥W⊤
+3 + b3))W⊤
+4 ),
+(12)
+5944
+Multi-view Semantic Contrastive Alignment for Multimodal Recommendation
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+where W3 ∈R𝑑×𝑑, W4 ∈R1×𝑑and b3 ∈R𝑑denote trainable pa-
+rameters. ℎ(·) is the Tanh activation function. The function 𝑔(𝑥)
+calculates the attention weights for multi-view input representa-
+tions 𝑥, evaluating the corresponding contribution as redundant
+information. Based on this, redundant representations E𝑟among
+multiple views are calculated as follows:
+E𝑟= 𝑔( ˜E) · ˜E +
+∑︁
+𝑚∈M
+𝑔(E𝑚) · E𝑚,
+(13)
+which captures parts that are identified by the module as redun-
+dant and non-discriminative within multi-view representations.
+˜E = [ ˜E𝑢∥˜E𝑖] ∈R(𝑃+𝑄)×𝑑, E𝑚= [E𝑚
+𝑢∥E𝑚
+𝑖] ∈R(𝑃+𝑄)×𝑑, where
+∥denotes the concatenation operation. Finally, the de-redundant
+representations ˆE are expressed as:
+ˆE = ˜E +
+∑︁
+𝑚∈M
+E𝑚−E𝑟,
+(14)
+which preserves key complementary information uniquely con-
+tributed by each view while effectively suppressing noise from
+overlapping information across views.
+3.3
+Semantic Contrastive Alignment
+To further advance the consistency of semantic patterns across
+various different views, we design a semantic contrastive alignment
+task utilizing InfoNCE [26] to promote robust and effective fusion
+between collaborative and augmented views, which encompasses
+the collaborative view and the modality-aware view.
+3.3.1
+Collaborative View. The objective of collaborative contrastive
+alignment is to maximize the semantic consistency between col-
+laborative representations ¯E𝑢/¯E𝑖of user-item interactions and aug-
+mented representations ˜E𝑢/˜E𝑖derived from the item-item structural
+view. This ensures that the fused representations simultaneously
+preserve core collaborative filtering signals while encoding latent
+structural semantics. It can be specifically represented as:
+
+
+LC
+𝑢=
+1
+|U|
+∑︁
+𝑢∈U
+−log
+exp(cos(¯E𝑢, ˜E𝑢)/𝜏)
+Í
+𝑢′∈U exp(cos(¯E𝑢, ˜E𝑢′)/𝜏)
+,
+LC
+𝑖= 1
+|I|
+∑︁
+𝑖∈I
+−log
+exp(cos(¯E𝑖, ˜E𝑖)/𝜏)
+Í
+𝑖′∈I exp(cos(¯E𝑖, ˜E𝑖′)/𝜏)
+,
+(15)
+where |U|, |I| ∈Z+ represent the mini-batch cardinalities. cos(·)
+is the cosine similarity between the two contrastive views and 𝜏
+denotes the temperature hyperparameter which controls sensitivity
+to differences in sample similarity.
+3.3.2
+Modality-aware View. To mitigate the semantic discrepancy
+between collaborative representations ¯E𝑢/¯E𝑖and modality-augmented
+representations E𝑚
+𝑢/E𝑚
+𝑖, modality-aware contrastive alignment losses
+can be calculated as:
+
+
+LM
+𝑢=
+1
+|U|
+∑︁
+𝑚∈M
+∑︁
+𝑢∈U
+−log
+exp(cos(¯E𝑢, E𝑚
+𝑢)/𝜏)
+Í
+𝑢′∈U exp(cos(¯E𝑢, E𝑚
+𝑢′)/𝜏) ,
+LM
+𝑖= 1
+|I|
+∑︁
+𝑚∈M
+∑︁
+𝑖∈I
+−log
+exp(cos(¯E𝑖, E𝑚
+𝑖)/𝜏)
+Í
+𝑖′∈I exp(cos(¯E𝑖, E𝑚
+𝑖′ )/𝜏) ,
+(16)
+which projects the learned multimodal representations into a collab-
+oratively aligned semantic space, enabling their consistent fusion.
+Table 1: Statistics of evaluated datasets.
+Dataset
+# Users
+# Items
+# Interactions
+Sparsity
+Baby
+19,445
+7,050
+160,792
+99.8827%
+Sports
+35,598
+18,357
+296,337
+99.9547%
+Electronics
+192,403
+63,001
+1,689,188
+99.9861%
+3.4
+Model Prediction
+Based on the learned collaborative and multi-view de-redundant
+representations, the final representations E∗are formulated as:
+E∗= ¯E + 𝛼ˆE,
+(17)
+where 𝛼denotes the fusion coefficient. The final user/item represen-
+tations E∗
+𝑢/E∗
+𝑖are obtained by slicing E∗. The inner product is then
+utilized to calculate the preference score ˆ𝑦𝑢𝑖= FΘ(𝑢,𝑖) = E∗
+𝑢
+⊤E∗
+𝑖.
+3.5
+Model Optimization
+During the optimization phase, Bayesian Personalized Ranking
+(BPR) [30], which is commonly used for recommendation tasks, is
+employed as the primary learning objective for our MSCA. Formally,
+LBPR = E(𝑢,𝑖,𝑗)∈D
+
+−ln𝜎( ˆ𝑦𝑢𝑖−ˆ𝑦𝑢𝑗)
+
+,
+(18)
+where D = {(𝑢,𝑖, 𝑗)|(𝑢,𝑖) ∈G𝑟, (𝑢, 𝑗) ∉G𝑟}. Finally, the joint
+optimization objective of our MSCA is represented as:
+L = LBPR + 𝜆1(LC
+𝑢+ LC
+𝑖+ LM
+𝑢+ LM
+𝑖) + 𝜆2∥Θ∥2
+2,
+(19)
+where 𝜆1 and 𝜆2 serve as hyperparameters to adjust the importance
+of different loss terms, while ∥Θ∥2
+2 denotes the L2 regularization
+term. Θ represents the model parameters.
+4
+Experiments
+To assess the effectiveness of our proposed MSCA, we design a
+series of experiments focusing on several research questions (RQs):
+• RQ1: How does our MSCA outperform different state-of-the-art
+recommendation methods in terms of performance?
+• RQ2: How does each key component contribute to the overall
+performance of our MSCA?
+• RQ3: Does MSCA effectively alleviate the interaction sparsity
+issue through its utilization of multi-view self-supervised signals?
+• RQ4: How do different hyperparameter settings influence the
+recommendation accuracy of our MSCA?
+• RQ5: Why can multi-view semantic contrastive alignment achieve
+superior recommendation outcomes?
+4.1
+Experimental Settings
+4.1.1
+Datasets. Following previous work [14, 64], we evaluate the
+performance of our MSCA on three publicly available datasets
+from Amazon1: Baby, Sports, and Electronics. Each dataset in-
+cludes the original textual features (384-dimensional) and visual
+features (4096-dimensional), extracted respectively from Sentence-
+Transformers [28] and VGG [31], as published in MMRec [62]. The
+interaction data of each dataset has undergone 5-core preprocess-
+ing from both the user and item perspectives. Table 1 provides the
+statistics of the filtered evaluated datasets.
+1http://jmcauley.ucsd.edu/data/amazon/links.html
+5945
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Jiuqiang Li and Hongjun Wang
+Table 2: Overall performance of MSCA and different baselines in terms of Recall@𝐾(R@𝐾) and NDCG@𝐾(N@𝐾). The best
+result is bold and the second best is underlined. Improvement percentage (Improv.) denotes the ratio of performance increment
+from the suboptimal method to MSCA. ‘OOM’ indicates that the model exceeds the memory limit of the experimental device.
+Model
+Baby
+Sports
+Electronics
+R@10
+N@10
+R@20
+N@20
+R@10
+N@10
+R@20
+N@20
+R@10
+N@10
+R@20
+N@20
+MF-BPR
+0.0357
+0.0192
+0.0575
+0.0249
+0.0432
+0.0241
+0.0653
+0.0298
+0.0235
+0.0127
+0.0367
+0.0161
+LightGCN
+0.0479
+0.0257
+0.0754
+0.0328
+0.0569
+0.0311
+0.0864
+0.0387
+0.0363
+0.0204
+0.0540
+0.0250
+BUIR
+0.0506
+0.0269
+0.0788
+0.0342
+0.0467
+0.0260
+0.0733
+0.0329
+0.0332
+0.0185
+0.0514
+0.0232
+SGL
+0.0543
+0.0294
+0.0858
+0.0375
+0.0650
+0.0364
+0.0977
+0.0448
+0.0420
+0.0240
+0.0610
+0.0289
+SimGCL
+0.0557
+0.0303
+0.0866
+0.0382
+0.0669
+0.0372
+0.1011
+0.0461
+0.0445
+0.0253
+0.0653
+0.0307
+XSimGCL
+0.0564
+0.0314
+0.0887
+0.0397
+0.0666
+0.0369
+0.1011
+0.0458
+0.0465
+0.0265
+0.0675
+0.0320
+BIGCF
+0.0546
+0.0295
+0.0866
+0.0377
+0.0650
+0.0362
+0.0982
+0.0448
+0.0438
+0.0249
+0.0642
+0.0302
+MixRec
+0.0577
+0.0318
+0.0875
+0.0395
+0.0674
+0.0373
+0.1029
+0.0464
+0.0448
+0.0254
+0.0658
+0.0308
+MSCA
+0.0703
+0.0385
+0.1049
+0.0474
+0.0814
+0.0444
+0.1210
+0.0546
+0.0502
+0.0284
+0.0734
+0.0344
+Improv.
+21.84%
+21.07%
+18.26%
+19.40%
+20.77%
+19.03%
+17.59%
+17.67%
+7.96%
+7.17%
+8.74%
+7.50%
+VBPR
+0.0423
+0.0223
+0.0663
+0.0284
+0.0558
+0.0307
+0.0856
+0.0384
+0.0293
+0.0159
+0.0458
+0.0202
+MMGCN
+0.0378
+0.0200
+0.0615
+0.0261
+0.0370
+0.0193
+0.0605
+0.0254
+0.0207
+0.0109
+0.0331
+0.0141
+GRCN
+0.0532
+0.0282
+0.0824
+0.0358
+0.0559
+0.0306
+0.0877
+0.0389
+0.0349
+0.0195
+0.0529
+0.0241
+DualGNN
+0.0448
+0.0240
+0.0716
+0.0309
+0.0568
+0.0310
+0.0859
+0.0385
+0.0363
+0.0202
+0.0541
+0.0248
+LATTICE
+0.0544
+0.0291
+0.0848
+0.0369
+0.0618
+0.0337
+0.0947
+0.0422
+OOM
+OOM
+OOM
+OOM
+SLMRec
+0.0524
+0.0289
+0.0785
+0.0356
+0.0676
+0.0374
+0.1018
+0.0462
+0.0444
+0.0250
+0.0660
+0.0306
+BM3
+0.0564
+0.0301
+0.0883
+0.0383
+0.0656
+0.0355
+0.0980
+0.0438
+0.0437
+0.0247
+0.0648
+0.0302
+FREEDOM
+0.0627
+0.0330
+0.0992
+0.0424
+0.0717
+0.0385
+0.1089
+0.0481
+0.0397
+0.0218
+0.0602
+0.0272
+MGCN
+0.0620
+0.0339
+0.0964
+0.0427
+0.0729
+0.0397
+0.1106
+0.0496
+0.0441
+0.0247
+0.0658
+0.0303
+DA-MRS
+0.0621
+0.0339
+0.0971
+0.0429
+0.0715
+0.0390
+0.1083
+0.0485
+0.0429
+0.0242
+0.0635
+0.0295
+LGMRec
+0.0652
+0.0350
+0.1001
+0.0440
+0.0722
+0.0391
+0.1091
+0.0486
+0.0424
+0.0236
+0.0632
+0.0289
+TMLP
+0.0680
+0.0366
+0.1018
+0.0453
+0.0769
+0.0417
+0.1163
+0.0519
+0.0464
+0.0259
+0.0687
+0.0316
+MSCA
+0.0703
+0.0385
+0.1049
+0.0474
+0.0814
+0.0444
+0.1210
+0.0546
+0.0502
+0.0284
+0.0734
+0.0344
+Improv.
+3.38%
+5.19%
+3.05%
+4.64%
+5.85%
+6.47%
+4.04%
+5.20%
+8.19%
+9.65%
+6.84%
+8.86%
+4.1.2
+Evaluation Metrics and Protocols. In accordance with previ-
+ous settings [14, 57, 64], we utilize two commonly used evaluation
+metrics for top-𝐾(𝐾= 10, 20) recommendation: Recall and Normal-
+ized Discounted Cumulative Gain (NDCG). Following MMRec [62],
+we randomly split the training, validation, and testing data in 8:1:1
+ratio and select the best model using Recall@20 on the validation
+set. To mitigate sampling bias, we evaluate predictions via the all-
+ranking protocol and employ negative sampling during training,
+pairing each observed interaction with an unobserved item.
+4.1.3
+Baselines. We compare proposed MSCA with a series of
+general collaborative filtering (CF) models: MF-BPR [30], Light-
+GCN [13], BUIR [19], SGL [45], SimGCL [54], XSimGCL [53],
+BIGCF [58], MixRec [59], and various multimodal recommen-
+dation approaches: VBPR [12], MMGCN [44], GRCN [43], Du-
+alGNN [38], LATTICE [57], SLMRec [32], BM3 [64], FREE-
+DOM [63], MGCN [55], DA-MRS [52], LGMRec [11], TMLP [14].
+4.1.4
+Implementation Details. In order to conduct a fair compar-
+ison, we develop the proposed MSCA and all baseline models by
+PyTorch [27] with a unified multimodal recommendation frame-
+work MMRec [62] and utilize a dimensional size of 64 to embed
+users and items for all models. We initialize the embedding pa-
+rameters with Xavier initialization [10], optimize our model using
+Adam optimizer [17] with an initial learning rate of 1𝑒−3 and fix
+the mini-batch size at 2048. All experiments are evaluated on an
+NVIDIA RTX 4090 GPU card with 24 GB memory. Partial results
+are sourced from the MMRec framework or its respective paper. For
+the remaining baselines, we adhered to their original publications
+and perform grid search to identify the optimal hyperparameters.
+To ensure convergence, we set the early stopping patience and the
+maximum number of epochs at 20 and 1000, respectively. For our
+MSCA, the hyperparameters 𝑘and 𝜏are set to 10 and 0.2, respec-
+tively. The number of graph propagation layers 𝐿is set to 2, 3 and 4
+for the Baby, Sports, and Electronics datasets, respectively. The reg-
+ularization weight 𝜆2 is configured as 3𝑒−7 for Baby, 5𝑒−8 for Sports,
+and 5𝑒−10 for the Electronics dataset. The fusion coefficient 𝛼and
+the contrastive loss weight 𝜆1 are tuned from {0.1, 0.2, · · · , 1.0} and
+{0.001, 0.005, 0.01, 0.05, 0.1}, respectively.
+4.2
+Performance Comparison (RQ1)
+Table 2 shows the comparative performance of MSCA and various
+baseline approaches across all datasets. Based on the evaluation
+results, we draw the following conclusions:
+5946
+Multi-view Semantic Contrastive Alignment for Multimodal Recommendation
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Table 3: Ablation study on core components of MSCA.
+Datasets
+Variants
+R@10
+N@10
+R@20
+N@20
+Baby
+w/o S
+0.0669
+0.0360
+0.1025
+0.0452
+w/o V
+0.0641
+0.0346
+0.0964
+0.0428
+w/o T
+0.0596
+0.0332
+0.0904
+0.0412
+w/o MAF
+0.0675
+0.0366
+0.1031
+0.0458
+w/o SCA
+0.0650
+0.0354
+0.1004
+0.0445
+MSCA
+0.0703
+0.0385
+0.1049
+0.0474
+Sports
+w/o S
+0.0764
+0.0417
+0.1149
+0.0516
+w/o V
+0.0762
+0.0420
+0.1118
+0.0512
+w/o T
+0.0726
+0.0398
+0.1074
+0.0488
+w/o MAF
+0.0793
+0.0430
+0.1186
+0.0532
+w/o SCA
+0.0761
+0.0418
+0.1132
+0.0513
+MSCA
+0.0814
+0.0444
+0.1210
+0.0546
+Elec.
+w/o S
+0.0460
+0.0259
+0.0682
+0.0317
+w/o V
+0.0498
+0.0281
+0.0721
+0.0339
+w/o T
+0.0473
+0.0266
+0.0695
+0.0324
+w/o MAF
+0.0495
+0.0279
+0.0723
+0.0338
+w/o SCA
+0.0431
+0.0243
+0.0629
+0.0295
+MSCA
+0.0502
+0.0284
+0.0734
+0.0344
+• Compared to all evaluated general CF models and multimodal
+recommendation approaches, MSCA consistently demonstrates
+superior performance across different datasets, validating the
+significant effectiveness of our proposed multi-view semantic
+contrastive alignment framework. For instance, on the Baby,
+Sports, and Electronics datasets, MSCA improves NDCG@10
+by 5.19%, 6.47%, and 9.65%, respectively, over the best baseline
+methods. We attribute this improvement to MSCA’s ability to
+model latent relational semantics from multiple perspectives,
+thereby augmenting the representations of both users and items.
+Specifically, beyond encoding effective and refined collabora-
+tive semantics from user–item interactions, MSCA separately
+captures structural semantics from historical user records and
+intra-modal latent associative semantics from modal features.
+• MSCA exhibits notable performance gains when compared to
+general CF methods (e.g., LightGCN, XSimGCL, and MixRec),
+indicating that modeling and integrating multi-view semantic
+patterns is both necessary and beneficial. It is worth noting that
+CL-based general methods (e.g., XSimGCL) even outperform CL-
+based multimodal recommendation models (e.g., MGCN, LGM-
+Rec) on the Electronics dataset. This suggests that multimodal
+recommendation systems may suffer from adverse effects due to
+semantic discrepancy when integrating multimodal information
+into the collaborative view. In contrast, MSCA first adaptively
+fuses the structural semantics learned from user–item interac-
+tions with intra-modal semantics, thereby mitigating potential
+noise contamination during the integration of modal features
+into collaborative representations.
+• MSCA achieves the largest improvement over the strongest base-
+line on the Electronics dataset, which is the sparsest among the
+experimental datasets, highlighting its robustness in handling
+sparse interaction scenarios. Concretely, the semantic contrastive
+alignment is introduced to maximize the mutual correlation be-
+tween collaborative semantics and their corresponding latent
+semantics from the collaborative view and the modality-aware
+(0,4]
+(4,8]
+(8,12]
+(12,inf)
+Sparsity Degree
+0.050
+0.055
+0.060
+0.065
+0.070
+0.075
+Recall@10
+Baby
+Ours
+TMLP
+LGMRec
+DA-MRS
+MGCN
+BM3
+(0,4]
+(4,8]
+(8,12]
+(12,inf)
+Sparsity Degree
+0.025
+0.030
+0.035
+0.040
+0.045
+0.050
+NDCG@10
+Baby
+Ours
+TMLP
+LGMRec
+DA-MRS
+MGCN
+BM3
+(0,4]
+(4,8]
+(8,12]
+(12,inf)
+Sparsity Degree
+0.060
+0.065
+0.070
+0.075
+0.080
+0.085
+Recall@10
+Sports
+Ours
+TMLP
+LGMRec
+DA-MRS
+MGCN
+BM3
+(0,4]
+(4,8]
+(8,12]
+(12,inf)
+Sparsity Degree
+0.030
+0.035
+0.040
+0.045
+0.050
+0.055
+NDCG@10
+Sports
+Ours
+TMLP
+LGMRec
+DA-MRS
+MGCN
+BM3
+Figure 3: Performance w.r.t different user interaction sparsity
+degree on Baby and Sports datasets.
+view, respectively. This facilitates multi-view semantic fusion
+and supplies rich semantic contrastive signals to the main recom-
+mendation task, mitigating the issue of insufficient supervision.
+4.3
+Ablation Study (RQ2)
+To examine the impact of diverse factors, we conduct ablation exper-
+iments on the core components of MSCA. Specifically, we construct
+a series of variants: w/o S, w/o V, and w/o T denote removing
+the item-item structural view, and the visual and textual modal-
+ity within the item-item intra-modal view, respectively. w/o MAF
+represents replacing the multi-view adaptive fusion module with
+a direct summation of the multi-view representations. w/o SCA
+indicates removing the semantic contrastive alignment module, i.e.,
+setting 𝜆1 = 0. The experimental results of MSCA and its variants
+on the three datasets are shown in Table 3, and we obtain the fol-
+lowing observations: (1) The performance of MSCA experiences a
+significant drop when any of the three views (S, V, T) for semantic
+modeling are removed. Furthermore, MSCA without the MAF mod-
+ule exhibits a consistent decrease in performance across all metrics.
+This indicates that the multi-view semantic pattern encoder effec-
+tively captures augmented representations from diverse views and
+achieves adaptive fusion to enhance personalized recommendation.
+(2) Removal of the semantic contrastive alignment module leads
+to substantial performance degradation. This validates the effec-
+tiveness and the necessity of the semantic contrastive alignment
+for multi-view features, which facilitates the fusion of multi-view
+semantics by narrowing the semantic gap between the augmented
+representations and the collaborative embeddings.
+4.4
+Performance against Sparsity (RQ3)
+To investigate the performance of MSCA in alleviating data sparsity,
+we divide users into four groups (i.e., (0, 4], (4, 8], (8, 12], (12, inf))
+based on their interaction frequency in the training set and calculate
+Recall@10 of MSCA and five representative baselines (i.e., TMLP,
+LGMRec, DA-MRS, MGCN, BM3) on the Baby and Sports datasets
+within each group. As shown in Figure 3, TMLP may outperform
+or trail LGMRec at varying sparsity levels on the Baby dataset,
+while our MSCA consistently surpasses all baselines in various
+5947
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Jiuqiang Li and Hongjun Wang
+0
+0.001
+0.005
+0.01
+0.05
+0.1
+1
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+Recall@10
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@10
+Baby
+0
+0.001
+0.005
+0.01
+0.05
+0.1
+1
+0.00
+0.02
+0.04
+0.06
+0.08
+0.10
+Recall@10
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@10
+Sports
+0
+0.001
+0.005
+0.01
+0.05
+0.1
+1
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+Recall@10
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@10
+Electronics
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+Recall@10
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@10
+Baby
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+0.00
+0.02
+0.04
+0.06
+0.08
+0.10
+Recall@10
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@10
+Sports
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+Recall@10
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@10
+Electronics
+0
+0.001
+0.005
+0.01
+0.05
+0.1
+1
+0.00
+0.02
+0.05
+0.07
+0.10
+0.12
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Baby
+0
+0.001
+0.005
+0.01
+0.05
+0.1
+1
+0.00
+0.03
+0.06
+0.08
+0.11
+0.14
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Sports
+0
+0.001
+0.005
+0.01
+0.05
+0.1
+1
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Electronics
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+0.00
+0.02
+0.05
+0.07
+0.10
+0.12
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Baby
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+0.00
+0.03
+0.06
+0.08
+0.11
+0.14
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Sports
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Electronics
+Figure 4: Hyperparameter analysis of the contrastive weight 𝜆1 and fusion coefficient 𝛼in MSCA on all the dataset.
+scenarios. Furthermore, MSCA achieves even higher Recall@10 on
+the extremely sparse user group ((0, 4]) than on the entire dataset.
+This demonstrates that MSCA effectively compensates for insuffi-
+cient supervision due to sparsity through its multi-view semantic
+modeling and semantic contrastive alignment signals.
+4.5
+Hyperparameter Investigation (RQ4)
+In this part, we investigate the sensitivity of MSCA to two main hy-
+perparameters: the contrastive weight 𝜆1 and the fusion coefficient
+𝛼, as illustrated in Figure 4. Our observations are as follows:
+• Impact of 𝜆1. MSCA achieves optimal performance on the Baby,
+Sports, and Electronics datasets when 𝜆1 is set to 0.005, 0.005 and
+0.01, respectively. It can be observed that an excessively small
+𝜆1 leads to insufficient self-supervised signals provided by the
+semantic contrastive alignment task, thereby failing to achieve
+the best results; whereas an excessively large 𝜆1 may cause the
+contrastive auxiliary task to mislead the main recommendation
+task, resulting in early stopping and suboptimal performance.
+• Selection of 𝛼. When 𝛼is configured to 0.4, 0.3, and 0.2, MSCA
+attains its peak performance on the Baby, Sports, and Electronics
+datasets, respectively. The experimental results across the three
+datasets exhibit a similar trend: as the value of 𝛼increases, the
+performance of MSCA first improves to an optimum and then
+gradually declines. Notably, an excessively small 𝛼on the Baby
+and Sports datasets causes the performance of MSCA to fall sig-
+nificantly outside the normal range. This indicates that selecting
+an appropriate 𝛼helps to effectively integrate the augmented
+multi-view semantic representations into the collaborative view,
+thereby improving interaction prediction.
+4.6
+Visualization Analysis (RQ5)
+Previous research [54] suggests that uniform representations can
+mitigate popularity bias to enhance recommendation performance.
+To visually demonstrate the effectiveness of our MSCA, Figure 5 il-
+lustrates the uniformity of the final item representations learned by
+MSCA, compared to LGMRec and TMLP. Specifically, we randomly
+sample 2, 000 items from the Sports dataset, utilize t-SNE [34] to
+embed their final item representations into a 2D space, and fur-
+ther employ Gaussian kernel density estimation [33] to map rep-
+resentations onto a unit hypersphere S1. We then visualize the
+angular density estimation for each point on S1. We observe that
+-1.0
+0.0
+1.0
+Features
+-1.0
+0.0
+1.0
+Features
+LGMRec
+-1.0
+0.0
+1.0
+Features
+-1.0
+0.0
+1.0
+TMLP
+-1.0
+0.0
+1.0
+Features
+-1.0
+0.0
+1.0
+MSCA
+−1
+0
+1
+Features
+−1.0
+−0.5
+0.0
+0.5
+1.0
+Features
+−1
+0
+1
+Features
+−1.0
+−0.5
+0.0
+0.5
+1.0
+−1
+0
+1
+Features
+−1.0
+−0.5
+0.0
+0.5
+1.0
+−2
+0
+2
+Angles
+0.00
+0.25
+0.50
+Density
+−2
+0
+2
+Angles
+0.00
+0.25
+0.50
+−2
+0
+2
+Angles
+0.00
+0.25
+0.50
+Figure 5: The distribution of final item representations from
+LGMRec, TMLP and MSCA on the Sports dataset.
+item representations learned by LGMRec and TMLP exhibit more
+community-like clustering and distributional inhomogeneity (uni-
+modality), whereas MSCA effectively integrates multi-view seman-
+tics through semantic contrastive alignment, thereby learning more
+uniform item representations and alleviating item popularity bias.
+5
+Conclusion
+In this work, we introduce a new multi-view semantic contrastive
+alignment framework to effectively capture multi-faceted seman-
+tics for multimodal recommendation. Specifically, we employ a
+multi-view semantic pattern encoder to separately model basic col-
+laborative embeddings and augmented semantic representations
+from multiple views. Subsequently, a tailored semantic contrastive
+alignment task is designed to mitigate the semantic discrepancy be-
+tween these representations and foster their fusion. Comprehensive
+experiments across three benchmarks demonstrate the significant
+superiority of our MSCA over state-of-the-art baselines while ex-
+hibiting exceptional robustness in sparse interaction scenarios.
+Acknowledgments
+This work is supported by the National Natural Science Foundation
+of China under Grant (No. 62276216) and Natural Science Founda-
+tion of Sichuan Province under Grant (No. 2024NSFSC0501).
+5948
+Multi-view Semantic Contrastive Alignment for Multimodal Recommendation
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+References
+[1] Vineeta Anand and Ashish Kumar Maurya. 2025. A survey on recommender
+systems using graph neural network. ACM Transactions on Information Systems
+43, 1 (2025), 1–49.
+[2] Haoyue Bai, Le Wu, Min Hou, Miaomiao Cai, Zhuangzhuang He, Yuyang Zhou,
+Richang Hong, and Meng Wang. 2024. Multimodality invariant learning for
+multimedia-based new item recommendation. In Proceedings of the 47th Inter-
+national ACM SIGIR Conference on Research and Development in Information
+Retrieval. 677–686.
+[3] Jianxin Chang, Chen Gao, Xiangnan He, Depeng Jin, and Yong Li. 2020. Bundle
+recommendation with graph convolutional networks. In Proceedings of the 43rd
+International ACM SIGIR Conference on Research and Development in Information
+Retrieval. 1673–1676.
+[4] Jie Chen, Haw-ren Fang, and Yousef Saad. 2009. Fast Approximate kNN Graph
+Construction for High Dimensional Data via Recursive Lanczos Bisection. Journal
+of Machine Learning Research 10 (2009), 1989–2012.
+[5] Jingyuan Chen, Hanwang Zhang, Xiangnan He, Liqiang Nie, Wei Liu, and Tat-
+Seng Chua. 2017. Attentive collaborative filtering: Multimedia recommendation
+with item-and component-level attention. In Proceedings of the 40th International
+ACM SIGIR Conference on Research and Development in Information Retrieval.
+335–344.
+[6] Lei Chen, Le Wu, Richang Hong, Kun Zhang, and Meng Wang. 2020. Revisiting
+graph based collaborative filtering: A linear residual graph convolutional network
+approach. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 34.
+27–34.
+[7] Ting Chen, Simon Kornblith, Mohammad Norouzi, and Geoffrey Hinton. 2020. A
+simple framework for contrastive learning of visual representations. In Proceed-
+ings of the International Conference on Machine Learning. PMLR, 1597–1607.
+[8] Wenqi Fan, Yao Ma, Qing Li, Yuan He, Eric Zhao, Jiliang Tang, and Dawei Yin.
+2019. Graph neural networks for social recommendation. In Proceedings of the
+World Wide Web Conference. 417–426.
+[9] Chen Gao, Yu Zheng, Nian Li, Yinfeng Li, Yingrong Qin, Jinghua Piao, Yuhan
+Quan, Jianxin Chang, Depeng Jin, Xiangnan He, et al. 2023. A survey of graph
+neural networks for recommender systems: Challenges, methods, and directions.
+ACM Transactions on Recommender Systems 1, 1 (2023), 1–51.
+[10] Xavier Glorot and Yoshua Bengio. 2010. Understanding the difficulty of training
+deep feedforward neural networks. In Proceedings of the thirteenth International
+Conference on Artificial Intelligence and Statistics. JMLR Workshop and Conference
+Proceedings, 249–256.
+[11] Zhiqiang Guo, Jianjun Li, Guohui Li, Chaoyang Wang, Si Shi, and Bin Ruan. 2024.
+LGMRec: Local and Global Graph Learning for Multimodal Recommendation. In
+Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 38. 8454–8462.
+[12] Ruining He and Julian McAuley. 2016. VBPR: visual bayesian personalized
+ranking from implicit feedback. In Proceedings of the AAAI Conference on Artificial
+Intelligence, Vol. 30. 144–150.
+[13] Xiangnan He, Kuan Deng, Xiang Wang, et al. 2020. Lightgcn: Simplifying and
+powering graph convolution network for recommendation. In Proceedings of
+the 43rd International ACM SIGIR Conference on Research and Development in
+Information Retrieval. 639–648.
+[14] Junjie Huang, Jiarui Qin, Yong Yu, and Weinan Zhang. 2025. Beyond graph con-
+volution: Multimodal recommendation with topology-aware mlps. In Proceedings
+of the AAAI Conference on Artificial Intelligence, Vol. 39. 11808–11816.
+[15] Mengyuan Jing, Yanmin Zhu, Tianzi Zang, and Ke Wang. 2023. Contrastive
+self-supervised learning in recommender systems: A survey. ACM Transactions
+on Information Systems 42, 2 (2023), 1–39.
+[16] Wang-Cheng Kang, Chen Fang, Zhaowen Wang, and Julian McAuley. 2017.
+Visually-aware fashion recommendation and design with generative image mod-
+els. In Proceedings of the IEEE International Conference on Data Mining. IEEE,
+207–216.
+[17] Diederik P. Kingma and Jimmy Ba. 2015. Adam: A Method for Stochastic Opti-
+mization. In Proceedings of the 3rd International Conference on Learning Represen-
+tations.
+[18] Thomas N. Kipf and Max Welling. 2017. Semi-Supervised Classification with
+Graph Convolutional Networks. In Proceedings of the 5th International Conference
+on Learning Representations.
+[19] Dongha Lee, SeongKu Kang, Hyunjun Ju, Chanyoung Park, and Hwanjo Yu. 2021.
+Bootstrapping user and item representations for one-class collaborative filtering.
+In Proceedings of the 44th International ACM SIGIR Conference on Research and
+Development in Information Retrieval. 317–326.
+[20] Fan Liu, Zhiyong Cheng, Lei Zhu, Zan Gao, and Liqiang Nie. 2021. Interest-
+aware message-passing GCN for recommendation. In Proceedings of the ACM
+Web Conference. 1296–1305.
+[21] Qidong Liu, Jiaxi Hu, Yutian Xiao, Xiangyu Zhao, Jingtong Gao, Wanyu Wang,
+Qing Li, and Jiliang Tang. 2024. Multimodal recommender systems: A survey.
+Comput. Surveys 57, 2 (2024), 1–17.
+[22] Shang Liu, Zhenzhong Chen, Hongyi Liu, and Xinghai Hu. 2019. User-video co-
+attention network for personalized micro-video recommendation. In Proceedings
+of the World Wide Web Conference. 3020–3026.
+[23] Yunshan Ma, Yingzhi He, Xiang Wang, Yinwei Wei, Xiaoyu Du, Yuyangzi Fu,
+and Tat-Seng Chua. 2024. Multicbr: Multi-view contrastive learning for bundle
+recommendation. ACM Transactions on Information Systems 42, 4 (2024), 1–23.
+[24] Kelong Mao, Jieming Zhu, Xi Xiao, Biao Lu, Zhaowei Wang, and Xiuqiang He.
+2021. UltraGCN: ultra simplification of graph convolutional networks for recom-
+mendation. In Proceedings of the 30th ACM International Conference on Information
+& Knowledge Management. 1253–1262.
+[25] Yongxin Ni, Yu Cheng, Xiangyan Liu, Junchen Fu, Youhua Li, Xiangnan He,
+Yongfeng Zhang, and Fajie Yuan. 2025. A content-driven micro-video recommen-
+dation dataset at scale. In Proceedings of the 34th ACM International Conference
+on Information and Knowledge Management. 6486–6491.
+[26] Aaron van den Oord, Yazhe Li, and Oriol Vinyals. 2018. Representation learning
+with contrastive predictive coding. arXiv preprint arXiv:1807.03748 (2018).
+[27] Adam Paszke, Sam Gross, Francisco Massa, Adam Lerer, James Bradbury, Gregory
+Chanan, Trevor Killeen, Zeming Lin, Natalia Gimelshein, Luca Antiga, et al.
+2019. Pytorch: An imperative style, high-performance deep learning library.
+In Proceedings of the Neural Information Processing Systems Conference, Vol. 32.
+8024–8035.
+[28] Nils Reimers and Iryna Gurevych. 2019. Sentence-BERT: Sentence Embeddings
+using Siamese BERT-Networks. In Proceedings of the Conference on Empirical
+Methods in Natural Language Processing. 3982–3992.
+[29] Xubin Ren, Wei Wei, Lianghao Xia, and Chao Huang. 2025. A comprehensive
+survey on self-supervised learning for recommendation. Comput. Surveys 58, 1
+(2025), 1–38.
+[30] Steffen Rendle, Christoph Freudenthaler, Zeno Gantner, and Lars Schmidt-Thieme.
+2009. BPR: Bayesian personalized ranking from implicit feedback. In Proceedings
+of the Conference on Uncertainty in Artificial Intelligence. 452–461.
+[31] Karen Simonyan and Andrew Zisserman. 2015. Very Deep Convolutional Net-
+works for Large-Scale Image Recognition. In Proceedings of the 3rd International
+Conference on Learning Representations.
+[32] Zhulin Tao, Xiaohao Liu, Yewei Xia, Xiang Wang, Lifang Yang, Xianglin Huang,
+and Tat-Seng Chua. 2022. Self-supervised learning for multimedia recommenda-
+tion. IEEE Transactions on Multimedia 25 (2022), 5107–5116.
+[33] George R Terrell and David W Scott. 1992. Variable kernel density estimation.
+The Annals of Statistics (1992), 1236–1265.
+[34] Laurens Van der Maaten and Geoffrey Hinton. 2008. Visualizing data using t-SNE.
+Journal of Machine Learning Research 9 (2008), 2579–2605.
+[35] Petar Veličković, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro
+Lio, and Yoshua Bengio. 2018. Graph Attention Networks. In Proceedings of the
+6th International Conference on Learning Representations.
+[36] Hongwei Wang, Fuzheng Zhang, Mengdi Zhang, Jure Leskovec, Miao Zhao,
+Wenjie Li, et al. 2019. Knowledge-aware graph neural networks with label
+smoothness regularization for recommender systems. In Proceedings of the ACM
+SIGKDD Conference on Knowledge Discovery and Data Mining. 968–977.
+[37] Hongwei Wang, Miao Zhao, Xing Xie, Wenjie Li, and Minyi Guo. 2019. Knowledge
+graph convolutional networks for recommender systems. In Proceedings of the
+World Wide Web Conference. 3307–3313.
+[38] Qifan Wang, Yinwei Wei, Jianhua Yin, Jianlong Wu, Xuemeng Song, and Liqiang
+Nie. 2021. Dualgnn: Dual graph neural network for multimedia recommendation.
+IEEE Transactions on Multimedia 25 (2021), 1074–1084.
+[39] Xiang Wang, Xiangnan He, Yixin Cao, Meng Liu, and Tat-Seng Chua. 2019. Kgat:
+Knowledge graph attention network for recommendation. In Proceedings of the
+ACM SIGKDD Conference on Knowledge Discovery and Data Mining. 950–958.
+[40] Xiang Wang, Xiangnan He, Meng Wang, Fuli Feng, and Tat-Seng Chua. 2019.
+Neural graph collaborative filtering. In Proceedings of the 42nd International ACM
+SIGIR Conference on Research and Development in Information Retrieval. 165–174.
+[41] Yanan Wang, Jianming Wu, and Keiichiro Hoashi. 2019. Multi-attention fusion
+network for video-based emotion recognition. In Proceedings of the International
+Conference on Multimodal Interaction. 595–601.
+[42] Wei Wei, Chao Huang, Lianghao Xia, and Chuxu Zhang. 2023. Multi-modal
+self-supervised learning for recommendation. In Proceedings of the ACM Web
+Conference. 790–800.
+[43] Yinwei Wei, Xiang Wang, Liqiang Nie, Xiangnan He, and Tat-Seng Chua. 2020.
+Graph-refined convolutional network for multimedia recommendation with im-
+plicit feedback. In Proceedings of the ACM International Conference on Multimedia.
+3541–3549.
+[44] Yinwei Wei, Xiang Wang, Liqiang Nie, Xiangnan He, Richang Hong, and Tat-Seng
+Chua. 2019. MMGCN: Multi-modal graph convolution network for personal-
+ized recommendation of micro-video. In Proceedings of the ACM International
+Conference on Multimedia. 1437–1445.
+[45] Jiancan Wu, Xiang Wang, Fuli Feng, Xiangnan He, Liang Chen, Jianxun Lian,
+and Xing Xie. 2021. Self-supervised graph learning for recommendation. In
+Proceedings of the 44th International ACM SIGIR Conference on Research and
+Development in Information Retrieval. 726–735.
+[46] Le Wu, Peijie Sun, Yanjie Fu, Richang Hong, et al. 2019. A neural influence
+diffusion model for social recommendation. In Proceedings of the International
+ACM SIGIR Conference on Research and Development in Information Retrieval.
+235–244.
+5949
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Jiuqiang Li and Hongjun Wang
+[47] Shiwen Wu, Fei Sun, Wentao Zhang, Xu Xie, and Bin Cui. 2022. Graph neural
+networks in recommender systems: a survey. Comput. Surveys 55, 5 (2022), 1–37.
+[48] Zonghan Wu, Shirui Pan, Fengwen Chen, Guodong Long, Chengqi Zhang, and
+Philip S Yu. 2020. A comprehensive survey on graph neural networks. IEEE
+Transactions on Neural Networks and Learning Systems 32, 1 (2020), 4–24.
+[49] Lianghao Xia, Yizhen Shao, Chao Huang, Yong Xu, Huance Xu, and Jian Pei.
+2023. Disentangled Graph Social Recommendation. In Proceedings of the IEEE
+International Conference on Data Engineering. 2332–2344.
+[50] Cong Xu, Yunhang He, Jun Wang, and Wei Zhang. 2025. STAIR: Manipulating
+Collaborative and Multimodal Information for E-Commerce Recommendation. In
+Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 39. 12899–12907.
+[51] Jinfeng Xu, Zheyu Chen, Shuo Yang, Jinze Li, Hewei Wang, and Edith CH Ngai.
+2025. Mentor: multi-level self-supervised learning for multimodal recommen-
+dation. In Proceedings of the AAAI Conference on Artificial Intelligence, Vol. 39.
+12908–12917.
+[52] Guipeng Xv, Xinyu Li, Ruobing Xie, Chen Lin, Chong Liu, Feng Xia, Zhanhui
+Kang, and Leyu Lin. 2024. Improving Multi-modal Recommender Systems by
+Denoising and Aligning Multi-modal Content and User Feedback. In Proceedings
+of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining.
+3645–3656.
+[53] Junliang Yu, Xin Xia, Tong Chen, Lizhen Cui, Nguyen Quoc Viet Hung, and
+Hongzhi Yin. 2023. XSimGCL: Towards extremely simple graph contrastive
+learning for recommendation. IEEE Transactions on Knowledge and Data Engi-
+neering 36, 2 (2023), 913–926.
+[54] Junliang Yu, Hongzhi Yin, Xin Xia, Tong Chen, Lizhen Cui, and Quoc Viet Hung
+Nguyen. 2022. Are graph augmentations necessary? Simple graph contrastive
+learning for recommendation. In Proceedings of the 45th International ACM SIGIR
+Conference on Research and Development in Information Retrieval. 1294–1303.
+[55] Penghang Yu, Zhiyi Tan, Guanming Lu, and Bing-Kun Bao. 2023. Multi-view
+graph convolutional network for multimedia recommendation. In Proceedings of
+the 31st ACM International Conference on Multimedia. 6576–6585.
+[56] Zheng Yuan, Fajie Yuan, Yu Song, Youhua Li, Junchen Fu, Fei Yang, Yunzhu
+Pan, and Yongxin Ni. 2023. Where to go next for recommender systems? id-
+vs. modality-based recommender models revisited. In Proceedings of the 46th
+International ACM SIGIR Conference on Research and Development in Information
+Retrieval. 2639–2649.
+[57] Jinghao Zhang, Yanqiao Zhu, Qiang Liu, Shu Wu, Shuhui Wang, and Liang Wang.
+2021. Mining latent structures for multimedia recommendation. In Proceedings
+of the ACM International Conference on Multimedia. 3872–3880.
+[58] Yi Zhang, Lei Sang, and Yiwen Zhang. 2024. Exploring the individuality and
+collectivity of intents behind interactions for graph collaborative filtering. In
+Proceedings of the 47th International ACM SIGIR Conference on Research and
+Development in Information Retrieval. 1253–1262.
+[59] Yi Zhang and Yiwen Zhang. 2025. MixRec: Individual and Collective Mixing
+Empowers Data Augmentation for Recommender Systems. In Proceedings of the
+ACM Web Conference. 2198–2208.
+[60] Sen Zhao, Wei Wei, Ding Zou, and Xianling Mao. 2022. Multi-view intent disen-
+tangle graph networks for bundle recommendation. In Proceedings of the AAAI
+Conference on Artificial Intelligence, Vol. 36. 4379–4387.
+[61] Hongyu Zhou, Xin Zhou, Zhiwei Zeng, Lingzi Zhang, and Zhiqi Shen. 2023. A
+comprehensive survey on multimodal recommender systems: Taxonomy, evalua-
+tion, and future directions. arXiv preprint arXiv:2302.04473 (2023).
+[62] Xin Zhou. 2023. Mmrec: Simplifying multimodal recommendation. In Proceedings
+of the 5th ACM International Conference on Multimedia in Asia Workshops. 1–2.
+[63] Xin Zhou and Zhiqi Shen. 2023. A tale of two graphs: Freezing and denoising
+graph structures for multimodal recommendation. In Proceedings of the 31st ACM
+International Conference on Multimedia. 935–943.
+[64] Xin Zhou, Hongyu Zhou, Yong Liu, Zhiwei Zeng, Chunyan Miao, Pengwei Wang,
+Yuan You, and Feijun Jiang. 2023. Bootstrap Latent Representations for Multi-
+Modal Recommendation. In Proceedings of the ACM Web Conference. 845–854.
+5950
+Multi-view Semantic Contrastive Alignment for Multimodal Recommendation
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Algorithm 1: Pseudo-Code of MSCA.
+Input: Sets of users U, items I. User-item interaction
+graph G𝑟. Pre-extracted multimodal features F.
+Output: Parameters Θ of MSCA.
+1 Randomly initialize model parameters: E(0)
+𝑢, E(0)
+𝑖
+, etc.
+2 Construct the item-item structural graph ˜G𝑠via Eq. (4).
+3 Construct the modality-specific item-item graphs ˜G𝑚within
+modality 𝑚via Eq. (7), (8).
+4 while not converged do
+5
+Sample a mini-batch from the training dataset D.
+// Multi-view Semantic Pattern Encoder.
+6
+Compute the node representations in the user-item
+collaborative view: ¯E𝑢, ¯E𝑖via Eq. (1), (2), (3).
+7
+Calculate the refined node representations in the
+item-item structural view: ˜E𝑢, ˜E𝑖via Eq. (5), (6).
+8
+Obtain the projected modal features ˜f𝑚
+𝑖
+via Eq. (9).
+9
+Obtain the modality-aware node representations in the
+item-item intra-modal view: E𝑚
+𝑢, E𝑚
+𝑖via Eq. (10), (11).
+10
+Extract redundant representations E𝑟from multiple
+views via Eq. (12), (13).
+11
+Compute de-redundant representations ˆE via Eq. (14).
+12
+Obtain final representations E∗via Eq. (17).
+// Semantic Contrastive Alignment.
+13
+Calculate the collaborative semantic contrastive losses
+LC
+𝑢, LC
+𝑖via Eq. (15).
+14
+Calculate the modality-aware semantic contrastive
+losses LM
+𝑢, LM
+𝑖via Eq. (16).
+15
+Calculate the BPR loss LBPR via Eq. (18).
+16
+Calculate the overall objective L via Eq. (19).
+17
+Update model parameters via gradient descent on L.
+18 Return parameters Θ.
+A
+Appendix
+A.1
+Pseudo-Code of MSCA
+The pseudo-code of MSCA is summarized in Algorithm 1. Given
+historical user behaviors and multimodal content, the item–item
+structural graph and modality-specific item–item graphs are con-
+structed during the initialization phase of MSCA. Our code is pub-
+licly available at https://github.com/recomall/MSCA.
+A.2
+Computational Complexity Analysis
+A.2.1
+Space Complexity. The primary parameters of our MSCA
+stem from the user embeddings E(0)
+𝑢
+∈R𝑃×𝑑, the item embed-
+dings E(0)
+𝑖
+∈R𝑄×𝑑, and the raw multimodal features F = {f𝑚
+𝑖
+∈
+R𝑄×𝑑𝑚|𝑚∈M}. This aligns with most multimodal recommenda-
+tion methods (e.g., LGMRec, DA-MRS, MGCN), incurring a space
+complexity of O((𝑃+ 𝑄)𝑑+ 𝑄Í
+𝑚∈M 𝑑𝑚). The additional param-
+eters mainly originate from the MLPs in Eq. (9) and (12), which
+require the space complexities of O(Í
+𝑚∈M(𝑑𝑚𝑑+ 𝑑2)) and O(𝑑2),
+respectively. This is negligible compared to the former.
+A.2.2
+Time Complexity. The computational cost of MSCA primar-
+ily arises from the following two components. i) Graph convolution
+operations in the multi-view semantic pattern encoder. The user-
+item collaborative view requires a time complexity of O(2𝐿|E𝑟|𝑑),
+which aligns with that of LightGCN as the backbone. The item-item
+structural view entails a complexity of O((|E𝑟| + |E𝑠|)𝑑), while the
+item-item intra-modal view necessitates O(Í
+𝑚∈M(|E𝑟| + |E𝑚|)𝑑).
+Here, |E𝑟|, |E𝑠|, and |E𝑚| denote the total edge count in the user-
+item interaction graph G𝑟, the item-item structural graph ˜G𝑠, and
+the modality-specific item-item graphs ˜G𝑚, respectively. Since the
+item-item structural and intra-modal views employ merely a single
+layer of sparse graph propagation and are independent of 𝐿, the
+additional computational overhead introduced by graph learning
+does not significantly increase the running time compared to Light-
+GCN. ii) Loss computations during model optimization. The BPR
+loss computation has a time complexity of O(2𝐵𝑑). The semantic
+contrastive alignment loss calculation includes the collaborative
+view and the modality-aware view, which require O(𝐵𝑑+ 𝐵𝑉𝑑)
+and O(|M|(𝐵𝑑+𝐵𝑉𝑑)), respectively, in which 𝐵denotes the batch
+size and 𝑉represents the node count in a batch. Although semantic
+contrastive alignment across the two views introduces additional
+computational costs, the simplification enabled by batch training
+ensures that MSCA remains comparable in efficiency to state-of-
+the-art CL-based multimodal recommendation approaches.
+A.3
+Baseline Details
+i) General Collaborative Filtering Models
+• MF-BPR [30] adopts the Bayesian Personalized Ranking loss
+into matrix factorization to enhance its performance.
+• LightGCN [13] removes redundant components from graph con-
+volutional network to enhance recommendation performance.
+• BUIR [19] employs an asymmetric network architecture to up-
+date the parameters of its backbone network, with LightGCN
+serving as the backbone in BUIR.
+• SGL [45] designs various graph augmentation to construct self-
+supervised tasks to improve the robustness of recommendations.
+• SimGCL [54] simplifies the construction of contrastive views
+with the addition of uniform noise to the embeddings.
+• XSimGCL [53] simplifies the establishment of contrastive views
+based on SimGCL to reduce computational costs and enhance
+recommendation performance.
+• BIGCF [58] explores bidirectional intents in interactions and
+utilizes contrastive learning for self-supervised intent modeling.
+• MixRec [59] introduces a dual mixing of individual and collective
+views to generate new samples in linear time complexity.
+ii) Multimodal Recommendation approaches
+• VBPR [12] incorporates visual features within a matrix factoriza-
+tion framework using BPR loss to learn latent user preferences.
+• MMGCN [44] propagates the multimodal features of items on
+the user-item graph to learn modality-specific user preferences.
+• GRCN [43] filters the user-item interaction graph in multimodal
+recommendation by eliminating false-positive connections.
+• DualGNN [38] builds a user co-occurrence graph based on his-
+torical interactions to augment the user representations.
+• LATTICE [57] extracts modality-specific item homogeneous
+graphs from multimodal features for recommendation.
+• SLMRec [32] designs three data augmentation methods to inte-
+grate self-supervised learning into multimodal recommendation.
+5951
+WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates.
+Jiuqiang Li and Hongjun Wang
+1
+2
+3
+4
+L
+0.00
+0.02
+0.05
+0.07
+0.10
+0.12
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Baby
+1
+2
+3
+4
+L
+0.00
+0.03
+0.06
+0.08
+0.11
+0.14
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Sports
+0.1
+0.2
+0.5
+1.0
+0.00
+0.02
+0.05
+0.07
+0.10
+0.12
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Baby
+0.1
+0.2
+0.5
+1.0
+0.00
+0.03
+0.06
+0.08
+0.11
+0.14
+Recall@20
+0.00
+0.02
+0.03
+0.05
+0.06
+0.08
+NDCG@20
+Sports
+Figure 6: Performance w.r.t different hyperparameters 𝐿and 𝜏on Baby and Sports datasets.
+• BM3 [64] employs cosine similarity to simplify the self-supervised
+learning task generated by feature masking.
+• FREEDOM [63] keeps the item-item graph fixed and trims the
+user-item graph in a degree-sensitive manner to filter out noise.
+• MGCN [55] utilizes item behavior information to purify modality
+noise and adaptively fuse different modality representations.
+• DA-MRS [52] denoises user feedback and aligns user feedback
+and multimodal features guided by user preferences.
+• LGMRec [11] proposes local graph and global hypergraph em-
+beddings jointly to capture modality-aware user interests.
+• TMLP [14] combines topological pruning and multi-layer per-
+ceptrons to denoise and model relationships between items.
+A.4
+Supplementary Experiments
+A.4.1
+Empirical Study on Fusion Methods. To further validate the
+efficacy of multi-view adaptive fusion (MAF), we design the fol-
+lowing variants: MSCA (𝛼=0) and MSCA (𝛼=1), which denote
+excluding multi-view fused representations from the collaborative
+view and directly incorporating them without using fusion weight,
+respectively; w/ SUM represents directly summing the multi-view
+representations, equivalent to the w/o MAF variant; and w/ RE
+refers to replacing ˆE with the redundant representations E𝑟calcu-
+lated by MAF during the model prediction stage. Table 4 presents
+the results of these variants on the Baby and Sports datasets. The
+performance of the w/ RE variant is even worse than that of w/
+SUM, which verifies the effectiveness of the MAF module in elimi-
+nating redundant representations among multiple views.
+Table 4: Ablation study on fusion methods.
+Variants
+Baby
+Sports
+R@20
+N@20
+R@20
+N@20
+MSCA (𝛼= 0)
+0.0585
+0.0276
+0.0748
+0.0347
+MSCA (𝛼= 1)
+0.1008
+0.0453
+0.1132
+0.0503
+MSCA w/ SUM
+0.1031
+0.0458
+0.1186
+0.0532
+MSCA w/ RE
+0.0994
+0.0443
+0.1112
+0.0504
+MSCA
+0.1049
+0.0474
+0.1210
+0.0546
+A.4.2
+Further Hyperparameter Study. We further conduct sensitiv-
+ity analysis on the number of graph propagation layers 𝐿and the
+temperature hyperparameter 𝜏, with values taken from {1, 2, 3, 4}
+and {0.1, 0.2, 0.5, 1.0}, respectively. The results shown in Figure 6
+suggest that as the number of graph propagation layers 𝐿increases,
+the performance of MSCA gradually rises to its peak, after which
+excessive graph convolution layers may lead to over-smoothing
+of representations, potentially resulting in early-stopping or sub-
+optimal outcomes. Regarding 𝜏, setting it to 0.2 yields the best
+performance for MSCA on both the Baby and Sports datasets.
+A.4.3
+Efficiency Comparison. To validate the analysis in Section A.2,
+we report in Table 5 the efficiency comparison between MSCA and
+MGCN, DA-MRS, LGMRec and TMLP on the Electronics dataset,
+in terms of the number of model parameters (in millions) and the
+training time per epoch. The results show that our MSCA achieves
+better performance than the strongest baseline, TMLP, with fewer
+model parameters and shorter per-epoch runtime. Moreover, while
+delivering significant improvements, MSCA maintains comparable
+efficiency to CL-based methods (e.g., MGCN, LGMRec).
+Table 5: Efficiency comparison between MSCA and baselines
+on the Electronics dataset.
+Metrics
+MGCN
+DA-MRS
+LGMRec
+TMLP
+MSCA
+# Param. (M)
+298.90
+298.88
+298.95
+324.99
+298.89
+Time (𝑠/epoch)
+54.51
+100.55
+67.17
+70.51
+65.55
+Recall@20
+0.0658
+0.0635
+0.0632
+0.0687
+0.0734
+A.4.4
+Evaluation on the Micro-Video Domain. To further verify the
+effectiveness and generalization capability of MSCA, we conduct
+evaluations on the 5-core preprocessed MicroLens dataset [25] in
+the domain of micro-videos (# Users: 98,129, # Items: 17,228, # Inter-
+actions: 705,174). As shown in Table 6, we present the performance
+comparison between MSCA and other recommendation methods
+on the MicroLens dataset. It is observed that our MSCA still sig-
+nificantly outperforms the baseline approaches, demonstrating its
+strong robustness and adaptability across diverse scenarios.
+Table 6: Performance comparison between MSCA and base-
+line methods on the MicroLens dataset.
+Model
+R@10
+N@10
+R@20
+N@20
+MF-BPR
+0.0537
+0.0271
+0.0845
+0.0351
+LightGCN
+0.0732
+0.0384
+0.1091
+0.0476
+VBPR
+0.0684
+0.0355
+0.1031
+0.0445
+GRCN
+0.0688
+0.0356
+0.1075
+0.0456
+BM3
+0.0616
+0.0309
+0.0992
+0.0405
+FREEDOM
+0.0656
+0.0335
+0.1023
+0.0430
+MGCN
+0.0777
+0.0399
+0.1173
+0.0501
+DA-MRS
+0.0767
+0.0399
+0.1164
+0.0501
+LGMRec
+0.0746
+0.0387
+0.1136
+0.0487
+TMLP
+0.0742
+0.0382
+0.1158
+0.0489
+MSCA
+0.0868
+0.0458
+0.1277
+0.0563
+5952

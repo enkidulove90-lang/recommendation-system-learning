@@ -150,10 +150,50 @@ class LightGCN(BasicModel):
             # idea3 预算式成本: 鼓励平均引入率稳定在 cost_target 附近.
             # =0 时为纯征税(原语义); >0 时激活预算式, 避免把已偏低的 conf 压到 0.
             self.cost_target = self.config.get('cost_target', 0.0)
+            # ---- E6 全局预算硬约束 ----
+            # L_budget = mm_budget_lambda * (mean(c_batch) - mm_budget)^2
+            # 与 idea3 cost_reg 的本质区别(勿混用):
+            #   cost_reg  : (c_i - t)^2 的**逐物品**均值 -> 强迫每个物品的 c 都等于 t,
+            #               会抹平门控判别性, 等价于「软化版 force_c」, 学不到自适应.
+            #   mm_budget : (mean(c) - t)^2 只约束**批均值** -> 允许物品间分化
+            #               (图文相符者 c 高 / 不符者 c 低), 只把"总引入预算"顶住不塌.
+            # 动机: E1(force_c=0.8 -> R@20 0.08798) vs E2(conf_reg=0, c 塌到 0.005 -> 0.0848)
+            #       证明 BPR 局部梯度偏好丢弃多模态, 软惩罚(conf_reg)打不过收缩,
+            #       须用全局预算把 c 顶在 0.8 附近, 同时保留逐物品自适应.
+            #
+            # 【固定 lambda 的软惩罚有系统性欠冲, 必须知道】
+            # 记 BPR 对 c 的等效下压强度为 A, 则 lambda_b*(c_bar-t)^2 的驻点满足
+            #     2*lambda_b*(t - c_bar) = A   =>   c_bar = t - A/(2*lambda_b)
+            # 即**永远够不到 t**, 缺口 A/(2*lambda_b). _smoke_e6_budget.py 实测(A=0.5):
+            #     lambda=0.5 -> 0.2998 | 1.0 -> 0.5506 | 2.0 -> 0.6750, 与解析解三位小数吻合.
+            # 而真实 A 未知 => 只扫固定 lambda 可能得到 "conf_mean<0.6 -> E6 无效" 的**假阴性**.
+            # 解法: 增广拉格朗日(mm_budget_dual>0), 用对偶上升自适应乘子把 c_bar 精确顶到 t,
+            #       与 A 的大小无关:
+            #     L = BPR + nu*(t - c_bar) + lambda_b*(t - c_bar)^2
+            #     nu <- clip(nu + eta*(t - c_bar), -nu_max, +nu_max)      # 双侧, 故为等式约束
+            self.mm_budget = self.config.get('mm_budget', 0.0)          # c_target
+            self.mm_budget_lambda = self.config.get('mm_budget_lambda', 0.0)  # lambda_b (二次项)
+            self.mm_budget_dual = self.config.get('mm_budget_dual', 0.0)      # eta, 0=纯二次(软)
+            self.mm_budget_dual_max = self.config.get('mm_budget_dual_max', 5.0)
+            self._mm_dual = 0.0                                          # nu, 对偶乘子(非参数)
+            # ---- 投影缓存刷新频率(E6 阻断级修复) ----
+            # project() 的全量缓存原本每 epoch 只刷 1 次, 而预算通过 fuse_subset(带梯度)
+            # 每 batch 都在推 proj 头 -> 图传播读到的 c 结构上永远追不上训练路径。
+            # 实测 seed2024: 图传播 c≈0.055, 预算路径 batch_c≈0.823, 差 0.77。
+            # 后果: 模型实际是在"几乎不融合多模态"的图上训练, E6 等于没生效;
+            #       而若只在 eval 前刷新(mm_eval_fresh), 又变成训练/评测错配, R@20 直接崩。
+            # 正解: 训练途中periodically 刷新, 让两条路径同步。K=0 关闭(旧行为)。
+            # 开销: 全量投影 ~2.5s, 94 batch/epoch, K=32 => 约 +7.5s/epoch(可接受)。
+            self.mm_proj_refresh = int(self.config.get('mm_proj_refresh', 0))
+            self._mm_batch_cnt = 0
             print(f"[idea2] MultiModalAligner ON: types={list(feat_dims)}, dims={feat_dims}, "
                   f"mm_reg={self.mm_reg}"
                   + (f", idea3 cost_reg={self.mm_cost_w}" if self.mm_cost_w > 0 else "")
-                  + (f", E1 force_c={self.config.get('force_c', 0.0)}" if self.config.get('force_c', 0.0) > 0 else ""))
+                  + (f", E1 force_c={self.config.get('force_c', 0.0)}" if self.config.get('force_c', 0.0) > 0 else "")
+                  + (f", E6 budget target={self.mm_budget} lambda={self.mm_budget_lambda}"
+                     + (f" dual_eta={self.mm_budget_dual}" if self.mm_budget_dual > 0 else " (fixed-lambda/soft)")
+                     if self.mm_budget > 0 else "")
+                  + (f", proj_refresh={self.mm_proj_refresh}batch" if self.mm_proj_refresh > 0 else ""))
 
     def mm_new_epoch(self):
         """每个训练 epoch 开始时调用, 触发对齐器刷新「全量投影缓存」(no_grad).
@@ -344,6 +384,35 @@ class LightGCN(BasicModel):
                     else:
                         cost_loss = self.mm_cost_w * c.mean()
                     bpr_term = bpr_term + cost_loss
+                # ---- E6 全局预算约束(增广拉格朗日) ----
+                #   L = BPR + nu*(t - c_bar) + lambda_b*(t - c_bar)^2
+                # 作用在 c.mean() 而非逐物品 -> 只顶住总预算, 不抹平物品间分化(与 cost_reg 的分水岭).
+                # nu 由对偶上升自适应, 可抵消未知强度的 BPR 下压, 消除固定 lambda 的欠冲.
+                # (若 force_c>0, c 已 detach 为常数, 该项梯度为 0, 自动失效.)
+                if self.mm_budget > 0 and (self.mm_budget_lambda > 0 or self.mm_budget_dual > 0):
+                    c_bar = c.mean()
+                    gap = self.mm_budget - c_bar          # >0 表示 c 偏低, 需要往上顶
+                    budget_loss = c_bar.new_zeros(())
+                    if self.mm_budget_lambda > 0:
+                        budget_loss = budget_loss + self.mm_budget_lambda * gap.pow(2)
+                    if self.mm_budget_dual > 0:
+                        # 乘子项(nu 视作常数, 不回传); dL/dc_bar = -nu -> nu>0 时把 c 往上推
+                        budget_loss = budget_loss + self._mm_dual * gap
+                        # 对偶上升: 双侧 clip => 等式约束 c_bar = t(低档 0.2 也能压下去)
+                        nu = self._mm_dual + self.mm_budget_dual * float(gap.detach())
+                        self._mm_dual = max(-self.mm_budget_dual_max,
+                                            min(self.mm_budget_dual_max, nu))
+                    bpr_term = bpr_term + budget_loss
+                    self._mm_batch_c_mean = float(c_bar.detach())
+                    self._mm_budget_loss = float(budget_loss.detach())
+
+            # ---- 周期性同步全量投影缓存 ----
+            # 必须放在 idea2 块内、每个 batch 都走到的位置(不能只在有预算时刷,
+            # 否则 E1/E2 的对照跑行为会不一致)。用计数器而非 epoch 判断。
+            if self.mm_proj_refresh > 0 and self.training:
+                self._mm_batch_cnt += 1
+                if self._mm_batch_cnt % self.mm_proj_refresh == 0:
+                    self.mm_aligner.refresh_proj(self.mm_feats)
 
         loss = bpr_term
         return loss, reg_loss

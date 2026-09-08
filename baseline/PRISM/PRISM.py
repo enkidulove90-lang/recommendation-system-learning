@@ -69,10 +69,16 @@ class Interaction_Expert_Layer(nn.Module):
                 hidden_size=expert_hidden_size,
             )
             self.interaction_experts.append(InteractionExpertWrapper(deepcopy(base_expert)))
-        self.lambda_uni_v = 0.1
-        self.lambda_uni_t = 0.1
-        self.lambda_syn = 0.1 
-        self.lambda_red = 0.1
+        # (P3) 破除硬编码：读 args（默认值与论文一致 0.1），使 --lambda_* 生效、可做 ablation
+        self.lambda_uni_v = getattr(args, 'lambda_uni', 0.1)
+        self.lambda_uni_t = getattr(args, 'lambda_uni', 0.1)
+        self.lambda_syn = getattr(args, 'lambda_syn', 0.1)
+        self.lambda_red = getattr(args, 'lambda_red', 0.1)
+        # E14-ter：互补损失锚定（让 syn 承载与 y 相关的互补内容，修复 E14-bis 梯度抵消）
+        # lambda_comp>0 时，forward 接收 syn_target（真实体制=下一 item embedding）作为 y_proxy，
+        # 对 syn 正交补 syn_⊥ 施加 MSE(comp_head(syn_⊥), y_proxy) 直接监督。
+        self.lambda_comp = getattr(args, 'lambda_comp', 0.0)
+        self.comp_head = nn.Linear(hidden_size, hidden_size)
         
     def uniqueness_loss_single(self, anchor, pos, neg, margin=1.0):
         # Triplet loss for uniqueness
@@ -98,6 +104,26 @@ class Interaction_Expert_Layer(nn.Module):
             cosine_sim = torch.einsum('bd,bd->b', anchor_normalized, positive_normalized)
             total_red_loss += (1 - cosine_sim).mean()
         return total_red_loss / len(positives)
+
+    # ────────────────────────────── E14-ter 互补利用（观点② 改造）──────────────────────────────
+    def syn_complement(self, expert_embs):
+        """syn 在单模态专家 {uni_v, uni_t} 张成子空间上的**正交补** = 纯互补/多样性信号。
+        Gram-Schmidt 正交化 uni_v/uni_t 后取投影残差（数值稳定，避免 2×2 求逆）。
+        因 syn_⊥ 强制 ∈ E^⊥，互补损失 L_comp 只能从 E 之外学 y 信息 → 与 L_syn(old)
+        几何一致、无梯度抵消（修复 E14-bis）。"""
+        uv = F.normalize(expert_embs["uni_v"], p=2, dim=-1)
+        ut = F.normalize(expert_embs["uni_t"], p=2, dim=-1)
+        s = F.normalize(expert_embs["syn"], p=2, dim=-1)
+        utp = F.normalize(ut - (ut * uv).sum(-1, keepdim=True) * uv, p=2, dim=-1)
+        proj = (s * uv).sum(-1, keepdim=True) * uv + (s * utp).sum(-1, keepdim=True) * utp
+        return F.normalize(s - proj, p=2, dim=-1)
+
+    def synergy_complementary_loss(self, syn_perp, y_proxy):
+        """E14-ter 显式互补损失：comp_head 把 syn 正交补 syn_⊥ 映射为 y_proxy 的预测，
+        直接监督 syn_⊥ 承载「与 y 相关、但在单模态子空间正交补方向」的互补内容。
+        合成体制 y_proxy=c_syn；真实体制 y_proxy=下一 item embedding（由 trainer 传入）。"""
+        pred = self.comp_head(syn_perp)
+        return F.mse_loss(pred, y_proxy)
     
     def calculate_total_interaction_loss(self, interaction_losses_dict):
                 
@@ -125,7 +151,7 @@ class Interaction_Expert_Layer(nn.Module):
         return total_loss
 
 
-    def forward(self, img_feat, txt_feat):
+    def forward(self, img_feat, txt_feat, syn_target=None):
         if img_feat.dim() == 3:
             img_feat_proc = img_feat.mean(dim=1)
             txt_feat_proc = txt_feat.mean(dim=1)
@@ -174,6 +200,12 @@ class Interaction_Expert_Layer(nn.Module):
         }
 
         total_interaction_loss = self.calculate_total_interaction_loss(interaction_losses_dict)
+
+        # E14-ter：显式互补损失（仅当开启 lambda_comp 且提供 syn_target=y_proxy 时生效）
+        if self.lambda_comp > 0 and syn_target is not None:
+            syn_perp = self.syn_complement(expert_embs)
+            comp_loss = self.synergy_complementary_loss(syn_perp, syn_target)
+            total_interaction_loss = total_interaction_loss + self.lambda_comp * comp_loss
 
         return {
             "interaction_losses": total_interaction_loss,

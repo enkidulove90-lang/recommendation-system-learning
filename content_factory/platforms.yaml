@@ -1,0 +1,39 @@
+# 多平台文案改写规则（M12，配置即代码，docs/content-factory-engineering.md §6.2）
+# 改平台策略不碰生成逻辑；新增平台只需在此追加一项。
+platforms:
+  xhs:                       # 小红书：标题 ≤20、允许 emoji、口语化
+    max_title_len: 20
+    tone: casual
+    emoji: allow
+    statement_only: false
+    topics_max: 10
+  wechat:                    # 公众号：标题 ≤64、陈述句、克制 emoji
+    max_title_len: 64
+    tone: formal
+    emoji: forbid
+    statement_only: true
+    topics_max: 0
+  zhihu_answer:              # 知乎：先说结论，陈述句
+    max_title_len: 50
+    tone: formal
+    emoji: forbid
+    statement_only: true
+    topics_max: 0
+  x_thread:                  # X / Twitter 线程：≤60、允许 emoji、带缺口
+    max_title_len: 60
+    tone: casual
+    emoji: allow
+    statement_only: false
+    topics_max: 0
+  hn:                        # Hacker News：陈述句、不夸张、美东工作时段提交
+    max_title_len: 80
+    tone: neutral
+    emoji: forbid
+    statement_only: true
+    topics_max: 0
+  reddit:                    # Reddit：投细分 sub，陈述句
+    max_title_len: 80
+    tone: neutral
+    emoji: forbid
+    statement_only: true
+    topics_max: 0

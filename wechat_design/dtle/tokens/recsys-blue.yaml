@@ -1,0 +1,32 @@
+name: recsys-blue
+description: 科技蓝，精细繁杂——推荐系统/AI 论文解读、技术科普、数据复盘类文章常驻默认主题
+colors:
+  primary: "#3a5fcd"
+  bg_light: "#eef3ff"
+  card_bg: "#f5f8ff"
+  title: "#1a1a1a"
+  body: "#3f3f3f"
+  mute: "#8a94a6"
+  warn: "#f0a020"
+  warn_bg: "#fff7ec"
+  ok: "#1a9e57"
+  code_bg: "#f6f8fa"
+  border: "#e3e8f0"
+type:
+  baseFontSize: 15
+  scaleRatio: 1.25
+  lineHeight: 1.8
+  # 角色字号覆盖（优先级高于自动 scale，匹配公众号铁律）
+  roles:
+    body: 15
+    h2: 17
+    h1: 20
+    caption: 13
+    kpi: 18
+spacing:
+  base: 8
+  rhythmUnit: 24
+radius: 8
+brand:
+  signature: "@RecSysLab"
+  watermark: true

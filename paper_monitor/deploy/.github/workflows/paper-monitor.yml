@@ -1,0 +1,50 @@
+# 零服务器部署：GitHub Action 每日 09:00 UTC 摄入 + 投递 digest
+# 参考设计文档#16 arxiv-daily-plus 模板。
+# 配置仓库 Secrets: OPENALEX_API_KEY, OPENALEX_MAILTO, S2_API_KEY,
+#   PM_SMTP_* 或 PM_SLACK_WEBHOOK（按需启用投递通道）。
+name: paper-monitor-daily
+
+on:
+  schedule:
+    - cron: "0 9 * * *"      # 每日 09:00 UTC
+  workflow_dispatch:         # 支持手动触发
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install pyalex semanticscholar requests
+
+      - name: Run ingest DAG
+        env:
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+          OPENALEX_MAILTO: ${{ secrets.OPENALEX_MAILTO }}
+          S2_API_KEY: ${{ secrets.S2_API_KEY }}
+          PM_DELIVERY: ${{ secrets.PM_DELIVERY || 'file' }}
+          PM_SMTP_HOST: ${{ secrets.PM_SMTP_HOST }}
+          PM_SMTP_USER: ${{ secrets.PM_SMTP_USER }}
+          PM_SMTP_PASS: ${{ secrets.PM_SMTP_PASS }}
+          PM_SMTP_TO: ${{ secrets.PM_SMTP_TO }}
+          PM_SLACK_WEBHOOK: ${{ secrets.PM_SLACK_WEBHOOK }}
+          PM_DB_PATH: ./paper_monitor/data/paper_monitor.db
+          PM_DIGEST_PATH: ./paper_monitor/data/digest
+        run: python -m paper_monitor.cli ingest --limit 200
+
+      - name: Upload artifacts (db + digest)
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-monitor-${{ github.run_id }}
+          path: |
+            paper_monitor/data/paper_monitor.db
+            paper_monitor/data/digest/
+          if-no-files-found: ignore

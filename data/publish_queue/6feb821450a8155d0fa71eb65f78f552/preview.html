@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSWorld 小红书草稿预览</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f4f4f5; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; justify-content: center; padding: 24px; }
+  .phone { width: 390px; background: #fff; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,.12); }
+  .cover { width: 100%; display: block; }
+  .body { padding: 16px 18px 8px; }
+  .title { font-size: 18px; font-weight: 700; line-height: 1.4; color: #1a1a1a; margin-bottom: 12px; }
+  .text { font-size: 15px; line-height: 1.75; color: #2b2b2b; white-space: pre-wrap; }
+  .text .hl { color: #ff2e4d; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 14px 18px 4px; }
+  .grid img { width: 100%; border-radius: 8px; display: block; object-fit: cover; aspect-ratio: 1/1; }
+  .grid img.tall { grid-column: 1 / -1; aspect-ratio: 16/10; }
+  .tags { padding: 12px 18px 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 13px; color: #1d6fff; background: #eef4ff; padding: 5px 10px; border-radius: 20px; }
+  .foot { padding: 0 18px 18px; font-size: 12px; color: #999; border-top: 1px solid #f0f0f0; margin-top: 6px; padding-top: 10px; }
+  .note { max-width: 390px; margin: 18px auto 0; font-size: 12px; color: #888; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <img class="cover" src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2404.07972_osworld/images/statistics.png" alt="OSWorld 任务统计概览">
+    <div class="body">
+      <div class="title">OSWorld：给 AI Agent 的「真实电脑考场」，369 题最强模型仅做对 12%</div>
+      <div class="text">💻 AI 替你操作电脑，到底行不行？先让它考过 OSWorld
+
+🧠 <span class="hl">一句话定性</span>
+OSWorld（NeurIPS 2024）是第一个「真·电脑环境」基准：不是模拟、不是单 App 沙盒，而是直接在你熟悉的 Ubuntu / Windows / macOS 里，给 Agent 369 道真实操作题。
+
+📊 它到底考什么
+· 跨系统：Ubuntu、Windows、macOS 真实虚拟机
+· 跨应用：Chrome、VS Code、GIMP、LibreOffice、Thunderbird……真实桌面 + Web App
+· 真评测：execution-based 执行式打分——不是「选哪个选项」，而是真去点、真去改，再跑脚本验证结果对不对
+· 369 道任务全部来自真实电脑使用场景，每题带初始状态配置 + 自定义评估脚本，可复现
+
+📉 <span class="hl">扎心数据</span>
+人类能完成 72.36% 的任务；评测时最强模型（GPT-4V 系）只做对 12.24%。
+差距主要卡在两件事：GUI 定位（按钮在哪、点哪个）+ 操作常识（哪个菜单里能找到功能）。说白了，Agent 看得懂图，但「不会用电脑」。
+
+🌟 为什么这篇老 benchmark 现在还值得读
+之前的电脑 Agent 基准要么是假环境、要么只盯单个软件，根本反映不了真实办公的复杂度。OSWorld 第一次把「多 App、跨系统、开放式任务」放进同一个可复现考场，直接把「电脑助手」的研究往前推了一大步。
+（补充：项目后来出了 OSWorld-Verified 升级版，新榜首已逼近 86%，进步飞快——但 12% 这个原始数字足够说明起点有多难。）
+
+💡 完整论文已整理，关注我持续拆解 Agent / 多模态方向硬核论文 📚
+
+📄 论文：https://arxiv.org/abs/2404.07972
+💻 代码 GitHub：https://github.com/xlang-ai/OSWorld
+🌐 项目主页：https://os-world.github.io</div>
+    </div>
+    <div class="grid">
+      <img class="tall" src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2404.07972_osworld/images/pie_chart.png" alt="任务分布饼图">
+      <img src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2404.07972_osworld/images/chrome_clean_cookies.png" alt="真实桌面任务：清理 Cookie">
+      <img src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2404.07972_osworld/images/calc_rename.png" alt="真实桌面任务：表格重命名">
+    </div>
+    <div class="tags">
+      <span class="tag">#论文分享</span>
+      <span class="tag">#人工智能</span>
+      <span class="tag">#大模型</span>
+      <span class="tag">#AI智能体</span>
+      <span class="tag">#多模态</span>
+    </div>
+    <div class="foot">图表摘自 OSWorld 论文与官网(os-world.github.io)，仅作学术解读。</div>
+  </div>
+  <div class="note">本地草稿预览 · 与 xhs.json 暂存包同构，可在配置好 OpenCLI 的机器上 <code>--publish</code> 推成小红书真实草稿（CDP 绑定话题→传图→落草稿）。</div>
+</body>
+</html>

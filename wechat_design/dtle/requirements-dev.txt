@@ -1,0 +1,5 @@
+# DTLE 开发/当前环境依赖（「当前环境配置 flask/playwright」）
+# 安装：pip install -r wechat_design/dtle/requirements-dev.txt
+#       && playwright install chromium
+flask>=3.0          # L4 HTTP 服务（首选后端，stdlib http.server 为兜底）
+playwright>=1.40     # B 轨 PNG 导出（dev 后端）+ 三视口视觉回归（validation/gate.py）

@@ -64,4 +64,38 @@ def parse_args():
                         help='idea3 budget target rate for c_i.mean(); 0=pure tax (legacy), '
                              '>0=budget mode penalizing |c-target| (avoids suppressing already-low conf)')
 
+    # ---- E6: global budget hard constraint on the G3 confidence gate ----
+    # NOTE: deliberately distinct from --cost_target. cost_target penalises EVERY item
+    # toward the target (per-item (c_i-t)^2), which destroys gate discriminability;
+    # mm_budget constrains only the BATCH MEAN, letting individual c_i diverge.
+    parser.add_argument('--mm_budget', type=float, default=0.0,
+                        help='E6 global budget target c_target for mean(c_batch); 0 disables. '
+                             'Use 0.8 (E1 optimum) -- do NOT reuse the legacy idea3 value 0.2.')
+    parser.add_argument('--mm_budget_lambda', type=float, default=0.0,
+                        help='E6 quadratic weight lambda_b in lambda_b*(c_target-mean(c))^2; 0 disables. '
+                             'WARNING: fixed-lambda alone undershoots the target by A/(2*lambda_b) '
+                             'where A is the (unknown) BPR shrink pressure -- use --mm_budget_dual to fix.')
+    parser.add_argument('--mm_budget_dual', type=float, default=0.0,
+                        help='E6 dual-ascent step eta for the augmented-Lagrangian multiplier nu; '
+                             '0=pure soft quadratic. >0 makes mean(c) converge to c_target exactly, '
+                             'independent of the BPR pressure magnitude.')
+    parser.add_argument('--mm_budget_dual_max', type=float, default=5.0,
+                        help='E6 clip bound for the dual multiplier nu (two-sided)')
+    parser.add_argument('--mm_eval_fresh', type=int, default=0,
+                        help='[DISPROVEN - keep 0] Refresh the projection cache right before '
+                             'eval. Was intended to fix an eval-lag, but measurements show it '
+                             'CAUSES a train/eval mismatch: the model is trained with graph '
+                             'propagation at c~0.06 yet scored at c~0.83, and R@20 collapses '
+                             '0.06968 -> 0.05775 (valid drops in lockstep, loss rises). '
+                             'The real fix is --mm_proj_refresh. Kept only for A/B evidence.')
+    parser.add_argument('--mm_proj_refresh', type=int, default=0,
+                        help='Refresh the full projection cache every K training batches '
+                             '(0 = off, legacy: once per epoch). Needed because the E6 budget '
+                             'pushes the proj head through fuse_subset every batch, while '
+                             'graph propagation reads the epoch-level cache and can never '
+                             'catch up: measured graph c~0.055 vs budget batch_c~0.823. '
+                             'Refreshing during TRAINING keeps both paths in sync, so eval '
+                             'needs no after-the-fact patching. Suggested K=32 '
+                             '(~+7.5s/epoch on 94 batches).')
+
     return parser.parse_args()

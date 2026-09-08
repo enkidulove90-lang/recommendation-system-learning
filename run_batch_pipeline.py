@@ -8,7 +8,9 @@ run_batch_pipeline.py — 批量执行 7 Phase 操作层面工作
   python run_batch_pipeline.py --step 3    # 11 维度摘要重写
   python run_batch_pipeline.py --step 4    # 分类回写 papers.jsonl
   python run_batch_pipeline.py --step 5    # 文件夹标准化
-  python run_batch_pipeline.py --step all  # 顺序执行 1-5
+  python run_batch_pipeline.py --step 6    # 内容工厂（故事化草稿→标题→发布审核包）
+  python run_batch_pipeline.py --step 7    # 内容事件编排（intake→render→stage，dryrun 安全）
+  python run_batch_pipeline.py --step all  # 顺序执行 1-7
 """
 
 from __future__ import annotations
@@ -623,6 +625,70 @@ def step5_standardize() -> list[dict]:
 
 
 # ======================================================================
+# Step 6: 内容工厂（故事化草稿 → 标题工厂 → 发布审核包）
+#   扩展自 docs/content-factory-engineering.md。仅依赖标准库 + PyYAML，
+#   规则层无需 API key；LLM 润色需 DEEPSEEK_API_KEY（缺失则自动跳过）。
+#   产出与 redbook PublicationPackage 同构的 JSON 到 publish_queue/（人工审核闸）。
+# ======================================================================
+
+def step6_content_factory(limit: int = 3, *, use_llm: bool = False,
+                           viz: bool = False, distribute: bool = False,
+                           analytics: bool = False) -> list[dict]:
+    """对最新、且尚未生成审核包的论文运行内容工厂并暂存。
+
+    viz/distribute/analytics 控制是否一并构建 Stage 4/5/7/8 产物（默认关，
+    避免无谓开销；需要全链路时由 CLI flag 开启）。
+    """
+    logger.info("=" * 60)
+    logger.info("  Step 6: Content Factory (story → title → publish_queue)")
+    logger.info("=" * 60)
+    try:
+        from content_factory.auto_runner import run as cf_run
+    except Exception as e:
+        logger.error("content_factory 不可用，跳过 Step 6：%s", e)
+        return [{"error": f"content_factory import failed: {e}"}]
+
+    try:
+        done = cf_run(
+            _PROJECT_ROOT, limit=limit, platforms=("xhs", "wechat"),
+            use_llm=use_llm, viz=viz, distribute=distribute, analytics=analytics,
+        )
+    except Exception as e:
+        logger.error("[Step6] EXCEPTION: %s", e)
+        return [{"error": str(e)}]
+
+    if not done:
+        return [{"arxiv_id": None, "error": None, "skipped": True, "note": "无新论文需生成"}]
+    return [{"arxiv_id": pid, "error": None, "staged": True} for pid in done]
+
+
+# ======================================================================
+# Step 7: 内容事件编排（intake→render→stage，挂到主流水线末尾）
+#   把孤立的 content_events 编排层接入主流程（设计文档 §7/§9 / 优化设计 O9）。
+#   默认 dry_run=True（沙箱安全，只写本地待发布包）；不阻断前序步骤。
+# ======================================================================
+
+def step7_content_events(dry_run: bool = True) -> list[dict]:
+    logger.info("=" * 60)
+    logger.info("  Step 7: Content Events Orchestration (process-queue)")
+    logger.info("=" * 60)
+    try:
+        from content_events.orchestrator import run_once
+    except Exception as e:
+        logger.error("content_events 不可用，跳过 Step 7：%s", e)
+        return [{"error": f"content_events import failed: {e}"}]
+
+    try:
+        results, summary = run_once(_PROJECT_ROOT, publisher="dryrun", dry_run=dry_run)
+    except Exception as e:
+        logger.error("[Step7] EXCEPTION: %s", e)
+        return [{"error": str(e)}]
+
+    logger.info("[Step7] %s", summary.render())
+    return [{"summary": summary.as_dict(), "items": results}]
+
+
+# ======================================================================
 # 主入口
 # ======================================================================
 
@@ -632,7 +698,14 @@ def main():
     setup_logging()
 
     parser = argparse.ArgumentParser(description="Batch Pipeline Runner")
-    parser.add_argument("--step", required=True, help="Step number (1-5) or 'all'")
+    parser.add_argument("--step", required=True, help="Step number (1-6) or 'all'")
+    parser.add_argument("--cf-limit", type=int, default=3, help="Step 6 单次最多生成篇数")
+    parser.add_argument("--cf-llm", action="store_true", help="Step 6 启用 LLM 润色（需 DEEPSEEK_API_KEY）")
+    parser.add_argument("--cf-viz", action="store_true", help="Step 6 构建 Stage 4/5 可视化+交互")
+    parser.add_argument("--cf-distribute", action="store_true", help="Step 6 构建 Stage 7 分发+A/B")
+    parser.add_argument("--cf-analytics", action="store_true", help="Step 6 构建 Stage 8 分析回收")
+    parser.add_argument("--ce-no-dry-run", action="store_true",
+                        help="Step 7 允许 approved 真实平台项尝试真实 stage（沙箱无会话→needs_review）")
     args = parser.parse_args()
 
     if args.step == "all":
@@ -642,6 +715,10 @@ def main():
             ("3", step3_summarize),
             ("4", step4_classify),
             ("5", step5_standardize),
+            ("6", lambda: step6_content_factory(limit=args.cf_limit, use_llm=args.cf_llm,
+                                                  viz=args.cf_viz, distribute=args.cf_distribute,
+                                                  analytics=args.cf_analytics)),
+            ("7", lambda: step7_content_events(dry_run=not args.ce_no_dry_run)),
         ]
     else:
         step_map = {
@@ -650,6 +727,10 @@ def main():
             "3": step3_summarize,
             "4": step4_classify,
             "5": step5_standardize,
+            "6": lambda: step6_content_factory(limit=args.cf_limit, use_llm=args.cf_llm,
+                                                viz=args.cf_viz, distribute=args.cf_distribute,
+                                                analytics=args.cf_analytics),
+            "7": lambda: step7_content_events(dry_run=not args.ce_no_dry_run),
         }
         if args.step not in step_map:
             print(f"Unknown step: {args.step}. Available: {list(step_map.keys())} or 'all'")

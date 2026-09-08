@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LOOPSBENCH：让 AI 在「循环改代码」里别越改越乱</title>
+<style>
+  body{max-width:677px;margin:0 auto;padding:20px 16px 32px;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#fff;color:#3f3f3f;font-size:15px;line-height:1.75;text-align:justify;}
+  h1{font-size:20px;line-height:1.45;margin:0 0 6px;color:#1a1a1a;text-align:center;font-weight:700;}
+  .sub{font-size:13px;color:#8a94a6;text-align:center;margin:0 0 18px;line-height:1.6;}
+  .cover{width:100%;border-radius:8px;margin-bottom:18px;display:block;}
+  hr{border:none;border-top:1px solid #eee;margin:26px 0;}
+  h2{font-size:17px;font-weight:700;color:#1a1a1a;border-left:4px solid #3a5fcd;
+    padding-left:10px;line-height:1.45;margin:24px 0 12px;}
+  p{margin:0 0 14px;line-height:1.8;}
+  .hl{background:#eef3ff;border-left:4px solid #3a5fcd;padding:12px 16px;border-radius:6px;
+    margin:0 0 16px;line-height:1.8;color:#2c3e50;font-size:15px;}
+  .hl strong{color:#3a5fcd;}
+  .warn{background:#fff7ec;border-left:4px solid #f0a020;padding:12px 16px;border-radius:6px;
+    margin:0 0 16px;line-height:1.8;color:#5a4a2a;font-size:14px;}
+  .kpi{display:flex;gap:10px;margin:0 0 16px;flex-wrap:wrap;}
+  .kpi .card{flex:1;min-width:90px;background:#f5f8ff;border:1px solid #dce6ff;border-radius:8px;
+    padding:10px 8px;text-align:center;}
+  .kpi .num{font-size:18px;font-weight:700;color:#3a5fcd;line-height:1.2;}
+  .kpi .lab{font-size:12px;color:#6b7280;margin-top:2px;}
+  table{width:100%;border-collapse:collapse;margin:6px 0 16px;font-size:14px;}
+  th,td{border:1px solid #e3e8f0;padding:9px 8px;text-align:center;}
+  th{background:#3a5fcd;color:#fff;font-weight:600;}
+  td:first-child,th:first-child{text-align:left;}
+  tbody tr:nth-child(even){background:#f7f9fc;}
+  .up{color:#1a9e57;font-weight:700;}
+  figure{margin:0 0 18px;}
+  figure img{width:100%;border-radius:6px;border:1px solid #f0f0f0;display:block;}
+  figcaption{font-size:13px;color:#999;line-height:1.6;margin-top:6px;text-align:center;}
+  .note{font-size:13px;color:#8a94a6;line-height:1.7;}
+  .ask{background:#f0f7ff;border-radius:8px;padding:14px 16px;margin:18px 0;font-size:14px;color:#2c3e3a;}
+  .ask b{color:#3a5fcd;}
+  a{color:#3a5fcd;text-decoration:none;}
+  .tag{display:inline-block;background:#eef3ff;color:#3a5fcd;border-radius:4px;
+    padding:2px 8px;font-size:13px;margin-right:6px;}
+</style></head>
+<body>
+
+<h1>LOOPSBENCH：让 AI 在「循环改代码」里别越改越乱</h1>
+<div class="sub">首个体评估基准，把长周期编码任务拆成 DAG、按拓扑门控测试，还顺手验证了「最小 Skill」的价值</div>
+
+<img class="cover" src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2608.00267/images/728f8cc26e4d177bec5e5d04ffddcbbdb2aa97c9b8c2ee99cdae6e3aa9e94e87.jpg" alt="LOOPSBENCH 封面">
+
+<div class="hl">
+  <strong>📌 一句话</strong><br>
+  论文提出首个面向「循环工程（agent 反复改代码）」评估的编码基准 <b>LOOPSBENCH</b>：
+  用依赖 DAG 描述任务、用流感知运行时按拓扑门控释放测试，让长周期编码能力第一次有了可复现的量化标尺。
+</div>
+
+<p>但在 LOOPSBENCH 之前，长周期编码任务的评估长期是绕不开的痛点——现有基准大多只测「一次性写完」，
+而真实工程里 agent 要反复改、反复测、反复回归。这正是这篇想补的缺口。</p>
+
+<h2>它到底解决了什么</h2>
+<p>LOOPSBENCH 的核心是把「改代码」这件事结构化，而不是丢给模型自由发挥：</p>
+<p><strong>1. 任务 = 依赖 DAG。</strong> 节点是可独立测试的开发单元，边是前置关系，天然表达「先 A 后 B」的工程顺序。</p>
+<p><strong>2. 流感知评估运行时。</strong> 按 DAG 拓扑门控释放测试：上游节点没过，下游就不算完成；已通过的节点转为「回归义务」，防止后面改崩前面。</p>
+<p><strong>3. 双容器快照流水线。</strong> 分离「编辑执行」与「测试裁决」两个容器，从而能精确算出循环轨迹上的各类指标。</p>
+
+<figure>
+  <img src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2608.00267/images/a098b89aeff7de7c4df6431b30f2eaa35c35f9bd578af946cfac465fefeb2521.jpg" alt="方法框架">
+  <figcaption>图 1｜LOOPSBENCH 方法框架示意（任务 DAG 与评估运行时）</figcaption>
+</figure>
+
+<h2>💡 关键结果</h2>
+<p>在「是否启用循环（w/ vs w/o）」的对照下，三个主流模型/loop 组合的 Resolve Rate（RR）如下：</p>
+
+<table>
+  <thead><tr><th>模型 / Loop</th><th>RR（无循环）</th><th>RR（有循环）</th><th>提升</th></tr></thead>
+  <tbody>
+    <tr><td>Opus-4.7 · Claude Code</td><td>16.96%</td><td class="up">25.00%</td><td class="up">+8.04</td></tr>
+    <tr><td>GPT-5.5 · Codex</td><td>14.29%</td><td class="up">21.43%</td><td class="up">+7.14</td></tr>
+    <tr><td>Codex · gpt-5.4</td><td>13.39%</td><td class="up">18.75%</td><td class="up">+5.36</td></tr>
+  </tbody>
+</table>
+
+<div class="kpi">
+  <div class="card"><div class="num">+8.04</div><div class="lab">Opus 最大提升</div></div>
+  <div class="card"><div class="num">25.0%</div><div class="lab">最高 RR</div></div>
+  <div class="card"><div class="num">112</div><div class="lab">基准任务数</div></div>
+</div>
+
+<div class="warn">⚠️ <b>一处诚实备注</b>：论文未给出跨更多循环轮次的长期演化曲线，上述提升主要来自单轮快照指标；
+且论文未系统对比「更多开源基线」，结论的外部有效性仍有待补充。</div>
+
+<figure>
+  <img src="file:///C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2608.00267/images/6aa350561920d04c1e4853083d749e4463b58596535526b67ba6ccf7f96430dd.jpg" alt="实验结果">
+  <figcaption>图 2｜不同模型 / loop 配置下的评估结果</figcaption>
+</figure>
+
+<h2>先说局限：哪些结论要打折</h2>
+<p>· <b>PR 序列几乎不可解析</b>：论文自承 PR 序列任务解析率极低（最高 3.45%），14 个配置中有 9 个完全解析不出任何 PR 序列任务（附录 M）。</p>
+<p>· <b>规模有限</b>：基准仅 112 个任务，可能不足以支撑统计显著的细分结论。</p>
+<p>· <b>评估窗口偏短</b>：模型和 loop 配置的观测窗口较短，未必能反映长期演化趋势。</p>
+
+<h2>但别一刀切全删</h2>
+<p>本文方法已在 LOOPSBENCH 上得到验证。上面这些局限提醒我们：新方法不是「全盘替代」，而是<b>按场景取舍</b>——
+简单任务不必套重流程，复杂或高风险任务才值得保留显式约束。</p>
+
+<h2>给工程实践的建议：先裸跑，再加最小 Skill</h2>
+<p><strong>1.</strong> 先定义结果，不定义仪式——把目标、硬约束、验收标准写清楚。</p>
+<p><strong>2.</strong> 用基准数据（LOOPSBENCH）让模型/基线裸跑，记录成功率与返工。</p>
+<p><strong>3.</strong> 只看可复现的失败——同一类错误稳定出现，才说明缺经验。</p>
+<p><strong>4.</strong> 只补一个最小补丁——把上文的「DAG 任务描述 + 拓扑门控测试 + 双容器快照」固化成可触发的最小流程。</p>
+<p><strong>5.</strong> 再跑同一组任务，对比 RR / TPR / Depth；质量没提升就删掉。</p>
+
+<h2>你该不该装</h2>
+<p>🧑‍🎓 <b>在校学生</b>：先吃透上面的创新点，理解它到底解决了什么。</p>
+<p>💼 <b>工业界落地</b>：重点看关键结果能否在你的业务指标上复现。</p>
+<p>🔬 <b>做研究</b>：借鉴它的模块拆分思路，而不是照抄整条流程。</p>
+
+<h2>写在最后</h2>
+<p>真正该学的，不是最火的插件或 Skill 名字，而是看清模型现在会什么、不会什么。LOOPSBENCH 的价值，
+不在于给出一个满分答案，而在于第一次把「循环改代码」这件事，变成了可以度量、可以比较、可以改进的工程问题。</p>
+
+<div class="ask">
+  <b>💬 互动一下</b>：你在实际项目里让 AI 反复改代码时，最常被「改崩前面」坑过的是哪类任务？欢迎在评论区聊聊。
+</div>
+
+<hr>
+<h2>📚 参考文献</h2>
+<p>· 论文：<a href="https://arxiv.org/abs/2608.00267">https://arxiv.org/abs/2608.00267</a></p>
+<p>· PDF：<a href="https://arxiv.org/pdf/2608.00267">https://arxiv.org/pdf/2608.00267</a></p>
+<p>· 代码：暂无官方代码（以论文复现为准）</p>
+<p class="note">图表摘自论文，仅作学术解读。</p>
+
+</body></html>

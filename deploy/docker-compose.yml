@@ -1,0 +1,35 @@
+# novelty 引擎运维编排（设计文档 §7）
+# - grobid: GROBID Docker 常驻（PDF -> TEI/全文，供解析模块）
+# - novelty: 创新性分析 REST 服务（FastAPI）
+# 数据卷挂载宿主 data/ 目录（本地快照语料 + 索引缓存）。
+
+services:
+  grobid:
+    image: lfoppiano/grobid:0.9.1
+    container_name: novelty-grobid
+    ports:
+      - "8070:8070"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8070/api/isalive"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  novelty:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: novelty-engine
+    depends_on:
+      - grobid
+    ports:
+      - "8000:8000"
+    environment:
+      - DATA_DIR=/app/data
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - SEMANTIC_SCHOLAR_API_BASE=https://api.semanticscholar.org/graph/v1
+    volumes:
+      - ../data:/app/data:ro
+      - ./index_cache:/app/data/novelty_index_cache
+    restart: unless-stopped

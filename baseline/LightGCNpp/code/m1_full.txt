@@ -1,0 +1,44 @@
+﻿[M1] loading CF embeddings ...
+      users=(35598, 64) items=(18357, 64)
+[M1] loading M3 e_u profiles ...
+      profiles=(35598, 4480) users=35598
+[M1] eval users: 35598
+[M1] computing CF ranking (sigmoid(U@I^T)) ...
+      CF topk done for 35598 users
+[M1] computing content ranking (e_u cos) ...
+      content topk done for 35598 users
+[M1] evaluating single tracks ...
+[M1] RRF grid ...
+      RRF_k40_w1.0: R@20=0.0657 N@20=0.0301
+      RRF_k40_w2.0: R@20=0.0903 N@20=0.0451
+      RRF_k40_w4.0: R@20=0.0903 N@20=0.0457
+      RRF_k40_w8.0: R@20=0.0903 N@20=0.0458
+      RRF_k60_w1.0: R@20=0.0655 N@20=0.0297
+      RRF_k60_w2.0: R@20=0.0902 N@20=0.0444
+      RRF_k60_w4.0: R@20=0.0902 N@20=0.0455
+      RRF_k60_w8.0: R@20=0.0904 N@20=0.0457
+      RRF_k100_w1.0: R@20=0.0651 N@20=0.0291
+      RRF_k100_w2.0: R@20=0.0896 N@20=0.0430
+      RRF_k100_w4.0: R@20=0.0905 N@20=0.0449
+      RRF_k100_w8.0: R@20=0.0902 N@20=0.0456
+
+[M1] ================ 缁撴灉姹囨€?================
+  CF only      : R@20=0.0902 N@20=0.0457
+  Content only : R@20=0.0081 N@20=0.0045
+  cf_only           : R@20=0.0902 N@20=0.0457
+  content_only      : R@20=0.0081 N@20=0.0045
+  RRF_k40_w1.0      : R@20=0.0657 N@20=0.0301
+  RRF_k40_w2.0      : R@20=0.0903 N@20=0.0451
+  RRF_k40_w4.0      : R@20=0.0903 N@20=0.0457
+  RRF_k40_w8.0      : R@20=0.0903 N@20=0.0458
+  RRF_k60_w1.0      : R@20=0.0655 N@20=0.0297
+  RRF_k60_w2.0      : R@20=0.0902 N@20=0.0444
+  RRF_k60_w4.0      : R@20=0.0902 N@20=0.0455
+  RRF_k60_w8.0      : R@20=0.0904 N@20=0.0457
+  RRF_k100_w1.0     : R@20=0.0651 N@20=0.0291
+  RRF_k100_w2.0     : R@20=0.0896 N@20=0.0430
+  RRF_k100_w4.0     : R@20=0.0905 N@20=0.0449
+  RRF_k100_w8.0     : R@20=0.0902 N@20=0.0456
+
+  BEST: RRF_k100_w4.0 R@20=0.0905 (vs CF only 0.0902, +0.25%)
+[M1] saved -> m1_report.json

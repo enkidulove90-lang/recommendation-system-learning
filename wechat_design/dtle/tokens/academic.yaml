@@ -1,0 +1,31 @@
+name: academic
+description: 学术灰——衬线、克制，适合严谨综述/方法论拆解
+colors:
+  primary: "#4a5568"
+  bg_light: "#f0f2f5"
+  card_bg: "#f7f8fa"
+  title: "#1a202c"
+  body: "#2d3748"
+  mute: "#a0aec0"
+  warn: "#b7791f"
+  warn_bg: "#fdf6e3"
+  ok: "#2f855a"
+  code_bg: "#eef1f4"
+  border: "#cbd5e0"
+type:
+  baseFontSize: 16
+  scaleRatio: 1.25
+  lineHeight: 1.9
+  roles:
+    body: 16
+    h2: 18
+    h1: 21
+    caption: 13
+    kpi: 17
+spacing:
+  base: 8
+  rhythmUnit: 28
+radius: 2
+brand:
+  signature: "@RecSysLab"
+  watermark: false

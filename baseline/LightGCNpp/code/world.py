@@ -30,7 +30,8 @@ if not os.path.exists(FILE_PATH):
 
 
 config = {}
-all_dataset = ['lastfm', 'gowalla', 'yelp2018', 'amazon-book', 'ml-100k', 'ml-1m', 'yelp2018-ass', 'amazon-sports', 'amazon-beauty', 'amazon-baby-mmssl']
+all_dataset = ['lastfm', 'gowalla', 'yelp2018', 'amazon-book', 'ml-100k', 'ml-1m', 'yelp2018-ass', 'amazon-sports', 'amazon-beauty', 'amazon-baby-mmssl',
+               'amazon-baby-mmssl_imgonly', 'amazon-baby-mmssl_txtonly']
 all_models  = ['mf', 'lgn']
 # config['batch_size'] = 4096
 config['bpr_batch_size'] = args.bpr_batch
@@ -71,6 +72,13 @@ config['force_c'] = args.force_c
 # ---- idea3: cost-aware knowledge introduction ----
 config['cost_reg'] = args.cost_reg
 config['cost_target'] = args.cost_target
+# ---- E6: global budget hard constraint (batch-mean, NOT per-item) ----
+config['mm_budget'] = args.mm_budget
+config['mm_budget_lambda'] = args.mm_budget_lambda
+config['mm_budget_dual'] = args.mm_budget_dual
+config['mm_budget_dual_max'] = args.mm_budget_dual_max
+config['mm_eval_fresh'] = args.mm_eval_fresh
+config['mm_proj_refresh'] = args.mm_proj_refresh
 
 GPU = torch.cuda.is_available()
 device = torch.device(f'cuda:{args.gpu}' if GPU else "cpu")

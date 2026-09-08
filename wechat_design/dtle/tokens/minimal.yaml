@@ -1,0 +1,31 @@
+name: minimal
+description: 极简——大留白、弱装饰，适合清单盘点/工具罗列类轻阅读
+colors:
+  primary: "#2b6cb0"
+  bg_light: "#f7fafc"
+  card_bg: "#ffffff"
+  title: "#1a202c"
+  body: "#2d3748"
+  mute: "#a0aec0"
+  warn: "#dd6b20"
+  warn_bg: "#fffaf0"
+  ok: "#2f855a"
+  code_bg: "#f7fafc"
+  border: "#e2e8f0"
+type:
+  baseFontSize: 16
+  scaleRatio: 1.2
+  lineHeight: 1.85
+  roles:
+    body: 16
+    h2: 18
+    h1: 22
+    caption: 13
+    kpi: 18
+spacing:
+  base: 12
+  rhythmUnit: 32
+radius: 4
+brand:
+  signature: "@RecSysLab"
+  watermark: false

@@ -1,0 +1,9 @@
+# DTLE 基础运行依赖（其余全部使用 Python 标准库）
+pyyaml>=6.0
+
+# —— 开发/当前环境依赖（Flask HTTP 服务 + Playwright B 轨 PNG/视觉回归）——
+# 见 requirements-dev.txt：pip install -r requirements-dev.txt && playwright install chromium
+#
+# —— 生产环境依赖（B 轨确定性 PNG 渲染 Satori+resvg）——
+# 见 prod/package.json（Node 包，非 Python）：cd prod && npm install
+# 运行时需提供 CJK 字体（设置 DTLE_FONT 或放置到候选路径，见 renderers/btrack.py）

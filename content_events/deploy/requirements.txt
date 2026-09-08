@@ -1,0 +1,6 @@
+# content_events/serve.py 运行所需最小依赖
+# 真实发布所需的 redbook/wechat_design 依赖为 guarded import，dry_run 模式不触发。
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
+# 测试用（可选，CI 镜像可去掉）：
+# httpx==0.28.1

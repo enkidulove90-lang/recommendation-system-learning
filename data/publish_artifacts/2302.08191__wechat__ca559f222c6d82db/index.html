@@ -1,0 +1,33 @@
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔸 用SVD增强图对比学习，注入全局协同信号提升推荐</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">但在此之前，Top-K排序长期是绕不开的痛点。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔹 它过去解决了什么</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">任务类型：Top-K排序 输入：用户-物品交互图（用户特征、物品特征、交互历史）</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">用SVD增强图对比学习，注入全局协同信号提升推荐。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔹 新变化把旧方案吃进了模型</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">1. 提出基于SVD的图增强方法，替代随机扰动或启发式增强，保留图的内在语义结构并注入全局协同关系</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">2. 简化对比学习框架，直接对比SVD增强视图与主视图嵌入，避免传统三视图范式的复杂性</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">3. 采用随机SVD算法，降低计算复杂度，提升训练效率</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">💡 关键结果</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">表1显示，在Yelp上LightGCL的R@20为0.0793，相比最强基线SimGCL（0.0718）提升10%；在Gowalla上R@20为0.1578，相比SimGCL（0.1357）提升16%；在ML-10M上R@20为0.2613，相比SimGCL（0.2265）提升15%；在Amazon上R@20为0.0585，相比SimGCL（0.0474）提升23%；在Tmall上R@20为0.0528，相比SimGCL（0.0473）提升11%</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">表1中报告了p值，如Yelp上R@20的p值为7e-9，表明结果具有统计显著性</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔸 最先没必要的，是这几类</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">· 论文自承：未来工作将探索引入因果分析以缓解数据增强中的混杂效应。 · 论文未提及模型在超大规模图上的可扩展性验证，且随机SVD的近似质量对性能的影响未深入分析。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔸 但这不等于全部都该删</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">本文方法在 Yelp、Gowalla、ML-10M、Amazon-book、Tmall 上得到验证。 但上面列出的局限提醒我们：新方法不是「全盘替代」，而是按场景取舍。 简单任务不必套重流程，复杂或高风险任务仍值得保留显式约束。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔹 新方法：先裸跑，再加最小Skill</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">第一步：先定义结果，不定义仪式——把目标、硬约束、验收标准写清楚。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">第二步：用基准数据（Yelp、Gowalla、ML-10M、Amazon-book、Tmall）让模型/基线裸跑，记录成功率与返工。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">第三步：只看可复现的失败——同一类错误稳定出现，才说明缺经验。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">第四步：只补一个最小补丁——把上文方法（提出基于SVD的图增强方法，替代随机扰动或启发式增强，保留图；简化对比学习框架，直接对比SVD增强视图与主视图嵌入，避免传…）固化成可触发的最小流程。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">第五步：再跑同一组任务，对比指标（Recall@20/NDCG@20/Recall@40/NDCG@40）；质量没提升就删掉。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔹 还要不要装</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🧑‍🎓 如果你是在校学生：先吃透上面的创新点，理解它到底解决了什么。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">💼 如果你在工业界落地：重点看关键结果能否在你的业务指标上复现。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔬 如果你在做研究：借鉴它的模块拆分思路，而不是照抄整条流程。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">🔹 写在最后</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">用SVD增强图对比学习，注入全局协同信号提升推荐。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">真正该学的，不是最火的插件或 Skill 名字，而是看清模型现在会什么、不会什么。</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;">——————————————</p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">📚 参考文献</span></p></section>
+<section style="margin:0 0 14px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">· 论文：https://arxiv.org/abs/2302.08191 · PDF：https://arxiv.org/pdf/2302.08191 · 代码：暂无官方代码（以论文复现为准）</span></p></section>
+<section style="background:#eef3ff;border-left:4px solid #3a5fcd;padding:12px 16px;border-radius:6px;margin:0 0 16px;"><p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15.0px;"><span leaf="">📌 一句话：</span><span leaf="">图表摘自论文，仅作学术解读。</span></p></section>

@@ -1,0 +1,23 @@
+# 内容事件编排 REST 服务部署
+# 用法：
+#   docker compose -f content_events/deploy/docker-compose.yml up --build
+#   curl http://localhost:8080/health
+#
+# 说明：
+#   - publish_queue/（输入队列）与 data/（落盘：事件日志/反馈库/幂等注册表）以卷挂载，
+#     镜像本身不含语料大文件。
+#   - 默认 dry_run=True：仅写本地待发布包，不触达真实平台。需要真实 stage 时在请求体显式传 dry_run=false，
+#     但仍需宿主机具备登录态（CDP 会话），否则降级 needs_review。
+services:
+  content-events:
+    build:
+      context: ../..
+      dockerfile: content_events/deploy/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    volumes:
+      - ../../publish_queue:/app/publish_queue:ro
+      - ../../data:/app/data
+    restart: unless-stopped

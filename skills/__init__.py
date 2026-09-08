@@ -12,6 +12,7 @@ skills/ — 技能模块
   - research-profile-build: Summary 2.0 研究画像构建
   - research-profile-validate: 研究画像质量校验
   - research-profile-search: 本地结构化画像检索
+  - novelty-analyze : 论文创新性辅助分析（novelty/ 引擎，可选增强）
 """
 
 from skills.base_module import (
@@ -44,6 +45,13 @@ from skills import graph_builder           # noqa: F401 — 图谱构建
 from skills import quality_scorer          # noqa: F401 — 质量评分
 from skills import narrative_generator     # noqa: F401 — 增强叙事
 from skills import graph_visualizer        # noqa: F401 — 图谱可视化
+
+# 创新性分析引擎 skill（可选增强：依赖 novelty/ 包；缺失时静默跳过，
+# 不影响既有 skills 加载）。注册为 novelty-analyze，接入 BaseSkill 工厂。
+try:
+    from novelty import analyzer_skill     # noqa: F401 — 注册 novelty-analyze
+except Exception:  # pragma: no cover - novelty 为可选增强
+    pass
 
 __all__ = [
     "BaseSkill",

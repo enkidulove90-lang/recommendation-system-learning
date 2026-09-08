@@ -1,0 +1,19 @@
+:root {
+  --rc-primary: #3a5fcd;
+  --rc-bg_light: #eef3ff;
+  --rc-card_bg: #f5f8ff;
+  --rc-title: #1a1a1a;
+  --rc-body: #3f3f3f;
+  --rc-mute: #8a94a6;
+  --rc-warn: #f0a020;
+  --rc-warn_bg: #fff7ec;
+  --rc-ok: #1a9e57;
+  --rc-code_bg: #f6f8fa;
+  --rc-border: #e3e8f0;
+  --rc-font-body: 15.0px;
+  --rc-font-h2: 17.0px;
+  --rc-font-h1: 20.0px;
+  --rc-line-height: 1.8;
+  --rc-radius: 8px;
+  --rc-space: 8px;
+}

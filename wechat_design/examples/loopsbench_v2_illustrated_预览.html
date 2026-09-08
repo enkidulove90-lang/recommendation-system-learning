@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>loopsbench_v2_illustrated · 公众号排版预览</title>
+<style>
+  body{margin:0;background:#eef0f2;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;-webkit-text-size-adjust:100%;}
+  .gzh-toolbar{position:fixed;top:0;left:0;right:0;height:54px;background:#ffffff;box-shadow:0 1px 10px rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:99;}
+  .gzh-hint{font-size:13px;color:#6b7280;line-height:1.4;}
+  .gzh-hint b{color:#111827;}
+  .gzh-copy{background:#059669;color:#fff;border:0;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(5,150,105,.28);white-space:nowrap;transition:transform .08s,background .15s;}
+  .gzh-copy:hover{background:#047857;}
+  .gzh-copy:active{transform:translateY(1px);}
+  .gzh-toast{position:fixed;top:66px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:100;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:88vw;text-align:center;}
+  .gzh-toast.show{opacity:1;}
+  .gzh-stage{max-width:700px;margin:78px auto 64px;padding:0 8px;}
+  @media(max-width:520px){.gzh-hint{max-width:150px;}}
+</style>
+</head>
+<body>
+<div class="gzh-toolbar">
+  <span class="gzh-hint">👇 下方是排版效果 · 点右侧 <b>复制</b> 直接粘到公众号</span>
+  <button class="gzh-copy" id="gzhCopyBtn" onclick="gzhCopy()">📋 复制到公众号</button>
+</div>
+<div class="gzh-toast" id="gzhToast"></div>
+<div class="gzh-stage">
+  <div id="gzh-content">
+<section style="text-align:center;margin:0 0 6px;">
+  <h1 style="font-size:20px;line-height:1.45;margin:0;color:#1a1a1a;font-weight:700;"><span leaf="">LOOPSBENCH：让 AI 在「循环改代码」里别越改越乱</span></h1>
+</section>
+<section style="text-align:center;margin:0 0 18px;">
+  <p style="font-size:13px;color:#8a94a6;line-height:1.6;margin:0;"><span leaf="">首个体评估基准，把长周期编码任务拆成 DAG、按拓扑门控测试</span></p>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2608.00267/images/728f8cc26e4d177bec5e5d04ffddcbbdb2aa97c9b8c2ee99cdae6e3aa9e94e87.jpg" style="width:100%;border-radius:8px;display:block;">
+</section>
+
+<section style="background:#eef3ff;border-left:4px solid #3a5fcd;padding:12px 16px;border-radius:6px;margin:0 0 16px;">
+  <p style="margin:0;line-height:1.8;color:#2c3e50;font-size:15px;"><span leaf="">📌 一句话：</span><span leaf="">论文提出首个面向「循环工程」评估的编码基准 LOOPSBENCH。</span></p>
+</section>
+
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">但在 LOOPSBENCH 之前，长周期编码任务的评估长期是绕不开的痛点——现有基准大多只测「一次性写完」，而真实工程里 agent 要反复改、反复测、反复回归。</span></p>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/wechat_design/illustration/01-scene-background.png" style="width:100%;border-radius:8px;display:block;">
+  <p style="font-size:13px;color:#999;line-height:1.6;margin:6px 0 0;text-align:center;"><span leaf="">图 1｜当 AI 陷入「改了又测、测了又改」的循环</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">它到底解决了什么</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">1. 任务 = 依赖 DAG。</span><span leaf="">节点是可独立测试的开发单元，边是前置关系，天然表达「先 A 后 B」的工程顺序。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">2. 流感知评估运行时。</span><span leaf="">按 DAG 拓扑门控释放测试：上游没过，下游不算完成；已通过的节点转为「回归义务」，防止后面改崩前面。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">3. 双容器快照流水线。</span><span leaf="">分离「编辑执行」与「测试裁决」两个容器，从而能精确算出循环轨迹上的各类指标。</span></p>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/wechat_design/illustration/02-framework-method.png" style="width:100%;border-radius:6px;border:1px solid #f0f0f0;display:block;">
+  <p style="font-size:13px;color:#999;line-height:1.6;margin:6px 0 0;text-align:center;"><span leaf="">图 2｜任务 DAG 与「编辑执行 / 测试裁决」双容器（概念示意）</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">💡 关键结果</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">在「是否启用循环（w/ 与 w/o）」的对照下，三个主流模型与 loop 组合的 Resolve Rate（RR）如下：</span></p>
+</section>
+
+<section style="margin:6px 0 16px;">
+  <table style="width:100%;border-collapse:collapse;font-size:14px;">
+    <thead><tr style="background:#3a5fcd;color:#ffffff;">
+      <th style="border:1px solid #e3e8f0;padding:9px 8px;text-align:left;"><span leaf="">模型 / Loop</span></th>
+      <th style="border:1px solid #e3e8f0;padding:9px 8px;"><span leaf="">RR（无循环）</span></th>
+      <th style="border:1px solid #e3e8f0;padding:9px 8px;"><span leaf="">RR（有循环）</span></th>
+      <th style="border:1px solid #e3e8f0;padding:9px 8px;"><span leaf="">提升</span></th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="border:1px solid #e3e8f0;padding:9px 8px;"><span leaf="">Opus-4.7 · Claude Code</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;"><span leaf="">16.96%</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;color:#1a9e57;font-weight:700;"><span leaf="">25.00%</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;color:#1a9e57;font-weight:700;"><span leaf="">+8.04</span></td></tr>
+      <tr><td style="border:1px solid #e3e8f0;padding:9px 8px;"><span leaf="">GPT-5.5 · Codex</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;"><span leaf="">14.29%</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;color:#1a9e57;font-weight:700;"><span leaf="">21.43%</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;color:#1a9e57;font-weight:700;"><span leaf="">+7.14</span></td></tr>
+      <tr><td style="border:1px solid #e3e8f0;padding:9px 8px;"><span leaf="">Codex · gpt-5.4</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;"><span leaf="">13.39%</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;color:#1a9e57;font-weight:700;"><span leaf="">18.75%</span></td><td style="border:1px solid #e3e8f0;padding:9px 8px;text-align:center;color:#1a9e57;font-weight:700;"><span leaf="">+5.36</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section style="display:flex;gap:10px;margin:0 0 16px;flex-wrap:wrap;">
+  <section style="flex:1;min-width:90px;background:#f5f8ff;border:1px solid #dce6ff;border-radius:8px;padding:10px 8px;text-align:center;">
+    <p style="margin:0;font-size:18px;font-weight:700;color:#3a5fcd;line-height:1.2;"><span leaf="">+8.04</span></p>
+    <p style="margin:2px 0 0;font-size:12px;color:#6b7280;"><span leaf="">Opus 最大提升</span></p>
+  </section>
+  <section style="flex:1;min-width:90px;background:#f5f8ff;border:1px solid #dce6ff;border-radius:8px;padding:10px 8px;text-align:center;">
+    <p style="margin:0;font-size:18px;font-weight:700;color:#3a5fcd;line-height:1.2;"><span leaf="">25.0%</span></p>
+    <p style="margin:2px 0 0;font-size:12px;color:#6b7280;"><span leaf="">最高 RR</span></p>
+  </section>
+  <section style="flex:1;min-width:90px;background:#f5f8ff;border:1px solid #dce6ff;border-radius:8px;padding:10px 8px;text-align:center;">
+    <p style="margin:0;font-size:18px;font-weight:700;color:#3a5fcd;line-height:1.2;"><span leaf="">112</span></p>
+    <p style="margin:2px 0 0;font-size:12px;color:#6b7280;"><span leaf="">基准任务数</span></p>
+  </section>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/wechat_design/illustration/03-infographic-results.png" style="width:100%;border-radius:6px;border:1px solid #f0f0f0;display:block;">
+  <p style="font-size:13px;color:#999;line-height:1.6;margin:6px 0 0;text-align:center;"><span leaf="">图 3｜三模型 × 两条件的 Resolve Rate 提升（概念示意）</span></p>
+</section>
+
+<section style="background:#fff7ec;border-left:4px solid #f0a020;padding:12px 16px;border-radius:6px;margin:0 0 16px;">
+  <p style="margin:0;line-height:1.8;color:#5a4a2a;font-size:14px;"><span leaf="">⚠️ 诚实备注：</span><span leaf="">论文未给出跨更多循环轮次的长期演化曲线，上述提升主要来自单轮快照指标；且未系统对比更多开源基线，结论的外部有效性仍有待补充。</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">先说局限：哪些结论要打折</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">· PR 序列几乎不可解析：</span><span leaf="">论文自承 PR 序列任务解析率极低（最高 3.45%），14 个配置中有 9 个完全解析不出任何 PR 序列任务（附录 M）。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">· 规模有限：</span><span leaf="">基准仅 112 个任务，可能不足以支撑统计显著的细分结论。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">· 评估窗口偏短：</span><span leaf="">模型和 loop 配置的观测窗口较短，未必能反映长期演化趋势。</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">但别一刀切全删</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">本文方法已在 LOOPSBENCH 上得到验证。上面这些局限提醒我们：新方法不是「全盘替代」，而是按场景取舍——简单任务不必套重流程，复杂或高风险任务才值得保留显式约束。</span></p>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/wechat_design/illustration/04-comparison-limitation.png" style="width:100%;border-radius:6px;border:1px solid #f0f0f0;display:block;">
+  <p style="font-size:13px;color:#999;line-height:1.6;margin:6px 0 0;text-align:center;"><span leaf="">图 4｜覆盖到的 vs 尚未覆盖到的</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">给工程实践的建议：先裸跑，再加最小 Skill</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">1. 先定义结果，不定义仪式——把目标、硬约束、验收标准写清楚。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">2. 用基准数据（LOOPSBENCH）让模型或基线裸跑，记录成功率与返工。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">3. 只看可复现的失败——同一类错误稳定出现，才说明缺经验。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">4. 只补一个最小补丁——把上文的「DAG 任务描述 + 拓扑门控测试 + 双容器快照」固化成可触发的最小流程。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">5. 再跑同一组任务，对比 RR / TPR / Depth；质量没提升就删掉。</span></p>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/wechat_design/illustration/05-flowchart-practice.png" style="width:100%;border-radius:6px;border:1px solid #f0f0f0;display:block;">
+  <p style="font-size:13px;color:#999;line-height:1.6;margin:6px 0 0;text-align:center;"><span leaf="">图 5｜五步落地循环工程评估</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">你该不该装</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">🧑‍🎓 在校学生：</span><span leaf="">先吃透上面的创新点，理解它到底解决了什么。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">💼 工业界落地：</span><span leaf="">重点看关键结果能否在你的业务指标上复现。</span></p>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">🔬 做研究：</span><span leaf="">借鉴它的模块拆分思路，而不是照抄整条流程。</span></p>
+</section>
+
+<section style="border-left:4px solid #3a5fcd;padding-left:10px;margin:24px 0 12px;">
+  <h2 style="font-size:17px;font-weight:700;color:#1a1a1a;line-height:1.45;margin:0;"><span leaf="">写在最后</span></h2>
+</section>
+<section style="margin:0 0 14px;">
+  <p style="margin:0;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">真正该学的，不是最火的插件或 Skill 名字，而是看清模型现在会什么、不会什么。LOOPSBENCH 的价值，不在于给出一个满分答案，而在于第一次把「循环改代码」这件事，变成了可以度量、可以比较、可以改进的工程问题。</span></p>
+</section>
+
+<section style="margin:0 0 18px;">
+  <img src="C:/Users/xu.yan1/papers/recommendation-system-learning/wechat_design/illustration/06-timeline-ending.png" style="width:100%;border-radius:6px;border:1px solid #f0f0f0;display:block;">
+  <p style="font-size:13px;color:#999;line-height:1.6;margin:6px 0 0;text-align:center;"><span leaf="">图 6｜从单轮评测走向循环工程评估</span></p>
+</section>
+
+<section style="background:#f0f7ff;border-radius:8px;padding:14px 16px;margin:18px 0;">
+  <p style="margin:0;font-size:14px;color:#2c3e3a;line-height:1.7;"><span leaf="">💬 互动一下：</span><span leaf="">你在实际项目里让 AI 反复改代码时，最常被「改崩前面」坑过的是哪类任务？欢迎在评论区聊聊。</span></p>
+</section>
+
+<section style="margin:0 0 12px;">
+  <p style="margin:0 0 14px;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">· 论文：</span><a href="https://arxiv.org/abs/2608.00267" style="color:#3a5fcd;text-decoration:none;"><span leaf="">https://arxiv.org/abs/2608.00267</span></a></p>
+  <p style="margin:0 0 14px;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">· PDF：</span><a href="https://arxiv.org/pdf/2608.00267" style="color:#3a5fcd;text-decoration:none;"><span leaf="">https://arxiv.org/pdf/2608.00267</span></a></p>
+  <p style="margin:0 0 14px;line-height:1.8;color:#3f3f3f;font-size:15px;"><span leaf="">· 代码：暂无官方代码（以论文复现为准）</span></p>
+  <p style="margin:0;font-size:13px;color:#8a94a6;line-height:1.7;"><span leaf="">图表摘自论文，仅作学术解读。</span></p>
+</section>
+  </div>
+</div>
+<script>
+  function gzhShowToast(msg){
+    var t=document.getElementById('gzhToast');
+    t.textContent=msg;t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer=setTimeout(function(){t.classList.remove('show');},2800);
+  }
+  function gzhCopy(){
+    var el=document.getElementById('gzh-content');
+    // 选中渲染后的富文本节点并复制（等价于手动 Ctrl+A / Ctrl+C，保留全部样式）
+    var range=document.createRange();
+    range.selectNodeContents(el);
+    var sel=window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    var ok=false;
+    try{ok=document.execCommand('copy');}catch(e){ok=false;}
+    sel.removeAllRanges();
+    var btn=document.getElementById('gzhCopyBtn');
+    if(ok){
+      gzhShowToast('✅ 已复制！去公众号编辑器按 Ctrl/⌘+V 粘贴即可');
+      var old=btn.textContent;btn.textContent='✅ 已复制';
+      setTimeout(function(){btn.textContent=old;},2200);
+    }else{
+      gzhShowToast('⚠ 自动复制失败，请手动全选(Ctrl/⌘+A)再复制(Ctrl/⌘+C)');
+    }
+  }
+</script>
+</body>
+</html>

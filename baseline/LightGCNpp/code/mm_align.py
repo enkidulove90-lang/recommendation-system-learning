@@ -165,6 +165,60 @@ class MultiModalAligner(nn.Module):
         w = torch.softmax(stacked, dim=-1)                    # [n, n_types]
         return {t: w[:, i:i + 1] for i, t in enumerate(proj_feats.keys())}
 
+    @torch.no_grad()
+    def refresh_proj(self, feats):
+        """把 epoch 级投影缓存**就地刷新**到当前权重。
+
+        ## ⚠️ 结论已修正: 单独用它做 eval 会让 R@20 崩(实测 0.0697 -> 0.0578)
+        最初以为这是"评测滞后"的修复, 错了。真实因果链是:
+
+          - 图传播 fuse() 读 project() 的 epoch 级全量缓存 -> 训练全程 c≈0.055~0.197
+          - 预算约束只作用在 fuse_subset() 的 batch 子集(带梯度) -> 那条路径 c≈0.82
+          - 两者差 0.64 不是"滞后 94 步", 而是**预算把 proj 头推着走, 而全量缓存
+            每个 epoch 只跟一次, 结构上永远追不上**
+
+        此时若在 eval 前 refresh_proj, 等于拿「在 c≈0.06 下训练出来的模型」
+        去跑「c≈0.83 的前向」——训练/评测错配, 性能必崩。实测 seed2024:
+          ep5  c_cache 0.197 / FRESH 0.805  -> R@20 0.06968
+          ep10 c_cache 0.055 / FRESH 0.834  -> R@20 0.05775 (valid 同步崩, loss 反升)
+
+        ## 正确解法
+        让**训练时图传播用的 c 本身**就受预算约束(而不是只约束 batch 子集),
+        使两条路径同步收敛; 评测自然一致, 无需事后 refresh。
+
+        本方法保留仅作诊断/实验用途, **不要**再用于 eval 口径对齐。
+        """
+        self._proj_cache = self._compute_proj(feats)
+        self._proj_epoch = self._epoch
+
+    @torch.no_grad()
+    def diag_fresh_conf(self, feats, id_emb):
+        """诊断量: 用**新鲜**全量投影重算 c, 与 fuse() 里的 epoch 级缓存版本对照。
+
+        ## 为什么需要它(E6 踩过的坑)
+        project() 是 epoch 级 no_grad 缓存, 只在每个 epoch 开头刷新一次;
+        而 eval 发生在 epoch 末尾 —— 即 fuse() 报出的 conf_mean / 用于图传播的
+        融合嵌入, 都基于**滞后 94 个 Adam step** 的投影.
+        E6 实测: 同一时刻 batch_c(新鲜投影)=0.825 而 conf_mean(缓存投影)=0.184,
+        且 conf_max(缓存)=0.727 < batch_c —— 数学上不可能同源, 即两者根本不是同一个 c.
+        若直接拿缓存版 conf_mean 去判 ">=0.6", 会把「预算其实顶住了」误判成 E6 无效.
+
+        本方法**只读不写**(不碰 _proj_cache, 不改 eval 融合路径),
+        因此 E1/E2 的历史数值仍可比; 开销为每次 eval 一次 no_grad 全量投影(~1-2s).
+        """
+        proj_feats = self._compute_proj(feats)
+        if not proj_feats:
+            return None
+        gates = self.gate_weights(proj_feats)
+        pooled = self._l2(sum(gates[t] * proj_feats[t] for t in proj_feats.keys()))
+        id_det = self._l2(id_emb.detach())
+        cos = (pooled * id_det).sum(-1, keepdim=True)
+        c = torch.sigmoid(self.conf_mlp(torch.cat([pooled, id_det], dim=-1)) + 2.0 * cos)
+        if self.force_c > 0:
+            c = torch.full_like(c, self.force_c)
+        return {'fresh_mean': float(c.mean()), 'fresh_std': float(c.std()),
+                'fresh_min': float(c.min()), 'fresh_max': float(c.max())}
+
     def fuse(self, feats, id_emb):
         """主前向: 投影 → 门控池化 → 置信度门控残差融合.
         Args:
