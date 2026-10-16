@@ -1,0 +1,1 @@
+﻿PUBLISH RESULT (retry1): {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:2ab6a34b-8dfb-438f-9d98-0c31418e58ac', 'topics': ['璁烘枃鍒嗕韩', '浜哄伐鏅鸿兘', '澶фā鍨?, '鏅鸿兘浣?, 'AI缁樼敾'], 'image_count': 6, 'pdf_name': '2609.22086_origin.pdf'}

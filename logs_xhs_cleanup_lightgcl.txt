@@ -1,0 +1,10 @@
+﻿dumped -> xhs_drafts_dump.json / xhs_drafts_dump.txt ( 10 drafts )
+delete s:35b9aec1-18fd-4871-a10b-310c128b93fa -> called (无回执，需按 id 复核)
+delete s:87518c45-2a83-42df-8586-768b363912be -> called (无回执，需按 id 复核)
+delete s:ca2b6ddb-feb1-4f81-a908-6d0d8f0b6a76 -> called (无回执，需按 id 复核)
+count: 10 -> 8
+  verify s:35b9aec1-18fd-4871-a10b-310c128b93fa removed
+  verify s:87518c45-2a83-42df-8586-768b363912be removed
+  verify s:ca2b6ddb-feb1-4f81-a908-6d0d8f0b6a76 STILL PRESENT
+unexpectedly lost: none
+dumped -> xhs_drafts_dump.json / xhs_drafts_dump.txt ( 8 drafts )

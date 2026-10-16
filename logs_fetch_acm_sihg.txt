@@ -1,0 +1,10 @@
+﻿[1] open https://dl.acm.org/doi/10.1145/3847662
+    rc=0 out={
+  "url": "https://dl.acm.org/doi/10.1145/3847662",
+  "page": "E64E038E291AEA8EB99CEE7C97F7831F"
+}
+[2] probe page
+    rc=0 {"title":"请稍候…","url":"https://dl.acm.org/doi/10.1145/3847662","body":"dl.acm.org\n正在进行安全验证\n\n本网站使用安全服务防护恶意自动程序。在验证您不是自动程序期间，将显示此页面。\n\nRay ID: a49c8485c871fdf7\n由 Cloudflare 提供的性能和安全服务\n隐私"}
+[3] fetch PDF into window.__pdf
+    rc=0 {"ok":false,"status":403,"ct":"text/html; charset=UTF-8","bytes":6184,"head":"<!DOC"}
+!! fetch 未成功: {'ok': False, 'status': 403, 'ct': 'text/html; charset=UTF-8', 'bytes': 6184, 'head': '<!DOC'}

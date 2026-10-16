@@ -1,0 +1,17 @@
+﻿online card: data\parsed\2606.00422\images\fig_card_online.png
+efficiency card: data\parsed\2606.00422\images\fig_card_efficiency.png
+figures.json ok
+summary ok
+title (18): 召回+排序合成一个模型，延迟降11%
+body (1161)
+python.exe : Traceback (most recent call last):
+所在位置 行:445 字符: 80
++ ... RY_RUN='1'; & "C:\Program Files\Python311\python.exe" build_xhs_draft ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\xu.yan1\papers\recommendation-system-learning\build_xhs_draft_unipinrec.py", line 228, in <module>
+    assert len(BODY) <= 1000, "body too long: %d" % len(BODY)
+           ^^^^^^^^^^^^^^^^^
+AssertionError: body too long: 1161

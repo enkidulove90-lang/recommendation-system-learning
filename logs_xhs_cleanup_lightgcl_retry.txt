@@ -1,0 +1,6 @@
+﻿dumped -> xhs_drafts_dump.json / xhs_drafts_dump.txt ( 8 drafts )
+delete s:ca2b6ddb-feb1-4f81-a908-6d0d8f0b6a76 -> called (无回执，需按 id 复核)
+count: 8 -> 7
+  verify s:ca2b6ddb-feb1-4f81-a908-6d0d8f0b6a76 removed
+unexpectedly lost: none
+dumped -> xhs_drafts_dump.json / xhs_drafts_dump.txt ( 7 drafts )

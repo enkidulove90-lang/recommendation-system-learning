@@ -1,0 +1,11 @@
+﻿text -> sihg_text_excerpt.txt (39743 chars, pages [1, 2, 4, 5, 6, 18, 19, 20, 21, 22])
+fig1_overview: p5 clip=463x314pt -> 1852x1259px 336KB
+fig2_ablation: p19 clip=463x204pt -> 1852x818px 121KB
+fig3_sparsity: p22 clip=463x147pt -> 1852x588px 138KB
+fig4_convergence: p24 clip=292x100pt -> 1170x401px 75KB
+fig5_hyper_lr: p24 clip=437x103pt -> 1750x413px 121KB
+fig6_hyper_k: p25 clip=428x136pt -> 1712x546px 113KB
+fig11_adaptive: p28 clip=463x157pt -> 1852x631px 126KB
+fig13_cos: p30 clip=463x157pt -> 1852x630px 123KB
+tab6_coldstart: p22 clip=552x100pt -> 2208x399px 7KB (fallback 整栏裁剪)
+tab3_main: p18 clip=552x100pt -> 2208x399px 7KB (fallback 整栏裁剪)

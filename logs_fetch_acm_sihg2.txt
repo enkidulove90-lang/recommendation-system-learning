@@ -1,0 +1,9 @@
+﻿[1] skip open (SKIP_OPEN=1)，复用已有会话
+[2] probe page
+    rc=0 {"title":"SIHG-Rec: Unleashing the Power of Semantic and Interactive Homogeneous Graphs via Dual-Stage Fusion for Multimodal Recommendation | ACM Transactions on Recommender Systems","url":"https://dl.acm.org/doi/10.1145/3847662","body":"This website uses cookies\n\nWe occasionally run membership recruitment campaigns on social media channels and use cookies to track post-clicks. We also share information about your use of our site with our social media, advertising and analytics partners who ma
+[3] fetch PDF into window.__pdf
+    rc=0 {"ok":true,"status":200,"ct":"application/pdf;charset=UTF-8","bytes":2287494,"head":"%PDF-"}
+[4] downloading bytes: 2287494 head= %PDF- ct= application/pdf;charset=UTF-8
+    2097152 / 2287494
+    2287494 / 2287494
+[5] saved data\parsed\sihg_rec\10.1145_3847662.pdf 2287494 bytes

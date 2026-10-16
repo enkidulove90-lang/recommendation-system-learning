@@ -1,0 +1,16 @@
+﻿card: data\parsed\sihg_rec\images\fig0_coldstart_card.png (1840, 1080)
+figures.json ok
+summary ok
+title (17): 两张图+双阶段融合，冷启动涨97%
+body (1057)
+python.exe : Traceback (most recent call last):
+所在位置 行:445 字符: 80
++ ... RY_RUN='1'; & "C:\Program Files\Python311\python.exe" build_xhs_draft ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\xu.yan1\papers\recommendation-system-learning\build_xhs_draft_sihg_rec.py", line 222, in <module>
+    assert len(BODY) <= 1000, "body too long: %d" % len(BODY)
+           ^^^^^^^^^^^^^^^^^
+AssertionError: body too long: 1057

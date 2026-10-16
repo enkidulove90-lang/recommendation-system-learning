@@ -1,0 +1,10 @@
+草稿箱共 8 条
+
+ 1 | imgs=4 | s:290a92fd-bdce-4765-89f8-9786698206c3        | ACL25｜RecLM推荐指令微调
+ 2 | imgs=4 | s:2ab6a34b-8dfb-438f-9d98-0c31418e58ac        | 不重训模型，给设计 Agent 加技能库
+ 3 | imgs=4 | s:4c494576-4666-45ae-abc4-98bc6478ba5e        | 隐私感知云-端协同广告推荐框架
+ 4 | imgs=5 | s:7da82de6-6040-4247-8d72-aa03a892f0a0        | LightGCL｜用SVD增强图对比学…
+ 5 | imgs=5 | s:92f201db-7f26-4910-bcd9-4181ed850729        | MSCA | 多模态推荐新SOTA 
+ 6 | imgs=4 | s:96153f47-1e08-420a-bf4c-017a71d29d56        | VRAgent-R1｜RL增强视频推荐
+ 7 | imgs=4 | s:a4599a1a-9037-4a1c-bcfd-29c075e44800        | OSWorld｜AI 电脑操作仅 12%
+ 8 | imgs=6 | s:aa30c40d-1b64-4cd5-9f07-0e4eda2ed104        | 召回+排序合成一个模型，延迟降11%

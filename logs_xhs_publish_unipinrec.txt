@@ -1,0 +1,15 @@
+﻿online card: data\parsed\2606.00422\images\fig_card_online.png
+efficiency card: data\parsed\2606.00422\images\fig_card_efficiency.png
+figures.json ok
+summary ok
+title (18): 召回+排序合成一个模型，延迟降11%
+body (1000)
+   fig_unipinrec_flat.png             2250x1142  253KB
+   fig_comparison_table_slim.png      2297x670  180KB
+   fig_serve_diagram.png              2625x969  208KB
+   fig_card_online.png                1840x1208  142KB
+   fig_card_efficiency.png            1840x1124  149KB
+   fig_scaling_flops.png              1558x582  65KB
+STAGED: {'ok': True, 'status': 'already_staged', 'path': 'publish_queue\\b750612563fe0dd21491616bd420aa6e\\xhs.json', 'staged_id': 'b750612563fe0dd21491616bd420aa6eed05bff504a6e1a0732e60a556a05556'}
+PUBLISH RESULT: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:69f6c71a-1094-4be3-8e2a-eb957036e7f5', 'topics': ['论文分享', '人工智能', '推荐系统', '深度学习', 'AI'], 'image_count': 6, 'pdf_name': '2606.00422_origin.pdf'}
+STAGED_ID: b750612563fe0dd21491616bd420aa6eed05bff504a6e1a0732e60a556a05556

@@ -1,0 +1,6 @@
+﻿PUBLISH NEW: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:aa30c40d-1b64-4cd5-9f07-0e4eda2ed104', 'topics': ['璁烘枃鍒嗕韩', '浜哄伐鏅鸿兘', '鎺ㄨ崘绯荤粺', '娣卞害瀛︿範', 'AI'], 'image_count': 6, 'pdf_name': '2606.00422_origin.pdf'}
+NEW_DRAFT_ID: s:aa30c40d-1b64-4cd5-9f07-0e4eda2ed104
+DELETE OLD called (鏃犲洖鎵?: None
+total: 8
+new present: True
+old removed: True

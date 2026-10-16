@@ -1,0 +1,5 @@
+﻿title (14): 题目越难，CoT 越决定答案
+body  (972)
+STAGED: {'ok': True, 'status': 'staged', 'path': 'publish_queue\\abc4365f7a9355274b45266da21feb2f\\xhs.json', 'staged_id': 'abc4365f7a9355274b45266da21feb2f211ca4404151dc75fcdbf23d2cb65da9'}
+PUBLISH RESULT: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:00e125eb-9784-4dc6-b61d-d39e5cfe90cd', 'topics': ['论文分享', '人工智能', '大模型', '深度学习', 'AI'], 'image_count': 6, 'pdf_name': 'lb_cot_main.pdf'}
+DELETE OLD OK: s:3abfa504-2171-4e25-a141-a330704d42a9

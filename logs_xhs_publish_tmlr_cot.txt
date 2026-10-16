@@ -1,0 +1,1 @@
+﻿PUBLISH RESULT: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:3abfa504-2171-4e25-a141-a330704d42a9', 'topics': ['璁烘枃鍒嗕韩', '浜哄伐鏅鸿兘', '澶фā鍨?, '娣卞害瀛︿範', 'AI'], 'image_count': 6, 'pdf_name': 'lb_cot_main.pdf'}

@@ -1,0 +1,14 @@
+﻿card: data\parsed\sihg_rec\images\fig0_coldstart_card.png (1840, 1080)
+figures.json ok
+summary ok
+title (17): 两张图+双阶段融合，冷启动涨97%
+body (998)
+   fig1_overview.png                  1852x1259  336KB
+   fig0_coldstart_card.png            1840x1080  137KB
+   fig2_ablation.png                  1852x818  121KB
+   fig3_sparsity.png                  1852x588  138KB
+   fig11_adaptive.png                 1852x631  126KB
+   fig5_hyper_lr.png                  1750x413  121KB
+STAGED: {'ok': True, 'status': 'already_staged', 'path': 'publish_queue\\2348f13250ab4dc0fe9c622496ede875\\xhs.json', 'staged_id': '2348f13250ab4dc0fe9c622496ede875a3e0b6e402c611d7242b3bb99d45ef07'}
+PUBLISH RESULT: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:0e088899-8f61-4248-aa41-5206510cf9e0', 'topics': ['论文分享', '人工智能', '推荐系统', '深度学习', 'AI'], 'image_count': 6, 'pdf_name': '10.1145_3847662.pdf'}
+STAGED_ID: 2348f13250ab4dc0fe9c622496ede875a3e0b6e402c611d7242b3bb99d45ef07

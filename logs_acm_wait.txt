@@ -1,0 +1,2 @@
+﻿round 1: {"title":"SIHG-Rec: Unleashing the Power of Semantic and Interactive Homogeneous Graphs via Dual-Stage Fusion for Multimodal Recommendation | ACM Transactions on Recommender Systems","url":"https://dl.acm.org/doi/10.1145/3847662","ready":"interactive","len":23
+=> 挑战已过（页面标题不再是验证页）
