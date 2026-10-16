@@ -81,5 +81,24 @@ _serve_st.json
 .audit_xiaowan/
 time.log
 
+# ===== 论文解析产物（data/parsed）：只入库 .md =====
+# PDF / 图片 / LaTeX 源等体积大（约 145MB）且可从 arXiv 重新获取，不入库。
+# 已入库的历史文件不受影响（gitignore 只作用于未跟踪文件）。
+data/parsed/**/*.pdf
+data/parsed/**/*.png
+data/parsed/**/*.jpg
+data/parsed/**/*.jpeg
+data/parsed/**/*.zip
+data/parsed/**/*.gz
+data/parsed/**/*.tex
+data/parsed/**/*.bst
+data/parsed/**/*.bib
+data/parsed/**/*.sty
+data/parsed/**/*.cls
+data/parsed/**/*.bbl
+data/parsed/**/*.ttf
+data/parsed/**/*.tfm
+data/parsed/**/*.otf
+
 # WorkBuddy 本地工作记忆 (个人日志, 不入库)
 .workbuddy/
