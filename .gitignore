@@ -43,6 +43,7 @@ data/summaries/
 data/workflow_state/
 .redbook_tmp/
 .workbuddy/
+.worktrees/
 
 # OS
 .DS_Store
