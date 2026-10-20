@@ -57,12 +57,19 @@ class PaperPipeline:
         self.workflow_root = Path(workflow_root)
         self.metadata_resolver = metadata_resolver or self._fallback_metadata
 
-    def run(self, job_id: str) -> JobRecord:
+    def run(
+        self,
+        job_id: str,
+        *,
+        on_step_completed: Callable[[StepName, dict[str, Any]], None] | None = None,
+    ) -> JobRecord:
         try:
             for step_name in self.PROCESSING_STEPS:
                 if self._job(job_id).status == JobStatus.CANCELLED:
                     break
                 output = self._run_step(job_id, step_name)
+                if on_step_completed is not None:
+                    on_step_completed(step_name, output)
                 if step_name == StepName.QUALITY_CHECK and output.get("issue_codes"):
                     self.repository.update_job(
                         job_id,

@@ -569,7 +569,7 @@ git commit -m "feat(intake): publish validated papers without review wait"
 - Test: `tests/test_remote_client.py`
 - Test: `tests/test_remote_worker.py`
 
-- [ ] **Step 1: Write failing remote client and recovery tests**
+- [x] **Step 1: Write failing remote client and recovery tests**
 
 ```python
 class FakeGateway:
@@ -602,7 +602,7 @@ def test_retry_reuses_parsed_checkpoint(self):
 Run: `python -m unittest tests.test_remote_client tests.test_remote_worker`  
 Expected: FAIL because the client and worker are absent.
 
-- [ ] **Step 2: Implement the typed gateway client**
+- [x] **Step 2: Implement the typed gateway client**
 
 ```python
 class RemoteJob(BaseModel):
@@ -634,7 +634,7 @@ class RemoteGatewayClient:
 
 Implement heartbeat, download, checkpoint, artifact upload, complete and fail with bounded retries only for network errors and HTTP 429/5xx.
 
-- [ ] **Step 3: Implement the local polling loop with a heartbeat thread**
+- [x] **Step 3: Implement the local polling loop with a heartbeat thread**
 
 ```python
 def run_once(self) -> bool:
@@ -654,7 +654,7 @@ def run_once(self) -> bool:
 
 The processor mirrors the remote `job_id` into the local SQLite repository, downloads artifacts into `data/paper_intake/remote/<job_id>/`, and skips stages represented by verified remote checkpoints.
 
-- [ ] **Step 4: Add the CLI entry**
+- [x] **Step 4: Add the CLI entry**
 
 ```python
 def remote_worker_command() -> int:
@@ -669,7 +669,7 @@ def remote_worker_command() -> int:
 Command: `python -m paper_intake remote-worker`  
 Missing variables must produce a concise configuration error without printing values.
 
-- [ ] **Step 5: Run tests and commit**
+- [x] **Step 5: Run tests and commit**
 
 Run: `python -m unittest tests.test_remote_client tests.test_remote_worker`  
 Expected: all remote tests pass.

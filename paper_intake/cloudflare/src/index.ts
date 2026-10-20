@@ -276,6 +276,7 @@ function leaseConflict(error: unknown): never {
 const artifactRules: Record<string, { maxBytes: number; contentTypes: string[] }> = {
   parsed_markdown: { maxBytes: 20 * 1024 * 1024, contentTypes: ["text/markdown", "text/plain"] },
   generated_article: { maxBytes: 10 * 1024 * 1024, contentTypes: ["text/markdown", "text/plain"] },
+  article_json: { maxBytes: 10 * 1024 * 1024, contentTypes: ["application/json"] },
   metadata: { maxBytes: 2 * 1024 * 1024, contentTypes: ["application/json"] },
   figure: { maxBytes: 20 * 1024 * 1024, contentTypes: ["image/jpeg", "image/png", "image/webp"] },
 };
@@ -382,6 +383,25 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
   }
 
   const artifactMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/artifacts\/([^/]+)$/u);
+  if (artifactMatch && request.method === "GET") {
+    const [jobId, artifactId] = [artifactMatch[1], decodeURIComponent(artifactMatch[2])];
+    const workerId = requiredString(url.searchParams.get("worker_id"), "invalid_worker_id", "必须提供 Worker ID。");
+    if (!(await repository.getActiveLease(jobId, workerId))) {
+      throw new ApiError(409, "lease_lost", "任务租约已经失效。", true);
+    }
+    const artifact = await repository.getArtifactForJob(jobId, artifactId);
+    if (!artifact) throw new ApiError(404, "artifact_missing", "处理产物不存在。", true);
+    const object = await env.ARTIFACTS.get(artifact.r2Key);
+    if (!object) throw new ApiError(404, "artifact_missing", "处理产物不存在。", true);
+    return new Response(object.body, {
+      headers: {
+        "content-type": artifact.contentType,
+        "content-length": String(artifact.sizeBytes),
+        "x-content-sha256": artifact.sha256,
+        "cache-control": "no-store",
+      },
+    });
+  }
   if (artifactMatch && request.method === "PUT") {
     const [jobId, kind] = [artifactMatch[1], decodeURIComponent(artifactMatch[2])];
     const workerId = requiredString(url.searchParams.get("worker_id"), "invalid_worker_id", "必须提供 Worker ID。");

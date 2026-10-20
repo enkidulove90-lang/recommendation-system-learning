@@ -39,6 +39,18 @@ interface JobRow {
   updated_at: string;
 }
 
+interface ArtifactRow {
+  artifact_id: string;
+  paper_id: string;
+  job_id: string;
+  kind: string;
+  r2_key: string;
+  sha256: string;
+  size_bytes: number;
+  content_type: string;
+  created_at: string;
+}
+
 function optional(value: string | undefined): string | null {
   const normalized = value?.trim();
   return normalized ? normalized : null;
@@ -443,6 +455,25 @@ export class IntakeRepository {
       jobId,
       createdAt,
       ...artifact,
+    };
+  }
+
+  async getArtifactForJob(jobId: string, artifactId: string): Promise<ArtifactRecord | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM artifacts WHERE job_id = ? AND artifact_id = ?")
+      .bind(jobId, artifactId)
+      .first<ArtifactRow>();
+    if (!row) return null;
+    return {
+      artifactId: row.artifact_id,
+      paperId: row.paper_id,
+      jobId: row.job_id,
+      kind: row.kind,
+      r2Key: row.r2_key,
+      sha256: row.sha256,
+      sizeBytes: row.size_bytes,
+      contentType: row.content_type,
+      createdAt: row.created_at,
     };
   }
 

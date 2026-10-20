@@ -106,6 +106,15 @@ describe("remote worker API", () => {
     const accepted = await upload(sha256);
     expect(accepted.status).toBe(201);
     expect((await testEnv.ARTIFACTS.list({ prefix: "derived/" })).objects).toHaveLength(1);
+    const artifact = await accepted.json<{ artifact_id: string }>();
+
+    const downloaded = await SELF.fetch(
+      `https://worker.test/v1/worker/jobs/${job.jobId}/artifacts/${artifact.artifact_id}?worker_id=worker-a`,
+      { headers: { authorization: machineHeaders.authorization } },
+    );
+    expect(downloaded.status).toBe(200);
+    expect(new Uint8Array(await downloaded.arrayBuffer())).toEqual(bytes);
+    expect(downloaded.headers.get("x-content-sha256")).toBe(sha256);
 
     const checkpoint = await SELF.fetch(
       `https://worker.test/v1/worker/jobs/${job.jobId}/checkpoint`,
@@ -115,7 +124,7 @@ describe("remote worker API", () => {
         body: JSON.stringify({
           worker_id: "worker-a",
           stage: "parsed",
-          output: { artifact_id: (await accepted.json<{ artifact_id: string }>()).artifact_id },
+          output: { artifact_id: artifact.artifact_id },
         }),
       },
     );
