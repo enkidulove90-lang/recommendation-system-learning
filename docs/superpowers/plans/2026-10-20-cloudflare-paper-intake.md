@@ -54,7 +54,7 @@ Repository root: `C:\Users\lkshpc\.codex\visualizations\2026\10\16\01a144bb-b59f
 - Create: `paper_intake/cloudflare/src/repository.ts`
 - Test: `paper_intake/cloudflare/test/repository.test.ts`
 
-- [ ] **Step 1: Add the isolated Worker test toolchain**
+- [x] **Step 1: Add the isolated Worker test toolchain**
 
 ```json
 {
@@ -122,7 +122,7 @@ export default defineConfig({
 Run: `cd paper_intake/cloudflare; npm install`  
 Expected: lockfile created with no runtime dependency outside the Worker package.
 
-- [ ] **Step 2: Write the failing repository tests**
+- [x] **Step 2: Write the failing repository tests**
 
 ```ts
 type SeededJob = { jobId: string };
@@ -157,7 +157,7 @@ it("only leases one queued job and reclaims expired leases", async () => {
 Run: `npm test -- repository.test.ts`  
 Expected: FAIL because the schema and repository do not exist.
 
-- [ ] **Step 3: Add the D1 schema**
+- [x] **Step 3: Add the D1 schema**
 
 ```sql
 CREATE TABLE papers (
@@ -222,7 +222,7 @@ CREATE INDEX jobs_claim_idx ON jobs(status, lease_until, created_at);
 CREATE INDEX papers_title_fingerprint_idx ON papers(title_fingerprint);
 ```
 
-- [ ] **Step 4: Implement atomic deduplication and leasing**
+- [x] **Step 4: Implement atomic deduplication and leasing**
 
 ```ts
 export interface JobDbRow {
@@ -279,7 +279,7 @@ export class IntakeRepository {
 
 Implement `createOrReusePaper`, `createJob`, `heartbeat`, `checkpoint`, `complete`, `fail`, `listOwnerJobs`, and `retry` using bound statements and transactions.
 
-- [ ] **Step 5: Run repository tests and commit**
+- [x] **Step 5: Run repository tests and commit**
 
 Run: `npm test -- repository.test.ts; npm run typecheck`  
 Expected: all repository tests pass and TypeScript reports zero errors.

@@ -8,6 +8,8 @@ __pycache__/
 dist/
 build/
 .eggs/
+node_modules/
+.wrangler/
 
 # Virtual environments
 venv/
@@ -24,6 +26,10 @@ env/
 output/
 *.json
 !package.json
+!paper_intake/cloudflare/package-lock.json
+!paper_intake/cloudflare/tsconfig.json
+!paper_intake/cloudflare/test/tsconfig.json
+paper_intake/cloudflare/src/worker-configuration.d.ts
 !.mcp.json
 !data/profiles/*.json
 !data/evidence/*.json
