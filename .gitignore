@@ -34,6 +34,16 @@ output/
 !data/metadata/papers/*.json
 !data/metadata/recommendations/*.json
 
+# Runtime paper assets (backed up outside Git; published content lives in Notion/site)
+data/discovery/
+data/inbox/
+data/papers/
+data/parsed/
+data/summaries/
+data/workflow_state/
+.redbook_tmp/
+.workbuddy/
+
 # OS
 .DS_Store
 Thumbs.db
