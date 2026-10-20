@@ -31,6 +31,18 @@ interface NormalizedUrl {
 
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
 
+function artifactStorage(env: AppEnv): R2Bucket {
+  if (env.ARTIFACT_STORAGE_ENABLED !== "true" || !env.ARTIFACTS) {
+    throw new ApiError(
+      503,
+      "pdf_upload_unavailable",
+      "PDF 上传暂未启用，请改用公开论文链接提交。",
+      false,
+    );
+  }
+  return env.ARTIFACTS;
+}
+
 function corsHeaders(origin: string, env: AppEnv): Headers {
   const allowed = assertOrigin(origin, env);
   return new Headers({
@@ -221,6 +233,7 @@ async function ingestUrl(request: Request, env: AppEnv, owner: Owner, requestId:
 }
 
 async function ingestPdf(request: Request, env: AppEnv, owner: Owner, requestId: string): Promise<Response> {
+  const artifacts = artifactStorage(env);
   const declaredLength = Number(request.headers.get("content-length") || 0);
   if (declaredLength > MAX_PDF_BYTES) {
     throw new ApiError(413, "pdf_too_large", "PDF 必须小于 50 MB。", false);
@@ -247,7 +260,7 @@ async function ingestPdf(request: Request, env: AppEnv, owner: Owner, requestId:
   }
 
   const inputRef = `originals/${paper.paperId}/${sha256}.pdf`;
-  await env.ARTIFACTS.put(inputRef, bytes, {
+  await artifacts.put(inputRef, bytes, {
     httpMetadata: { contentType: "application/pdf" },
     customMetadata: { sha256 },
   });
@@ -261,7 +274,7 @@ async function ingestPdf(request: Request, env: AppEnv, owner: Owner, requestId:
       message: "PDF 已安全保存并进入处理队列。",
     });
   } catch (error) {
-    await env.ARTIFACTS.delete(inputRef);
+    await artifacts.delete(inputRef);
     throw error;
   }
 }
@@ -370,6 +383,7 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
       attempt: job.attempt,
       stage: job.stage,
       checkpoints: job.checkpoints,
+      artifact_storage_enabled: env.ARTIFACT_STORAGE_ENABLED === "true" && Boolean(env.ARTIFACTS),
     };
     return machineResponse(200, requestId, { ...claimPayload, job: claimPayload });
   }
@@ -380,7 +394,7 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     const job = await repository.getActiveLease(inputMatch[1], workerId);
     if (!job) throw new ApiError(409, "lease_lost", "任务租约已经失效。", true);
     if (job.inputType !== "pdf") throw new ApiError(409, "input_not_pdf", "该任务没有托管 PDF。", false);
-    const object = await env.ARTIFACTS.get(job.inputRef);
+    const object = await artifactStorage(env).get(job.inputRef);
     if (!object) throw new ApiError(404, "input_missing", "原始 PDF 不存在。", true);
     const headers = new Headers({
       "content-type": "application/pdf",
@@ -426,7 +440,7 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     }
     const artifact = await repository.getArtifactForJob(jobId, artifactId);
     if (!artifact) throw new ApiError(404, "artifact_missing", "处理产物不存在。", true);
-    const object = await env.ARTIFACTS.get(artifact.r2Key);
+    const object = await artifactStorage(env).get(artifact.r2Key);
     if (!object) throw new ApiError(404, "artifact_missing", "处理产物不存在。", true);
     return new Response(object.body, {
       headers: {
@@ -463,7 +477,8 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     const requestedName = request.headers.get("x-artifact-name") || `${kind}.bin`;
     const safeName = requestedName.replace(/[^A-Za-z0-9._-]+/gu, "-").slice(0, 120) || `${kind}.bin`;
     const r2Key = `derived/${job.paperId}/${jobId}/${kind}/${crypto.randomUUID()}-${safeName}`;
-    await env.ARTIFACTS.put(r2Key, bytes, {
+    const artifacts = artifactStorage(env);
+    await artifacts.put(r2Key, bytes, {
       httpMetadata: { contentType },
       customMetadata: { sha256: actualHash, kind },
     });
@@ -483,7 +498,7 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
         size_bytes: bytes.byteLength,
       });
     } catch (error) {
-      await env.ARTIFACTS.delete(r2Key);
+      await artifacts.delete(r2Key);
       return leaseConflict(error);
     }
   }

@@ -1,11 +1,13 @@
-export interface AppEnv extends Env {
+export type AppEnv = Omit<Env, "ARTIFACT_STORAGE_ENABLED"> & {
   ACCESS_IDENTITY_HEADER: string;
+  ARTIFACT_STORAGE_ENABLED: string;
+  ARTIFACTS?: R2Bucket;
   GITHUB_TOKEN: string;
   OWNER_IDENTITIES: string;
   PUBLISH_CALLBACK_TOKEN: string;
   SESSION_SIGNING_KEY: string;
   WORKER_TOKEN: string;
-}
+};
 
 export interface Owner {
   identity: string;

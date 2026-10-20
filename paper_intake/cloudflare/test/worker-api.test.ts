@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { IntakeRepository } from "../src/repository";
 import type { AppEnv } from "../src/security";
 
-const testEnv = env as AppEnv;
+const testEnv = env as AppEnv & { ARTIFACTS: R2Bucket };
 const machineHeaders = {
   authorization: "Bearer test-worker-token",
   "content-type": "application/json",

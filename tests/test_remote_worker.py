@@ -2,9 +2,12 @@ from __future__ import annotations
 
 import unittest
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from paper_intake.remote import LeaseLost, RemoteJob
-from paper_intake.remote_worker import RemoteWorker
+from paper_intake.models import StepName
+from paper_intake.remote_worker import RemotePipelineProcessor, RemoteWorker
 
 
 class _FakeGateway:
@@ -58,6 +61,52 @@ class _CheckpointAwareProcessor:
 
 
 class RemoteWorkerTests(unittest.TestCase):
+    def test_url_only_job_checkpoints_without_uploading_artifacts(self):
+        class Gateway:
+            def __init__(self):
+                self.uploads = []
+                self.checkpoints = []
+
+            def upload_artifact(self, *args, **kwargs):
+                self.uploads.append((args, kwargs))
+                raise AssertionError("artifact upload must stay disabled")
+
+            def checkpoint(self, job_id, worker_id, stage, output):
+                self.checkpoints.append((job_id, worker_id, stage, output))
+
+        job = RemoteJob(
+            job_id="job-url-only",
+            paper_id="paper-url-only",
+            input_type="url",
+            input_ref="https://arxiv.org/abs/2608.17316",
+            stage="received",
+            checkpoints={},
+            lease_owner="worker-a",
+            lease_until=datetime.now(UTC) + timedelta(minutes=10),
+            artifact_storage_enabled=False,
+        )
+        gateway = Gateway()
+        with TemporaryDirectory() as directory:
+            article_path = Path(directory) / "article.json"
+            article_path.write_text("{}", encoding="utf-8")
+            processor = RemotePipelineProcessor(
+                repository=None,
+                input_store=None,
+                pipeline=None,
+                workflow_root=directory,
+                site_url="https://example.github.io",
+            )
+            processor._sync_step(
+                job,
+                gateway,
+                StepName.DEEPSEEK_GENERATE,
+                {"article_path": str(article_path), "title": "URL paper"},
+            )
+
+        self.assertEqual(gateway.uploads, [])
+        self.assertEqual(gateway.checkpoints[0][2], StepName.DEEPSEEK_GENERATE.value)
+        self.assertEqual(gateway.checkpoints[0][3], {"title": "URL paper"})
+
     def test_worker_stops_when_initial_heartbeat_loses_lease(self):
         gateway = _FakeGateway(heartbeat_result=False)
         runner = RemoteWorker(gateway=gateway, processor=_CheckpointAwareProcessor(), poll_seconds=0)

@@ -3,8 +3,9 @@ import { SELF } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 
 import { signSession, type AppEnv } from "../src/security";
+import worker from "../src/index";
 
-const testEnv = env as AppEnv;
+const testEnv = env as AppEnv & { ARTIFACTS: R2Bucket };
 const origin = "http://127.0.0.1:4322";
 
 async function authorization(): Promise<string> {
@@ -27,6 +28,43 @@ async function submitUrl(url: string): Promise<Record<string, unknown>> {
 }
 
 describe("paper intake API", () => {
+  it("keeps URL intake available while PDF storage is disabled", async () => {
+    const disabledEnv = {
+      ...testEnv,
+      ARTIFACT_STORAGE_ENABLED: "false",
+      ARTIFACTS: undefined,
+    } as unknown as AppEnv;
+    const pdf = new TextEncoder().encode("%PDF-1.7\n%%EOF");
+    const pdfResponse = await worker.fetch(
+      new Request("https://worker.test/v1/intake/pdf", {
+        method: "POST",
+        headers: {
+          authorization: await authorization(),
+          "content-type": "application/pdf",
+          origin,
+        },
+        body: pdf,
+      }),
+      disabledEnv,
+    );
+    expect(pdfResponse.status).toBe(503);
+    expect((await pdfResponse.json<{ code: string }>()).code).toBe("pdf_upload_unavailable");
+
+    const urlResponse = await worker.fetch(
+      new Request("https://worker.test/v1/intake/url", {
+        method: "POST",
+        headers: {
+          authorization: await authorization(),
+          "content-type": "application/json",
+          origin,
+        },
+        body: JSON.stringify({ url: "https://papers.example/url-only-paper" }),
+      }),
+      disabledEnv,
+    );
+    expect(urlResponse.status).toBe(202);
+  });
+
   it("lists only the owner's sanitized jobs", async () => {
     const submitted = await submitUrl("https://papers.example/private-source.pdf");
     const response = await SELF.fetch("https://worker.test/v1/jobs", {

@@ -139,6 +139,8 @@ class RemotePipelineProcessor:
         return str(value or "")
 
     def _restore_remote_checkpoints(self, job: RemoteJob, gateway) -> None:
+        if not job.artifact_storage_enabled:
+            return
         parsed = job.checkpoints.get(StepName.MINERU_PARSE.value) or job.checkpoints.get("parsed")
         existing = self.repository.get_step(job.job_id, StepName.MINERU_PARSE)
         if not parsed or (existing and existing.status == StepStatus.SUCCEEDED):
@@ -193,7 +195,7 @@ class RemotePipelineProcessor:
             for key, value in output.items()
             if not key.endswith("_path") and key not in {"figures"}
         }
-        if step == StepName.MINERU_PARSE:
+        if step == StepName.MINERU_PARSE and job.artifact_storage_enabled:
             markdown_path = Path(output["markdown_path"])
             remote_output["markdown_artifact"] = gateway.upload_artifact(
                 job.job_id,
@@ -218,7 +220,7 @@ class RemotePipelineProcessor:
                     )
                 )
             remote_output["figure_artifacts"] = figure_artifacts
-        elif step in {StepName.DEEPSEEK_GENERATE, StepName.CLASSIFY}:
+        elif step in {StepName.DEEPSEEK_GENERATE, StepName.CLASSIFY} and job.artifact_storage_enabled:
             article_path = Path(output["article_path"])
             remote_output["article_artifact"] = gateway.upload_artifact(
                 job.job_id,
@@ -228,7 +230,7 @@ class RemotePipelineProcessor:
                 content=article_path.read_bytes(),
                 content_type="application/json",
             )
-        elif step == StepName.QUALITY_CHECK:
+        elif step == StepName.QUALITY_CHECK and job.artifact_storage_enabled:
             article_path = Path(output["article_path"])
             remote_output["article_artifact"] = gateway.upload_artifact(
                 job.job_id,

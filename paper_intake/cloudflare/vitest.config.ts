@@ -10,10 +10,11 @@ process.env.WRANGLER_LOG_PATH = path.join(root, ".wrangler", "logs", "wrangler.l
 export default defineConfig({
   plugins: [
     cloudflareTest(async () => ({
-      wrangler: { configPath: path.join(root, "wrangler.jsonc") },
+      wrangler: { configPath: path.join(root, "wrangler.test.jsonc") },
       miniflare: {
         bindings: {
           ACCESS_IDENTITY_HEADER: "cf-access-authenticated-user-email",
+          ARTIFACT_STORAGE_ENABLED: "true",
           OWNER_IDENTITIES: "owner@example.com",
           GITHUB_TOKEN: "test-github-token",
           PUBLISH_CALLBACK_TOKEN: "test-callback-token",

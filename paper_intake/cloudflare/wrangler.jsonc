@@ -5,6 +5,7 @@
   "compatibility_date": "2026-10-20",
   "vars": {
     "ALLOWED_ORIGINS": "https://enkidulove90-lang.github.io,http://127.0.0.1:4322",
+    "ARTIFACT_STORAGE_ENABLED": "false",
     "GITHUB_REPOSITORY": "enkidulove90-lang/enkidulove90-lang.github.io"
   },
   "d1_databases": [
@@ -13,12 +14,6 @@
       "database_name": "paper-intake",
       "database_id": "b8457a94-8974-4b49-b4a0-9238e18a85dc",
       "migrations_dir": "migrations"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "ARTIFACTS",
-      "bucket_name": "paper-intake-artifacts"
     }
   ]
 }

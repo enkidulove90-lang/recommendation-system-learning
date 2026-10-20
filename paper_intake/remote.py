@@ -29,6 +29,7 @@ class RemoteJob(BaseModel):
     checkpoints: dict[str, dict[str, Any]] = Field(default_factory=dict)
     lease_owner: str
     lease_until: datetime
+    artifact_storage_enabled: bool = True
 
 
 class RemoteGatewayClient:
