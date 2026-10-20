@@ -27,6 +27,46 @@ async function submitUrl(url: string): Promise<Record<string, unknown>> {
 }
 
 describe("paper intake API", () => {
+  it("lists only the owner's sanitized jobs", async () => {
+    const submitted = await submitUrl("https://papers.example/private-source.pdf");
+    const response = await SELF.fetch("https://worker.test/v1/jobs", {
+      headers: { authorization: await authorization(), origin },
+    });
+    expect(response.status).toBe(200);
+    const payload = await response.json<{ jobs: Array<Record<string, unknown>> }>();
+    const job = payload.jobs.find((item) => item.job_id === submitted.job_id);
+    expect(job).toMatchObject({ status: "queued", retryable: false });
+    expect(job).not.toHaveProperty("input_ref");
+    expect(job).not.toHaveProperty("owner_identity");
+    expect(job).not.toHaveProperty("lease_owner");
+    expect(JSON.stringify(job)).not.toContain("private-source.pdf");
+  });
+
+  it("retries only failed jobs owned by the authenticated user", async () => {
+    const submitted = await submitUrl("https://papers.example/retry-me");
+    await testEnv.DB.prepare(
+      "UPDATE jobs SET status = 'failed', error_code = 'parse_failed', error_message = '解析失败' WHERE job_id = ?",
+    ).bind(submitted.job_id).run();
+
+    const response = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/retry`, {
+      method: "POST",
+      headers: { authorization: await authorization(), origin },
+    });
+    expect(response.status).toBe(202);
+    expect(await response.json<Record<string, unknown>>()).toMatchObject({
+      job_id: submitted.job_id,
+      status: "queued",
+      code: "retry_accepted",
+    });
+
+    const second = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/retry`, {
+      method: "POST",
+      headers: { authorization: await authorization(), origin },
+    });
+    expect(second.status).toBe(409);
+    expect((await second.json<{ code: string }>()).code).toBe("job_not_retryable");
+  });
+
   it("rejects non-PDF bodies before writing R2", async () => {
     const bytes = new TextEncoder().encode("not a pdf");
     const response = await SELF.fetch("https://worker.test/v1/intake/pdf", {

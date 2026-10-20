@@ -1,4 +1,5 @@
 import { IntakeRepository } from "./repository";
+import type { JobRecord } from "./types";
 import {
   ApiError,
   assertOrigin,
@@ -64,6 +65,40 @@ function envelope(
     }),
     { status: httpStatus, headers },
   );
+}
+
+function publicJob(job: JobRecord): Record<string, unknown> {
+  const checkpointTitle = job.checkpoints.title;
+  return {
+    job_id: job.jobId,
+    paper_id: job.paperId,
+    title: typeof checkpointTitle === "string" ? checkpointTitle : null,
+    input_type: job.inputType,
+    stage: job.stage,
+    status: job.status,
+    attempt: job.attempt,
+    error_code: job.errorCode,
+    error_message: job.errorMessage,
+    retryable: job.status === "failed",
+    created_at: job.createdAt,
+    updated_at: job.updatedAt,
+  };
+}
+
+function ownerJson(
+  status: number,
+  requestId: string,
+  origin: string,
+  env: AppEnv,
+  payload: Record<string, unknown>,
+): Response {
+  const headers = corsHeaders(origin, env);
+  headers.set("content-type", "application/json; charset=utf-8");
+  headers.set("cache-control", "no-store");
+  return new Response(JSON.stringify({ ok: status >= 200 && status < 300, request_id: requestId, ...payload }), {
+    status,
+    headers,
+  });
 }
 
 function isPrivateHostname(hostname: string): boolean {
@@ -572,6 +607,26 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
     response = await ingestUrl(request, env, owner, requestId);
   } else if (url.pathname === "/v1/intake/pdf" && request.method === "POST") {
     response = await ingestPdf(request, env, owner, requestId);
+  } else if (url.pathname === "/v1/jobs" && request.method === "GET") {
+    const jobs = await new IntakeRepository(env.DB).listOwnerJobs(owner.identity);
+    return ownerJson(200, requestId, origin, env, { jobs: jobs.map(publicJob) });
+  } else if (request.method === "POST" && /^\/v1\/jobs\/[^/]+\/retry$/u.test(url.pathname)) {
+    const jobId = url.pathname.split("/")[3];
+    try {
+      const job = await new IntakeRepository(env.DB).retry(jobId, owner.identity);
+      response = envelope(202, requestId, {
+        paperId: job.paperId,
+        jobId: job.jobId,
+        status: job.status,
+        code: "retry_accepted",
+        message: "任务已重新进入处理队列。",
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "job_not_retryable") {
+        throw new ApiError(409, "job_not_retryable", "任务不存在、并非失败状态或不属于当前用户。", false);
+      }
+      throw error;
+    }
   } else {
     throw new ApiError(404, "not_found", "接口不存在。", false);
   }
