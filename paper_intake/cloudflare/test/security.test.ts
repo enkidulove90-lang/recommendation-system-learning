@@ -6,6 +6,8 @@ import {
   assertOrigin,
   consumeLoginCode,
   createLoginCode,
+  requireMachine,
+  requirePublishCallback,
   signSession,
   verifySession,
   type AppEnv,
@@ -15,6 +17,26 @@ import worker from "../src/index";
 const testEnv = env as AppEnv;
 
 describe("owner security", () => {
+  it("fails closed when machine or callback secrets are not configured", async () => {
+    const missingSecrets = {
+      ...testEnv,
+      WORKER_TOKEN: undefined,
+      PUBLISH_CALLBACK_TOKEN: undefined,
+    } as unknown as AppEnv;
+    await expect(requireMachine(
+      new Request("https://worker.test/v1/worker/jobs/claim", {
+        headers: { authorization: "Bearer undefined" },
+      }),
+      missingSecrets,
+    )).rejects.toMatchObject({ status: 503, code: "worker_not_configured" });
+    await expect(requirePublishCallback(
+      new Request("https://worker.test/v1/publications/callback", {
+        headers: { authorization: "Bearer undefined" },
+      }),
+      missingSecrets,
+    )).rejects.toMatchObject({ status: 503, code: "callback_not_configured" });
+  });
+
   it("keeps owner login closed until Cloudflare Access is configured", async () => {
     const response = await worker.fetch(
       new Request("https://worker.test/v1/session/start?return_origin=http%3A%2F%2F127.0.0.1%3A4322", {

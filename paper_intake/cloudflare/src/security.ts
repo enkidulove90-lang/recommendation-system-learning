@@ -128,6 +128,9 @@ async function secureEqual(left: string, right: string): Promise<boolean> {
 }
 
 export async function requireMachine(request: Request, env: AppEnv): Promise<void> {
+  if (!env.WORKER_TOKEN) {
+    throw new ApiError(503, "worker_not_configured", "Worker authentication is not configured.", false);
+  }
   const provided = request.headers.get("authorization") || "";
   if (!(await secureEqual(provided, `Bearer ${env.WORKER_TOKEN}`))) {
     throw new ApiError(401, "worker_auth_required", "Worker authentication failed.", false);
@@ -135,6 +138,9 @@ export async function requireMachine(request: Request, env: AppEnv): Promise<voi
 }
 
 export async function requirePublishCallback(request: Request, env: AppEnv): Promise<void> {
+  if (!env.PUBLISH_CALLBACK_TOKEN) {
+    throw new ApiError(503, "callback_not_configured", "Publication callback is not configured.", false);
+  }
   const provided = request.headers.get("authorization") || "";
   if (!(await secureEqual(provided, `Bearer ${env.PUBLISH_CALLBACK_TOKEN}`))) {
     throw new ApiError(401, "callback_auth_required", "Publication callback authentication failed.", false);
