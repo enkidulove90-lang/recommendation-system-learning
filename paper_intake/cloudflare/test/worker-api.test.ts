@@ -39,6 +39,22 @@ async function claim(workerId = "worker-a", authorization = machineHeaders.autho
 }
 
 describe("remote worker API", () => {
+  it("exposes a non-mutating authenticated health check", async () => {
+    const denied = await SELF.fetch("https://worker.test/v1/worker/health", {
+      headers: { authorization: "Bearer wrong" },
+    });
+    expect(denied.status).toBe(401);
+
+    const response = await SELF.fetch("https://worker.test/v1/worker/health", {
+      headers: { authorization: machineHeaders.authorization },
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      status: "ok",
+      code: "worker_authenticated",
+    });
+  });
+
   it("returns 204 when no work is queued", async () => {
     const response = await SELF.fetch("https://worker.test/v1/worker/jobs/claim", {
       method: "POST",

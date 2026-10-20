@@ -425,6 +425,14 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
   await requireMachine(request, env);
   const repository = new IntakeRepository(env.DB);
 
+  if (url.pathname === "/v1/worker/health" && request.method === "GET") {
+    return machineResponse(200, requestId, {
+      status: "ok",
+      code: "worker_authenticated",
+      artifact_storage_enabled: env.ARTIFACT_STORAGE_ENABLED === "true" && Boolean(env.ARTIFACTS),
+    });
+  }
+
   if (
     (url.pathname === "/v1/worker/claim" || url.pathname === "/v1/worker/jobs/claim") &&
     request.method === "POST"

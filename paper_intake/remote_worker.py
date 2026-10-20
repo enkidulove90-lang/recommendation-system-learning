@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import mimetypes
+import logging
 import os
 import socket
 import threading
@@ -10,6 +11,9 @@ from typing import Any
 
 from .models import JobStatus, StepName, StepStatus
 from .remote import LeaseLost, RemoteGatewayClient, RemoteJob
+
+
+logger = logging.getLogger(__name__)
 
 
 class RemoteWorker:
@@ -82,7 +86,14 @@ class RemoteWorker:
 
     def run_forever(self) -> None:
         while not self._stop.is_set():
-            handled = self.run_once()
+            try:
+                handled = self.run_once()
+            except LeaseLost as exc:
+                logger.warning("Worker lease was lost; continuing polling: %s", exc)
+                handled = False
+            except Exception:
+                logger.exception("Worker iteration failed; continuing polling")
+                handled = False
             if not handled:
                 self._stop.wait(self.poll_seconds)
 

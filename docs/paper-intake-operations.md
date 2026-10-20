@@ -98,10 +98,33 @@ NOTION_DATABASE_ID=<database-id>
 启动：
 
 ```powershell
-python -m paper_intake remote-worker
+powershell -ExecutionPolicy Bypass -File scripts/paper_worker_control.ps1 start
 ```
 
 进程可以安全重启。任务租约会阻止两台机器同时处理同一任务，阶段 checkpoint 会避免已经成功的 MinerU 等步骤被重复执行。
+
+### 后台进程开关
+
+控制脚本将 PID 和标准输出/错误日志保存在被 Git 忽略的 `.paper-work/` 目录，并始终以隐藏窗口启动：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/paper_worker_control.ps1 status
+powershell -ExecutionPolicy Bypass -File scripts/paper_worker_control.ps1 start
+powershell -ExecutionPolicy Bypass -File scripts/paper_worker_control.ps1 stop
+powershell -ExecutionPolicy Bypass -File scripts/paper_worker_control.ps1 restart
+```
+
+停止操作只会终止 PID 文件所指向且进程名为 Python 的进程；PID 失效时不会误杀其他程序。
+
+### 一键分环节诊断
+
+```powershell
+python scripts/paper_intake_diagnose.py
+python scripts/paper_intake_diagnose.py --job-id <job-id>
+python scripts/paper_intake_diagnose.py --json
+```
+
+检查顺序是：本机配置 → 后台进程 → Cloudflare 接入与机器鉴权 → MinerU → DeepSeek → Notion → GitHub Actions → 本地任务账本。输出只包含状态码、环节名和脱敏错误类型，不打印任何 token。若某篇论文失败，`--job-id` 会报告最后阶段并给出对应排查方向。
 
 ## 日常使用
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 
 
@@ -37,6 +38,11 @@ def remote_worker_command() -> int:
     from .remote_worker import build_remote_worker
 
     project_root = Path(__file__).resolve().parent.parent
+    logging.basicConfig(
+        level=os.getenv("PAPER_INTAKE_LOG_LEVEL", "INFO").upper(),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     load_dotenv(project_root / ".env", override=False)
     required = {
         "PAPER_INTAKE_API_BASE": os.getenv("PAPER_INTAKE_API_BASE", ""),

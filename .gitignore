@@ -54,6 +54,7 @@ data/paper_intake/
 .redbook_tmp/
 .workbuddy/
 .worktrees/
+.paper-work/
 
 # OS
 .DS_Store
