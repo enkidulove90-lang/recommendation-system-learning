@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>论文入库控制台</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">LOCAL EDITORIAL DESK · 127.0.0.1</p>
+      <h1>论文入库控制台</h1>
+      <p class="lede">从原始 PDF 到 Notion Draft，在审核前保留每一个可恢复的处理节点。</p>
+    </div>
+    <div class="pipeline-mark" aria-label="发布流程">
+      <span>MinerU</span><b>→</b><span>DeepSeek</span><b>→</b><span>Notion Draft</span><b>→</b><span>Pages</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="intake-card" aria-labelledby="new-job-heading">
+      <div class="section-heading">
+        <p>01 / INTAKE</p>
+        <h2 id="new-job-heading">新建处理任务</h2>
+      </div>
+      <div class="forms-grid">
+        <form id="url-form">
+          <h3>从论文链接开始</h3>
+          <label>论文或 PDF 链接<input name="url" type="url" required placeholder="https://arxiv.org/abs/..."></label>
+          <label>暂定标题（可选）<input name="title" type="text" placeholder="处理后会以论文元数据为准"></label>
+          <button type="submit">提交链接</button>
+        </form>
+        <form id="upload-form">
+          <h3>上传本地 PDF</h3>
+          <label class="file-drop">PDF 文件<input name="file" type="file" accept="application/pdf,.pdf" required></label>
+          <label>论文原始链接（建议填写）<input name="paper_url" type="url" placeholder="https://arxiv.org/abs/..."></label>
+          <label>暂定标题（可选）<input name="title" type="text"></label>
+          <button type="submit">上传并处理</button>
+        </form>
+      </div>
+      <p id="form-message" class="message" role="status"></p>
+    </section>
+
+    <section class="desk" aria-labelledby="jobs-heading">
+      <div class="section-heading">
+        <p>02 / REVIEW QUEUE</p>
+        <h2 id="jobs-heading">处理与审核</h2>
+      </div>
+      <div class="desk-grid">
+        <div id="job-list" class="job-list"><p class="empty">尚无论文任务。</p></div>
+        <article id="job-detail" class="job-detail">
+          <p class="empty">选择左侧任务查看步骤、错误和恢复操作。</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>本机管理页面不会显示 API Token、本地文件路径或全文解析内容。</footer>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
