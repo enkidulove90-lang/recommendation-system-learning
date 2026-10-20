@@ -35,7 +35,10 @@ class PaperCreationWorkflow:
         return checkpoint
 
     def prepare_figures(self, paper_id: str, markdown_path: Path, image_dir: Path, pdf_path: Path | None = None,
-                        layout_path: Path | None = None, use_vision: bool = False, arxiv_id: str | None = None) -> WorkflowCheckpoint:
+                        layout_path: Path | None = None, use_vision: bool = False, arxiv_id: str | None = None,
+                        max_images: int = 9) -> WorkflowCheckpoint:
+        if not 4 <= max_images <= 9:
+            raise ValueError("max_images must be between the four-image hard gate and the platform limit of 9")
         checkpoint = self.load(paper_id)
         selected = []
         candidates = []
@@ -49,7 +52,8 @@ class PaperCreationWorkflow:
                 source_artifact = source_result.as_dict()
                 if source_result.images:
                     source_selected, source_candidates, source_reviews = self.figures.select(
-                        markdown_path, Path(source_result.images[0]).parent, use_vision=use_vision, source="arxiv_latex"
+                        markdown_path, Path(source_result.images[0]).parent, limit=max_images,
+                        use_vision=use_vision, source="arxiv_latex"
                     )
                     selected.extend(source_selected)
                     candidates.extend(source_candidates)
@@ -58,12 +62,12 @@ class PaperCreationWorkflow:
                 source_artifact = {"arxiv_id": arxiv_id, "error": str(error)[:300]}
 
         # Priority 2: rerender MinerU-detected regions straight from the paper PDF.
-        if len(selected) < 4 and pdf_path and layout_path:
+        if len(selected) < max_images and pdf_path and layout_path:
             hd_dir = image_dir.parent / "images_hd"
             if not (hd_dir / "figure_manifest.json").is_file():
                 HighDpiPdfFigureExtractor().extract(pdf_path, layout_path, hd_dir)
             fallback_selected, fallback_candidates, fallback_reviews = self.figures.select(
-                markdown_path, hd_dir, limit=4 - len(selected), use_vision=use_vision, source="pdf_high_dpi"
+                markdown_path, hd_dir, limit=max_images - len(selected), use_vision=use_vision, source="pdf_high_dpi"
             )
             selected.extend(fallback_selected)
             candidates.extend(fallback_candidates)
@@ -73,7 +77,9 @@ class PaperCreationWorkflow:
             source_dir = Path(selected[0].path).parent
         else:
             # Last-resort compatibility path for older MinerU-only runs.
-            selected, candidates, reviews = self.figures.select(markdown_path, image_dir, use_vision=use_vision, source="mineru")
+            selected, candidates, reviews = self.figures.select(
+                markdown_path, image_dir, limit=max_images, use_vision=use_vision, source="mineru"
+            )
             source_dir = image_dir
         if not selected:
             return self._advance(checkpoint, WorkflowStage.BLOCKED, figure_error="No figure passed quality gate", candidate_count=len(candidates))

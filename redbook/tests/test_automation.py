@@ -1,22 +1,120 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
+import subprocess
 
 from PIL import Image
 
 from redbook.automation.feedback import FeedbackStore
+from redbook.automation.daily_discovery import DailyDiscoveryConfig, filter_candidates
+from redbook.automation.daily_runner import DailyDraftRunner, configured_interval_minutes
+from redbook.automation.one_click import QualifiedPaperDraftDelivery, OneClickEligibilityError
 from redbook.automation.common import append_jsonl
+from redbook.automation.content_operations import ContentOperationError, PaperCardStore, ReviewQueue, XiaohongshuPaperRenderer, card_content_hash
 from redbook.automation.images import build_manifest, compose_group, group_figures, metadata_from_mineru_markdown
 from redbook.automation.publishing import FilePublisher, render_package
 from redbook.automation.scheduling import PublishScheduler
 from redbook.automation.scoring import QualityScorerV2
-from redbook.automation.sources import JsonlSource, PaperRecord, SourceRunner, deduplicate_records
+from redbook.automation.sources import ArxivSource, JsonlSource, PaperRecord, SourceRunner, deduplicate_records
 
 
 class AutomationTests(unittest.TestCase):
+    def test_paper_card_is_the_validated_fact_source_for_xhs_rendering(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pdf, markdown = root / "p.pdf", root / "p.md"
+            pdf.write_bytes(b"%PDF-1.7"); markdown.write_text("parsed", encoding="utf-8")
+            figures = []
+            for index in range(4):
+                path = root / f"f{index}.png"; path.write_bytes(b"png")
+                figures.append({"path": str(path), "role": "results"})
+            card = {
+                "schema_version": 1, "paper_id": "arxiv:2607.1",
+                "identity": {"title": "A factual paper", "authors": [], "organizations": [], "venue": {"name": "arXiv", "year": 2026, "status": "preprint"}},
+                "provenance": {"source_records": [{"url": "https://arxiv.org/abs/2607.1"}], "verified_at": "2026-08-02T00:00:00+00:00", "verifier": "test"},
+                "links": {"landing": "https://arxiv.org/abs/2607.1", "pdf": "https://arxiv.org/pdf/2607.1", "official_github": "https://github.com/org/repo"},
+                "evidence": {"problem": ["A measured problem."], "contributions": ["A verified contribution."], "method": ["A documented method."], "benchmarks": [], "experimental_conditions": [], "results": ["A reported result."], "limitations": ["A stated boundary."]},
+                "assets": {"local_pdf": str(pdf), "mineru_markdown": str(markdown), "figures": figures},
+                "eligibility": {"official_github_verified": True, "venue_verified": True, "mineru_verified": True, "high_resolution_figure_count": 4, "eligible": True, "reasons": []},
+                "strategy": {"platform": "xiaohongshu", "angle": "research_evidence", "topics": ["人工智能"]},
+                "delivery": {"mode": "draft_only", "state": "discovered"},
+            }
+            card["content_hash"] = card_content_hash(card)
+            card_path = root / "paper_card.json"
+            PaperCardStore().write(card_path, card)
+            loaded = PaperCardStore.load(card_path, require_delivery_assets=True)
+            rendered = XiaohongshuPaperRenderer.render(loaded)
+            review = ReviewQueue(root).create(card_path, loaded)
+            review = ReviewQueue(root).transition("arxiv:2607.1", "qualified")
+
+        self.assertEqual(rendered["topics"], ["人工智能"])
+        self.assertIn("A reported result.", rendered["body"])
+        self.assertEqual(review["state"], "qualified")
+
+    def test_review_queue_rejects_skipped_states(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            queue = ReviewQueue(Path(directory))
+            path = queue.path_for("arxiv:1")
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({"paper_id": "arxiv:1", "state": "discovered", "history": [], "content_hash": "x"}), encoding="utf-8")
+            with self.assertRaises(ContentOperationError):
+                queue.transition("arxiv:1", "staged")
+
+    def test_daily_runner_writes_fail_closed_qualification_queue(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "data"
+            candidate_path = root / "discovery" / "today" / "candidates.jsonl"
+            append_jsonl(candidate_path, [{"title": "Candidate", "identifiers": {"arxiv": "2608.1"}}])
+
+            class Discovery:
+                def __init__(self, *_: object) -> None:
+                    pass
+
+                def run(self) -> dict[str, object]:
+                    return {"candidate_path": str(candidate_path), "manifest_path": "manifest.json"}
+
+            result = DailyDraftRunner(root, Path("config.yaml"), discovery_factory=Discovery).run_once()
+            queue = json.loads(Path(result.queue_path).read_text(encoding="utf-8"))
+
+        self.assertEqual(result.state, "awaiting_qualification")
+        self.assertEqual(result.candidate_count, 1)
+        self.assertEqual(queue["delivery"], "disabled_until_every_hard_gate_is_verified")
+
+    def test_daily_runner_reads_configured_hourly_interval(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            config = Path(directory) / "daily.yaml"
+            config.write_text("continuous_runner:\n  discovery_interval_hours: 18\n", encoding="utf-8")
+            self.assertEqual(configured_interval_minutes(config), 1080)
+
+    def test_one_click_delivery_rejects_incomplete_bundle_before_executor(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            manifest_path = Path(directory) / "selection_manifest.json"
+            manifest_path.write_text(json.dumps({"paper_id": "p", "mode": "draft_only", "local_artifacts": {}, "links": {}, "selected_figures": []}), encoding="utf-8")
+            with self.assertRaises(OneClickEligibilityError):
+                QualifiedPaperDraftDelivery(lambda _: self.fail("executor must not run")).deliver(manifest_path)
+
+    def test_one_click_delivery_updates_manifest_from_receipt(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pdf, markdown, draft = root / "p.pdf", root / "p.md", root / "draft.json"
+            for path in (pdf, markdown, draft): path.write_text("x", encoding="utf-8")
+            figures = [root / f"f{index}.jpg" for index in range(4)]
+            for figure in figures: figure.write_bytes(b"x")
+            manifest_path = root / "selection_manifest.json"
+            manifest_path.write_text(json.dumps({"paper_id": "p", "mode": "draft_only", "local_artifacts": {"pdf": str(pdf), "mineru_markdown": str(markdown), "structured_draft": str(draft)}, "links": {"github": "https://github.com/org/repo"}, "selected_figures": [{"path": str(path)} for path in figures]}), encoding="utf-8")
+            receipt = {"draft_id": "draft-1", "state": "saved_draft_only", "pdf_attachment": "p.pdf"}
+            (root / "one_click_delivery_receipt.json").write_text(json.dumps(receipt), encoding="utf-8")
+            executor = lambda command: subprocess.CompletedProcess(command, 0, json.dumps(receipt), "")
+            result = QualifiedPaperDraftDelivery(executor).deliver(manifest_path)
+            updated = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(result["draft_id"], "draft-1")
+        self.assertTrue(updated["pdf_attachment_verified"])
+
     def test_deduplicate_merges_identifier_records(self) -> None:
         left = PaperRecord.from_dict({"title": "A Paper", "identifiers": {"arxiv": "2607.00001"}, "source_records": [{"source_type": "arxiv"}]})
         right = PaperRecord.from_dict({"title": "A Paper Final", "identifiers": {"doi": "10.1/example", "arxiv": "2607.00001"}, "urls": {"pdf": "https://example/pdf"}, "source_records": [{"source_type": "proceedings"}]})
@@ -72,6 +170,47 @@ class AutomationTests(unittest.TestCase):
             self.assertEqual(result["count"], 1)
             self.assertTrue(Path(result["raw_path"]).exists())
             self.assertTrue(Path(result["state_path"]).exists())
+
+    def test_arxiv_source_normalizes_records_and_remembers_seen_ids(self) -> None:
+        atom = b'''<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+        <entry><id>http://arxiv.org/abs/2608.00001v2</id><title> Agentic Recommenders </title>
+        <summary> A verifiable recommender experiment. </summary><published>2026-08-02T00:00:00Z</published>
+        <author><name>Ada Lovelace</name></author><category term="cs.IR"/><arxiv:doi>10.1000/example</arxiv:doi></entry></feed>'''
+
+        class Response:
+            content = atom
+
+            def raise_for_status(self) -> None:
+                return None
+
+        with patch("httpx.get", return_value=Response()) as request:
+            source = ArxivSource(max_results=3)
+            records, cursor = source.discover({}, {"search_query": 'all:"agentic recommender systems"', "scope": "domain"})
+            repeated, _ = source.discover(cursor, {"search_query": 'all:"agentic recommender systems"', "scope": "domain"})
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].identifiers["arxiv"], "2608.00001")
+        self.assertEqual(records[0].urls["pdf"], "https://arxiv.org/pdf/2608.00001")
+        self.assertEqual(repeated, [])
+        self.assertEqual(request.call_args.kwargs["params"]["sortBy"], "submittedDate")
+
+    def test_daily_filter_records_unverified_organization_hints(self) -> None:
+        config = DailyDiscoveryConfig(
+            companies=("OpenAI",), universities=(), domains=("agentic recommender systems",),
+            allowed_venues=("KDD",), allow_verified_preprint=True,
+        )
+        record = PaperRecord.from_dict({
+            "title": "Agentic Recommender Systems", "abstract": "Experiments from OpenAI.",
+            "identifiers": {"arxiv": "2608.00001"}, "venue": {"status": "preprint"},
+            "published_at": "2026-08-02T00:00:00+00:00",
+            "source_records": [{"source_type": "arxiv"}],
+            "provenance": {"candidate_scope": "domain", "arxiv_query": 'all:"agentic recommender systems"'},
+        })
+        filtered = filter_candidates([record], config)
+        self.assertEqual(len(filtered), 1)
+        evidence = filtered[0].provenance["daily_filter"]
+        self.assertIn("agentic recommender systems", evidence["matched_domains"])
+        self.assertTrue(evidence["requires_official_github_verification"])
 
     def test_composer_preserves_uncropped_panels(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

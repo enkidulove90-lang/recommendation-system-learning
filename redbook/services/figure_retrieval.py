@@ -224,5 +224,5 @@ class FigureRetrievalService:
             if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}
         ]
         eligible = [candidate for candidate in candidates if candidate.eligible]
-        reviews = self.reviewer.review(eligible) if use_vision and self.reviewer and self.reviewer.is_ready else {}
+        reviews = self.reviewer.review(eligible, max_images=limit) if use_vision and self.reviewer and self.reviewer.is_ready else {}
         return self.gate.rank(candidates, reviews, limit), candidates, reviews

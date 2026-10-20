@@ -27,3 +27,10 @@ delivery:
   min_images: 4
   max_images: 9
   fallback: fail_closed
+discovery:
+  arxiv_max_results_per_query: 50
+  max_candidate_age_days: 90
+continuous_runner:
+  duration_hours: 24
+  discovery_interval_hours: 18
+  output: qualification_review_queue

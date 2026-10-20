@@ -7,6 +7,7 @@ import html
 import re
 from pathlib import Path
 from typing import Any, Protocol
+from xml.etree import ElementTree
 
 from .common import append_jsonl, jaccard, normalize_text, read_json, stable_hash, title_tokens, utc_now, write_json
 
@@ -157,6 +158,76 @@ class JsonlSource:
                 source_record.setdefault("source_type", self.source_type)
                 source_record.setdefault("fetched_at", utc_now())
         return rows[offset:], {"offset": len(rows)}
+
+
+class ArxivSource:
+    """Incrementally collect recent arXiv records through its public Atom API.
+
+    This source deliberately produces *candidates*, not qualified papers. arXiv
+    does not reliably expose author affiliations or an official code repository,
+    so those two requirements remain downstream verification gates.
+    """
+
+    atom_namespace = "http://www.w3.org/2005/Atom"
+    arxiv_namespace = "http://arxiv.org/schemas/atom"
+
+    def __init__(self, name: str = "arxiv", endpoint: str = "https://export.arxiv.org/api/query", max_results: int = 50) -> None:
+        self.name, self.endpoint, self.max_results = name, endpoint, max_results
+
+    @staticmethod
+    def _arxiv_id(value: str) -> str:
+        return value.rsplit("/", 1)[-1].split("v", 1)[0].strip()
+
+    @staticmethod
+    def _text(value: str | None) -> str:
+        return " ".join((value or "").split())
+
+    def discover(self, cursor: dict[str, Any], query: dict[str, Any]) -> tuple[list[PaperRecord], dict[str, Any]]:
+        import httpx
+
+        search_query = str(query.get("search_query", "")).strip()
+        if not search_query:
+            raise ValueError("arXiv source requires search_query")
+        limit = min(int(query.get("max_results", self.max_results)), 2000)
+        response = httpx.get(
+            self.endpoint,
+            params={"search_query": search_query, "start": 0, "max_results": limit, "sortBy": "submittedDate", "sortOrder": "descending"},
+            headers={"User-Agent": "redbook-paper-monitor/1.0"}, timeout=30,
+        )
+        response.raise_for_status()
+        root = ElementTree.fromstring(response.content)
+        seen = set(str(value) for value in cursor.get("seen_ids", []))
+        records: list[PaperRecord] = []
+        for entry in root.findall(f"{{{self.atom_namespace}}}entry"):
+            arxiv_id = self._arxiv_id(entry.findtext(f"{{{self.atom_namespace}}}id", ""))
+            if not arxiv_id or arxiv_id in seen:
+                continue
+            title = self._text(entry.findtext(f"{{{self.atom_namespace}}}title"))
+            if not title:
+                continue
+            published = str(entry.findtext(f"{{{self.atom_namespace}}}published", ""))
+            authors = [{"name": self._text(author.findtext(f"{{{self.atom_namespace}}}name"))} for author in entry.findall(f"{{{self.atom_namespace}}}author")]
+            categories = [str(category.get("term", "")) for category in entry.findall(f"{{{self.atom_namespace}}}category") if category.get("term")]
+            doi = self._text(entry.findtext(f"{{{self.arxiv_namespace}}}doi"))
+            journal_ref = self._text(entry.findtext(f"{{{self.arxiv_namespace}}}journal_ref"))
+            urls = {"landing": f"https://arxiv.org/abs/{arxiv_id}", "pdf": f"https://arxiv.org/pdf/{arxiv_id}"}
+            records.append(PaperRecord.from_dict({
+                "title": title,
+                "authors": authors,
+                "abstract": self._text(entry.findtext(f"{{{self.atom_namespace}}}summary")),
+                "identifiers": {key: value for key, value in {"arxiv": arxiv_id, "doi": doi}.items() if value},
+                "venue": {"name": journal_ref, "year": published[:4], "status": "preprint" if not journal_ref else "published"},
+                "urls": urls,
+                "published_at": published or None,
+                "topics": categories,
+                "provenance": {"arxiv_query": search_query, "candidate_scope": str(query.get("scope", ""))},
+                "source_records": [{
+                    "source": self.name, "source_type": "arxiv", "source_id": arxiv_id,
+                    "url": urls["landing"], "fetched_at": utc_now(), "search_query": search_query,
+                }],
+            }))
+        next_seen = list(dict.fromkeys([*(str(value) for value in cursor.get("seen_ids", [])), *(record.identifiers["arxiv"] for record in records)]))[-1000:]
+        return records, {"seen_ids": next_seen, "checked_at": utc_now(), "search_query": search_query}
 
 
 class ConferenceAnnouncementSource:
