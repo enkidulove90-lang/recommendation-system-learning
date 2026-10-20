@@ -1,0 +1,4 @@
+interface:
+  display_name: "小红书论文日更全链路"
+  short_description: "用于小红书的研究论文发现核验制稿与草稿附件交付工作流"
+  default_prompt: "执行严格的小红书论文日更：发现候选、核验硬门槛、生成论文快报，并只保存可验收草稿。"
