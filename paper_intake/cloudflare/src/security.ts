@@ -1,10 +1,13 @@
 export type AppEnv = Omit<Env, "ARTIFACT_STORAGE_ENABLED" | "BROWSER_AUTH_ENABLED"> & {
-  ACCESS_IDENTITY_HEADER: string;
   ARTIFACT_STORAGE_ENABLED: string;
   ARTIFACTS?: R2Bucket;
   BROWSER_AUTH_ENABLED: string;
+  GITHUB_OAUTH_CLIENT_ID: string;
+  GITHUB_OAUTH_CLIENT_SECRET: string;
+  GITHUB_OWNER_IDS: string;
   GITHUB_TOKEN: string;
   OWNER_IDENTITIES: string;
+  PUBLIC_BASE_URL: string;
   PUBLISH_CALLBACK_TOKEN: string;
   SESSION_SIGNING_KEY: string;
   WORKER_TOKEN: string;
@@ -147,16 +150,6 @@ export async function requirePublishCallback(request: Request, env: AppEnv): Pro
   }
 }
 
-export function requireAccessIdentity(request: Request, env: AppEnv): string {
-  const header = env.ACCESS_IDENTITY_HEADER || "cf-access-authenticated-user-email";
-  const identity = request.headers.get(header)?.trim();
-  const owners = env.OWNER_IDENTITIES.split(",").map((value) => value.trim().toLowerCase());
-  if (!identity || !owners.includes(identity.toLowerCase())) {
-    throw new ApiError(403, "owner_denied", "当前 GitHub 身份没有上传权限。", false);
-  }
-  return identity;
-}
-
 export async function createLoginCode(
   env: AppEnv,
   identity: string,
@@ -172,6 +165,40 @@ export async function createLoginCode(
     .bind(await sha256(code), identity, expiresAt)
     .run();
   return code;
+}
+
+export async function createOAuthState(
+  env: AppEnv,
+  returnOrigin: string,
+  now: number,
+): Promise<string> {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  const state = bytesToBase64Url(bytes);
+  const expiresAt = new Date((now + 600) * 1000).toISOString();
+  await env.DB.prepare(
+    "INSERT INTO oauth_states (state_hash, return_origin, expires_at) VALUES (?, ?, ?)",
+  )
+    .bind(await sha256(state), returnOrigin, expiresAt)
+    .run();
+  return state;
+}
+
+export async function consumeOAuthState(
+  env: AppEnv,
+  state: string,
+  now: number,
+): Promise<string | null> {
+  if (!state || state.length > 256) return null;
+  const timestamp = new Date(now * 1000).toISOString();
+  const row = await env.DB.prepare(
+    `UPDATE oauth_states SET consumed_at = ?
+     WHERE state_hash = ? AND consumed_at IS NULL AND expires_at >= ?
+     RETURNING return_origin`,
+  )
+    .bind(timestamp, await sha256(state), timestamp)
+    .first<{ return_origin: string }>();
+  return row?.return_origin ?? null;
 }
 
 export async function consumeLoginCode(

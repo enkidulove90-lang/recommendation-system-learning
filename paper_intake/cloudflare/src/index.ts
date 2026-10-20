@@ -3,9 +3,10 @@ import type { JobRecord } from "./types";
 import {
   ApiError,
   assertOrigin,
+  consumeOAuthState,
   consumeLoginCode,
+  createOAuthState,
   createLoginCode,
-  requireAccessIdentity,
   requireMachine,
   requireOwner,
   requirePublishCallback,
@@ -293,6 +294,73 @@ window.opener?.postMessage({type:"paper-intake-login",code:${safeCode}},${safeOr
       "referrer-policy": "no-referrer",
     },
   });
+}
+
+function githubCallbackUrl(env: AppEnv): string {
+  let base: URL;
+  try {
+    base = new URL(env.PUBLIC_BASE_URL);
+  } catch {
+    throw new ApiError(503, "owner_login_unavailable", "GitHub 登录尚未完成配置。", false);
+  }
+  if (base.protocol !== "https:" || base.username || base.password || base.pathname !== "/") {
+    throw new ApiError(503, "owner_login_unavailable", "GitHub 登录尚未完成配置。", false);
+  }
+  return new URL("/v1/session/callback", base).toString();
+}
+
+function requireGitHubOAuth(env: AppEnv): void {
+  if (!env.GITHUB_OAUTH_CLIENT_ID || !env.GITHUB_OAUTH_CLIENT_SECRET || !env.GITHUB_OWNER_IDS) {
+    throw new ApiError(503, "owner_login_unavailable", "GitHub 登录尚未完成配置。", false);
+  }
+}
+
+async function githubIdentity(env: AppEnv, code: string): Promise<string> {
+  const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/x-www-form-urlencoded",
+      "user-agent": "enkidu-paper-intake-worker",
+    },
+    body: new URLSearchParams({
+      client_id: env.GITHUB_OAUTH_CLIENT_ID,
+      client_secret: env.GITHUB_OAUTH_CLIENT_SECRET,
+      code,
+      redirect_uri: githubCallbackUrl(env),
+    }),
+  });
+  let tokenPayload: Record<string, unknown> = {};
+  try {
+    tokenPayload = JSON.parse(await tokenResponse.text()) as Record<string, unknown>;
+  } catch {
+    tokenPayload = {};
+  }
+  const accessToken = typeof tokenPayload.access_token === "string" ? tokenPayload.access_token : "";
+  if (!tokenResponse.ok || !accessToken) {
+    throw new ApiError(401, "github_oauth_failed", "GitHub 身份验证失败，请重新登录。", false);
+  }
+
+  const userResponse = await fetch("https://api.github.com/user", {
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${accessToken}`,
+      "user-agent": "enkidu-paper-intake-worker",
+      "x-github-api-version": "2022-11-28",
+    },
+  });
+  let user: Record<string, unknown> = {};
+  try {
+    user = JSON.parse(await userResponse.text()) as Record<string, unknown>;
+  } catch {
+    user = {};
+  }
+  const id = typeof user.id === "number" && Number.isSafeInteger(user.id) ? String(user.id) : "";
+  const allowedIds = env.GITHUB_OWNER_IDS.split(",").map((value) => value.trim());
+  if (!userResponse.ok || !id || !allowedIds.includes(id)) {
+    throw new ApiError(403, "owner_denied", "当前 GitHub 账号没有投稿权限。", false);
+  }
+  return `github:${id}`;
 }
 
 function machineResponse(
@@ -592,8 +660,30 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
         false,
       );
     }
+    requireGitHubOAuth(env);
     const targetOrigin = assertOrigin(url.searchParams.get("return_origin"), env);
-    const identity = requireAccessIdentity(request, env);
+    const state = await createOAuthState(env, targetOrigin, Math.floor(Date.now() / 1000));
+    const authorization = new URL("https://github.com/login/oauth/authorize");
+    authorization.searchParams.set("client_id", env.GITHUB_OAUTH_CLIENT_ID);
+    authorization.searchParams.set("redirect_uri", githubCallbackUrl(env));
+    authorization.searchParams.set("state", state);
+    return Response.redirect(authorization.toString(), 302);
+  }
+  if (url.pathname === "/v1/session/callback" && request.method === "GET") {
+    requireGitHubOAuth(env);
+    if (url.searchParams.get("error")) {
+      throw new ApiError(401, "github_oauth_cancelled", "GitHub 登录已取消。", false);
+    }
+    const state = url.searchParams.get("state") || "";
+    const targetOrigin = await consumeOAuthState(env, state, Math.floor(Date.now() / 1000));
+    if (!targetOrigin) {
+      throw new ApiError(401, "invalid_oauth_state", "登录请求无效或已过期，请重新登录。", false);
+    }
+    const code = url.searchParams.get("code") || "";
+    if (!code || code.length > 512) {
+      throw new ApiError(401, "github_oauth_failed", "GitHub 身份验证失败，请重新登录。", false);
+    }
+    const identity = await githubIdentity(env, code);
     return htmlLoginResponse(
       await createLoginCode(env, identity, Math.floor(Date.now() / 1000)),
       targetOrigin,

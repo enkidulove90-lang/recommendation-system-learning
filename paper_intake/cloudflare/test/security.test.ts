@@ -1,10 +1,12 @@
 import { env } from "cloudflare:workers";
 import { SELF } from "cloudflare:test";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   assertOrigin,
+  consumeOAuthState,
   consumeLoginCode,
+  createOAuthState,
   createLoginCode,
   requireMachine,
   requirePublishCallback,
@@ -15,6 +17,8 @@ import {
 import worker from "../src/index";
 
 const testEnv = env as AppEnv;
+
+afterEach(() => vi.restoreAllMocks());
 
 describe("owner security", () => {
   it("fails closed when machine or callback secrets are not configured", async () => {
@@ -37,11 +41,9 @@ describe("owner security", () => {
     )).rejects.toMatchObject({ status: 503, code: "callback_not_configured" });
   });
 
-  it("keeps owner login closed until Cloudflare Access is configured", async () => {
+  it("keeps owner login closed until browser OAuth is enabled", async () => {
     const response = await worker.fetch(
-      new Request("https://worker.test/v1/session/start?return_origin=http%3A%2F%2F127.0.0.1%3A4322", {
-        headers: { "cf-access-authenticated-user-email": "owner@example.com" },
-      }),
+      new Request("https://worker.test/v1/session/start?return_origin=http%3A%2F%2F127.0.0.1%3A4322"),
       { ...testEnv, BROWSER_AUTH_ENABLED: "false" },
     );
     expect(response.status).toBe(503);
@@ -76,22 +78,98 @@ describe("owner security", () => {
     expect(await consumeLoginCode(testEnv, code, 1_800_000_002)).toBeNull();
   });
 
-  it("exchanges an Access-authenticated popup code for one browser session", async () => {
+  it("consumes an OAuth state exactly once and restores its return origin", async () => {
+    const origin = "http://127.0.0.1:4322";
+    const state = await createOAuthState(testEnv, origin, 1_800_000_000);
+    expect(await consumeOAuthState(testEnv, state, 1_800_000_001)).toBe(origin);
+    expect(await consumeOAuthState(testEnv, state, 1_800_000_002)).toBeNull();
+  });
+
+  it("redirects to GitHub and accepts only the configured stable GitHub user id", async () => {
     const origin = "http://127.0.0.1:4322";
     const started = await SELF.fetch(
       `https://worker.test/v1/session/start?return_origin=${encodeURIComponent(origin)}`,
-      { headers: { "cf-access-authenticated-user-email": "owner@example.com" } },
+      { redirect: "manual" },
     );
-    expect(started.status).toBe(200);
-    const html = await started.text();
+    expect(started.status).toBe(302);
+    const authorization = new URL(started.headers.get("location") || "");
+    expect(authorization.origin + authorization.pathname).toBe("https://github.com/login/oauth/authorize");
+    expect(authorization.searchParams.get("client_id")).toBe("test-github-client-id");
+    expect(authorization.searchParams.get("scope")).toBeNull();
+    expect(authorization.searchParams.get("redirect_uri")).toBe(
+      "https://paper-intake.example/v1/session/callback",
+    );
+
+    const github = vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ access_token: "temporary-oauth-token" }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ id: 123456, login: "owner-login" }),
+      } as Response);
+    const callback = await SELF.fetch(
+      `https://worker.test/v1/session/callback?code=temporary-code&state=${encodeURIComponent(authorization.searchParams.get("state") || "")}`,
+    );
+    const html = await callback.text();
+    expect(github).toHaveBeenCalledTimes(2);
+    expect(callback.status, html).toBe(200);
     const match = html.match(/code:"([A-Za-z0-9_-]+)"/u);
     expect(match?.[1]).toBeTruthy();
-    expect(html).not.toContain(testEnv.SESSION_SIGNING_KEY);
 
     const exchange = await SELF.fetch("https://worker.test/v1/session/exchange", {
       method: "POST",
       headers: { "content-type": "application/json", origin },
       body: JSON.stringify({ code: match?.[1] }),
+    });
+    const payload = await exchange.json<{ token: string }>();
+    expect((await verifySession(
+      payload.token,
+      testEnv.SESSION_SIGNING_KEY,
+      Math.floor(Date.now() / 1000),
+    ))?.sub).toBe("github:123456");
+  });
+
+  it("rejects a valid GitHub login from any other user id", async () => {
+    const origin = "http://127.0.0.1:4322";
+    const started = await SELF.fetch(
+      `https://worker.test/v1/session/start?return_origin=${encodeURIComponent(origin)}`,
+      { redirect: "manual" },
+    );
+    const authorization = new URL(started.headers.get("location") || "");
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ access_token: "other-user-token" }),
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ id: 999999, login: "not-the-owner" }),
+      } as Response);
+    const callback = await SELF.fetch(
+      `https://worker.test/v1/session/callback?code=temporary-code&state=${encodeURIComponent(authorization.searchParams.get("state") || "")}`,
+    );
+    expect(callback.status).toBe(403);
+    expect((await callback.json<{ code: string }>()).code).toBe("owner_denied");
+  });
+
+  it("exchanges a popup code for one browser session", async () => {
+    const origin = "http://127.0.0.1:4322";
+    const code = await createLoginCode(
+      testEnv,
+      "owner@example.com",
+      Math.floor(Date.now() / 1000),
+    );
+
+    const exchange = await SELF.fetch("https://worker.test/v1/session/exchange", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin },
+      body: JSON.stringify({ code }),
     });
     expect(exchange.status).toBe(200);
     const payload = await exchange.json<{ code: string; token: string }>();
@@ -102,7 +180,7 @@ describe("owner security", () => {
     const replay = await SELF.fetch("https://worker.test/v1/session/exchange", {
       method: "POST",
       headers: { "content-type": "application/json", origin },
-      body: JSON.stringify({ code: match?.[1] }),
+      body: JSON.stringify({ code }),
     });
     expect(replay.status).toBe(401);
     expect((await replay.json<{ code: string }>()).code).toBe("invalid_login_code");

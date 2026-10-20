@@ -7,7 +7,10 @@
     "ALLOWED_ORIGINS": "https://enkidulove90-lang.github.io,http://127.0.0.1:4322",
     "ARTIFACT_STORAGE_ENABLED": "true",
     "BROWSER_AUTH_ENABLED": "true",
-    "GITHUB_REPOSITORY": "enkidulove90-lang/enkidulove90-lang.github.io"
+    "GITHUB_OAUTH_CLIENT_ID": "test-github-client-id",
+    "GITHUB_OWNER_IDS": "123456",
+    "GITHUB_REPOSITORY": "enkidulove90-lang/enkidulove90-lang.github.io",
+    "PUBLIC_BASE_URL": "https://paper-intake.example"
   },
   "d1_databases": [
     {

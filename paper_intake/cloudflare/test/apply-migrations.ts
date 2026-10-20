@@ -17,6 +17,7 @@ beforeEach(async () => {
     testEnv.DB.prepare("DELETE FROM jobs"),
     testEnv.DB.prepare("DELETE FROM papers"),
     testEnv.DB.prepare("DELETE FROM login_codes"),
+    testEnv.DB.prepare("DELETE FROM oauth_states"),
   ]);
   const objects = await testEnv.ARTIFACTS.list();
   if (objects.objects.length > 0) {

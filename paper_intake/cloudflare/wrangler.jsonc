@@ -11,12 +11,14 @@
     }
   ],
   "vars": {
-    "ACCESS_IDENTITY_HEADER": "cf-access-authenticated-user-email",
     "ALLOWED_ORIGINS": "https://enkidulove90-lang.github.io,http://127.0.0.1:4322",
     "ARTIFACT_STORAGE_ENABLED": "false",
-    "BROWSER_AUTH_ENABLED": "false",
+    "BROWSER_AUTH_ENABLED": "true",
+    "GITHUB_OAUTH_CLIENT_ID": "Ov23liCbFt3bqH3uEjQA",
+    "GITHUB_OWNER_IDS": "289115946",
     "GITHUB_REPOSITORY": "enkidulove90-lang/enkidulove90-lang.github.io",
-    "OWNER_IDENTITIES": "enkidulove90@gmail.com"
+    "OWNER_IDENTITIES": "enkidulove90@gmail.com,github:289115946",
+    "PUBLIC_BASE_URL": "https://paper-intake.enkiduai.club"
   },
   "d1_databases": [
     {

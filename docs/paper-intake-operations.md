@@ -6,8 +6,9 @@
 
 ```text
 GitHub.io「收录论文」按钮
-  → Cloudflare Access（只允许站点所有者的 GitHub 身份）
-  → Worker 接收 URL/PDF，D1 去重并记录任务，R2 暂存原始 PDF
+  → GitHub OAuth（只允许配置过的 GitHub 数字用户 ID）
+  → Worker 接收 URL，D1 去重并记录任务
+  → （启用 PDF 后）R2 暂存原始 PDF
   → 本机 remote-worker 领取带租约任务
   → MinerU 解析与提图 → DeepSeek 生成 → 质量门禁
   → Notion 直接写入 Published + Post
@@ -24,32 +25,41 @@ GitHub.io「收录论文」按钮
 
 曾在聊天、日志或截图中出现过的 Notion token 必须先在 Notion 后台撤销并重新生成。更新本机和 GitHub Secrets 后再运行真实论文。不要把 token 粘贴到命令历史、Markdown、截图或 Git 提交中。
 
-### 2. 创建 Cloudflare 资源
+### 2. 创建 GitHub OAuth App
+
+OAuth App 使用以下设置：
+
+- Homepage URL：公开站点首页。
+- Authorization callback URL：`https://<worker-domain>/v1/session/callback`。
+- 不申请额外 scope，只读取 GitHub 公开身份。
+
+把公开的 Client ID 写入 `wrangler.jsonc` 的 `GITHUB_OAUTH_CLIENT_ID`，把稳定的 GitHub 数字用户 ID 写入 `GITHUB_OWNER_IDS`。Client Secret 只能作为 Worker secret 保存，不能写入仓库。
+
+### 3. 创建 Cloudflare 资源
 
 在 `paper_intake/cloudflare` 目录执行：
 
 ```powershell
 npx wrangler login
 npx wrangler d1 create paper-intake
-npx wrangler r2 bucket create paper-intake-artifacts
+npx wrangler r2 bucket create paper-intake-artifacts # 仅在启用 PDF 上传前需要
 ```
 
 把 D1 创建命令返回的 `database_id` 写入 `wrangler.jsonc`，不要修改绑定名 `DB`。R2 绑定名必须保持 `ARTIFACTS`。
 
-通过交互式输入设置四个 Worker secret；不要把值写入仓库：
+通过交互式输入设置 Worker secret；不要把值写入仓库：
 
 ```powershell
 npx wrangler secret put SESSION_SIGNING_KEY
 npx wrangler secret put WORKER_TOKEN
+npx wrangler secret put GITHUB_OAUTH_CLIENT_SECRET
 npx wrangler secret put GITHUB_TOKEN
 npx wrangler secret put PUBLISH_CALLBACK_TOKEN
 npx wrangler d1 migrations apply paper-intake --remote
 npx wrangler deploy
 ```
 
-建议使用相互独立的高熵随机值作为会话签名、机器 Worker 和发布回调令牌。`GITHUB_TOKEN` 使用仅能向目标仓库发送 `repository_dispatch` 的细粒度 PAT。
-
-在 Cloudflare Zero Trust 中只保护 `/v1/session/start*`：身份源选 GitHub，策略仅允许站点所有者账号。不要把机器接口放在浏览器 Access 跳转之后；机器接口已经使用单独 Bearer token。
+建议使用相互独立的高熵随机值作为会话签名、机器 Worker 和发布回调令牌。`GITHUB_TOKEN` 使用只绑定目标网站仓库、只具备触发发布所需最小权限的细粒度 PAT。机器接口使用独立 Bearer token，不复用浏览器 OAuth 会话。
 
 生产变量 `ALLOWED_ORIGINS` 只保留：
 
@@ -59,7 +69,7 @@ https://enkidulove90-lang.github.io,http://127.0.0.1:4322
 
 域名必须精确匹配，不使用 `*`。
 
-### 3. 配置 GitHub Secrets
+### 4. 配置 GitHub Secrets
 
 网站仓库需要：
 
@@ -72,7 +82,7 @@ https://enkidulove90-lang.github.io,http://127.0.0.1:4322
 
 网站构建脚本只把 `PAPER_INTAKE_API_BASE` 输出到 `/paper-intake-config.json`；测试会阻止 token/secret 被写入该文件。
 
-### 4. 配置本机 Worker
+### 5. 配置本机 Worker
 
 项目根目录 `.env` 至少包括：
 
@@ -96,7 +106,7 @@ python -m paper_intake remote-worker
 ## 日常使用
 
 1. 打开站点导航栏的“收录论文”。
-2. 选择公开 HTTPS 链接或不超过 50 MB 的 PDF。
+2. 当前生产入口选择公开 HTTPS 链接；启用 R2 和 `PAPER_INTAKE_PDF_ENABLED=true` 后才开放不超过 50 MB 的 PDF。
 3. 使用 GitHub 所有者身份登录；浏览器凭据只存于 `sessionStorage`，关闭会话后不会长期保留。
 4. 提交后从右侧“任务”抽屉观察“处理中/处理完成”。
 5. 失败卡片显示“未发布”和脱敏错误，可点击“重新处理”。
@@ -137,7 +147,7 @@ python -m paper_intake remote-worker
 
 上线前只使用一篇可合法下载的测试论文：
 
-- 从网页 PDF 模式提交，确认得到一个 `paper_id/job_id`。
+- 从网页 URL 模式提交，确认得到一个 `paper_id/job_id`；PDF 模式在 R2 启用后单独验收。
 - 启动 Worker，在 MinerU checkpoint 完成后中断并重启，确认不重复解析。
 - 确认生成内容通过图片、引用与文章结构门禁。
 - 确认 Notion 仅有一个 `Published + Post` 页面。

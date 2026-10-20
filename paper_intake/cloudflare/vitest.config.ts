@@ -13,11 +13,14 @@ export default defineConfig({
       wrangler: { configPath: path.join(root, "wrangler.test.jsonc") },
       miniflare: {
         bindings: {
-          ACCESS_IDENTITY_HEADER: "cf-access-authenticated-user-email",
           ARTIFACT_STORAGE_ENABLED: "true",
           BROWSER_AUTH_ENABLED: "true",
-          OWNER_IDENTITIES: "owner@example.com",
+          GITHUB_OAUTH_CLIENT_ID: "test-github-client-id",
+          GITHUB_OAUTH_CLIENT_SECRET: "test-github-client-secret",
+          GITHUB_OWNER_IDS: "123456",
+          OWNER_IDENTITIES: "owner@example.com,github:123456",
           GITHUB_TOKEN: "test-github-token",
+          PUBLIC_BASE_URL: "https://paper-intake.example",
           PUBLISH_CALLBACK_TOKEN: "test-callback-token",
           SESSION_SIGNING_KEY: "test-signing-key-with-at-least-32-bytes",
           WORKER_TOKEN: "test-worker-token",
