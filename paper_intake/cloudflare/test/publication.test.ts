@@ -73,6 +73,10 @@ describe("publication dispatch", () => {
     });
     expect(repeated.status).toBe(200);
     expect(github).toHaveBeenCalledTimes(1);
+    const completedEvents = await testEnv.DB.prepare(
+      "SELECT COUNT(*) AS count FROM job_events WHERE job_id = ? AND event_type = 'publication.completed'",
+    ).bind(job.jobId).first<{ count: number }>();
+    expect(completedEvents?.count).toBe(1);
   });
 
   it("keeps a failed deployment retryable in the completed UI group", async () => {
