@@ -395,6 +395,36 @@ class NotionGateway:
             )
         return NotionPage(page_id, page_url, "Draft", before)
 
+    def upsert_published(self, draft: NotionDraft) -> NotionPage:
+        existing = self._find_by_arxiv(draft.arxiv_id)
+        properties = self._properties(
+            title=draft.title,
+            slug=draft.slug,
+            summary=draft.summary,
+            arxiv_id=draft.arxiv_id,
+            status="Published",
+        )
+        before = ""
+        if existing:
+            page_id = existing["id"]
+            page_url = existing.get("url", "")
+            before = self._snapshot_markdown(page_id)
+            self._update_page(page_id, properties)
+        else:
+            created = self._create_page(properties)
+            page_id = created["id"]
+            page_url = created.get("url", "")
+        uploads = {path.name: self._upload_file(path) for path in draft.figure_paths}
+        blocks = self._blocks(draft.markdown, uploads)
+        self._clear_children(page_id)
+        for index in range(0, len(blocks), 100):
+            self._request(
+                "PATCH",
+                f"/blocks/{page_id}/children",
+                json={"children": blocks[index : index + 100]},
+            )
+        return NotionPage(page_id, page_url, "Published", before)
+
     def publish(self, page_id: str, *, title: str, slug: str, arxiv_id: str) -> NotionPage:
         properties = self._properties(
             title=title,

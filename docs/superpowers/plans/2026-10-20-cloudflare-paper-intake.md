@@ -496,7 +496,7 @@ git commit -m "feat(intake): add leased workers and publication callback"
 - Modify: `tests/test_intake_service.py`
 - Modify: `tests/test_intake_end_to_end.py`
 
-- [ ] **Step 1: Replace review expectations with direct-publish failing tests**
+- [x] **Step 1: Replace review expectations with direct-publish failing tests**
 
 ```python
 PDF_BYTES = b"%PDF-1.7\nvalidated test document"
@@ -519,7 +519,7 @@ def test_quality_failure_never_writes_notion(self):
 Run: `python -m unittest tests.test_intake_pipeline tests.test_intake_service tests.test_intake_end_to_end`  
 Expected: FAIL because the pipeline still stops at `AWAITING_REVIEW`.
 
-- [ ] **Step 2: Replace the draft step with a published-page step**
+- [x] **Step 2: Replace the draft step with a published-page step**
 
 ```python
 class StepName(StrEnum):
@@ -531,7 +531,7 @@ class StepName(StrEnum):
 
 Change `NotionGateway.upsert_draft` into `upsert_published`, setting Notion properties `status=Published` and `type=Post` in the create/update request.
 
-- [ ] **Step 3: Make the service auto-publish only after quality success**
+- [x] **Step 3: Make the service auto-publish only after quality success**
 
 ```python
 result = self.pipeline.run(job.job_id)
@@ -545,7 +545,7 @@ return self.repository.update_job(
 
 The local service does not call GitHub in this path. The remote worker reports the Notion result to Cloudflare, and Task 3's gateway performs the single repository dispatch. Keep `approve()` temporarily as a compatibility method that returns an already publishing/published job and rejects every other state; remove its HTTP button and review wording.
 
-- [ ] **Step 4: Run the focused and regression tests**
+- [x] **Step 4: Run the focused and regression tests**
 
 Run: `python -m unittest tests.test_intake_pipeline tests.test_intake_service tests.test_intake_end_to_end`  
 Expected: direct-publish tests pass.
@@ -553,7 +553,7 @@ Expected: direct-publish tests pass.
 Run: `python -m unittest discover -s tests -p "test_*.py"`  
 Expected: all existing intake and unrelated tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add paper_intake tests

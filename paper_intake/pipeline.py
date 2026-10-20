@@ -25,7 +25,7 @@ class PipelineFailure(RuntimeError):
 
 
 class PaperPipeline:
-    """Checkpointed single-paper processing pipeline ending at a Notion draft."""
+    """Checkpointed single-paper pipeline publishing only after quality success."""
 
     PROCESSING_STEPS = (
         StepName.VALIDATE_INPUT,
@@ -35,7 +35,7 @@ class PaperPipeline:
         StepName.DEEPSEEK_GENERATE,
         StepName.CLASSIFY,
         StepName.QUALITY_CHECK,
-        StepName.WRITE_NOTION_DRAFT,
+        StepName.WRITE_NOTION_PUBLISHED,
     )
 
     def __init__(
@@ -66,15 +66,15 @@ class PaperPipeline:
                 if step_name == StepName.QUALITY_CHECK and output.get("issue_codes"):
                     self.repository.update_job(
                         job_id,
-                        status=JobStatus.BLOCKED,
+                        status=JobStatus.FAILED,
                         error_code="quality_gate_failed",
-                        error_message="Article quality checks require review.",
+                        error_message="Article quality checks failed.",
                     )
                     break
             else:
                 self.repository.update_job(
                     job_id,
-                    status=JobStatus.AWAITING_REVIEW,
+                    status=JobStatus.PUBLISHING,
                     current_step="",
                     error_code="",
                     error_message="",
@@ -291,12 +291,12 @@ class PaperPipeline:
             "article_path": str(article_md),
         }
 
-    def _step_write_notion_draft(self, job_id: str) -> dict[str, Any]:
+    def _step_write_notion_published(self, job_id: str) -> dict[str, Any]:
         bundle = self._bundle(job_id)
         article = self._load_article(job_id)
         markdown = (bundle / "article.md").read_text(encoding="utf-8")
         figure_paths = tuple((bundle / figure.path).resolve() for figure in article.figures)
-        page = self.notion.upsert_draft(
+        page = self.notion.upsert_published(
             NotionDraft(
                 arxiv_id=article.paper.canonical_id,
                 title=article.paper.chinese_title or article.paper.title,

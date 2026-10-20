@@ -20,7 +20,7 @@ class _FakePipeline:
         StepName.DEEPSEEK_GENERATE,
         StepName.CLASSIFY,
         StepName.QUALITY_CHECK,
-        StepName.WRITE_NOTION_DRAFT,
+        StepName.WRITE_NOTION_PUBLISHED,
     )
 
     def __init__(self, repo: JobRepository):
@@ -29,7 +29,7 @@ class _FakePipeline:
 
     def run(self, job_id: str):
         self.calls.append(job_id)
-        return self.repo.update_job(job_id, status=JobStatus.AWAITING_REVIEW)
+        return self.repo.update_job(job_id, status=JobStatus.PUBLISHING)
 
     def retry(self, job_id: str):
         return self.run(job_id)
@@ -119,39 +119,32 @@ class ServiceTests(unittest.TestCase):
         self.assertTrue(self.service.run_pending_once())
         self.assertEqual(self.pipeline.calls, [first.job_id, second.job_id])
 
-    def test_approval_publishes_notion_then_dispatches_pages(self) -> None:
+    def test_approve_is_only_a_compatibility_noop_for_publishing_jobs(self) -> None:
         job = self._reviewable_job()
+        job = self.repo.update_job(job.job_id, status=JobStatus.PUBLISHING)
 
         approved = self.service.approve(job.job_id)
 
-        self.assertEqual(self.notion.publish_calls, 1)
-        self.assertEqual(self.github.calls, 1)
+        self.assertEqual(self.notion.publish_calls, 0)
+        self.assertEqual(self.github.calls, 0)
         self.assertEqual(approved.status, JobStatus.PUBLISHING)
-        self.assertEqual(approved.github_run_id, "run-1")
-        self.assertEqual(approved.published_url, "https://example.github.io/article/paper-2608.17316/")
 
     def test_blocked_or_unreviewed_job_cannot_be_approved(self) -> None:
         job = self.repo.create_job(source_type="upload", upload_path="missing.pdf")
         self.repo.update_job(job.job_id, status=JobStatus.BLOCKED)
 
-        with self.assertRaisesRegex(ServiceError, "awaiting review"):
+        with self.assertRaisesRegex(ServiceError, "already publishing"):
             self.service.approve(job.job_id)
 
         self.assertEqual(self.notion.publish_calls, 0)
         self.assertEqual(self.github.calls, 0)
 
-    def test_deployment_retry_does_not_publish_notion_twice(self) -> None:
-        job = self._reviewable_job()
-        self.github = _FakeGitHub(fail_once=True)
-        self.service.github = self.github
-
-        failed = self.service.approve(job.job_id)
-        retried = self.service.retry_deployment(job.job_id)
-
-        self.assertEqual(failed.status, JobStatus.FAILED)
-        self.assertEqual(retried.status, JobStatus.PUBLISHING)
-        self.assertEqual(self.notion.publish_calls, 1)
-        self.assertEqual(self.github.calls, 2)
+    def test_processing_does_not_dispatch_github_from_the_local_service(self) -> None:
+        job = self.service.submit_upload("paper.pdf", b"%PDF-1.7\nbody")
+        self.assertTrue(self.service.run_pending_once())
+        processed = self.repo.get_job(job.job_id)
+        self.assertEqual(processed.status, JobStatus.PUBLISHING)
+        self.assertEqual(self.github.calls, 0)
 
     def test_cancel_does_not_delete_uploaded_pdf(self) -> None:
         job = self.service.submit_upload("paper.pdf", b"%PDF-1.7\nbody")
@@ -187,7 +180,7 @@ class ServiceTests(unittest.TestCase):
             restart_from=StepName.DEEPSEEK_GENERATE,
         )
 
-        self.assertEqual(retried.status, JobStatus.AWAITING_REVIEW)
+        self.assertEqual(retried.status, JobStatus.PUBLISHING)
         self.assertEqual(
             self.repo.get_step(job.job_id, StepName.MINERU_PARSE).status.value,
             "succeeded",
@@ -196,6 +189,11 @@ class ServiceTests(unittest.TestCase):
 
     def test_mark_published_requires_successful_publication_check(self) -> None:
         job = self._reviewable_job()
+        self.repo.update_job(
+            job.job_id,
+            status=JobStatus.PUBLISHING,
+            published_url="https://example.github.io/article/paper-2608.17316/",
+        )
         approved = self.service.approve(job.job_id)
 
         with self.assertRaisesRegex(ServiceError, "not reachable"):

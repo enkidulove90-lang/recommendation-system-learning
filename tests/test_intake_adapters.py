@@ -212,6 +212,24 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(page.before_markdown, "old remote body")
         self.assertEqual(transport.last_properties["status"]["select"]["name"], "Draft")
 
+    def test_notion_direct_publish_sets_published_post_before_writing_blocks(self) -> None:
+        transport = _FakeNotionTransport()
+        gateway = NotionGateway("token", "database", transport=transport)
+
+        page = gateway.upsert_published(
+            NotionDraft(
+                arxiv_id="2608.17316",
+                title="一篇论文",
+                slug="paper-2608.17316",
+                summary="摘要",
+                markdown="# published body",
+            )
+        )
+
+        self.assertEqual(transport.last_properties["status"]["select"]["name"], "Published")
+        self.assertEqual(transport.last_properties["type"]["select"]["name"], "Post")
+        self.assertEqual(page.status, "Published")
+
     def test_notion_approval_only_changes_status_to_published(self) -> None:
         transport = _FakeNotionTransport()
         transport.page_exists = True

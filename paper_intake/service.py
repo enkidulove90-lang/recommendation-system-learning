@@ -125,7 +125,7 @@ class PaperIntakeService:
         try:
             job = self.repository.get_job(job_id)
             if job and job.status != JobStatus.CANCELLED:
-                self.pipeline.run(job_id)
+                self._finalize_pipeline_result(self.pipeline.run(job_id))
         finally:
             self._queue.task_done()
         return True
@@ -139,7 +139,7 @@ class PaperIntakeService:
             try:
                 job = self.repository.get_job(job_id)
                 if job and job.status != JobStatus.CANCELLED:
-                    self.pipeline.run(job_id)
+                    self._finalize_pipeline_result(self.pipeline.run(job_id))
             finally:
                 self._queue.task_done()
 
@@ -158,47 +158,30 @@ class PaperIntakeService:
                 restart_from=restart_from,
                 ordered_steps=self.pipeline.PROCESSING_STEPS,
             )
-        return self.pipeline.retry(job_id)
+        return self._finalize_pipeline_result(self.pipeline.retry(job_id))
+
+    def _finalize_pipeline_result(self, job: JobRecord) -> JobRecord:
+        if job.status != JobStatus.PUBLISHING:
+            return job
+        publication_url = job.published_url or (
+            f"{self.site_url}/article/paper-{job.canonical_id}/"
+        )
+        return self.repository.update_job(
+            job.job_id,
+            status=JobStatus.PUBLISHING,
+            published_url=publication_url,
+            error_code="",
+            error_message="",
+        )
 
     def approve(self, job_id: str) -> JobRecord:
         job = self._require_job(job_id)
-        if job.status != JobStatus.AWAITING_REVIEW:
-            raise ServiceError("not_reviewable", "Job is not awaiting review.")
-        quality = self.repository.get_step(job_id, StepName.QUALITY_CHECK)
-        if not quality or not quality.output.get("publishable"):
-            raise ServiceError("quality_gate_failed", "Article has not passed the quality gate.")
-        if not job.notion_page_id:
-            raise ServiceError("notion_page_missing", "Notion draft is missing.")
-
-        self.repository.start_step(job_id, StepName.APPROVE)
-        try:
-            self.notion.publish(
-                job.notion_page_id,
-                title=job.title,
-                slug=f"paper-{job.canonical_id}",
-                arxiv_id=job.canonical_id,
-            )
-            self.repository.complete_step(
-                job_id,
-                StepName.APPROVE,
-                output={"status": "Published"},
-            )
-        except Exception as exc:
-            self.repository.fail_step(
-                job_id,
-                StepName.APPROVE,
-                error_code="notion_publish_failed",
-                error_message="Notion approval failed.",
-            )
-            return self._require_job(job_id)
-
-        publication_url = f"{self.site_url}/article/paper-{job.canonical_id}/"
-        self.repository.update_job(
-            job_id,
-            status=JobStatus.PUBLISHING,
-            published_url=publication_url,
+        if job.status in {JobStatus.PUBLISHING, JobStatus.PUBLISHED}:
+            return job
+        raise ServiceError(
+            "not_publishable",
+            "Job is not already publishing or published; manual approval is disabled.",
         )
-        return self._dispatch(job_id)
 
     def _dispatch(self, job_id: str) -> JobRecord:
         self.repository.start_step(job_id, StepName.TRIGGER_PAGES)

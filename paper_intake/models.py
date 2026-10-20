@@ -33,7 +33,8 @@ class StepName(StrEnum):
     DEEPSEEK_GENERATE = "deepseek_generate"
     CLASSIFY = "classify"
     QUALITY_CHECK = "quality_check"
-    WRITE_NOTION_DRAFT = "write_notion_draft"
+    WRITE_NOTION_PUBLISHED = "write_notion_published"
+    WRITE_NOTION_DRAFT = "write_notion_published"  # compatibility alias
     APPROVE = "approve"
     TRIGGER_PAGES = "trigger_pages"
     VERIFY_PUBLICATION = "verify_publication"

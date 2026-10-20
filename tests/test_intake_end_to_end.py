@@ -69,10 +69,10 @@ class _Notion:
         self.status = ""
         self.draft_markdown = ""
 
-    def upsert_draft(self, draft):
-        self.status = "Draft"
+    def upsert_published(self, draft):
+        self.status = "Published"
         self.draft_markdown = draft.markdown
-        return NotionPage("page-e2e", "https://notion.so/page-e2e", "Draft", "")
+        return NotionPage("page-e2e", "https://notion.so/page-e2e", "Published", "")
 
     def publish(self, page_id: str, *, title: str, slug: str, arxiv_id: str):
         self.status = "Published"
@@ -89,7 +89,7 @@ class _GitHub:
 
 
 class IntakeEndToEndTests(unittest.TestCase):
-    def test_pdf_survives_draft_review_publish_and_repository_restart(self):
+    def test_pdf_survives_direct_publish_and_repository_restart(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             database = root / "jobs.sqlite3"
@@ -129,17 +129,13 @@ class IntakeEndToEndTests(unittest.TestCase):
             )
             original_pdf = Path(repository.get_job(job.job_id).upload_path)
             self.assertTrue(service.run_pending_once())
-            draft = repository.get_job(job.job_id)
+            publishing = repository.get_job(job.job_id)
 
-            self.assertEqual(draft.status, JobStatus.AWAITING_REVIEW)
-            self.assertEqual(notion.status, "Draft")
+            self.assertEqual(publishing.status, JobStatus.PUBLISHING)
+            self.assertEqual(notion.status, "Published")
             self.assertIn("## 二、方法", notion.draft_markdown)
             self.assertTrue(original_pdf.is_file())
-
-            approved = service.approve(job.job_id)
-            self.assertEqual(approved.status, JobStatus.PUBLISHING)
-            self.assertEqual(notion.status, "Published")
-            self.assertEqual(github.calls, 1)
+            self.assertEqual(github.calls, 0)
             published = service.verify_publication(job.job_id, checker=lambda _url: True)
             self.assertEqual(published.status, JobStatus.PUBLISHED)
 
@@ -149,9 +145,9 @@ class IntakeEndToEndTests(unittest.TestCase):
             try:
                 persisted = reopened.get_job(job.job_id)
                 self.assertEqual(persisted.status, JobStatus.PUBLISHED)
-                self.assertEqual(persisted.github_run_id, "run-e2e")
+                self.assertEqual(persisted.github_run_id, "")
                 self.assertTrue(original_pdf.is_file())
-                self.assertGreaterEqual(len(reopened.list_events(job.job_id)), 20)
+                self.assertGreaterEqual(len(reopened.list_events(job.job_id)), 19)
             finally:
                 reopened.close()
 

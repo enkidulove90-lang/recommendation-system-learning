@@ -82,12 +82,12 @@ class _FakeDeepSeek:
 class _FakeNotion:
     def __init__(self):
         self.calls = 0
-        self.drafts = []
+        self.pages = []
 
-    def upsert_draft(self, draft):
+    def upsert_published(self, draft):
         self.calls += 1
-        self.drafts.append(draft)
-        return NotionPage("page-id", "https://notion.so/page-id", "Draft", "old body")
+        self.pages.append(draft)
+        return NotionPage("page-id", "https://notion.so/page-id", "Published", "old body")
 
 
 class PipelineHarness:
@@ -127,12 +127,12 @@ class PaperPipelineTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
 
-    def test_successful_run_stops_at_notion_draft_for_review(self) -> None:
+    def test_successful_run_writes_published_notion_page(self) -> None:
         harness = PipelineHarness(self.root)
         try:
             result = harness.pipeline.run(harness.job.job_id)
 
-            self.assertEqual(result.status, JobStatus.AWAITING_REVIEW)
+            self.assertEqual(result.status, JobStatus.PUBLISHING)
             self.assertEqual(result.notion_page_id, "page-id")
             self.assertEqual(harness.notion.calls, 1)
             self.assertEqual(harness.mineru.calls, 1)
@@ -147,7 +147,7 @@ class PaperPipelineTests(unittest.TestCase):
                     StepName.DEEPSEEK_GENERATE,
                     StepName.CLASSIFY,
                     StepName.QUALITY_CHECK,
-                    StepName.WRITE_NOTION_DRAFT,
+                    StepName.WRITE_NOTION_PUBLISHED,
                 ],
             )
             self.assertTrue(all(step.status == StepStatus.SUCCEEDED for step in harness.repo.list_steps(harness.job.job_id)))
@@ -161,7 +161,7 @@ class PaperPipelineTests(unittest.TestCase):
             retried = harness.pipeline.retry(harness.job.job_id)
 
             self.assertEqual(failed.status, JobStatus.FAILED)
-            self.assertEqual(retried.status, JobStatus.AWAITING_REVIEW)
+            self.assertEqual(retried.status, JobStatus.PUBLISHING)
             self.assertEqual(harness.mineru.calls, 1)
             self.assertEqual(harness.deepseek.calls, 2)
             deepseek_step = harness.repo.get_step(harness.job.job_id, StepName.DEEPSEEK_GENERATE)
@@ -174,12 +174,12 @@ class PaperPipelineTests(unittest.TestCase):
         try:
             result = harness.pipeline.run(harness.job.job_id)
 
-            self.assertEqual(result.status, JobStatus.BLOCKED)
+            self.assertEqual(result.status, JobStatus.FAILED)
             self.assertEqual(harness.notion.calls, 0)
             quality = harness.repo.get_step(harness.job.job_id, StepName.QUALITY_CHECK)
             self.assertEqual(quality.status, StepStatus.SUCCEEDED)
             self.assertIn("figure_required", quality.output["issue_codes"])
-            self.assertIsNone(harness.repo.get_step(harness.job.job_id, StepName.WRITE_NOTION_DRAFT))
+            self.assertIsNone(harness.repo.get_step(harness.job.job_id, StepName.WRITE_NOTION_PUBLISHED))
         finally:
             harness.close()
 
