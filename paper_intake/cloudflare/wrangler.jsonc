@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "paper-intake",
-      "database_id": "00000000-0000-0000-0000-000000000001",
+      "database_id": "b8457a94-8974-4b49-b4a0-9238e18a85dc",
       "migrations_dir": "migrations"
     }
   ],
