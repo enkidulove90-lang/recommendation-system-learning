@@ -1,4 +1,6 @@
 import type {
+  ArtifactInput,
+  ArtifactRecord,
   CreateJobInput,
   JobRecord,
   PaperIdentity,
@@ -241,6 +243,20 @@ export class IntakeRepository {
     return row ? mapJob(row) : null;
   }
 
+  async getActiveLease(jobId: string, workerId: string): Promise<JobRecord | null> {
+    const job = await this.getJob(jobId);
+    if (
+      !job ||
+      job.status !== "processing" ||
+      job.leaseOwner !== workerId ||
+      !job.leaseUntil ||
+      job.leaseUntil < this.timestamp()
+    ) {
+      return null;
+    }
+    return job;
+  }
+
   private async requireJob(jobId: string): Promise<JobRecord> {
     const job = await this.getJob(jobId);
     if (!job) throw new Error("job_not_found");
@@ -353,7 +369,12 @@ export class IntakeRepository {
     publication: PublicationInput,
   ): Promise<JobRecord> {
     const current = await this.requireJob(jobId);
-    if (current.status !== "processing" || current.leaseOwner !== workerId) {
+    if (
+      current.status !== "processing" ||
+      current.leaseOwner !== workerId ||
+      !current.leaseUntil ||
+      current.leaseUntil < this.timestamp()
+    ) {
       throw new Error("lease_lost");
     }
     const timestamp = this.timestamp();
@@ -385,6 +406,111 @@ export class IntakeRepository {
         )
         .bind(timestamp, jobId, workerId),
     ]);
+    return this.requireJob(jobId);
+  }
+
+  async recordArtifact(
+    jobId: string,
+    workerId: string,
+    artifact: ArtifactInput,
+  ): Promise<ArtifactRecord> {
+    const job = await this.getActiveLease(jobId, workerId);
+    if (!job) throw new Error("lease_lost");
+    const artifactId = crypto.randomUUID();
+    const createdAt = this.timestamp();
+    await this.db
+      .prepare(
+        `INSERT INTO artifacts (
+          artifact_id, paper_id, job_id, kind, r2_key, sha256,
+          size_bytes, content_type, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        artifactId,
+        job.paperId,
+        jobId,
+        artifact.kind,
+        artifact.r2Key,
+        artifact.sha256,
+        artifact.sizeBytes,
+        artifact.contentType,
+        createdAt,
+      )
+      .run();
+    return {
+      artifactId,
+      paperId: job.paperId,
+      jobId,
+      createdAt,
+      ...artifact,
+    };
+  }
+
+  async hasJobEvent(jobId: string, eventType: string): Promise<boolean> {
+    const row = await this.db
+      .prepare("SELECT event_id FROM job_events WHERE job_id = ? AND event_type = ? LIMIT 1")
+      .bind(jobId, eventType)
+      .first<{ event_id: number }>();
+    return Boolean(row);
+  }
+
+  async recordJobEvent(
+    jobId: string,
+    eventType: string,
+    details: Record<string, unknown> = {},
+  ): Promise<void> {
+    await this.db
+      .prepare(
+        `INSERT OR IGNORE INTO job_events (job_id, event_type, details_json, created_at)
+         VALUES (?, ?, ?, ?)`,
+      )
+      .bind(jobId, eventType, JSON.stringify(details), this.timestamp())
+      .run();
+  }
+
+  async finishPublication(
+    jobId: string,
+    success: boolean,
+    gitCommit = "",
+  ): Promise<JobRecord> {
+    const current = await this.requireJob(jobId);
+    if (success && current.status === "published") return current;
+    const timestamp = this.timestamp();
+    if (success) {
+      await this.db.batch([
+        this.db
+          .prepare(
+            `UPDATE publications SET publish_status = 'published', git_commit = ?, published_at = ?
+             WHERE job_id = ?`,
+          )
+          .bind(gitCommit, timestamp, jobId),
+        this.db
+          .prepare(
+            `UPDATE jobs SET status = 'published', stage = 'published', error_code = NULL,
+              error_message = NULL, updated_at = ? WHERE job_id = ? AND status = 'publishing'`,
+          )
+          .bind(timestamp, jobId),
+        this.db
+          .prepare(
+            `INSERT OR IGNORE INTO job_events (job_id, event_type, details_json, created_at)
+             VALUES (?, 'publication.completed', ?, ?)`,
+          )
+          .bind(jobId, JSON.stringify({ git_commit: gitCommit }), timestamp),
+      ]);
+    } else {
+      await this.db.batch([
+        this.db
+          .prepare("UPDATE publications SET publish_status = 'deploy_failed' WHERE job_id = ?")
+          .bind(jobId),
+        this.db
+          .prepare(
+            `UPDATE jobs SET status = 'failed', error_code = 'deploy_failed',
+              error_message = 'GitHub Pages deployment failed.', updated_at = ?
+             WHERE job_id = ? AND status = 'publishing'`,
+          )
+          .bind(timestamp, jobId),
+      ]);
+    }
     return this.requireJob(jobId);
   }
 }

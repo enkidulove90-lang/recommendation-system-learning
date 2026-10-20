@@ -406,7 +406,7 @@ git commit -m "feat(intake): secure owner URL and PDF submissions"
 - Test: `paper_intake/cloudflare/test/worker-api.test.ts`
 - Test: `paper_intake/cloudflare/test/publication.test.ts`
 
-- [ ] **Step 1: Write failing worker contract tests**
+- [x] **Step 1: Write failing worker contract tests**
 
 ```ts
 it("requires the machine token and renews only the current lease", async () => {
@@ -428,7 +428,7 @@ it("dispatches once and completes only after the Pages callback", async () => {
 Run: `npm test -- worker-api.test.ts publication.test.ts`  
 Expected: FAIL because worker and callback routes do not exist.
 
-- [ ] **Step 2: Implement machine-authenticated claim and heartbeat**
+- [x] **Step 2: Implement machine-authenticated claim and heartbeat**
 
 ```ts
 function requireMachine(request: Request, env: Env): void {
@@ -441,7 +441,7 @@ function requireMachine(request: Request, env: Env): void {
 
 Claim returns the job plus a short-lived artifact download URL. Heartbeat and checkpoint require matching `lease_owner`; a stale worker receives HTTP 409 and must stop processing.
 
-- [ ] **Step 3: Implement artifact upload and completion**
+- [x] **Step 3: Implement artifact upload and completion**
 
 Artifact upload verifies lease ownership, kind, declared SHA-256, actual SHA-256, MIME and size. Completion transaction records the Notion Page ID, slug, public URL and final artifact references before changing the job to `publishing`.
 
@@ -455,7 +455,7 @@ async function completeClaimedJob(request: Request, env: Env, jobId: string): Pr
 }
 ```
 
-- [ ] **Step 4: Dispatch and accept the Pages callback**
+- [x] **Step 4: Dispatch and accept the Pages callback**
 
 ```ts
 await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/dispatches`, {
@@ -475,7 +475,7 @@ await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/dispatches`, 
 
 `POST /v1/publications/callback` requires `PUBLISH_CALLBACK_TOKEN`. Success stores the commit and marks `published`; failure stores `deploy_failed` and remains retryable in the completed UI group.
 
-- [ ] **Step 5: Run tests and commit**
+- [x] **Step 5: Run tests and commit**
 
 Run: `npm test; npm run typecheck`  
 Expected: all gateway tests pass.

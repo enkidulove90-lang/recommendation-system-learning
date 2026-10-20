@@ -1,7 +1,10 @@
 export interface AppEnv extends Env {
   ACCESS_IDENTITY_HEADER: string;
+  GITHUB_TOKEN: string;
   OWNER_IDENTITIES: string;
+  PUBLISH_CALLBACK_TOKEN: string;
   SESSION_SIGNING_KEY: string;
+  WORKER_TOKEN: string;
 }
 
 export interface Owner {
@@ -105,6 +108,34 @@ export async function requireOwner(request: Request, env: AppEnv): Promise<Owner
     throw new ApiError(401, "auth_required", "请使用已授权的 GitHub 账号登录。", false);
   }
   return { identity: claims.sub };
+}
+
+async function secureEqual(left: string, right: string): Promise<boolean> {
+  const [leftDigest, rightDigest] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(left)),
+    crypto.subtle.digest("SHA-256", encoder.encode(right)),
+  ]);
+  const leftBytes = new Uint8Array(leftDigest);
+  const rightBytes = new Uint8Array(rightDigest);
+  let difference = 0;
+  for (let index = 0; index < leftBytes.length; index += 1) {
+    difference |= leftBytes[index] ^ rightBytes[index];
+  }
+  return difference === 0;
+}
+
+export async function requireMachine(request: Request, env: AppEnv): Promise<void> {
+  const provided = request.headers.get("authorization") || "";
+  if (!(await secureEqual(provided, `Bearer ${env.WORKER_TOKEN}`))) {
+    throw new ApiError(401, "worker_auth_required", "Worker authentication failed.", false);
+  }
+}
+
+export async function requirePublishCallback(request: Request, env: AppEnv): Promise<void> {
+  const provided = request.headers.get("authorization") || "";
+  if (!(await secureEqual(provided, `Bearer ${env.PUBLISH_CALLBACK_TOKEN}`))) {
+    throw new ApiError(401, "callback_auth_required", "Publication callback authentication failed.", false);
+  }
 }
 
 export function requireAccessIdentity(request: Request, env: AppEnv): string {

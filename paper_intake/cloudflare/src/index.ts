@@ -5,7 +5,9 @@ import {
   consumeLoginCode,
   createLoginCode,
   requireAccessIdentity,
+  requireMachine,
   requireOwner,
+  requirePublishCallback,
   signSession,
   type AppEnv,
   type Owner,
@@ -245,8 +247,272 @@ window.opener?.postMessage({type:"paper-intake-login",code:${safeCode}},${safeOr
   });
 }
 
+function machineResponse(
+  status: number,
+  requestId: string,
+  payload: Record<string, unknown>,
+): Response {
+  return new Response(JSON.stringify({ ok: status >= 200 && status < 300, request_id: requestId, ...payload }), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+    },
+  });
+}
+
+function requiredString(value: unknown, code: string, message: string): string {
+  if (typeof value !== "string" || !value.trim()) throw new ApiError(400, code, message, false);
+  return value.trim();
+}
+
+function leaseConflict(error: unknown): never {
+  if (error instanceof Error && error.message === "lease_lost") {
+    throw new ApiError(409, "lease_lost", "任务租约已经失效，请停止当前处理。", true);
+  }
+  throw error;
+}
+
+const artifactRules: Record<string, { maxBytes: number; contentTypes: string[] }> = {
+  parsed_markdown: { maxBytes: 20 * 1024 * 1024, contentTypes: ["text/markdown", "text/plain"] },
+  generated_article: { maxBytes: 10 * 1024 * 1024, contentTypes: ["text/markdown", "text/plain"] },
+  metadata: { maxBytes: 2 * 1024 * 1024, contentTypes: ["application/json"] },
+  figure: { maxBytes: 20 * 1024 * 1024, contentTypes: ["image/jpeg", "image/png", "image/webp"] },
+};
+
+async function dispatchPublication(env: AppEnv, jobId: string, paperId: string): Promise<void> {
+  const repository = new IntakeRepository(env.DB);
+  if (await repository.hasJobEvent(jobId, "publication.dispatched")) return;
+  const response = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/dispatches`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.GITHUB_TOKEN}`,
+      accept: "application/vnd.github+json",
+      "content-type": "application/json",
+      "user-agent": "enkidu-paper-intake-worker",
+      "x-github-api-version": "2022-11-28",
+    },
+    body: JSON.stringify({
+      event_type: "notion-updated",
+      client_payload: { job_id: jobId, paper_id: paperId },
+    }),
+  });
+  if (!response.ok) {
+    await repository.finishPublication(jobId, false);
+    throw new ApiError(502, "github_dispatch_failed", "GitHub Pages 构建触发失败。", true);
+  }
+  await repository.recordJobEvent(jobId, "publication.dispatched", { status: response.status });
+}
+
+async function routeWorker(request: Request, env: AppEnv, requestId: string, url: URL): Promise<Response> {
+  await requireMachine(request, env);
+  const repository = new IntakeRepository(env.DB);
+
+  if (
+    (url.pathname === "/v1/worker/claim" || url.pathname === "/v1/worker/jobs/claim") &&
+    request.method === "POST"
+  ) {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const requestedLease = typeof body.lease_seconds === "number" ? body.lease_seconds : 600;
+    const leaseSeconds = Math.max(60, Math.min(900, Math.floor(requestedLease)));
+    const job = await repository.claim(workerId, leaseSeconds);
+    if (!job) return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
+    const inputUrl = job.inputType === "pdf"
+      ? `${url.origin}/v1/worker/jobs/${job.jobId}/input?worker_id=${encodeURIComponent(workerId)}`
+      : null;
+    const claimPayload = {
+      status: "processing",
+      job_id: job.jobId,
+      paper_id: job.paperId,
+      input_type: job.inputType,
+      input_ref: job.inputType === "url" ? job.inputRef : inputUrl,
+      source_url: job.inputType === "url" ? job.inputRef : null,
+      input_url: inputUrl,
+      lease_owner: job.leaseOwner,
+      lease_until: job.leaseUntil,
+      attempt: job.attempt,
+      stage: job.stage,
+      checkpoints: job.checkpoints,
+    };
+    return machineResponse(200, requestId, { ...claimPayload, job: claimPayload });
+  }
+
+  const inputMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/input$/u);
+  if (inputMatch && request.method === "GET") {
+    const workerId = requiredString(url.searchParams.get("worker_id"), "invalid_worker_id", "必须提供 Worker ID。");
+    const job = await repository.getActiveLease(inputMatch[1], workerId);
+    if (!job) throw new ApiError(409, "lease_lost", "任务租约已经失效。", true);
+    if (job.inputType !== "pdf") throw new ApiError(409, "input_not_pdf", "该任务没有托管 PDF。", false);
+    const object = await env.ARTIFACTS.get(job.inputRef);
+    if (!object) throw new ApiError(404, "input_missing", "原始 PDF 不存在。", true);
+    const headers = new Headers({
+      "content-type": "application/pdf",
+      "cache-control": "no-store",
+    });
+    object.writeHttpMetadata(headers);
+    return new Response(object.body, { headers });
+  }
+
+  const heartbeatMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/heartbeat$/u);
+  if (heartbeatMatch && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const requestedLease = typeof body.lease_seconds === "number" ? body.lease_seconds : 600;
+    const renewed = await repository.heartbeat(
+      heartbeatMatch[1],
+      workerId,
+      Math.max(60, Math.min(900, Math.floor(requestedLease))),
+    );
+    if (!renewed) throw new ApiError(409, "lease_lost", "任务租约已经失效，请停止当前处理。", true);
+    return machineResponse(200, requestId, { job_id: heartbeatMatch[1], status: "processing" });
+  }
+
+  const checkpointMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/checkpoint$/u);
+  if (checkpointMatch && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const stage = requiredString(body.stage, "invalid_stage", "必须提供处理阶段。");
+    try {
+      const job = await repository.checkpoint(checkpointMatch[1], workerId, stage, body.output ?? {});
+      return machineResponse(200, requestId, { job_id: job.jobId, stage: job.stage, status: job.status });
+    } catch (error) {
+      return leaseConflict(error);
+    }
+  }
+
+  const artifactMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/artifacts\/([^/]+)$/u);
+  if (artifactMatch && request.method === "PUT") {
+    const [jobId, kind] = [artifactMatch[1], decodeURIComponent(artifactMatch[2])];
+    const workerId = requiredString(url.searchParams.get("worker_id"), "invalid_worker_id", "必须提供 Worker ID。");
+    const job = await repository.getActiveLease(jobId, workerId);
+    if (!job) throw new ApiError(409, "lease_lost", "任务租约已经失效。", true);
+    const rule = artifactRules[kind];
+    if (!rule) throw new ApiError(400, "artifact_kind_denied", "不支持该产物类型。", false);
+    const contentType = (request.headers.get("content-type") || "").split(";", 1)[0].toLowerCase();
+    if (!rule.contentTypes.includes(contentType)) {
+      throw new ApiError(415, "artifact_type_denied", "产物 MIME 类型不受支持。", false);
+    }
+    const declaredHash = (request.headers.get("x-content-sha256") || "").toLowerCase();
+    if (!/^[a-f0-9]{64}$/u.test(declaredHash)) {
+      throw new ApiError(422, "artifact_hash_invalid", "必须提供有效的 SHA-256。", false);
+    }
+    const bytes = new Uint8Array(await request.arrayBuffer());
+    if (bytes.byteLength === 0 || bytes.byteLength > rule.maxBytes) {
+      throw new ApiError(413, "artifact_too_large", "产物为空或超过大小限制。", false);
+    }
+    const actualHash = await digestHex(bytes);
+    if (actualHash !== declaredHash) {
+      throw new ApiError(422, "artifact_hash_mismatch", "产物 SHA-256 校验失败。", false);
+    }
+    const requestedName = request.headers.get("x-artifact-name") || `${kind}.bin`;
+    const safeName = requestedName.replace(/[^A-Za-z0-9._-]+/gu, "-").slice(0, 120) || `${kind}.bin`;
+    const r2Key = `derived/${job.paperId}/${jobId}/${kind}/${crypto.randomUUID()}-${safeName}`;
+    await env.ARTIFACTS.put(r2Key, bytes, {
+      httpMetadata: { contentType },
+      customMetadata: { sha256: actualHash, kind },
+    });
+    try {
+      const artifact = await repository.recordArtifact(jobId, workerId, {
+        kind,
+        r2Key,
+        sha256: actualHash,
+        sizeBytes: bytes.byteLength,
+        contentType,
+      });
+      return machineResponse(201, requestId, {
+        artifact_id: artifact.artifactId,
+        job_id: jobId,
+        kind,
+        sha256: actualHash,
+        size_bytes: bytes.byteLength,
+      });
+    } catch (error) {
+      await env.ARTIFACTS.delete(r2Key);
+      return leaseConflict(error);
+    }
+  }
+
+  const completionMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/complete$/u);
+  if (completionMatch && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const publication = body.publication;
+    if (!publication || typeof publication !== "object" || Array.isArray(publication)) {
+      throw new ApiError(400, "invalid_publication", "必须提供发布信息。", false);
+    }
+    const values = publication as Record<string, unknown>;
+    try {
+      const job = await repository.complete(completionMatch[1], workerId, {
+        notionPageId: requiredString(values.notion_page_id, "invalid_notion_page", "缺少 Notion Page ID。"),
+        slug: requiredString(values.slug, "invalid_slug", "缺少文章 slug。"),
+        siteUrl: requiredString(values.site_url, "invalid_site_url", "缺少文章地址。"),
+      });
+      await dispatchPublication(env, job.jobId, job.paperId);
+      return machineResponse(200, requestId, {
+        job_id: job.jobId,
+        paper_id: job.paperId,
+        status: "publishing",
+      });
+    } catch (error) {
+      return leaseConflict(error);
+    }
+  }
+
+  const failureMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/fail$/u);
+  if (failureMatch && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const errorCode = requiredString(body.error_code, "invalid_error_code", "必须提供错误代码。");
+    const errorMessage = typeof body.error_message === "string"
+      ? body.error_message.slice(0, 1000)
+      : "Processing failed.";
+    try {
+      const job = await repository.fail(failureMatch[1], workerId, errorCode.slice(0, 100), errorMessage);
+      return machineResponse(200, requestId, {
+        job_id: job.jobId,
+        paper_id: job.paperId,
+        status: job.status,
+        code: job.errorCode,
+      });
+    } catch (error) {
+      return leaseConflict(error);
+    }
+  }
+
+  throw new ApiError(404, "not_found", "Worker 接口不存在。", false);
+}
+
+async function routePublicationCallback(
+  request: Request,
+  env: AppEnv,
+  requestId: string,
+): Promise<Response> {
+  await requirePublishCallback(request, env);
+  if (request.method !== "POST") throw new ApiError(405, "method_not_allowed", "请求方法不允许。", false);
+  const body = await readJsonObject(request);
+  const jobId = requiredString(body.job_id, "invalid_job_id", "必须提供 Job ID。");
+  const success = body.ok === true;
+  const job = await new IntakeRepository(env.DB).finishPublication(
+    jobId,
+    success,
+    typeof body.git_commit === "string" ? body.git_commit : "",
+  );
+  return machineResponse(200, requestId, {
+    job_id: job.jobId,
+    paper_id: job.paperId,
+    status: job.status,
+  });
+}
+
 async function route(request: Request, env: AppEnv, requestId: string): Promise<Response> {
   const url = new URL(request.url);
+  if (url.pathname.startsWith("/v1/worker/")) {
+    return routeWorker(request, env, requestId, url);
+  }
+  if (url.pathname === "/v1/publications/callback") {
+    return routePublicationCallback(request, env, requestId);
+  }
   if (url.pathname === "/v1/session/start" && request.method === "GET") {
     const targetOrigin = assertOrigin(url.searchParams.get("return_origin"), env);
     const identity = requireAccessIdentity(request, env);

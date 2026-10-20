@@ -15,7 +15,10 @@ export default defineConfig({
         bindings: {
           ACCESS_IDENTITY_HEADER: "cf-access-authenticated-user-email",
           OWNER_IDENTITIES: "owner@example.com",
+          GITHUB_TOKEN: "test-github-token",
+          PUBLISH_CALLBACK_TOKEN: "test-callback-token",
           SESSION_SIGNING_KEY: "test-signing-key-with-at-least-32-bytes",
+          WORKER_TOKEN: "test-worker-token",
           TEST_MIGRATIONS: await readD1Migrations(path.join(root, "migrations")),
         },
       },

@@ -61,3 +61,18 @@ export interface PublicationInput {
   slug: string;
   siteUrl: string;
 }
+
+export interface ArtifactInput {
+  kind: string;
+  r2Key: string;
+  sha256: string;
+  sizeBytes: number;
+  contentType: string;
+}
+
+export interface ArtifactRecord extends ArtifactInput {
+  artifactId: string;
+  paperId: string;
+  jobId: string;
+  createdAt: string;
+}
