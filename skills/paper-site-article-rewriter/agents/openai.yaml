@@ -1,0 +1,4 @@
+interface:
+  display_name: "论文网站文章改写"
+  short_description: "将论文材料改写成可核验的中文方法与实验长文"
+  default_prompt: "使用 $paper-site-article-rewriter 将这篇论文改写为可发布的中文网站文章。"

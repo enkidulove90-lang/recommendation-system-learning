@@ -1,0 +1,4 @@
+interface:
+  display_name: "小红书论文快报"
+  short_description: "按会议公司与实验事实生成可交付的论文图文正文模板技能"
+  default_prompt: "Use $xiaohongshu-paper-brief to draft a factual Xiaohongshu paper post from parsed evidence."
