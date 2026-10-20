@@ -156,6 +156,35 @@ class JobRepository:
             ).fetchall()
         return [self._job_from_row(row) for row in rows]
 
+    def find_duplicate(
+        self,
+        *,
+        canonical_id: str = "",
+        source_sha256: str = "",
+        source_url: str = "",
+        exclude_job_id: str = "",
+    ) -> JobRecord | None:
+        conditions: list[str] = []
+        parameters: list[str] = []
+        for column, value in (
+            ("canonical_id", canonical_id),
+            ("source_sha256", source_sha256),
+            ("source_url", source_url),
+        ):
+            if value:
+                conditions.append(f"{column} = ?")
+                parameters.append(value)
+        if not conditions:
+            return None
+        query = "SELECT * FROM jobs WHERE (" + " OR ".join(conditions) + ")"
+        if exclude_job_id:
+            query += " AND job_id != ?"
+            parameters.append(exclude_job_id)
+        query += " ORDER BY created_at LIMIT 1"
+        with self._lock:
+            row = self._connection.execute(query, parameters).fetchone()
+        return self._job_from_row(row) if row else None
+
     def update_job(self, job_id: str, **values: Any) -> JobRecord:
         unknown = set(values) - self._UPDATABLE_JOB_FIELDS
         if unknown:
