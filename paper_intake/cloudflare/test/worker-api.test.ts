@@ -39,6 +39,19 @@ async function claim(workerId = "worker-a", authorization = machineHeaders.autho
 }
 
 describe("remote worker API", () => {
+  it("accepts an operator URL through the same normalized intake path", async () => {
+    const response = await SELF.fetch("https://worker.test/v1/worker/intake/url", {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({ url: "https://arxiv.org/pdf/2509.06002v1.pdf" }),
+    });
+    expect(response.status).toBe(202);
+    expect(await response.json()).toMatchObject({
+      status: "queued",
+      code: "intake_accepted",
+    });
+  });
+
   it("exposes a non-mutating authenticated health check", async () => {
     const denied = await SELF.fetch("https://worker.test/v1/worker/health", {
       headers: { authorization: "Bearer wrong" },
@@ -172,5 +185,12 @@ describe("remote worker API", () => {
     const stored = await new IntakeRepository(testEnv.DB).getJob(job.jobId);
     expect(stored?.status).toBe("failed");
     expect(stored?.checkpoints.parsed).toEqual({ ok: true });
+
+    const retry = await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, {
+      method: "POST",
+      headers: machineHeaders,
+    });
+    expect(retry.status).toBe(202);
+    expect(await retry.json()).toMatchObject({ status: "queued", code: "retry_accepted" });
   });
 });

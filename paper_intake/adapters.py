@@ -264,11 +264,23 @@ class NotionGateway:
         return properties
 
     def _find_by_arxiv(self, arxiv_id: str) -> dict | None:
+        source_id = self._data_source()
+        property_name = "arxiv_id"
+        property_type = "rich_text"
+        property_value = arxiv_id
+        if self._property_names is not None and property_name not in self._property_names:
+            if "slug" not in self._property_names:
+                return None
+            property_name = "slug"
+            property_value = f"paper-{arxiv_id}"
         result = self._request(
             "POST",
-            f"/data_sources/{self._data_source()}/query",
+            f"/data_sources/{source_id}/query",
             json={
-                "filter": {"property": "arxiv_id", "rich_text": {"equals": arxiv_id}},
+                "filter": {
+                    "property": property_name,
+                    property_type: {"equals": property_value},
+                },
                 "page_size": 2,
             },
         )

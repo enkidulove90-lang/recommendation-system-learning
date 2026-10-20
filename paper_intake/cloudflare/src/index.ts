@@ -425,6 +425,32 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
   await requireMachine(request, env);
   const repository = new IntakeRepository(env.DB);
 
+  if (url.pathname === "/v1/worker/intake/url" && request.method === "POST") {
+    const githubOwnerId = env.GITHUB_OWNER_IDS.split(",").map((value) => value.trim()).find(Boolean);
+    const ownerIdentity = githubOwnerId ? `github:${githubOwnerId}` : "machine:operator";
+    return ingestUrl(request, env, { identity: ownerIdentity }, requestId);
+  }
+
+  const operatorRetryMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/retry$/u);
+  if (operatorRetryMatch && request.method === "POST") {
+    const current = await repository.getJob(operatorRetryMatch[1]);
+    if (!current) throw new ApiError(404, "job_not_found", "任务不存在。", false);
+    try {
+      const job = await repository.retry(current.jobId, current.ownerIdentity);
+      return machineResponse(202, requestId, {
+        job_id: job.jobId,
+        paper_id: job.paperId,
+        status: job.status,
+        code: "retry_accepted",
+      });
+    } catch (error) {
+      if (error instanceof Error && error.message === "job_not_retryable") {
+        throw new ApiError(409, "job_not_retryable", "任务当前不可重试。", false);
+      }
+      throw error;
+    }
+  }
+
   if (url.pathname === "/v1/worker/health" && request.method === "GET") {
     return machineResponse(200, requestId, {
       status: "ok",
