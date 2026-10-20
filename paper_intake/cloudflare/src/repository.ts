@@ -102,6 +102,7 @@ export class IntakeRepository {
       ["doi", optional(identity.doi)],
       ["arxiv_id", optional(identity.arxivId)],
       ["pdf_sha256", optional(identity.pdfSha256)],
+      ["canonical_url", optional(identity.canonicalUrl)],
       ["title_fingerprint", optional(identity.titleFingerprint)],
     ];
     for (const [column, value] of selectors) {
@@ -191,30 +192,36 @@ export class IntakeRepository {
     await this.requirePaper(input.paperId);
     const jobId = crypto.randomUUID();
     const timestamp = this.timestamp();
-    await this.db.batch([
-      this.db
-        .prepare(
-          `INSERT INTO jobs (
-            job_id, paper_id, owner_identity, input_type, input_ref,
-            stage, status, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, 'received', 'queued', ?, ?)`,
-        )
-        .bind(
-          jobId,
-          input.paperId,
-          input.ownerIdentity,
-          input.inputType,
-          input.inputRef,
-          timestamp,
-          timestamp,
-        ),
-      this.db
-        .prepare(
-          `INSERT INTO job_events (job_id, event_type, details_json, created_at)
-           VALUES (?, 'job.created', '{}', ?)`,
-        )
-        .bind(jobId, timestamp),
-    ]);
+    try {
+      await this.db.batch([
+        this.db
+          .prepare(
+            `INSERT INTO jobs (
+              job_id, paper_id, owner_identity, input_type, input_ref,
+              stage, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'received', 'queued', ?, ?)`,
+          )
+          .bind(
+            jobId,
+            input.paperId,
+            input.ownerIdentity,
+            input.inputType,
+            input.inputRef,
+            timestamp,
+            timestamp,
+          ),
+        this.db
+          .prepare(
+            `INSERT INTO job_events (job_id, event_type, details_json, created_at)
+             VALUES (?, 'job.created', '{}', ?)`,
+          )
+          .bind(jobId, timestamp),
+      ]);
+    } catch (error) {
+      const raced = await this.getLatestJobForPaper(input.paperId);
+      if (raced) return raced;
+      throw error;
+    }
     return this.requireJob(jobId);
   }
 
@@ -222,6 +229,14 @@ export class IntakeRepository {
     const row = await this.db
       .prepare("SELECT * FROM jobs WHERE job_id = ?")
       .bind(jobId)
+      .first<JobRow>();
+    return row ? mapJob(row) : null;
+  }
+
+  async getLatestJobForPaper(paperId: string): Promise<JobRecord | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM jobs WHERE paper_id = ? ORDER BY created_at DESC LIMIT 1")
+      .bind(paperId)
       .first<JobRow>();
     return row ? mapJob(row) : null;
   }

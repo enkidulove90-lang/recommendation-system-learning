@@ -297,7 +297,7 @@ git commit -m "feat(intake): add durable cloudflare job ledger"
 - Test: `paper_intake/cloudflare/test/security.test.ts`
 - Test: `paper_intake/cloudflare/test/intake.test.ts`
 
-- [ ] **Step 1: Write failing security and intake tests**
+- [x] **Step 1: Write failing security and intake tests**
 
 ```ts
 it("accepts only configured GitHub Pages and local origins", () => {
@@ -327,7 +327,7 @@ it("returns an existing identity for a duplicate DOI", async () => {
 Run: `npm test -- security.test.ts intake.test.ts`  
 Expected: FAIL because the router and security functions are absent.
 
-- [ ] **Step 2: Implement short-lived sessions and one-time login codes**
+- [x] **Step 2: Implement short-lived sessions and one-time login codes**
 
 ```ts
 export async function signSession(identity: string, key: string, now: number): Promise<string> {
@@ -348,7 +348,7 @@ export async function requireOwner(request: Request, env: Env): Promise<Owner> {
 
 `/v1/session/start` reads the Access-authenticated identity, creates a two-minute single-use code, and returns a tiny `postMessage` page. `/v1/session/exchange` consumes the code and returns a 30-minute bearer session.
 
-- [ ] **Step 3: Implement URL and PDF ingestion**
+- [x] **Step 3: Implement URL and PDF ingestion**
 
 ```ts
 async function ingestPdf(request: Request, env: Env, owner: Owner): Promise<Response> {
@@ -371,7 +371,7 @@ async function ingestPdf(request: Request, env: Env, owner: Owner): Promise<Resp
 
 URL ingestion accepts only `https`, normalizes DOI/arXiv links, rejects private/local hosts, and creates an R2 input only after the local worker legally downloads the paper.
 
-- [ ] **Step 4: Add exact CORS and safe envelopes**
+- [x] **Step 4: Add exact CORS and safe envelopes**
 
 All successful and failed responses use `{ok, request_id, paper_id, job_id, status, code, message, retryable}`. Preflight responses echo only a matched origin and allow `authorization, content-type`.
 
@@ -388,7 +388,7 @@ function corsHeaders(origin: string, env: Env): Headers {
 }
 ```
 
-- [ ] **Step 5: Run tests and commit**
+- [x] **Step 5: Run tests and commit**
 
 Run: `npm test -- security.test.ts intake.test.ts; npm run typecheck`  
 Expected: all tests pass; no response snapshot contains a secret, stack, R2 key, or local path.

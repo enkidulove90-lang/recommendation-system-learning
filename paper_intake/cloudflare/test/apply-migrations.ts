@@ -3,7 +3,10 @@ import { applyD1Migrations } from "cloudflare:test";
 import { beforeEach } from "vitest";
 
 type MigrationList = Parameters<typeof applyD1Migrations>[1];
-const testEnv = env as Env & { TEST_MIGRATIONS: MigrationList };
+const testEnv = env as Env & {
+  TEST_MIGRATIONS: MigrationList;
+  ARTIFACTS: R2Bucket;
+};
 
 beforeEach(async () => {
   await applyD1Migrations(testEnv.DB, testEnv.TEST_MIGRATIONS);
@@ -15,4 +18,8 @@ beforeEach(async () => {
     testEnv.DB.prepare("DELETE FROM papers"),
     testEnv.DB.prepare("DELETE FROM login_codes"),
   ]);
+  const objects = await testEnv.ARTIFACTS.list();
+  if (objects.objects.length > 0) {
+    await testEnv.ARTIFACTS.delete(objects.objects.map((object) => object.key));
+  }
 });

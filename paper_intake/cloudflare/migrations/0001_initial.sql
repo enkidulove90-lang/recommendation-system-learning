@@ -13,6 +13,8 @@ CREATE TABLE papers (
 );
 
 CREATE INDEX papers_title_fingerprint_idx ON papers(title_fingerprint);
+CREATE UNIQUE INDEX papers_canonical_url_once_idx ON papers(canonical_url)
+WHERE canonical_url <> '';
 
 CREATE TABLE jobs (
   job_id TEXT PRIMARY KEY,
@@ -34,6 +36,7 @@ CREATE TABLE jobs (
 
 CREATE INDEX jobs_claim_idx ON jobs(status, lease_until, created_at);
 CREATE INDEX jobs_owner_idx ON jobs(owner_identity, created_at);
+CREATE UNIQUE INDEX jobs_paper_once_idx ON jobs(paper_id);
 
 CREATE TABLE artifacts (
   artifact_id TEXT PRIMARY KEY,
