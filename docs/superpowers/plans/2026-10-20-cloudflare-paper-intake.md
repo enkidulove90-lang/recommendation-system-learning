@@ -692,7 +692,7 @@ git commit -m "feat(intake): add resumable local cloud worker"
 - Modify: `package.json`
 - Test: `tests/paper-intake-ui.test.js`
 
-- [ ] **Step 1: Add jsdom and write failing UI tests**
+- [x] **Step 1: Add jsdom and write failing UI tests**
 
 Run: `npm install --save-dev jsdom`  
 Expected: `package.json` and `package-lock.json` record jsdom only as a development dependency.
@@ -734,7 +734,7 @@ test("failed jobs appear under completed with retry", () => {
 Run: `npm test -- paper-intake-ui.test.js`  
 Expected: FAIL because the component is absent.
 
-- [ ] **Step 2: Emit a public runtime config**
+- [x] **Step 2: Emit a public runtime config**
 
 ```js
 hexo.extend.generator.register('paper-intake-config', function () {
@@ -749,7 +749,7 @@ hexo.extend.generator.register('paper-intake-config', function () {
 
 Only the API URL is emitted. Tests assert that token-like environment variables cannot appear in the JSON.
 
-- [ ] **Step 3: Implement the modal and owner login flow**
+- [x] **Step 3: Implement the modal and owner login flow**
 
 `paper-intake.js` injects one button into both desktop and mobile Butterfly menus, mounts one modal, opens the Access login popup, validates `postMessage.origin`, exchanges the one-time code, and keeps the bearer only in `sessionStorage`.
 
@@ -766,7 +766,7 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 ```
 
-- [ ] **Step 4: Implement drawer states and two UI groups**
+- [x] **Step 4: Implement drawer states and two UI groups**
 
 ```css
 .paper-task-drawer { transform: translateX(calc(100% - 42px)); transition: transform .24s ease; }
@@ -777,7 +777,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 Mouse entry opens `peek`; leaving the combined tab/drawer hot zone starts a short close timer. Click sets `locked`; close and outside-click restore `closed`. Status mapping is `published/failed/cancelled → completed`, all others → processing.
 
-- [ ] **Step 5: Inject, test, build, and commit in the website repository**
+- [x] **Step 5: Inject, test, build, and commit in the website repository**
 
 Add to `_config.butterfly.yml`:
 
@@ -804,7 +804,7 @@ git commit -m "feat(site): embed owner paper upload workflow"
 - Test: website `tests/publish-workflow.test.js`
 - Modify: `paper_intake/cloudflare/test/publication.test.ts`
 
-- [ ] **Step 1: Write a failing workflow contract test**
+- [x] **Step 1: Write a failing workflow contract test**
 
 ```js
 test('publish workflow reports repository-dispatch completion', () => {
@@ -818,7 +818,7 @@ test('publish workflow reports repository-dispatch completion', () => {
 Run: `node --test tests/publish-workflow.test.js`  
 Expected: FAIL because callback variables are absent.
 
-- [ ] **Step 2: Add the post-deploy callback**
+- [x] **Step 2: Add the post-deploy callback**
 
 ```yaml
       - name: Report paper intake deployment
@@ -834,7 +834,7 @@ Expected: FAIL because callback variables are absent.
             --data "{\"job_id\":\"$JOB_ID\",\"git_commit\":\"${GITHUB_SHA}\"}"
 ```
 
-- [ ] **Step 3: Verify callback idempotency**
+- [x] **Step 3: Verify callback idempotency**
 
 Extend the Worker test so two identical callbacks both return 200 and create only one publication event.
 
@@ -846,13 +846,13 @@ expect(second.status).toBe(200);
 expect(await repo.countEvents(jobId, "publication.completed")).toBe(1);
 ```
 
-- [ ] **Step 4: Run both repository test suites**
+- [x] **Step 4: Run both repository test suites**
 
 Website: `npm test; npm run test:python; npm run build`  
 Gateway: `cd D:\recommendation-system-learning\paper_intake\cloudflare; npm test; npm run typecheck`  
 Expected: all pass.
 
-- [ ] **Step 5: Commit website and gateway changes separately**
+- [x] **Step 5: Commit website and gateway changes separately**
 
 ```bash
 git add .github/workflows/publish.yml tests/publish-workflow.test.js
@@ -875,7 +875,7 @@ git commit -m "test(intake): lock publication callback idempotency"
 - Delete after successful verification: `paper_intake/static/style.css`
 - Modify: `tests/test_intake_web.py`
 
-- [ ] **Step 1: Protect all local and Cloudflare artifacts**
+- [x] **Step 1: Protect all local and Cloudflare artifacts**
 
 Add exact ignore rules:
 

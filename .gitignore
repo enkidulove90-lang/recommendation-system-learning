@@ -1,5 +1,7 @@
 # Environment variables (contains secrets)
 .env
+.dev.vars
+*.sqlite3
 
 # Python
 __pycache__/
@@ -47,6 +49,7 @@ data/papers/
 data/parsed/
 data/summaries/
 data/workflow_state/
+data/workflow_state/paper_intake/
 data/paper_intake/
 .redbook_tmp/
 .workbuddy/
