@@ -10,10 +10,22 @@ import {
   verifySession,
   type AppEnv,
 } from "../src/security";
+import worker from "../src/index";
 
 const testEnv = env as AppEnv;
 
 describe("owner security", () => {
+  it("keeps owner login closed until Cloudflare Access is configured", async () => {
+    const response = await worker.fetch(
+      new Request("https://worker.test/v1/session/start?return_origin=http%3A%2F%2F127.0.0.1%3A4322", {
+        headers: { "cf-access-authenticated-user-email": "owner@example.com" },
+      }),
+      { ...testEnv, BROWSER_AUTH_ENABLED: "false" },
+    );
+    expect(response.status).toBe(503);
+    expect((await response.json<{ code: string }>()).code).toBe("owner_login_unavailable");
+  });
+
   it("accepts only configured GitHub Pages and local origins", () => {
     expect(assertOrigin("https://enkidulove90-lang.github.io", testEnv)).toBe(
       "https://enkidulove90-lang.github.io",

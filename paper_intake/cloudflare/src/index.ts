@@ -584,6 +584,14 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
     return routePublicationCallback(request, env, requestId);
   }
   if (url.pathname === "/v1/session/start" && request.method === "GET") {
+    if (env.BROWSER_AUTH_ENABLED !== "true") {
+      throw new ApiError(
+        503,
+        "owner_login_unavailable",
+        "站点所有者登录尚未启用。",
+        false,
+      );
+    }
     const targetOrigin = assertOrigin(url.searchParams.get("return_origin"), env);
     const identity = requireAccessIdentity(request, env);
     return htmlLoginResponse(

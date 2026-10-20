@@ -1,7 +1,8 @@
-export type AppEnv = Omit<Env, "ARTIFACT_STORAGE_ENABLED"> & {
+export type AppEnv = Omit<Env, "ARTIFACT_STORAGE_ENABLED" | "BROWSER_AUTH_ENABLED"> & {
   ACCESS_IDENTITY_HEADER: string;
   ARTIFACT_STORAGE_ENABLED: string;
   ARTIFACTS?: R2Bucket;
+  BROWSER_AUTH_ENABLED: string;
   GITHUB_TOKEN: string;
   OWNER_IDENTITIES: string;
   PUBLISH_CALLBACK_TOKEN: string;

@@ -15,6 +15,7 @@ export default defineConfig({
         bindings: {
           ACCESS_IDENTITY_HEADER: "cf-access-authenticated-user-email",
           ARTIFACT_STORAGE_ENABLED: "true",
+          BROWSER_AUTH_ENABLED: "true",
           OWNER_IDENTITIES: "owner@example.com",
           GITHUB_TOKEN: "test-github-token",
           PUBLISH_CALLBACK_TOKEN: "test-callback-token",

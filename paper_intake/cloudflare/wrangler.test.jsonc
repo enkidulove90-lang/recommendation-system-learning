@@ -6,6 +6,7 @@
   "vars": {
     "ALLOWED_ORIGINS": "https://enkidulove90-lang.github.io,http://127.0.0.1:4322",
     "ARTIFACT_STORAGE_ENABLED": "true",
+    "BROWSER_AUTH_ENABLED": "true",
     "GITHUB_REPOSITORY": "enkidulove90-lang/enkidulove90-lang.github.io"
   },
   "d1_databases": [
