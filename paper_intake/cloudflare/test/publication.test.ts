@@ -50,6 +50,13 @@ describe("publication dispatch", () => {
     );
     expect(completion.status).toBe(200);
     expect(github).toHaveBeenCalledTimes(1);
+    const dispatch = JSON.parse(String(github.mock.calls[0]?.[1]?.body || "{}"));
+    expect(dispatch.client_payload).toMatchObject({
+      job_id: job.jobId,
+      paper_id: job.paperId,
+      notion_page_id: "notion-page-1",
+      slug: "consumer-search-transformer",
+    });
     expect((await repository.getJob(job.jobId))?.status).toBe("publishing");
 
     const callback = await SELF.fetch("https://worker.test/v1/publications/callback", {

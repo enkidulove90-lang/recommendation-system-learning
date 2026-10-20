@@ -397,7 +397,13 @@ const artifactRules: Record<string, { maxBytes: number; contentTypes: string[] }
   figure: { maxBytes: 20 * 1024 * 1024, contentTypes: ["image/jpeg", "image/png", "image/webp"] },
 };
 
-async function dispatchPublication(env: AppEnv, jobId: string, paperId: string): Promise<void> {
+async function dispatchPublication(
+  env: AppEnv,
+  jobId: string,
+  paperId: string,
+  notionPageId: string,
+  slug: string,
+): Promise<void> {
   const repository = new IntakeRepository(env.DB);
   if (await repository.hasJobEvent(jobId, "publication.dispatched")) return;
   const response = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/dispatches`, {
@@ -411,7 +417,12 @@ async function dispatchPublication(env: AppEnv, jobId: string, paperId: string):
     },
     body: JSON.stringify({
       event_type: "notion-updated",
-      client_payload: { job_id: jobId, paper_id: paperId },
+      client_payload: {
+        job_id: jobId,
+        paper_id: paperId,
+        notion_page_id: notionPageId,
+        slug,
+      },
     }),
   });
   if (!response.ok) {
@@ -615,12 +626,18 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     }
     const values = publication as Record<string, unknown>;
     try {
+      const notionPageId = requiredString(
+        values.notion_page_id,
+        "invalid_notion_page",
+        "缺少 Notion Page ID。",
+      );
+      const slug = requiredString(values.slug, "invalid_slug", "缺少文章 slug。");
       const job = await repository.complete(completionMatch[1], workerId, {
-        notionPageId: requiredString(values.notion_page_id, "invalid_notion_page", "缺少 Notion Page ID。"),
-        slug: requiredString(values.slug, "invalid_slug", "缺少文章 slug。"),
+        notionPageId,
+        slug,
         siteUrl: requiredString(values.site_url, "invalid_site_url", "缺少文章地址。"),
       });
-      await dispatchPublication(env, job.jobId, job.paperId);
+      await dispatchPublication(env, job.jobId, job.paperId, notionPageId, slug);
       return machineResponse(200, requestId, {
         job_id: job.jobId,
         paper_id: job.paperId,

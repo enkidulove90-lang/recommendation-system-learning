@@ -42,7 +42,14 @@ class RemoteGatewayClient:
         max_attempts: int = 3,
     ):
         self.base_url = base_url.rstrip("/")
-        self.client = client or httpx.Client(base_url=self.base_url, timeout=120)
+        # The worker talks to one public Cloudflare endpoint directly. Ignoring
+        # inherited proxy variables prevents stale desktop proxy settings from
+        # terminating CONNECT tunnels during TLS negotiation.
+        self.client = client or httpx.Client(
+            base_url=self.base_url,
+            timeout=120,
+            trust_env=False,
+        )
         self.client.headers["Authorization"] = f"Bearer {token}"
         self.max_attempts = max(1, max_attempts)
 

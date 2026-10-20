@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import unittest
+from unittest.mock import MagicMock, patch
 
 import httpx
 
@@ -9,6 +10,18 @@ from paper_intake.remote import LeaseLost, RemoteGatewayClient
 
 
 class RemoteGatewayClientTests(unittest.TestCase):
+    def test_default_client_ignores_inherited_proxy_environment(self):
+        client = MagicMock()
+        client.headers = {}
+        with patch("paper_intake.remote.httpx.Client", return_value=client) as factory:
+            RemoteGatewayClient("https://gateway.test", "machine-secret")
+
+        factory.assert_called_once_with(
+            base_url="https://gateway.test",
+            timeout=120,
+            trust_env=False,
+        )
+
     def test_claim_parses_nested_job_and_uses_machine_token(self):
         requests = []
 
