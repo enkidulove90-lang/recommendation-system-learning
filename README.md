@@ -60,6 +60,67 @@ python main.py learning-path --all
 python main.py recommend --seed 2606.26859 --top-k 8 --use-profiles
 ```
 
+## 单篇论文入库控制台
+
+本机控制台把一篇论文按固定状态链送入网站：
+
+```text
+论文链接 / PDF → MinerU → DeepSeek → 质量检查 → Notion Draft
+                                           ↓ 人工审核
+                         Notion Published → GitHub Pages → 在线检查
+```
+
+GitHub Pages 仍然是静态展示站，Notion 是发布主库。网站同步脚本只查询
+`status=Published` 且 `type=Post` 的记录，因此 Draft 不会提前出现在公开网站。
+
+### 启动
+
+1. 安装依赖：`pip install -r requirements.txt`。
+2. 将 `.env.example` 复制为 `.env`，至少配置以下四项：
+   `MINERU_API_KEY`、`DEEPSEEK_API_KEY`、`NOTION_TOKEN`、
+   `NOTION_DATABASE_ID`。
+3. 如需审核后立即触发网站构建，再配置 `GITHUB_TOKEN`；未配置时保留既有的
+   定时构建作为后备。
+4. 启动仅监听本机的服务：
+
+```powershell
+python -m paper_intake serve --host 127.0.0.1 --port 8765
+```
+
+随后打开 `http://127.0.0.1:8765/`。链接提交支持 arXiv 摘要页或 PDF 链接；
+直接上传 PDF 时建议同时填写论文原始链接，便于生成可核验的 References。
+本地 PDF 使用 MinerU 官方的签名上传流程，不会把 `file://` 地址交给云端。
+
+### 状态与操作
+
+| 状态 | 含义 | 可用操作 |
+| --- | --- | --- |
+| `received` | 已入队，尚未开始 | 取消 |
+| `processing` | 正在执行一个处理步骤 | 等待或取消 |
+| `blocked` | 图片、中文图解或文章结构未通过质量门 | 修正配置后从检查点重试 |
+| `failed` | 外部服务或输入步骤失败 | 从失败步骤重试 |
+| `awaiting_review` | Notion Draft 已创建，等待人工审核 | 打开 Notion、批准或取消 |
+| `publishing` | 已批准并触发 GitHub Pages | 仅重试部署、检查公开页面 |
+| `published` | 公开 URL 已返回 HTTP 200 | 完成 |
+| `cancelled` | 停止后续步骤 | 原始文件仍保留 |
+
+“审核通过并发布”会先把 Notion 状态改为 `Published`，再触发 GitHub workflow。
+页面不会自动批准文章。发布后点击“检查公开页面”，只有目标 URL 实际返回成功，
+本地任务才会进入 `published`。
+
+### 故障恢复
+
+- 每个步骤记录在 `data/paper_intake/jobs.sqlite3`，服务重启时会把正在运行的步骤
+  标为中断，已成功的 MinerU 等步骤不会重复付费执行。
+- 原始 PDF 保存在 `data/paper_intake/inbox/`，文章 JSON、Markdown、图片和 Notion
+  前后快照保存在 `data/workflow_state/paper_intake/`。这些目录均被 Git 忽略。
+- DeepSeek 或质量检查失败时，可从对应检查点重试；选择较晚步骤不会重跑 MinerU。
+- GitHub 触发失败时使用“仅重试部署”，不会再次发布 Notion。
+- Notion 内容需要回退时，使用保存的 `notion-before.md` 快照恢复为 Draft。
+- 取消、失败和发布都不会自动删除 PDF、MinerU 产物或审计记录；确认备份和内容一致
+  后再由维护者手动清理。
+- 控制台 API 只返回审核字段，不返回 Token、本地文件路径、SHA-256 或全文解析内容。
+
 ## 数据存储约定
 
 - `data/parsed/{arXiv ID}_{中文标题}/`：单篇论文资产包，包含 Markdown、原始 PDF 和 MinerU 图片。

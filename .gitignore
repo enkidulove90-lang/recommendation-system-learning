@@ -41,6 +41,7 @@ data/papers/
 data/parsed/
 data/summaries/
 data/workflow_state/
+data/paper_intake/
 .redbook_tmp/
 .workbuddy/
 .worktrees/

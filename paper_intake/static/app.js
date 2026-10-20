@@ -41,6 +41,7 @@ function renderList() {
 function actionButtons(job) {
   const buttons = [];
   if (job.status === 'awaiting_review') buttons.push('<button data-action="approve">审核通过并发布</button>');
+  if (job.status === 'publishing') buttons.push('<button data-action="verify-publication">检查公开页面</button>');
   if (['failed', 'blocked'].includes(job.status)) buttons.push('<button data-action="retry">从检查点重试</button>');
   if (job.error_code === 'github_dispatch_failed') buttons.push('<button data-action="retry-deployment">仅重试部署</button>');
   if (!['published', 'cancelled'].includes(job.status)) buttons.push('<button class="danger" data-action="cancel">取消任务</button>');

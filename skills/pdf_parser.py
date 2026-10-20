@@ -219,18 +219,13 @@ class PDFParser(BaseSkill):
             "Authorization": f"Bearer {self._api_key}",
         }
 
-        # 构建请求体
-        if pdf_url:
-            data: dict[str, Any] = {
-                "url": pdf_url,
-                "model_version": self._model_version,
-            }
-        else:
-            # v4 API 的本地文件上传需要不同方式，这里暂用 URL 模式
-            data = {
-                "url": f"file://{pdf_path}",
-                "model_version": self._model_version,
-            }
+        if not pdf_url:
+            return self._submit_local_batch(Path(pdf_path), headers)
+
+        data: dict[str, Any] = {
+            "url": pdf_url,
+            "model_version": self._model_version,
+        }
 
         try:
             with httpx.Client(timeout=60.0) as client:
@@ -252,6 +247,35 @@ class PDFParser(BaseSkill):
             return None
         return task_id
 
+    def _submit_local_batch(self, pdf_path: Path, headers: dict[str, str]) -> str | None:
+        """Upload a local file through MinerU's signed v4 batch endpoint."""
+        if not pdf_path.is_file():
+            logger.error("[MinerU] Local file does not exist: %s", pdf_path)
+            return None
+        request_url = f"{MINERU_API_BASE}/api/v4/file-urls/batch"
+        payload = {
+            "files": [{"name": pdf_path.name, "data_id": pdf_path.stem[:128]}],
+            "model_version": self._model_version,
+        }
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                response = client.post(request_url, headers=headers, json=payload)
+                response.raise_for_status()
+                result = response.json()
+                data = result.get("data") or {}
+                batch_id = str(data.get("batch_id") or "")
+                upload_urls = data.get("file_urls") or []
+                if result.get("code") != 0 or not batch_id or not upload_urls:
+                    logger.error("[MinerU] Invalid local upload response: %s", result)
+                    return None
+                with pdf_path.open("rb") as handle:
+                    uploaded = client.put(upload_urls[0], content=handle)
+                    uploaded.raise_for_status()
+                return f"batch:{batch_id}"
+        except Exception as exc:
+            logger.error("[MinerU] Local file upload failed: %s", exc)
+            return None
+
     # ------------------------------------------------------------------
     # 内部方法: 轮询任务
     # ------------------------------------------------------------------
@@ -262,6 +286,11 @@ class PDFParser(BaseSkill):
 
         返回下载 URL，超时或失败返回 None。
         """
+        if not task_id:
+            return None
+        if task_id.startswith("batch:"):
+            return self._poll_batch_task(task_id.removeprefix("batch:"))
+
         headers = {
             "Authorization": f"Bearer {self._api_key}",
         }
@@ -312,6 +341,35 @@ class PDFParser(BaseSkill):
                 time.sleep(self._poll_interval)
 
         logger.error("[MinerU] Poll timeout | task_id=%s after %d attempts", task_id, self._poll_max_retries)
+        return None
+
+    def _poll_batch_task(self, batch_id: str) -> str | None:
+        headers = {"Authorization": f"Bearer {self._api_key}"}
+        poll_url = f"{MINERU_API_BASE}/api/v4/extract-results/batch/{batch_id}"
+        for attempt in range(1, self._poll_max_retries + 1):
+            try:
+                with httpx.Client(timeout=30.0) as client:
+                    response = client.get(poll_url, headers=headers)
+                    response.raise_for_status()
+                    result = response.json()
+            except Exception as exc:
+                logger.error("[MinerU] Batch poll attempt %d error: %s", attempt, exc)
+                time.sleep(self._poll_interval)
+                continue
+
+            extracted = (result.get("data") or {}).get("extract_result") or []
+            if not extracted:
+                time.sleep(self._poll_interval)
+                continue
+            item = extracted[0]
+            state = item.get("state", "")
+            if state == "done":
+                return item.get("full_zip_url") or None
+            if state == "failed":
+                logger.error("[MinerU] Batch task failed: %s", item.get("err_msg", "Unknown error"))
+                return None
+            time.sleep(self._poll_interval)
+        logger.error("[MinerU] Batch poll timeout | batch_id=%s", batch_id)
         return None
 
     # ------------------------------------------------------------------

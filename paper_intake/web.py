@@ -88,10 +88,26 @@ def _serialize_detail(service, job: JobRecord) -> dict[str, Any]:
     return payload
 
 
-def create_app(service, *, max_upload_bytes: int = 100 * 1024 * 1024) -> FastAPI:
+def _default_publication_checker(url: str) -> bool:
+    import httpx
+
+    try:
+        response = httpx.get(url, follow_redirects=True, timeout=20.0)
+        return response.status_code == 200
+    except httpx.HTTPError:
+        return False
+
+
+def create_app(
+    service,
+    *,
+    max_upload_bytes: int = 100 * 1024 * 1024,
+    publication_checker=None,
+) -> FastAPI:
     app = FastAPI(title="Paper Intake Control Desk", docs_url=None, redoc_url=None)
     app.state.service = service
     app.state.max_upload_bytes = max_upload_bytes
+    app.state.publication_checker = publication_checker or _default_publication_checker
     app.mount("/static", StaticFiles(directory=PACKAGE_ROOT / "static"), name="static")
 
     @app.exception_handler(ServiceError)
@@ -170,6 +186,12 @@ def create_app(service, *, max_upload_bytes: int = 100 * 1024 * 1024) -> FastAPI
     async def restore_notion(job_id: str):
         return _serialize_job(service.restore_notion(job_id))
 
+    @app.post("/api/jobs/{job_id}/verify-publication")
+    async def verify_publication(job_id: str):
+        return _serialize_job(
+            service.verify_publication(job_id, checker=app.state.publication_checker)
+        )
+
     return app
 
 
@@ -189,6 +211,7 @@ def build_default_app() -> FastAPI:
     load_dotenv(project_root / ".env", override=False)
 
     required = {
+        "MINERU_API_KEY": os.getenv("MINERU_API_KEY", ""),
         "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY", ""),
         "NOTION_TOKEN": os.getenv("NOTION_TOKEN", ""),
         "NOTION_DATABASE_ID": os.getenv("NOTION_DATABASE_ID", ""),

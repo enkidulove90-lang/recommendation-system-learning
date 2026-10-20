@@ -47,6 +47,12 @@ class _FakeService:
     def restore_notion(self, job_id: str):
         return self.repository.update_job(job_id, status=JobStatus.AWAITING_REVIEW)
 
+    def verify_publication(self, job_id: str, *, checker):
+        job = self.repository.get_job(job_id)
+        if not job.published_url or not checker(job.published_url):
+            raise ServiceError("publication_not_ready", "Published article is not reachable yet.")
+        return self.repository.update_job(job_id, status=JobStatus.PUBLISHED)
+
 
 class WebTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -139,6 +145,20 @@ class WebTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "cancelled")
+
+    def test_publication_verification_marks_reachable_page_published(self) -> None:
+        job = self.repo.create_job(source_type="url", source_url="https://example.org/paper.pdf")
+        self.repo.update_job(
+            job.job_id,
+            status=JobStatus.PUBLISHING,
+            published_url="https://example.github.io/article/paper-1/",
+        )
+        app = create_app(self.service, publication_checker=lambda _url: True)
+
+        response = TestClient(app).post(f"/api/jobs/{job.job_id}/verify-publication")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "published")
 
 
 if __name__ == "__main__":
