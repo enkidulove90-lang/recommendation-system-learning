@@ -60,6 +60,8 @@ class PaperPipeline:
     def run(self, job_id: str) -> JobRecord:
         try:
             for step_name in self.PROCESSING_STEPS:
+                if self._job(job_id).status == JobStatus.CANCELLED:
+                    break
                 output = self._run_step(job_id, step_name)
                 if step_name == StepName.QUALITY_CHECK and output.get("issue_codes"):
                     self.repository.update_job(

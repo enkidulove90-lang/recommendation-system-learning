@@ -221,6 +221,23 @@ class AdapterTests(unittest.TestCase):
 
         self.assertEqual(transport.last_properties["status"]["select"]["name"], "Published")
 
+    def test_notion_restore_replaces_body_and_returns_page_to_draft(self) -> None:
+        transport = _FakeNotionTransport()
+        transport.page_exists = True
+        gateway = NotionGateway("token", "database", transport=transport)
+
+        page = gateway.restore_draft(
+            "page",
+            markdown="# Restored body",
+            title="一篇论文",
+            slug="paper-2608.17316",
+            arxiv_id="2608.17316",
+        )
+
+        self.assertEqual(page.status, "Draft")
+        self.assertEqual(transport.last_properties["status"]["select"]["name"], "Draft")
+        self.assertTrue(any(block["type"] == "heading_1" for block in transport.blocks))
+
     def test_github_dispatch_is_optional_and_uses_workflow_dispatch(self) -> None:
         no_token = GitHubPagesGateway(token="", repository="owner/site")
         self.assertFalse(no_token.dispatch().triggered)

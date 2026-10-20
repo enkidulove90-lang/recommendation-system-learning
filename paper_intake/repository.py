@@ -358,6 +358,38 @@ class JobRepository:
             ).fetchall()
         return [self._step_from_row(row) for row in rows]
 
+    def reset_steps(
+        self,
+        job_id: str,
+        *,
+        restart_from: StepName,
+        ordered_steps: tuple[StepName, ...],
+    ) -> int:
+        if restart_from not in ordered_steps:
+            raise ValueError(f"Step is not restartable: {restart_from.value}")
+        names = [step.value for step in ordered_steps[ordered_steps.index(restart_from) :]]
+        placeholders = ", ".join("?" for _ in names)
+        with self._lock, self._connection:
+            cursor = self._connection.execute(
+                f"DELETE FROM job_steps WHERE job_id = ? AND step_name IN ({placeholders})",
+                (job_id, *names),
+            )
+            self._connection.execute(
+                """
+                UPDATE jobs
+                SET status = ?, current_step = '', error_code = '', error_message = '', updated_at = ?
+                WHERE job_id = ?
+                """,
+                (JobStatus.RECEIVED.value, _now(), job_id),
+            )
+            self._add_event(
+                job_id,
+                "job.reset",
+                restart_from.value,
+                {"cleared_steps": names},
+            )
+        return cursor.rowcount
+
     def recover_interrupted_jobs(self) -> int:
         timestamp = _now()
         with self._lock, self._connection:

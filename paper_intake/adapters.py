@@ -406,6 +406,32 @@ class NotionGateway:
         self._update_page(page_id, properties)
         return NotionPage(page_id, "", "Published")
 
+    def restore_draft(
+        self,
+        page_id: str,
+        *,
+        markdown: str,
+        title: str,
+        slug: str,
+        arxiv_id: str,
+    ) -> NotionPage:
+        properties = self._properties(
+            title=title,
+            slug=slug,
+            summary="",
+            arxiv_id=arxiv_id,
+            status="Draft",
+        )
+        self._update_page(page_id, properties)
+        self._clear_children(page_id)
+        blocks = self._blocks(markdown, {})
+        for index in range(0, len(blocks), 100):
+            self._request(
+                "PATCH",
+                f"/blocks/{page_id}/children",
+                json={"children": blocks[index : index + 100]},
+            )
+        return NotionPage(page_id, "", "Draft")
 
 class GitHubPagesGateway:
     def __init__(
