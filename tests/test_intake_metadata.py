@@ -9,8 +9,8 @@ ATOM = """<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <entry>
     <id>http://arxiv.org/abs/2606.17628v1</id>
-    <updated>2026-06-19T12:00:00Z</updated>
     <published>2026-06-19T12:00:00Z</published>
+    <updated>2026-06-20T09:30:00Z</updated>
     <title> OPD-Evolver: Cultivating Holistic Agent Evolver via On-Policy Distillation </title>
     <summary> A slow-fast co-evolution framework. </summary>
     <author><name>Guibin Zhang</name></author>
@@ -43,6 +43,7 @@ class ArxivMetadataResolverTests(unittest.TestCase):
         self.assertEqual(metadata["paper_url"], "https://arxiv.org/abs/2606.17628")
         self.assertEqual(metadata["pdf_url"], "https://arxiv.org/pdf/2606.17628.pdf")
         self.assertEqual(metadata["year"], "2026")
+        self.assertEqual(metadata["updated"], "2026-06-20T09:30:00Z")
         self.assertIn("id_list=2606.17628", transport.calls[0])
 
     def test_non_arxiv_id_uses_safe_fallback_without_network(self) -> None:

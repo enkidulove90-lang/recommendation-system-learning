@@ -5,9 +5,14 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from paper_intake.remote import LeaseLost, RemoteJob
+from paper_intake.remote import LeaseLost, RemoteJob, RemoteMetadataRefresh
 from paper_intake.models import StepName
-from paper_intake.remote_worker import RemotePipelineProcessor, RemoteProcessingError, RemoteWorker
+from paper_intake.remote_worker import (
+    PublishedMetadataRefresher,
+    RemotePipelineProcessor,
+    RemoteProcessingError,
+    RemoteWorker,
+)
 
 
 class _FakeGateway:
@@ -63,6 +68,148 @@ class _CheckpointAwareProcessor:
 
 
 class RemoteWorkerTests(unittest.TestCase):
+    def test_published_refresh_updates_only_metadata_and_completes_operation(self):
+        class Gateway:
+            def __init__(self):
+                self.completed = []
+                self.failed = []
+
+            def complete_metadata_refresh(self, key, worker_id, result):
+                self.completed.append((key, worker_id, result))
+
+            def fail_metadata_refresh(self, key, worker_id, code, message):
+                self.failed.append((key, worker_id, code, message))
+
+        class Notion:
+            def __init__(self):
+                self.calls = []
+
+            def update_metadata_properties(self, page_id, metadata):
+                self.calls.append((page_id, metadata))
+
+        operation = RemoteMetadataRefresh(
+            idempotency_key="11111111-1111-4111-8111-111111111111",
+            job_id="published-job",
+            paper_id="paper-1",
+            arxiv_id="2606.17628",
+            input_ref="https://arxiv.org/abs/2606.17628",
+            notion_page_id="notion-page",
+            lease_owner="metadata-worker",
+            lease_until=datetime.now(UTC) + timedelta(minutes=10),
+        )
+        gateway = Gateway()
+        notion = Notion()
+        with TemporaryDirectory() as directory:
+            metadata_path = Path(directory) / "published-job" / "metadata.json"
+            metadata_path.parent.mkdir()
+            metadata_path.write_text(
+                '{"canonical_id":"2606.17628","title":"2606.17628","authors":[]}',
+                encoding="utf-8",
+            )
+            refresher = PublishedMetadataRefresher(
+                workflow_root=directory,
+                notion=notion,
+                metadata_resolver=lambda _paper_id, _url: {
+                    "title": "OPD-Evolver",
+                    "authors": ["Author One"],
+                    "published": "2026-06-18T00:00:00Z",
+                },
+            )
+
+            refresher.process(operation, gateway)
+
+        self.assertEqual(notion.calls[0][0], "notion-page")
+        self.assertEqual(gateway.completed[0][2]["metadata"]["title"], "OPD-Evolver")
+        self.assertTrue(gateway.completed[0][2]["changed"])
+        self.assertEqual(gateway.failed, [])
+
+    def test_published_refresh_restores_local_metadata_when_notion_rejects_update(self):
+        class Gateway:
+            def __init__(self):
+                self.failed = []
+
+            def complete_metadata_refresh(self, *_args):
+                raise AssertionError("completion must not run")
+
+            def fail_metadata_refresh(self, *args):
+                self.failed.append(args)
+
+        class Notion:
+            def update_metadata_properties(self, _page_id, _metadata):
+                raise RuntimeError("notion unavailable")
+
+        operation = RemoteMetadataRefresh(
+            idempotency_key="11111111-1111-4111-8111-111111111111",
+            job_id="published-job",
+            paper_id="paper-1",
+            arxiv_id="2606.17628",
+            input_ref="https://arxiv.org/abs/2606.17628",
+            notion_page_id="notion-page",
+            lease_owner="metadata-worker",
+            lease_until=datetime.now(UTC) + timedelta(minutes=10),
+        )
+        with TemporaryDirectory() as directory:
+            metadata_path = Path(directory) / "published-job" / "metadata.json"
+            metadata_path.parent.mkdir()
+            old = b'{"canonical_id":"2606.17628","title":"2606.17628","authors":[]}'
+            metadata_path.write_bytes(old)
+            refresher = PublishedMetadataRefresher(
+                workflow_root=directory,
+                notion=Notion(),
+                metadata_resolver=lambda *_args: {
+                    "title": "OPD-Evolver",
+                    "authors": ["Author One"],
+                },
+            )
+            gateway = Gateway()
+
+            with self.assertRaisesRegex(RuntimeError, "notion unavailable"):
+                refresher.process(operation, gateway)
+
+            self.assertEqual(metadata_path.read_bytes(), old)
+            self.assertEqual(gateway.failed[0][2], "metadata_refresh_failed")
+
+    def test_published_metadata_refresh_is_claimed_before_pipeline_job(self):
+        class Gateway(_FakeGateway):
+            def __init__(self):
+                super().__init__()
+                self.refresh_claims = 0
+
+            def claim_metadata_refresh(self, worker_id):
+                self.refresh_claims += 1
+                return RemoteMetadataRefresh(
+                    idempotency_key="11111111-1111-4111-8111-111111111111",
+                    job_id="published-job",
+                    paper_id="paper-1",
+                    arxiv_id="2606.17628",
+                    input_ref="https://arxiv.org/abs/2606.17628",
+                    notion_page_id="notion-page",
+                    lease_owner=worker_id,
+                    lease_until=datetime.now(UTC) + timedelta(minutes=10),
+                )
+
+        class Refresher:
+            def __init__(self):
+                self.calls = []
+
+            def process(self, operation, gateway):
+                self.calls.append((operation, gateway))
+
+        gateway = Gateway()
+        processor = _CheckpointAwareProcessor()
+        refresher = Refresher()
+        runner = RemoteWorker(
+            gateway=gateway,
+            processor=processor,
+            metadata_refresher=refresher,
+            poll_seconds=0,
+        )
+
+        self.assertTrue(runner.run_once())
+        self.assertEqual(len(refresher.calls), 1)
+        self.assertEqual(gateway.claim_calls, 0)
+        self.assertEqual(processor.deepseek_calls, 0)
+
     def test_preflight_failure_prevents_claiming_a_job(self):
         gateway = _FakeGateway()
         calls = 0

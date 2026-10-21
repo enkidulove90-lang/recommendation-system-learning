@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+import uuid
 from datetime import datetime
 from typing import Any, Literal
 
@@ -32,6 +33,17 @@ class RemoteJob(BaseModel):
     lease_owner: str
     lease_until: datetime
     artifact_storage_enabled: bool = True
+
+
+class RemoteMetadataRefresh(BaseModel):
+    idempotency_key: str
+    job_id: str
+    paper_id: str
+    arxiv_id: str
+    input_ref: str
+    notion_page_id: str
+    lease_owner: str
+    lease_until: datetime
 
 
 class RemoteGatewayClient:
@@ -124,6 +136,64 @@ class RemoteGatewayClient:
         self._require_success(response)
         payload = response.json()
         return RemoteJob.model_validate(payload.get("job") or payload)
+
+    def claim_metadata_refresh(self, worker_id: str) -> RemoteMetadataRefresh | None:
+        response = self._request(
+            "POST",
+            "/v1/worker/metadata-refreshes/claim",
+            json={"worker_id": worker_id, "lease_seconds": 600},
+        )
+        if response.status_code == 204:
+            return None
+        self._require_success(response)
+        payload = response.json()
+        return RemoteMetadataRefresh.model_validate(payload.get("operation") or payload)
+
+    def enqueue_metadata_refresh(self, job_id: str, idempotency_key: str | None = None) -> dict[str, Any]:
+        key = idempotency_key or str(uuid.uuid4())
+        response = self._request(
+            "POST",
+            f"/v1/worker/jobs/{job_id}/refresh-metadata",
+            headers={"Idempotency-Key": key},
+        )
+        payload = self._require_success(response).json()
+        payload.setdefault("operation_key", key)
+        return payload
+
+    def get_metadata_refresh(self, operation_key: str) -> dict[str, Any]:
+        response = self._request("GET", f"/v1/worker/metadata-refreshes/{operation_key}")
+        return self._require_success(response).json()
+
+    def complete_metadata_refresh(
+        self,
+        operation_key: str,
+        worker_id: str,
+        result: dict[str, Any],
+    ) -> dict[str, Any]:
+        response = self._request(
+            "POST",
+            f"/v1/worker/metadata-refreshes/{operation_key}/complete",
+            json={"worker_id": worker_id, "result": result},
+        )
+        return self._require_success(response).json()
+
+    def fail_metadata_refresh(
+        self,
+        operation_key: str,
+        worker_id: str,
+        code: str,
+        message: str,
+    ) -> dict[str, Any]:
+        response = self._request(
+            "POST",
+            f"/v1/worker/metadata-refreshes/{operation_key}/fail",
+            json={
+                "worker_id": worker_id,
+                "error_code": code[:100],
+                "error_message": message[:1000],
+            },
+        )
+        return self._require_success(response).json()
 
     def heartbeat(self, job_id: str, worker_id: str, stage: str = "") -> bool:
         payload: dict[str, Any] = {"worker_id": worker_id, "lease_seconds": 600}

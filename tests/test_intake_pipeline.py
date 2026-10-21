@@ -223,7 +223,12 @@ class PaperPipelineTests(unittest.TestCase):
 
             failed = harness.pipeline.run(harness.job.job_id)
             stale = __import__("json").loads(metadata_path.read_text(encoding="utf-8"))
-            canonical_id = harness.repo.get_job(harness.job.job_id).canonical_id
+            canonical_id = "2606.17628"
+            harness.repo.update_job(
+                harness.job.job_id,
+                canonical_id=canonical_id,
+                source_url="https://arxiv.org/pdf/2606.17628.pdf",
+            )
             stale.update({"title": canonical_id, "authors": []})
             stale.pop("metadata_source", None)
             metadata_path.write_text(
@@ -242,7 +247,7 @@ class PaperPipelineTests(unittest.TestCase):
                 "OPD-Evolver: Cultivating Holistic Agent Evolver via On-Policy Distillation",
             )
             refreshed = __import__("json").loads(metadata_path.read_text(encoding="utf-8"))
-            self.assertEqual(refreshed["metadata_source"], "arxiv")
+            self.assertEqual(refreshed["metadata_source"], "arxiv_api_refresh")
         finally:
             harness.close()
 

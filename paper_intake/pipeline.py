@@ -16,6 +16,7 @@ from .article import (
 )
 from .inputs import InputValidationError, PaperInputStore, canonicalize_url, sha256_file
 from .models import JobRecord, JobStatus, StepName, StepStatus
+from .metadata_refresh import refresh_metadata_file
 from .repository import JobRepository
 from .remote import LeaseLost
 
@@ -198,7 +199,7 @@ class PaperPipeline:
         metadata_path = self._bundle(job_id) / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
         self.repository.update_job(job_id, title=str(metadata["title"]))
-        return {"metadata_path": str(metadata_path)}
+        return {"metadata_path": str(metadata_path), "metadata": metadata}
 
     def _step_download_pdf(self, job_id: str) -> dict[str, Any]:
         job = self._job(job_id)
@@ -265,21 +266,16 @@ class PaperPipeline:
     def _step_deepseek_generate(self, job_id: str) -> dict[str, Any]:
         bundle = self._bundle(job_id)
         metadata_path = bundle / "metadata.json"
-        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         job = self._job(job_id)
-        legacy_fallback = (
-            not metadata.get("metadata_source")
-            and str(metadata.get("title", "")).strip() == str(job.canonical_id or "").strip()
-            and not metadata.get("authors")
+        refresh = refresh_metadata_file(
+            metadata_path,
+            canonical_id=job.canonical_id,
+            source_url=job.source_url,
+            resolver=self.metadata_resolver,
         )
-        if metadata.get("metadata_source") == "fallback" or legacy_fallback:
-            refreshed = self.metadata_resolver(job.canonical_id, job.source_url) or {}
-            if refreshed.get("metadata_source") != "fallback":
-                metadata.update(refreshed)
-                metadata_path.write_text(
-                    json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
-                )
-                self.repository.update_job(job_id, title=str(metadata["title"]))
+        metadata = refresh.metadata
+        if refresh.changed:
+            self.repository.update_job(job_id, title=str(metadata["title"]))
         parse_step = self.repository.get_step(job_id, StepName.MINERU_PARSE)
         if parse_step is None or parse_step.status != StepStatus.SUCCEEDED:
             raise PipelineFailure("mineru_output_missing", "MinerU output is not available.")
@@ -294,7 +290,7 @@ class PaperPipeline:
         )
         article_path = bundle / "article.json"
         article_path.write_text(article.model_dump_json(indent=2), encoding="utf-8")
-        return {"article_path": str(article_path)}
+        return {"article_path": str(article_path), "metadata": metadata}
 
     def _load_article(self, job_id: str) -> PaperArticle:
         path = self._bundle(job_id) / "article.json"

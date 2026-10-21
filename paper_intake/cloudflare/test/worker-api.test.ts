@@ -38,7 +38,69 @@ async function claim(workerId = "worker-a", authorization = machineHeaders.autho
   });
 }
 
+async function seedPublishedJob() {
+  const repository = new IntakeRepository(testEnv.DB);
+  const paper = await repository.createOrReusePaper({
+    arxivId: "2606.17628",
+    canonicalUrl: "https://arxiv.org/abs/2606.17628",
+  });
+  const job = await repository.createJob({
+    paperId: paper.paperId,
+    ownerIdentity: "owner@example.com",
+    inputType: "url",
+    inputRef: "https://arxiv.org/abs/2606.17628",
+  });
+  await repository.claim("publisher", 600);
+  await repository.complete(job.jobId, "publisher", {
+    notionPageId: "notion-page",
+    slug: "paper-2606.17628",
+    siteUrl: "https://example.github.io/article/paper-2606.17628/",
+  });
+  await repository.finishPublication(job.jobId, true, "commit-1");
+  return job;
+}
+
 describe("remote worker API", () => {
+  it("queues, claims, and completes a published metadata-only refresh", async () => {
+    const job = await seedPublishedJob();
+    const key = "11111111-1111-4111-8111-111111111111";
+    const queued = await SELF.fetch(
+      `https://worker.test/v1/worker/jobs/${job.jobId}/refresh-metadata`,
+      { method: "POST", headers: { ...machineHeaders, "idempotency-key": key } },
+    );
+    expect(queued.status).toBe(202);
+
+    const claimed = await SELF.fetch("https://worker.test/v1/worker/metadata-refreshes/claim", {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({ worker_id: "metadata-worker", lease_seconds: 600 }),
+    });
+    expect(claimed.status).toBe(200);
+    expect(await claimed.clone().json()).toMatchObject({
+      operation: { job_id: job.jobId, arxiv_id: "2606.17628", notion_page_id: "notion-page" },
+    });
+    const completed = await SELF.fetch(
+      `https://worker.test/v1/worker/metadata-refreshes/${key}/complete`,
+      {
+        method: "POST",
+        headers: machineHeaders,
+        body: JSON.stringify({
+          worker_id: "metadata-worker",
+          result: {
+            changed: true,
+            metadata: {
+              canonical_id: "2606.17628",
+              title: "OPD-Evolver",
+              authors: ["Author One"],
+              metadata_source: "arxiv_api_refresh",
+            },
+          },
+        }),
+      },
+    );
+    expect(completed.status).toBe(200);
+    expect((await new IntakeRepository(testEnv.DB).getJob(job.jobId))?.status).toBe("published");
+  });
   it("accepts an operator URL through the same normalized intake path", async () => {
     const response = await SELF.fetch("https://worker.test/v1/worker/intake/url", {
       method: "POST",

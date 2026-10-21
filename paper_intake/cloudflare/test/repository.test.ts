@@ -76,6 +76,37 @@ describe("IntakeRepository", () => {
     expect(checkpointed.checkpoints.parsed).toEqual({ artifactId: "a1" });
   });
 
+  it("stores verified metadata from a checkpoint without rerunning any job stage", async () => {
+    const repository = new IntakeRepository(env.DB);
+    const paper = await repository.createOrReusePaper({ arxivId: "2606.17628" });
+    const job = await repository.createJob({
+      paperId: paper.paperId,
+      ownerIdentity: "owner@example.com",
+      inputType: "url",
+      inputRef: "https://arxiv.org/abs/2606.17628",
+    });
+    await repository.claim("worker-a", 600);
+    await repository.checkpoint(job.jobId, "worker-a", "resolve_metadata", {
+      metadata: {
+        canonical_id: "2606.17628",
+        title: "OPD-Evolver",
+        authors: ["Author One"],
+        metadata_source: "arxiv_xml",
+      },
+    });
+
+    const stored = await env.DB.prepare(
+      "SELECT metadata_json, metadata_source, normalized_title FROM papers WHERE paper_id = ?",
+    ).bind(paper.paperId).first<{
+      metadata_json: string;
+      metadata_source: string;
+      normalized_title: string;
+    }>();
+    expect(JSON.parse(stored?.metadata_json || "{}").authors).toEqual(["Author One"]);
+    expect(stored?.metadata_source).toBe("arxiv_xml");
+    expect(stored?.normalized_title).toBe("OPD-Evolver");
+  });
+
   it("moves failed jobs back to queued without losing checkpoints", async () => {
     const repository = new IntakeRepository(env.DB);
     const paper = await repository.createOrReusePaper({ pdfSha256: "retry-hash" });
@@ -93,5 +124,58 @@ describe("IntakeRepository", () => {
     expect(retried.status).toBe("queued");
     expect(retried.checkpoints.parsed).toEqual({ artifactId: "parsed" });
     expect(retried.errorCode).toBeNull();
+  });
+
+  it("leases one idempotent published metadata refresh without changing publication state", async () => {
+    const repository = new IntakeRepository(env.DB);
+    const paper = await repository.createOrReusePaper({
+      arxivId: "2606.17628",
+      normalizedTitle: "2606.17628",
+    });
+    const job = await repository.createJob({
+      paperId: paper.paperId,
+      ownerIdentity: "owner@example.com",
+      inputType: "url",
+      inputRef: "https://arxiv.org/abs/2606.17628",
+    });
+    await repository.claim("publisher", 600);
+    await repository.complete(job.jobId, "publisher", {
+      notionPageId: "notion-page",
+      slug: "paper-2606.17628",
+      siteUrl: "https://example.github.io/article/paper-2606.17628/",
+    });
+    await repository.finishPublication(job.jobId, true, "commit-1");
+
+    const first = await repository.enqueueMetadataRefresh(job.jobId, "11111111-1111-4111-8111-111111111111");
+    const replay = await repository.enqueueMetadataRefresh(job.jobId, "11111111-1111-4111-8111-111111111111");
+    const claimed = await repository.claimMetadataRefresh("metadata-worker", 600);
+
+    expect(first.replayed).toBe(false);
+    expect(replay.replayed).toBe(true);
+    expect(claimed?.jobId).toBe(job.jobId);
+    expect(claimed?.notionPageId).toBe("notion-page");
+    expect(await repository.claimMetadataRefresh("second-worker", 600)).toBeNull();
+    expect((await repository.getJob(job.jobId))?.status).toBe("published");
+
+    await repository.completeMetadataRefresh(
+      "11111111-1111-4111-8111-111111111111",
+      "metadata-worker",
+      {
+        changed: true,
+        metadata: {
+          canonical_id: "2606.17628",
+          title: "OPD-Evolver",
+          authors: ["Author One"],
+          metadata_source: "arxiv_api_refresh",
+        },
+      },
+    );
+    const completed = await repository.getMetadataRefresh("11111111-1111-4111-8111-111111111111");
+    expect(completed?.state).toBe("completed");
+    expect((await repository.getJob(job.jobId))?.status).toBe("published");
+    const stored = await env.DB.prepare("SELECT metadata_source, normalized_title FROM papers WHERE paper_id = ?")
+      .bind(paper.paperId).first<{ metadata_source: string; normalized_title: string }>();
+    expect(stored?.metadata_source).toBe("arxiv_api_refresh");
+    expect(stored?.normalized_title).toBe("OPD-Evolver");
   });
 });

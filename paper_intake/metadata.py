@@ -60,6 +60,7 @@ class ArxivMetadataResolver:
             ]
             authors = [name for name in authors if name]
             published = entry.findtext("atom:published", default="", namespaces=_ATOM)
+            updated = entry.findtext("atom:updated", default="", namespaces=_ATOM)
             if not title:
                 raise ValueError("arXiv title is empty")
         except Exception as exc:
@@ -77,6 +78,7 @@ class ArxivMetadataResolver:
             "pdf_url": f"https://arxiv.org/pdf/{paper_id}.pdf",
             "year": published[:4] if len(published) >= 4 else "",
             "published": published,
+            "updated": updated,
             "summary": " ".join((entry.findtext("atom:summary", default="", namespaces=_ATOM)).split()),
             "metadata_source": "arxiv",
         }

@@ -60,6 +60,40 @@ interface RetryOperationRow {
   updated_at: string;
 }
 
+interface MetadataRefreshRow {
+  idempotency_key: string;
+  job_id: string;
+  state: "queued" | "processing" | "completed" | "failed";
+  lease_owner: string | null;
+  lease_until: string | null;
+  result_json: string;
+  error_code: string | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+  paper_id?: string;
+  arxiv_id?: string | null;
+  input_ref?: string;
+  notion_page_id?: string;
+  slug?: string;
+}
+
+export interface MetadataRefreshRecord {
+  idempotencyKey: string;
+  jobId: string;
+  state: MetadataRefreshRow["state"];
+  leaseOwner: string | null;
+  leaseUntil: string | null;
+  result: Record<string, unknown>;
+  errorCode: string | null;
+  errorMessage: string | null;
+  paperId?: string;
+  arxivId?: string | null;
+  inputRef?: string;
+  notionPageId?: string;
+  slug?: string;
+}
+
 export interface RetryOperationRecord {
   idempotencyKey: string;
   jobId: string;
@@ -127,6 +161,24 @@ function mapRetryOperation(row: RetryOperationRow): RetryOperationRecord {
     response: parseCheckpoints(row.response_json),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+function mapMetadataRefresh(row: MetadataRefreshRow): MetadataRefreshRecord {
+  return {
+    idempotencyKey: row.idempotency_key,
+    jobId: row.job_id,
+    state: row.state,
+    leaseOwner: row.lease_owner,
+    leaseUntil: row.lease_until,
+    result: parseCheckpoints(row.result_json),
+    errorCode: row.error_code,
+    errorMessage: row.error_message,
+    paperId: row.paper_id,
+    arxivId: row.arxiv_id,
+    inputRef: row.input_ref,
+    notionPageId: row.notion_page_id,
+    slug: row.slug,
   };
 }
 
@@ -365,6 +417,23 @@ export class IntakeRepository {
       .bind(stage, JSON.stringify(checkpoints), this.timestamp(), jobId, workerId)
       .run();
     if (result.meta.changes !== 1) throw new Error("lease_lost");
+    const envelope = output && typeof output === "object" && !Array.isArray(output)
+      ? output as Record<string, unknown>
+      : {};
+    const metadata = envelope.metadata && typeof envelope.metadata === "object" && !Array.isArray(envelope.metadata)
+      ? envelope.metadata as Record<string, unknown>
+      : null;
+    const title = typeof metadata?.title === "string" ? metadata.title.trim() : "";
+    const authors = Array.isArray(metadata?.authors)
+      ? metadata.authors.filter((author) => typeof author === "string" && author.trim())
+      : [];
+    if (metadata && title && authors.length > 0) {
+      const source = typeof metadata.metadata_source === "string" ? metadata.metadata_source.trim() : "";
+      await this.db.prepare(
+        `UPDATE papers SET metadata_json = ?, metadata_source = ?, normalized_title = ?, updated_at = ?
+         WHERE paper_id = ?`,
+      ).bind(JSON.stringify(metadata), source || null, title, this.timestamp(), current.paperId).run();
+    }
     await this.recordJobEvent(jobId, "job.stage_completed", { stage });
     return this.requireJob(jobId);
   }
@@ -458,6 +527,119 @@ export class IntakeRepository {
        WHERE idempotency_key = ?`,
     ).bind(JSON.stringify(response), this.timestamp(), idempotencyKey).run();
     return { job, replayed: !changed };
+  }
+
+  async getMetadataRefresh(idempotencyKey: string): Promise<MetadataRefreshRecord | null> {
+    const row = await this.db.prepare(
+      `SELECT o.*, j.paper_id, j.input_ref, p.arxiv_id, u.notion_page_id, u.slug
+       FROM metadata_refresh_operations o
+       JOIN jobs j ON j.job_id = o.job_id
+       JOIN papers p ON p.paper_id = j.paper_id
+       LEFT JOIN publications u ON u.job_id = j.job_id
+       WHERE o.idempotency_key = ? LIMIT 1`,
+    ).bind(idempotencyKey).first<MetadataRefreshRow>();
+    return row ? mapMetadataRefresh(row) : null;
+  }
+
+  async enqueueMetadataRefresh(
+    jobId: string,
+    idempotencyKey: string,
+  ): Promise<{ operation: MetadataRefreshRecord; replayed: boolean }> {
+    const existing = await this.getMetadataRefresh(idempotencyKey);
+    if (existing && existing.jobId !== jobId) throw new Error("idempotency_conflict");
+    if (existing) return { operation: existing, replayed: true };
+    const job = await this.requireJob(jobId);
+    if (job.status !== "published") throw new Error("metadata_refresh_not_allowed");
+    const publication = await this.db.prepare(
+      "SELECT notion_page_id FROM publications WHERE job_id = ? AND publish_status = 'published' LIMIT 1",
+    ).bind(jobId).first<{ notion_page_id: string }>();
+    if (!publication) throw new Error("publication_not_found");
+    const timestamp = this.timestamp();
+    await this.db.prepare(
+      `INSERT OR IGNORE INTO metadata_refresh_operations (
+        idempotency_key, job_id, state, created_at, updated_at
+      ) VALUES (?, ?, 'queued', ?, ?)`,
+    ).bind(idempotencyKey, jobId, timestamp, timestamp).run();
+    const operation = await this.getMetadataRefresh(idempotencyKey);
+    if (!operation || operation.jobId !== jobId) throw new Error("idempotency_conflict");
+    return { operation, replayed: false };
+  }
+
+  async claimMetadataRefresh(workerId: string, leaseSeconds: number): Promise<MetadataRefreshRecord | null> {
+    const now = this.timestamp();
+    const leaseUntil = new Date(this.now().getTime() + leaseSeconds * 1000).toISOString();
+    const row = await this.db.prepare(
+      `UPDATE metadata_refresh_operations SET
+        state = 'processing', lease_owner = ?, lease_until = ?,
+        error_code = NULL, error_message = NULL, updated_at = ?
+       WHERE idempotency_key = (
+         SELECT idempotency_key FROM metadata_refresh_operations
+         WHERE state = 'queued'
+            OR (state = 'processing' AND lease_until IS NOT NULL AND lease_until < ?)
+         ORDER BY created_at LIMIT 1
+       )
+       RETURNING *`,
+    ).bind(workerId, leaseUntil, now, now).first<MetadataRefreshRow>();
+    if (!row) return null;
+    const details = await this.db.prepare(
+      `SELECT o.*, j.paper_id, j.input_ref, p.arxiv_id, u.notion_page_id, u.slug
+       FROM metadata_refresh_operations o
+       JOIN jobs j ON j.job_id = o.job_id
+       JOIN papers p ON p.paper_id = j.paper_id
+       JOIN publications u ON u.job_id = j.job_id
+       WHERE o.idempotency_key = ?`,
+    ).bind(row.idempotency_key).first<MetadataRefreshRow>();
+    return details ? mapMetadataRefresh(details) : null;
+  }
+
+  async completeMetadataRefresh(
+    idempotencyKey: string,
+    workerId: string,
+    result: Record<string, unknown>,
+  ): Promise<MetadataRefreshRecord> {
+    const current = await this.getMetadataRefresh(idempotencyKey);
+    if (
+      !current || current.state !== "processing" || current.leaseOwner !== workerId ||
+      !current.leaseUntil || current.leaseUntil < this.timestamp()
+    ) throw new Error("lease_lost");
+    const metadata = result.metadata && typeof result.metadata === "object" && !Array.isArray(result.metadata)
+      ? result.metadata as Record<string, unknown>
+      : {};
+    const title = typeof metadata.title === "string" ? metadata.title.trim() : "";
+    const source = typeof metadata.metadata_source === "string" ? metadata.metadata_source.trim() : "";
+    const timestamp = this.timestamp();
+    await this.db.batch([
+      this.db.prepare(
+        `UPDATE metadata_refresh_operations SET state = 'completed', lease_owner = NULL,
+          lease_until = NULL, result_json = ?, updated_at = ?
+         WHERE idempotency_key = ? AND state = 'processing' AND lease_owner = ?`,
+      ).bind(JSON.stringify(result), timestamp, idempotencyKey, workerId),
+      this.db.prepare(
+        `UPDATE papers SET metadata_json = ?, metadata_source = ?,
+          normalized_title = CASE WHEN ? <> '' THEN ? ELSE normalized_title END, updated_at = ?
+         WHERE paper_id = (SELECT paper_id FROM jobs WHERE job_id = ?)`,
+      ).bind(JSON.stringify(metadata), source || null, title, title, timestamp, current.jobId),
+    ]);
+    const completed = await this.getMetadataRefresh(idempotencyKey);
+    if (!completed || completed.state !== "completed") throw new Error("lease_lost");
+    return completed;
+  }
+
+  async failMetadataRefresh(
+    idempotencyKey: string,
+    workerId: string,
+    errorCode: string,
+    errorMessage: string,
+  ): Promise<MetadataRefreshRecord> {
+    const changed = await this.db.prepare(
+      `UPDATE metadata_refresh_operations SET state = 'failed', lease_owner = NULL,
+        lease_until = NULL, error_code = ?, error_message = ?, updated_at = ?
+       WHERE idempotency_key = ? AND state = 'processing' AND lease_owner = ?`,
+    ).bind(errorCode, errorMessage, this.timestamp(), idempotencyKey, workerId).run();
+    if (changed.meta.changes !== 1) throw new Error("lease_lost");
+    const failed = await this.getMetadataRefresh(idempotencyKey);
+    if (!failed) throw new Error("operation_not_found");
+    return failed;
   }
 
   async listOwnerJobs(ownerIdentity: string, limit = 100): Promise<JobRecord[]> {

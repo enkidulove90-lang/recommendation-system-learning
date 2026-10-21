@@ -442,6 +442,113 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     return ingestUrl(request, env, { identity: ownerIdentity }, requestId);
   }
 
+  const refreshRequestMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/refresh-metadata$/u);
+  if (refreshRequestMatch && request.method === "POST") {
+    const idempotencyKey = request.headers.get("idempotency-key")?.trim() ?? "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(idempotencyKey)) {
+      throw new ApiError(400, "invalid_idempotency_key", "必须提供有效的 Idempotency-Key。", false);
+    }
+    try {
+      const { operation, replayed } = await repository.enqueueMetadataRefresh(
+        refreshRequestMatch[1],
+        idempotencyKey,
+      );
+      const response = machineResponse(202, requestId, {
+        operation_key: operation.idempotencyKey,
+        job_id: operation.jobId,
+        status: operation.state,
+        code: "metadata_refresh_accepted",
+      });
+      if (replayed) response.headers.set("idempotency-replayed", "true");
+      return response;
+    } catch (error) {
+      if (error instanceof Error && error.message === "idempotency_conflict") {
+        throw new ApiError(409, "idempotency_conflict", "该 Idempotency-Key 已用于其他任务。", false);
+      }
+      if (error instanceof Error && ["metadata_refresh_not_allowed", "publication_not_found"].includes(error.message)) {
+        throw new ApiError(409, "metadata_refresh_not_allowed", "仅允许显式刷新已发布论文元数据。", false);
+      }
+      throw error;
+    }
+  }
+
+  const refreshStatusMatch = url.pathname.match(/^\/v1\/worker\/metadata-refreshes\/([^/]+)$/u);
+  if (refreshStatusMatch && request.method === "GET") {
+    const operation = await repository.getMetadataRefresh(refreshStatusMatch[1]);
+    if (!operation) throw new ApiError(404, "operation_not_found", "元数据刷新操作不存在。", false);
+    return machineResponse(200, requestId, {
+      operation_key: operation.idempotencyKey,
+      job_id: operation.jobId,
+      status: operation.state,
+      result: operation.result,
+      error_code: operation.errorCode,
+      error_message: operation.errorMessage,
+    });
+  }
+
+  if (url.pathname === "/v1/worker/metadata-refreshes/claim" && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const requestedLease = typeof body.lease_seconds === "number" ? body.lease_seconds : 600;
+    const operation = await repository.claimMetadataRefresh(
+      workerId,
+      Math.max(60, Math.min(900, Math.floor(requestedLease))),
+    );
+    if (!operation) return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
+    return machineResponse(200, requestId, {
+      operation: {
+        idempotency_key: operation.idempotencyKey,
+        job_id: operation.jobId,
+        paper_id: operation.paperId,
+        arxiv_id: operation.arxivId,
+        input_ref: operation.inputRef,
+        notion_page_id: operation.notionPageId,
+        lease_owner: operation.leaseOwner,
+        lease_until: operation.leaseUntil,
+      },
+    });
+  }
+
+  const refreshCompleteMatch = url.pathname.match(/^\/v1\/worker\/metadata-refreshes\/([^/]+)\/complete$/u);
+  if (refreshCompleteMatch && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    const result = body.result && typeof body.result === "object" && !Array.isArray(body.result)
+      ? body.result as Record<string, unknown>
+      : {};
+    try {
+      const operation = await repository.completeMetadataRefresh(refreshCompleteMatch[1], workerId, result);
+      return machineResponse(200, requestId, {
+        operation_key: operation.idempotencyKey,
+        job_id: operation.jobId,
+        status: operation.state,
+      });
+    } catch (error) {
+      return leaseConflict(error);
+    }
+  }
+
+  const refreshFailMatch = url.pathname.match(/^\/v1\/worker\/metadata-refreshes\/([^/]+)\/fail$/u);
+  if (refreshFailMatch && request.method === "POST") {
+    const body = await readJsonObject(request);
+    const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
+    try {
+      const operation = await repository.failMetadataRefresh(
+        refreshFailMatch[1],
+        workerId,
+        requiredString(body.error_code, "invalid_error_code", "必须提供错误代码。"),
+        typeof body.error_message === "string" ? body.error_message.slice(0, 1000) : "Metadata refresh failed.",
+      );
+      return machineResponse(200, requestId, {
+        operation_key: operation.idempotencyKey,
+        job_id: operation.jobId,
+        status: operation.state,
+      });
+    } catch (error) {
+      return leaseConflict(error);
+    }
+  }
+
   const operationMatch = url.pathname.match(/^\/v1\/worker\/operations\/([^/]+)$/u);
   if (operationMatch && request.method === "GET") {
     const operation = await repository.getRetryOperation(operationMatch[1]);

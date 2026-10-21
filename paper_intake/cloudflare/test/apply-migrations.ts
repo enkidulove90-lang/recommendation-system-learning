@@ -11,6 +11,7 @@ const testEnv = env as Env & {
 beforeEach(async () => {
   await applyD1Migrations(testEnv.DB, testEnv.TEST_MIGRATIONS);
   await testEnv.DB.batch([
+    testEnv.DB.prepare("DELETE FROM metadata_refresh_operations"),
     testEnv.DB.prepare("DELETE FROM retry_operations"),
     testEnv.DB.prepare("DELETE FROM job_events"),
     testEnv.DB.prepare("DELETE FROM publications"),

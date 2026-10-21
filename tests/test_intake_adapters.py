@@ -89,6 +89,7 @@ class _FakeBalanceTransport:
 
 class _FakeNotionTransport:
     def __init__(self, property_names=None):
+        self.calls = []
         self.last_properties = {}
         self.page_exists = False
         self.created_pages = 0
@@ -101,6 +102,7 @@ class _FakeNotionTransport:
         ]
 
     def request(self, method: str, path: str, **kwargs):
+        self.calls.append((method, path, kwargs))
         if method == "GET" and path == "/databases/database":
             return {"data_sources": [{"id": "source"}]}
         if method == "GET" and path == "/data_sources/source":
@@ -242,6 +244,35 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(transport.uploads, 1)
         self.assertEqual(page.page_id, "page")
         self.assertEqual(page.before_markdown, "")
+
+    def test_notion_metadata_refresh_updates_properties_without_touching_body(self) -> None:
+        transport = _FakeNotionTransport(
+            property_names=[
+                "title", "status", "type", "slug", "arxiv_id", "year",
+                "authors", "published", "updated",
+            ]
+        )
+        gateway = NotionGateway("token", "database", transport=transport)
+
+        gateway.update_metadata_properties(
+            "page",
+            {
+                "canonical_id": "2606.17628",
+                "title": "OPD-Evolver",
+                "authors": ["Author One", "Author Two"],
+                "published": "2026-06-18T00:00:00Z",
+                "updated": "2026-06-20T09:30:00Z",
+            },
+        )
+
+        mutation_calls = [call for call in transport.calls if call[0] in {"POST", "PATCH", "DELETE"}]
+        self.assertEqual([(method, path) for method, path, _ in mutation_calls], [("PATCH", "/pages/page")])
+        self.assertEqual(transport.last_properties["title"]["title"][0]["text"]["content"], "OPD-Evolver")
+        self.assertEqual(
+            transport.last_properties["authors"]["rich_text"][0]["text"]["content"],
+            "Author One, Author Two",
+        )
+        self.assertNotIn("status", transport.last_properties)
 
     def test_notion_preflight_rejects_missing_required_schema(self) -> None:
         transport = _FakeNotionTransport(

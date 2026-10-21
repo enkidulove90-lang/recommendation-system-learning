@@ -437,6 +437,41 @@ class NotionGateway:
     def _update_page(self, page_id: str, properties: dict) -> None:
         self._request("PATCH", f"/pages/{page_id}", json={"properties": properties})
 
+    def update_metadata_properties(self, page_id: str, metadata: dict) -> None:
+        """Update verified bibliographic properties without reading or replacing page blocks."""
+        self._data_source()
+        canonical_id = str(metadata.get("canonical_id") or metadata.get("arxiv_id") or "").strip()
+        published = str(metadata.get("published") or "").strip()
+        authors = metadata.get("authors") or []
+        if not isinstance(authors, (list, tuple)):
+            authors = []
+        properties = {
+            "title": {"title": self._rich_text(str(metadata.get("title") or "").strip())},
+            "arxiv_id": {"rich_text": self._rich_text(canonical_id)},
+            "year": {"select": {"name": published[:4] if len(published) >= 4 else ""}},
+            "authors": {
+                "rich_text": self._rich_text(", ".join(str(author).strip() for author in authors if str(author).strip()))
+            },
+            "published": {"rich_text": self._rich_text(published)},
+            "updated": {"rich_text": self._rich_text(str(metadata.get("updated") or "").strip())},
+        }
+        properties = {
+            key: value
+            for key, value in properties.items()
+            if key in (self._property_names or set())
+            and not (
+                (key == "year" and not value["select"]["name"])
+                or (key != "year" and not next(iter(value.values())))
+            )
+        }
+        if not properties:
+            raise ExternalServiceError(
+                "notion_schema_mismatch",
+                "Notion database has no supported metadata properties.",
+                service="notion",
+            )
+        self._update_page(page_id, properties)
+
     def _snapshot_markdown(self, page_id: str) -> str:
         result = self._request("GET", f"/pages/{page_id}/markdown")
         return str(result.get("markdown") or result.get("content") or "")

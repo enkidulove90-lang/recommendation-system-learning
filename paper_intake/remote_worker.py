@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import mimetypes
 import logging
+import json
 import os
 import socket
 import threading
@@ -11,6 +12,7 @@ from typing import Any
 
 from .models import JobStatus, StepName, StepStatus
 from .remote import LeaseLost, RemoteGatewayClient, RemoteJob
+from .metadata_refresh import refresh_metadata_file
 
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,7 @@ class RemoteWorker:
         heartbeat_seconds: float = 30,
         preflight=None,
         preflight_interval_seconds: float = 60,
+        metadata_refresher=None,
     ):
         self.gateway = gateway
         self.processor = processor
@@ -47,6 +50,7 @@ class RemoteWorker:
         self.heartbeat_seconds = max(0.05, heartbeat_seconds)
         self.preflight = preflight
         self.preflight_interval_seconds = max(0.0, preflight_interval_seconds)
+        self.metadata_refresher = metadata_refresher
         self._last_preflight = 0.0
         self._preflight_error: Exception | None = None
         self._stop = threading.Event()
@@ -101,6 +105,11 @@ class RemoteWorker:
             thread.join(timeout=2)
 
     def run_once(self) -> bool:
+        if self.metadata_refresher is not None:
+            operation = self.gateway.claim_metadata_refresh(self.worker_id)
+            if operation is not None:
+                self.metadata_refresher.process(operation, self.gateway)
+                return True
         now = time.monotonic()
         if self.preflight is not None:
             due = (
@@ -135,6 +144,67 @@ class RemoteWorker:
                 handled = False
             if not handled:
                 self._stop.wait(self.poll_seconds)
+
+
+class PublishedMetadataRefresher:
+    """Repairs bibliographic fields for published pages without rerunning their body pipeline."""
+
+    def __init__(self, *, workflow_root: str | Path, notion, metadata_resolver):
+        self.workflow_root = Path(workflow_root)
+        self.notion = notion
+        self.metadata_resolver = metadata_resolver
+
+    def process(self, operation, gateway) -> None:
+        metadata_path: Path | None = None
+        original: bytes | None = None
+        existed = False
+        try:
+            bundle = self.workflow_root / operation.job_id
+            bundle.mkdir(parents=True, exist_ok=True)
+            metadata_path = bundle / "metadata.json"
+            existed = metadata_path.is_file()
+            if existed:
+                original = metadata_path.read_bytes()
+            if not metadata_path.is_file():
+                metadata_path.write_text(
+                    json.dumps(
+                        {
+                            "canonical_id": operation.arxiv_id,
+                            "title": operation.arxiv_id,
+                            "authors": [],
+                            "paper_url": operation.input_ref,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+            refresh = refresh_metadata_file(
+                metadata_path,
+                canonical_id=operation.arxiv_id,
+                source_url=operation.input_ref,
+                resolver=self.metadata_resolver,
+            )
+            if refresh.changed:
+                self.notion.update_metadata_properties(operation.notion_page_id, refresh.metadata)
+            gateway.complete_metadata_refresh(
+                operation.idempotency_key,
+                operation.lease_owner,
+                {"changed": refresh.changed, "metadata": refresh.metadata},
+            )
+        except Exception as exc:
+            if metadata_path is not None:
+                if existed and original is not None:
+                    metadata_path.write_bytes(original)
+                elif metadata_path.exists():
+                    metadata_path.unlink()
+            gateway.fail_metadata_refresh(
+                operation.idempotency_key,
+                operation.lease_owner,
+                "metadata_refresh_failed",
+                "Published metadata refresh failed. Inspect local logs for details.",
+            )
+            raise
 
 
 class RemotePipelineProcessor:
@@ -358,6 +428,11 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         workflow_root=workflow_root,
         metadata_resolver=ArxivMetadataResolver(),
     )
+    metadata_refresher = PublishedMetadataRefresher(
+        workflow_root=workflow_root,
+        notion=notion,
+        metadata_resolver=ArxivMetadataResolver(),
+    )
     processor = RemotePipelineProcessor(
         repository=repository,
         input_store=input_store,
@@ -376,6 +451,7 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         heartbeat_seconds=float(os.getenv("PAPER_INTAKE_HEARTBEAT_SECONDS", "30")),
         preflight=lambda: (deepseek.preflight(), notion.preflight_schema()),
         preflight_interval_seconds=float(os.getenv("PAPER_INTAKE_PREFLIGHT_SECONDS", "60")),
+        metadata_refresher=metadata_refresher,
     )
     worker.repository = repository
     return worker
