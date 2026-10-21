@@ -266,8 +266,13 @@ class PaperPipeline:
         bundle = self._bundle(job_id)
         metadata_path = bundle / "metadata.json"
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-        if metadata.get("metadata_source") == "fallback":
-            job = self._job(job_id)
+        job = self._job(job_id)
+        legacy_fallback = (
+            not metadata.get("metadata_source")
+            and str(metadata.get("title", "")).strip() == str(job.canonical_id or "").strip()
+            and not metadata.get("authors")
+        )
+        if metadata.get("metadata_source") == "fallback" or legacy_fallback:
             refreshed = self.metadata_resolver(job.canonical_id, job.source_url) or {}
             if refreshed.get("metadata_source") != "fallback":
                 metadata.update(refreshed)

@@ -223,7 +223,9 @@ class PaperPipelineTests(unittest.TestCase):
 
             failed = harness.pipeline.run(harness.job.job_id)
             stale = __import__("json").loads(metadata_path.read_text(encoding="utf-8"))
-            stale.update({"title": "2606.17628", "authors": [], "metadata_source": "fallback"})
+            canonical_id = harness.repo.get_job(harness.job.job_id).canonical_id
+            stale.update({"title": canonical_id, "authors": []})
+            stale.pop("metadata_source", None)
             metadata_path.write_text(
                 __import__("json").dumps(stale, ensure_ascii=False), encoding="utf-8"
             )
