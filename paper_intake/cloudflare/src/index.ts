@@ -49,7 +49,7 @@ function corsHeaders(origin: string, env: AppEnv): Headers {
   return new Headers({
     "access-control-allow-origin": allowed,
     "access-control-allow-methods": "GET,POST,OPTIONS",
-    "access-control-allow-headers": "authorization,content-type",
+    "access-control-allow-headers": "authorization,content-type,idempotency-key",
     "access-control-max-age": "600",
     vary: "Origin",
   });
@@ -442,19 +442,47 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     return ingestUrl(request, env, { identity: ownerIdentity }, requestId);
   }
 
+  const operationMatch = url.pathname.match(/^\/v1\/worker\/operations\/([^/]+)$/u);
+  if (operationMatch && request.method === "GET") {
+    const operation = await repository.getRetryOperation(operationMatch[1]);
+    if (!operation) throw new ApiError(404, "operation_not_found", "幂等操作不存在。", false);
+    const job = await repository.getJob(operation.jobId);
+    const payload = Object.keys(operation.response).length > 0
+      ? operation.response
+      : {
+          job_id: operation.jobId,
+          status: job?.status ?? "unknown",
+          code: operation.state === "completed" ? "retry_accepted" : "operation_pending",
+        };
+    return machineResponse(operation.state === "completed" ? 200 : 202, requestId, payload);
+  }
+
   const operatorRetryMatch = url.pathname.match(/^\/v1\/worker\/jobs\/([^/]+)\/retry$/u);
   if (operatorRetryMatch && request.method === "POST") {
+    const idempotencyKey = request.headers.get("idempotency-key")?.trim() ?? "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(idempotencyKey)) {
+      throw new ApiError(400, "invalid_idempotency_key", "必须提供有效的 Idempotency-Key。", false);
+    }
     const current = await repository.getJob(operatorRetryMatch[1]);
     if (!current) throw new ApiError(404, "job_not_found", "任务不存在。", false);
     try {
-      const job = await repository.retry(current.jobId, current.ownerIdentity);
-      return machineResponse(202, requestId, {
+      const { job, replayed } = await repository.retryIdempotent(
+        current.jobId,
+        current.ownerIdentity,
+        idempotencyKey,
+      );
+      const response = machineResponse(202, requestId, {
         job_id: job.jobId,
         paper_id: job.paperId,
         status: job.status,
         code: "retry_accepted",
       });
+      if (replayed) response.headers.set("idempotency-replayed", "true");
+      return response;
     } catch (error) {
+      if (error instanceof Error && error.message === "idempotency_conflict") {
+        throw new ApiError(409, "idempotency_conflict", "该 Idempotency-Key 已用于其他任务。", false);
+      }
       if (error instanceof Error && error.message === "job_not_retryable") {
         throw new ApiError(409, "job_not_retryable", "任务当前不可重试。", false);
       }
@@ -795,8 +823,16 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
     return ownerJson(200, requestId, origin, env, { job: publicJob(job), events });
   } else if (request.method === "POST" && /^\/v1\/jobs\/[^/]+\/retry$/u.test(url.pathname)) {
     const jobId = url.pathname.split("/")[3];
+    const idempotencyKey = request.headers.get("idempotency-key")?.trim() ?? "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(idempotencyKey)) {
+      throw new ApiError(400, "invalid_idempotency_key", "必须提供有效的 Idempotency-Key。", false);
+    }
     try {
-      const job = await new IntakeRepository(env.DB).retry(jobId, owner.identity);
+      const { job, replayed } = await new IntakeRepository(env.DB).retryIdempotent(
+        jobId,
+        owner.identity,
+        idempotencyKey,
+      );
       response = envelope(202, requestId, {
         paperId: job.paperId,
         jobId: job.jobId,
@@ -804,7 +840,11 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
         code: "retry_accepted",
         message: "任务已重新进入处理队列。",
       });
+      if (replayed) response.headers.set("idempotency-replayed", "true");
     } catch (error) {
+      if (error instanceof Error && error.message === "idempotency_conflict") {
+        throw new ApiError(409, "idempotency_conflict", "该 Idempotency-Key 已用于其他任务。", false);
+      }
       if (error instanceof Error && error.message === "job_not_retryable") {
         throw new ApiError(409, "job_not_retryable", "任务不存在、并非失败状态或不属于当前用户。", false);
       }

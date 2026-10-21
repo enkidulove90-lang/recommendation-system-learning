@@ -188,9 +188,123 @@ describe("remote worker API", () => {
 
     const retry = await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, {
       method: "POST",
-      headers: machineHeaders,
+      headers: { ...machineHeaders, "idempotency-key": "11111111-1111-4111-8111-111111111111" },
     });
     expect(retry.status).toBe(202);
     expect(await retry.json()).toMatchObject({ status: "queued", code: "retry_accepted" });
+  });
+
+  it("replays one retry result for the same idempotency key", async () => {
+    const job = await seedJob();
+    await claim();
+    await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/fail`, {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({ worker_id: "worker-a", error_code: "failed", error_message: "failed" }),
+    });
+    const key = "22222222-2222-4222-8222-222222222222";
+    const retry = () => SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, {
+      method: "POST",
+      headers: { ...machineHeaders, "idempotency-key": key },
+    });
+
+    const first = await retry();
+    const second = await retry();
+    const queried = await SELF.fetch(`https://worker.test/v1/worker/operations/${key}`, {
+      headers: { authorization: machineHeaders.authorization },
+    });
+
+    expect(first.status).toBe(202);
+    expect(second.status).toBe(202);
+    expect(second.headers.get("idempotency-replayed")).toBe("true");
+    expect(await queried.json()).toMatchObject({
+      job_id: job.jobId,
+      status: "queued",
+      code: "retry_accepted",
+    });
+  });
+
+  it("never starts a later retry when an old idempotency key is replayed", async () => {
+    const job = await seedJob();
+    await claim();
+    await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/fail`, {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({ worker_id: "worker-a", error_code: "failed", error_message: "failed" }),
+    });
+    const key = "77777777-7777-4777-8777-777777777777";
+    const headers = { ...machineHeaders, "idempotency-key": key };
+    await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, { method: "POST", headers });
+    await testEnv.DB.prepare(
+      "UPDATE jobs SET status = 'failed', error_code = 'later_failure' WHERE job_id = ?",
+    ).bind(job.jobId).run();
+
+    const replay = await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, {
+      method: "POST", headers,
+    });
+
+    expect(replay.status).toBe(202);
+    expect(replay.headers.get("idempotency-replayed")).toBe("true");
+    expect((await new IntakeRepository(testEnv.DB).getJob(job.jobId))?.status).toBe("failed");
+  });
+
+  it("serializes concurrent retries with one idempotency key", async () => {
+    const job = await seedJob();
+    await claim();
+    await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/fail`, {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({ worker_id: "worker-a", error_code: "failed", error_message: "failed" }),
+    });
+    const headers = {
+      ...machineHeaders,
+      "idempotency-key": "66666666-6666-4666-8666-666666666666",
+    };
+    const [first, second] = await Promise.all([
+      SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, { method: "POST", headers }),
+      SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, { method: "POST", headers }),
+    ]);
+    expect([first.status, second.status]).toEqual([202, 202]);
+    expect(
+      [first, second].filter((response) => response.headers.get("idempotency-replayed") === "true"),
+    ).toHaveLength(1);
+    const stored = await new IntakeRepository(testEnv.DB).getJob(job.jobId);
+    expect(stored?.status).toBe("queued");
+  });
+
+  it("rejects reuse of an idempotency key for another job", async () => {
+    const firstJob = await seedJob();
+    const secondJob = await seedJob();
+    for (const [index, job] of [firstJob, secondJob].entries()) {
+      const workerId = `worker-${index}`;
+      await claim(workerId);
+      await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/fail`, {
+        method: "POST",
+        headers: machineHeaders,
+        body: JSON.stringify({ worker_id: workerId, error_code: "failed", error_message: "failed" }),
+      });
+    }
+    const key = "33333333-3333-4333-8333-333333333333";
+    const headers = { ...machineHeaders, "idempotency-key": key };
+    expect((await SELF.fetch(`https://worker.test/v1/worker/jobs/${firstJob.jobId}/retry`, {
+      method: "POST", headers,
+    })).status).toBe(202);
+    expect((await SELF.fetch(`https://worker.test/v1/worker/jobs/${secondJob.jobId}/retry`, {
+      method: "POST", headers,
+    })).status).toBe(409);
+  });
+
+  it("requires a valid idempotency key and reports missing operations", async () => {
+    const job = await seedJob();
+    const missingKey = await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/retry`, {
+      method: "POST",
+      headers: machineHeaders,
+    });
+    expect(missingKey.status).toBe(400);
+    const missing = await SELF.fetch(
+      "https://worker.test/v1/worker/operations/44444444-4444-4444-8444-444444444444",
+      { headers: { authorization: machineHeaders.authorization } },
+    );
+    expect(missing.status).toBe(404);
   });
 });

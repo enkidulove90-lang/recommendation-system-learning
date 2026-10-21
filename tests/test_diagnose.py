@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import requests
@@ -10,6 +14,20 @@ from scripts.paper_intake_diagnose import http_check, make_http_session, process
 
 
 class DiagnoseTests(unittest.TestCase):
+    def test_cli_scripts_import_project_modules_outside_repository_cwd(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as cwd:
+            for relative in ("scripts/paper_intake_diagnose.py", "scripts/paper_retry_job.py"):
+                completed = subprocess.run(
+                    [sys.executable, str(root / relative), "--help"],
+                    cwd=cwd,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+
     def test_current_process_is_reported_alive(self):
         self.assertTrue(process_alive(os.getpid()))
 

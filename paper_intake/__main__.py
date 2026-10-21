@@ -4,6 +4,10 @@ import argparse
 import logging
 import os
 
+from .control_client import sanitize_proxy_environment
+
+sanitize_proxy_environment()
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Local single-paper intake control desk")
@@ -54,6 +58,8 @@ def remote_worker_command() -> int:
     client = RemoteGatewayClient(
         required["PAPER_INTAKE_API_BASE"],
         required["PAPER_INTAKE_WORKER_TOKEN"],
+        network_mode=os.getenv("PAPER_INTAKE_NETWORK_MODE", "direct"),
+        proxy_url=os.getenv("PAPER_INTAKE_PROXY_URL", ""),
     )
     worker = build_remote_worker(client)
     try:

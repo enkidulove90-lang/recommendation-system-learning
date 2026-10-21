@@ -104,9 +104,10 @@ describe("paper intake API", () => {
       "UPDATE jobs SET status = 'failed', error_code = 'parse_failed', error_message = '解析失败' WHERE job_id = ?",
     ).bind(submitted.job_id).run();
 
+    const idempotencyKey = "77777777-7777-4777-8777-777777777777";
     const response = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/retry`, {
       method: "POST",
-      headers: { authorization: await authorization(), origin },
+      headers: { authorization: await authorization(), origin, "idempotency-key": idempotencyKey },
     });
     expect(response.status).toBe(202);
     expect(await response.json<Record<string, unknown>>()).toMatchObject({
@@ -117,10 +118,11 @@ describe("paper intake API", () => {
 
     const second = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/retry`, {
       method: "POST",
-      headers: { authorization: await authorization(), origin },
+      headers: { authorization: await authorization(), origin, "idempotency-key": idempotencyKey },
     });
-    expect(second.status).toBe(409);
-    expect((await second.json<{ code: string }>()).code).toBe("job_not_retryable");
+    expect(second.status).toBe(202);
+    expect(second.headers.get("idempotency-replayed")).toBe("true");
+    expect((await second.json<{ code: string }>()).code).toBe("retry_accepted");
   });
 
   it("rejects non-PDF bodies before writing R2", async () => {

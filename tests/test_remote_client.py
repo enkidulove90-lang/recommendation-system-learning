@@ -13,13 +13,38 @@ class RemoteGatewayClientTests(unittest.TestCase):
     def test_default_client_ignores_inherited_proxy_environment(self):
         client = MagicMock()
         client.headers = {}
-        with patch("paper_intake.remote.httpx.Client", return_value=client) as factory:
+        inherited = {
+            "HTTP_PROXY": "http://stale:7890",
+            "https_proxy": "http://stale:7890",
+            "ALL_PROXY": "http://stale:7890",
+        }
+        with patch.dict("os.environ", inherited, clear=False), patch(
+            "paper_intake.remote.httpx.Client", return_value=client
+        ) as factory:
             RemoteGatewayClient("https://gateway.test", "machine-secret")
+            self.assertTrue(all(name not in __import__("os").environ for name in inherited))
 
         factory.assert_called_once_with(
             base_url="https://gateway.test",
-            timeout=120,
+            timeout=httpx.Timeout(connect=8, read=120, write=120, pool=8),
             trust_env=False,
+        )
+
+    def test_proxy_mode_is_explicit(self):
+        client = MagicMock()
+        client.headers = {}
+        with patch("paper_intake.remote.httpx.Client", return_value=client) as factory:
+            RemoteGatewayClient(
+                "https://gateway.test",
+                "machine-secret",
+                network_mode="proxy",
+                proxy_url="http://127.0.0.1:7890",
+            )
+        factory.assert_called_once_with(
+            base_url="https://gateway.test",
+            timeout=httpx.Timeout(connect=8, read=120, write=120, pool=8),
+            trust_env=False,
+            proxy="http://127.0.0.1:7890",
         )
 
     def test_claim_parses_nested_job_and_uses_machine_token(self):

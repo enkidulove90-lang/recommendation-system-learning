@@ -264,7 +264,17 @@ class PaperPipeline:
 
     def _step_deepseek_generate(self, job_id: str) -> dict[str, Any]:
         bundle = self._bundle(job_id)
-        metadata = json.loads((bundle / "metadata.json").read_text(encoding="utf-8"))
+        metadata_path = bundle / "metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        if metadata.get("metadata_source") == "fallback":
+            job = self._job(job_id)
+            refreshed = self.metadata_resolver(job.canonical_id, job.source_url) or {}
+            if refreshed.get("metadata_source") != "fallback":
+                metadata.update(refreshed)
+                metadata_path.write_text(
+                    json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+                self.repository.update_job(job_id, title=str(metadata["title"]))
         parse_step = self.repository.get_step(job_id, StepName.MINERU_PARSE)
         if parse_step is None or parse_step.status != StepStatus.SUCCEEDED:
             raise PipelineFailure("mineru_output_missing", "MinerU output is not available.")

@@ -8,6 +8,8 @@ from typing import Any, Literal
 import httpx
 from pydantic import BaseModel, Field
 
+from .control_client import sanitize_proxy_environment
+
 
 class LeaseLost(RuntimeError):
     """Raised when Cloudflare no longer recognizes this worker's lease."""
@@ -40,16 +42,27 @@ class RemoteGatewayClient:
         *,
         client: httpx.Client | None = None,
         max_attempts: int = 3,
+        network_mode: str = "direct",
+        proxy_url: str = "",
     ):
         self.base_url = base_url.rstrip("/")
         # The worker talks to one public Cloudflare endpoint directly. Ignoring
         # inherited proxy variables prevents stale desktop proxy settings from
         # terminating CONNECT tunnels during TLS negotiation.
-        self.client = client or httpx.Client(
-            base_url=self.base_url,
-            timeout=120,
-            trust_env=False,
-        )
+        sanitize_proxy_environment()
+        client_options: dict[str, Any] = {
+            "base_url": self.base_url,
+            "timeout": httpx.Timeout(connect=8, read=120, write=120, pool=8),
+            "trust_env": False,
+        }
+        normalized_mode = network_mode.strip().lower()
+        if normalized_mode == "proxy":
+            if not proxy_url.strip():
+                raise ValueError("PAPER_INTAKE_PROXY_URL is required in proxy mode")
+            client_options["proxy"] = proxy_url.strip()
+        elif normalized_mode != "direct":
+            raise ValueError("PAPER_INTAKE_NETWORK_MODE must be direct or proxy")
+        self.client = client or httpx.Client(**client_options)
         self.client.headers["Authorization"] = f"Bearer {token}"
         self.max_attempts = max(1, max_attempts)
 

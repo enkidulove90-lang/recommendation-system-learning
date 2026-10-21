@@ -36,9 +36,11 @@ class _FakeDeepSeek:
     def __init__(self, *, fail_once: bool = False):
         self.calls = 0
         self.fail_once = fail_once
+        self.metadata_history = []
 
     def generate(self, *, markdown: str, metadata: dict, figures: list[dict], failure_path=None) -> PaperArticle:
         self.calls += 1
+        self.metadata_history.append(dict(metadata))
         if self.fail_once and self.calls == 1:
             raise ExternalServiceError("deepseek_timeout", "DeepSeek request timed out.")
         article_figures = []
@@ -200,6 +202,45 @@ class PaperPipelineTests(unittest.TestCase):
             self.assertEqual(harness.deepseek.calls, 2)
             deepseek_step = harness.repo.get_step(harness.job.job_id, StepName.DEEPSEEK_GENERATE)
             self.assertEqual(deepseek_step.attempts, 2)
+        finally:
+            harness.close()
+
+    def test_retry_refreshes_fallback_metadata_without_repeating_mineru(self) -> None:
+        harness = PipelineHarness(self.root, fail_once=True)
+        try:
+            metadata_path = harness.pipeline._bundle(harness.job.job_id) / "metadata.json"
+            refreshed_calls = []
+
+            def resolver(canonical_id, source_url):
+                refreshed_calls.append((canonical_id, source_url))
+                return {
+                    "canonical_id": canonical_id,
+                    "title": "OPD-Evolver: Cultivating Holistic Agent Evolver via On-Policy Distillation",
+                    "authors": ["ByteDance Seed"],
+                    "paper_url": f"https://arxiv.org/abs/{canonical_id}",
+                    "metadata_source": "arxiv",
+                }
+
+            failed = harness.pipeline.run(harness.job.job_id)
+            stale = __import__("json").loads(metadata_path.read_text(encoding="utf-8"))
+            stale.update({"title": "2606.17628", "authors": [], "metadata_source": "fallback"})
+            metadata_path.write_text(
+                __import__("json").dumps(stale, ensure_ascii=False), encoding="utf-8"
+            )
+            harness.pipeline.metadata_resolver = resolver
+
+            retried = harness.pipeline.retry(harness.job.job_id)
+
+            self.assertEqual(failed.status, JobStatus.FAILED)
+            self.assertEqual(retried.status, JobStatus.PUBLISHING)
+            self.assertEqual(harness.mineru.calls, 1)
+            self.assertEqual(len(refreshed_calls), 1)
+            self.assertEqual(
+                harness.deepseek.metadata_history[-1]["title"],
+                "OPD-Evolver: Cultivating Holistic Agent Evolver via On-Policy Distillation",
+            )
+            refreshed = __import__("json").loads(metadata_path.read_text(encoding="utf-8"))
+            self.assertEqual(refreshed["metadata_source"], "arxiv")
         finally:
             harness.close()
 

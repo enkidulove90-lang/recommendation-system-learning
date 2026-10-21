@@ -14,11 +14,15 @@ from typing import Any
 import requests
 from dotenv import dotenv_values
 
-os.environ.pop("HTTP_PROXY", None)
-os.environ.pop("HTTPS_PROXY", None)
-
-
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from paper_intake.control_client import build_control_session, sanitize_proxy_environment
+
+sanitize_proxy_environment()
+
+
 RUNTIME = ROOT / ".paper-work"
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -33,9 +37,10 @@ class Check:
 
 
 def make_http_session() -> requests.Session:
-    session = requests.Session()
-    session.trust_env = False
-    return session
+    return build_control_session(
+        mode=os.getenv("PAPER_INTAKE_NETWORK_MODE", "direct"),
+        proxy_url=os.getenv("PAPER_INTAKE_PROXY_URL", ""),
+    )
 
 
 def config() -> dict[str, str]:

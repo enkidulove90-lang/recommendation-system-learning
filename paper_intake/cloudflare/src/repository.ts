@@ -51,6 +51,24 @@ interface ArtifactRow {
   created_at: string;
 }
 
+interface RetryOperationRow {
+  idempotency_key: string;
+  job_id: string;
+  state: "pending" | "completed";
+  response_json: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RetryOperationRecord {
+  idempotencyKey: string;
+  jobId: string;
+  state: "pending" | "completed";
+  response: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 function optional(value: string | undefined): string | null {
   const normalized = value?.trim();
   return normalized ? normalized : null;
@@ -96,6 +114,17 @@ function mapJob(row: JobRow): JobRecord {
     checkpoints: parseCheckpoints(row.checkpoint_json),
     errorCode: row.error_code,
     errorMessage: row.error_message,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapRetryOperation(row: RetryOperationRow): RetryOperationRecord {
+  return {
+    idempotencyKey: row.idempotency_key,
+    jobId: row.job_id,
+    state: row.state,
+    response: parseCheckpoints(row.response_json),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -369,6 +398,66 @@ export class IntakeRepository {
       .run();
     if (result.meta.changes !== 1) throw new Error("job_not_retryable");
     return this.requireJob(jobId);
+  }
+
+  async getRetryOperation(idempotencyKey: string): Promise<RetryOperationRecord | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM retry_operations WHERE idempotency_key = ? LIMIT 1")
+      .bind(idempotencyKey)
+      .first<RetryOperationRow>();
+    return row ? mapRetryOperation(row) : null;
+  }
+
+  async retryIdempotent(
+    jobId: string,
+    ownerIdentity: string,
+    idempotencyKey: string,
+  ): Promise<{ job: JobRecord; replayed: boolean }> {
+    const existing = await this.getRetryOperation(idempotencyKey);
+    if (existing && existing.jobId !== jobId) throw new Error("idempotency_conflict");
+    if (existing) {
+      const current = await this.requireJob(jobId);
+      const cachedStatus = String(existing.response.status ?? "");
+      const replay = cachedStatus
+        ? { ...current, status: cachedStatus as JobRecord["status"] }
+        : current;
+      return { job: replay, replayed: true };
+    }
+    const current = await this.requireJob(jobId);
+    if (current.ownerIdentity !== ownerIdentity || current.status !== "failed") {
+      throw new Error("job_not_retryable");
+    }
+    const timestamp = this.timestamp();
+    const results = await this.db.batch([
+      this.db.prepare(
+        `INSERT OR IGNORE INTO retry_operations (
+          idempotency_key, job_id, operation, state, response_json, created_at, updated_at
+        ) VALUES (?, ?, 'retry', 'pending', '{}', ?, ?)`,
+      ).bind(idempotencyKey, jobId, timestamp, timestamp),
+      this.db.prepare(
+        `UPDATE jobs SET status = 'queued', lease_owner = NULL, lease_until = NULL,
+          error_code = NULL, error_message = NULL, updated_at = ?
+         WHERE job_id = ? AND owner_identity = ? AND status = 'failed'`,
+      ).bind(timestamp, jobId, ownerIdentity),
+    ]);
+    const operation = await this.getRetryOperation(idempotencyKey);
+    if (!operation || operation.jobId !== jobId) throw new Error("idempotency_conflict");
+    const job = await this.requireJob(jobId);
+    const changed = Number(results[1].meta.changes) === 1;
+    if (!changed && job.status !== "queued" && job.status !== "processing") {
+      throw new Error("job_not_retryable");
+    }
+    const response = {
+      job_id: job.jobId,
+      paper_id: job.paperId,
+      status: job.status,
+      code: "retry_accepted",
+    };
+    await this.db.prepare(
+      `UPDATE retry_operations SET state = 'completed', response_json = ?, updated_at = ?
+       WHERE idempotency_key = ?`,
+    ).bind(JSON.stringify(response), this.timestamp(), idempotencyKey).run();
+    return { job, replayed: !changed };
   }
 
   async listOwnerJobs(ownerIdentity: string, limit = 100): Promise<JobRecord[]> {
