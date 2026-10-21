@@ -12,6 +12,7 @@ from typing import Any
 import requests
 
 from .article import PaperArticle, parse_article_payload
+from .retry import request_with_retry
 
 
 NOTION_API = "https://api.notion.com/v1"
@@ -21,9 +22,20 @@ _IMAGE_LINE = re.compile(r"^!\[([^]]*)\]\(([^)]+)\)$")
 
 
 class ExternalServiceError(RuntimeError):
-    def __init__(self, code: str, message: str):
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        *,
+        service: str = "",
+        http_status: int | None = None,
+        retryable: bool = False,
+    ):
         super().__init__(message)
         self.code = code
+        self.service = service
+        self.http_status = http_status
+        self.retryable = retryable
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +53,11 @@ class NotionDraft:
     summary: str
     markdown: str
     figure_paths: tuple[Path, ...] = ()
+    categories: tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
+    year: str = ""
+    venue_type: str = ""
+    venue_name: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,11 +86,9 @@ class MinerUAdapter:
     def parse(self, pdf_path: str | Path, *, canonical_id: str, title: str = "") -> ParseResult:
         path = Path(pdf_path)
         try:
-            result = self.parser.execute(
-                pdf_path=str(path),
-                arxiv_id=canonical_id,
-                title=title,
-            )
+            result = request_with_retry(lambda: self.parser.execute(
+                pdf_path=str(path), arxiv_id=canonical_id, title=title,
+            ))
         except Exception as exc:
             raise ExternalServiceError("mineru_request_failed", "MinerU request failed.") from exc
         if result.get("error"):
@@ -100,6 +115,7 @@ class DeepSeekArticleAdapter:
         model: str = "deepseek-chat",
         base_url: str = "https://api.deepseek.com",
         client=None,
+        preflight_transport=None,
     ):
         if not api_key:
             raise ValueError("DeepSeek API key is required")
@@ -109,6 +125,48 @@ class DeepSeekArticleAdapter:
             client = OpenAI(api_key=api_key, base_url=base_url)
         self.client = client
         self.model = model
+        self.preflight_transport = preflight_transport or _RequestsTransport(
+            base_url=base_url,
+            headers={"Authorization": f"Bearer {api_key}"},
+        )
+
+    def preflight(self) -> dict[str, Any]:
+        """Verify credential reachability and usable account balance."""
+        try:
+            payload = self.preflight_transport.request("GET", "/user/balance")
+        except requests.RequestException as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            if status in {401, 403}:
+                code, retryable = "deepseek_auth_rejected", False
+            elif status == 402:
+                code, retryable = "deepseek_balance_low", False
+            elif status == 429:
+                code, retryable = "deepseek_rate_limited", True
+            else:
+                code, retryable = "deepseek_unreachable", True
+            raise ExternalServiceError(
+                code,
+                "DeepSeek preflight failed.",
+                service="deepseek",
+                http_status=status,
+                retryable=retryable,
+            ) from exc
+        except ExternalServiceError:
+            raise
+        except Exception as exc:
+            raise ExternalServiceError(
+                "deepseek_unreachable",
+                "DeepSeek preflight failed.",
+                service="deepseek",
+                retryable=True,
+            ) from exc
+        if payload.get("is_available") is not True:
+            raise ExternalServiceError(
+                "deepseek_balance_low",
+                "DeepSeek balance is unavailable.",
+                service="deepseek",
+            )
+        return payload
 
     def generate(
         self,
@@ -130,7 +188,7 @@ class DeepSeekArticleAdapter:
             },
         }
         try:
-            response = self.client.chat.completions.create(
+            response = request_with_retry(lambda: self.client.chat.completions.create(
                 model=self.model,
                 response_format={"type": "json_object"},
                 temperature=0.1,
@@ -144,7 +202,7 @@ class DeepSeekArticleAdapter:
                     },
                     {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
                 ],
-            )
+            ))
             raw = response.choices[0].message.content or ""
             return parse_article_payload(raw)
         except ExternalServiceError:
@@ -164,6 +222,7 @@ class _RequestsTransport:
         self.base_url = base_url
         self.headers = headers
         self.session = requests.Session()
+        self.session.trust_env = False
 
     def request(self, method: str, path: str, **kwargs):
         headers = dict(self.headers)
@@ -238,6 +297,22 @@ class NotionGateway:
             self._property_names = set((source.get("properties") or {}).keys())
         return self._source_id
 
+    def preflight_schema(self) -> set[str]:
+        """Fail before mutation when the publication schema is incompatible."""
+        self._data_source()
+        names = self._property_names or set()
+        # Summary and arXiv ID improve discovery, but existing databases may
+        # omit them; slug remains the stable idempotency fallback.
+        required = {"title", "status", "type", "slug"}
+        missing = sorted(required - names)
+        if missing:
+            raise ExternalServiceError(
+                "notion_schema_mismatch",
+                "Notion database is missing required properties: " + ", ".join(missing),
+                service="notion",
+            )
+        return names
+
     @staticmethod
     def _rich_text(value: str) -> list[dict]:
         return [{"type": "text", "text": {"content": value[:2000]}}] if value else []
@@ -250,6 +325,11 @@ class NotionGateway:
         summary: str,
         arxiv_id: str,
         status: str,
+        categories: tuple[str, ...] = (),
+        tags: tuple[str, ...] = (),
+        year: str = "",
+        venue_type: str = "",
+        venue_name: str = "",
     ) -> dict:
         properties = {
             "title": {"title": self._rich_text(title)},
@@ -258,6 +338,24 @@ class NotionGateway:
             "slug": {"rich_text": self._rich_text(slug)},
             "summary": {"rich_text": self._rich_text(summary)},
             "arxiv_id": {"rich_text": self._rich_text(arxiv_id)},
+            "category": {
+                "select": {"name": " / ".join(category for category in categories if category)}
+            },
+            "tags": {
+                "multi_select": [{"name": tag[:100]} for tag in tags if tag]
+            },
+            "year": {"select": {"name": year}},
+            "venue_type": {"select": {"name": venue_type}},
+            "venue_name": {"rich_text": self._rich_text(venue_name)},
+        }
+        properties = {
+            key: value
+            for key, value in properties.items()
+            if not (
+                (key in {"category", "year", "venue_type"} and not value["select"]["name"])
+                or (key == "tags" and not value["multi_select"])
+                or (key == "venue_name" and not value["rich_text"])
+            )
         }
         if self._property_names is not None:
             properties = {key: value for key, value in properties.items() if key in self._property_names}
@@ -378,6 +476,7 @@ class NotionGateway:
         return blocks
 
     def upsert_draft(self, draft: NotionDraft) -> NotionPage:
+        self.preflight_schema()
         existing = self._find_by_arxiv(draft.arxiv_id)
         properties = self._properties(
             title=draft.title,
@@ -385,6 +484,11 @@ class NotionGateway:
             summary=draft.summary,
             arxiv_id=draft.arxiv_id,
             status="Draft",
+            categories=draft.categories,
+            tags=draft.tags,
+            year=draft.year,
+            venue_type=draft.venue_type,
+            venue_name=draft.venue_name,
         )
         before = ""
         if existing:
@@ -408,6 +512,7 @@ class NotionGateway:
         return NotionPage(page_id, page_url, "Draft", before)
 
     def upsert_published(self, draft: NotionDraft) -> NotionPage:
+        self.preflight_schema()
         existing = self._find_by_arxiv(draft.arxiv_id)
         properties = self._properties(
             title=draft.title,
@@ -415,6 +520,11 @@ class NotionGateway:
             summary=draft.summary,
             arxiv_id=draft.arxiv_id,
             status="Published",
+            categories=draft.categories,
+            tags=draft.tags,
+            year=draft.year,
+            venue_type=draft.venue_type,
+            venue_name=draft.venue_name,
         )
         before = ""
         if existing:

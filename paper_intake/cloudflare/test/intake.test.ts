@@ -80,6 +80,24 @@ describe("paper intake API", () => {
     expect(JSON.stringify(job)).not.toContain("private-source.pdf");
   });
 
+  it("exports an owner-scoped task log with stage events", async () => {
+    const submitted = await submitUrl("https://papers.example/loggable-paper");
+    const repository = new (await import("../src/repository")).IntakeRepository(testEnv.DB);
+    await repository.recordJobEvent(String(submitted.job_id), "job.stage_completed", {
+      stage: "mineru_parse",
+    });
+
+    const response = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/log`, {
+      headers: { authorization: await authorization(), origin },
+    });
+    expect(response.status).toBe(200);
+    const payload = await response.json<{ job: Record<string, unknown>; events: Array<Record<string, unknown>> }>();
+    expect(payload.job).toMatchObject({ job_id: submitted.job_id, status: "queued" });
+    expect(payload.events.some((event) => event.event_type === "job.stage_completed")).toBe(true);
+    expect(JSON.stringify(payload)).not.toContain("input_ref");
+    expect(JSON.stringify(payload)).not.toContain("lease_owner");
+  });
+
   it("retries only failed jobs owned by the authenticated user", async () => {
     const submitted = await submitUrl("https://papers.example/retry-me");
     await testEnv.DB.prepare(

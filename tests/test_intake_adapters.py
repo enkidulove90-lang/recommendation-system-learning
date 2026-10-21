@@ -77,21 +77,34 @@ class _FakeDeepSeekClient:
         self.chat = SimpleNamespace(completions=_FakeDeepSeekCompletions(content))
 
 
+class _FakeBalanceTransport:
+    def __init__(self, payload):
+        self.payload = payload
+        self.calls = []
+
+    def request(self, method: str, path: str, **kwargs):
+        self.calls.append((method, path, kwargs))
+        return self.payload
+
+
 class _FakeNotionTransport:
-    def __init__(self):
+    def __init__(self, property_names=None):
         self.last_properties = {}
         self.page_exists = False
         self.created_pages = 0
         self.uploads = 0
         self.blocks = []
         self.markdown = "old remote body"
+        self.property_names = property_names or [
+            "title", "status", "type", "slug", "summary", "arxiv_id",
+            "category", "tags", "year", "venue_type", "venue_name"
+        ]
 
     def request(self, method: str, path: str, **kwargs):
         if method == "GET" and path == "/databases/database":
             return {"data_sources": [{"id": "source"}]}
         if method == "GET" and path == "/data_sources/source":
-            names = ["title", "status", "type", "slug", "summary", "arxiv_id"]
-            return {"properties": {name: {} for name in names}}
+            return {"properties": {name: {} for name in self.property_names}}
         if method == "POST" and path == "/data_sources/source/query":
             results = [{"id": "page", "url": "https://notion.so/page"}] if self.page_exists else []
             return {"results": results, "has_more": False}
@@ -173,6 +186,20 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(call["response_format"], {"type": "json_object"})
         self.assertEqual(article.paper.canonical_id, "2608.17316")
 
+    def test_deepseek_preflight_rejects_unavailable_balance(self) -> None:
+        balance = _FakeBalanceTransport({"is_available": False, "balance_infos": []})
+        adapter = DeepSeekArticleAdapter(
+            api_key="secret",
+            client=_FakeDeepSeekClient("{}"),
+            preflight_transport=balance,
+        )
+
+        with self.assertRaisesRegex(Exception, "balance") as caught:
+            adapter.preflight()
+
+        self.assertEqual(caught.exception.code, "deepseek_balance_low")
+        self.assertEqual(balance.calls[0][0:2], ("GET", "/user/balance"))
+
     def test_notion_upsert_defaults_new_article_to_draft_and_uploads_figure(self) -> None:
         transport = _FakeNotionTransport()
         gateway = NotionGateway("token", "database", transport=transport)
@@ -192,6 +219,26 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(transport.uploads, 1)
         self.assertEqual(page.page_id, "page")
         self.assertEqual(page.before_markdown, "")
+
+    def test_notion_preflight_rejects_missing_required_schema(self) -> None:
+        transport = _FakeNotionTransport(
+            property_names=["title", "status", "type", "summary", "arxiv_id"]
+        )
+        gateway = NotionGateway("token", "database", transport=transport)
+
+        with self.assertRaises(Exception) as caught:
+            gateway.preflight_schema()
+
+        self.assertEqual(caught.exception.code, "notion_schema_mismatch")
+        self.assertIn("slug", str(caught.exception))
+
+    def test_notion_preflight_allows_optional_summary_and_arxiv_id(self) -> None:
+        transport = _FakeNotionTransport(
+            property_names=["title", "status", "type", "slug"]
+        )
+        gateway = NotionGateway("token", "database", transport=transport)
+
+        self.assertEqual(gateway.preflight_schema(), {"title", "status", "type", "slug"})
 
     def test_notion_existing_page_is_snapshotted_before_update(self) -> None:
         transport = _FakeNotionTransport()
@@ -223,11 +270,30 @@ class AdapterTests(unittest.TestCase):
                 slug="paper-2608.17316",
                 summary="摘要",
                 markdown="# published body",
+                categories=("推荐系统", "生成式推荐"),
+                tags=("论文速读", "Semantic ID"),
+                year="2026",
+                venue_type="会议",
+                venue_name="RecSys 2026",
             )
         )
 
         self.assertEqual(transport.last_properties["status"]["select"]["name"], "Published")
         self.assertEqual(transport.last_properties["type"]["select"]["name"], "Post")
+        self.assertEqual(
+            transport.last_properties["category"]["select"]["name"],
+            "推荐系统 / 生成式推荐",
+        )
+        self.assertEqual(
+            [item["name"] for item in transport.last_properties["tags"]["multi_select"]],
+            ["论文速读", "Semantic ID"],
+        )
+        self.assertEqual(transport.last_properties["venue_type"]["select"]["name"], "会议")
+        self.assertEqual(transport.last_properties["year"]["select"]["name"], "2026")
+        self.assertEqual(
+            transport.last_properties["venue_name"]["rich_text"][0]["text"]["content"],
+            "RecSys 2026",
+        )
         self.assertEqual(page.status, "Published")
 
     def test_notion_approval_only_changes_status_to_published(self) -> None:

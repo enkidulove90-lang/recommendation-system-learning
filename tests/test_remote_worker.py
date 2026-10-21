@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 
 from paper_intake.remote import LeaseLost, RemoteJob
 from paper_intake.models import StepName
-from paper_intake.remote_worker import RemotePipelineProcessor, RemoteWorker
+from paper_intake.remote_worker import RemotePipelineProcessor, RemoteProcessingError, RemoteWorker
 
 
 class _FakeGateway:
@@ -16,8 +16,10 @@ class _FakeGateway:
         self.checkpoints = checkpoints or {}
         self.completed = []
         self.failed = []
+        self.claim_calls = 0
 
     def claim(self, worker_id="test-worker"):
+        self.claim_calls += 1
         return RemoteJob(
             job_id="job-1",
             paper_id="paper-1",
@@ -29,7 +31,7 @@ class _FakeGateway:
             lease_until=datetime.now(UTC) + timedelta(minutes=10),
         )
 
-    def heartbeat(self, job_id, worker_id):
+    def heartbeat(self, job_id, worker_id, stage=""):
         if not self.heartbeat_result:
             raise LeaseLost(job_id)
         return True
@@ -61,6 +63,30 @@ class _CheckpointAwareProcessor:
 
 
 class RemoteWorkerTests(unittest.TestCase):
+    def test_preflight_failure_prevents_claiming_a_job(self):
+        gateway = _FakeGateway()
+        calls = 0
+
+        def unavailable():
+            nonlocal calls
+            calls += 1
+            raise RuntimeError("deepseek balance unavailable")
+
+        runner = RemoteWorker(
+            gateway=gateway,
+            processor=_CheckpointAwareProcessor(),
+            poll_seconds=0,
+            preflight=unavailable,
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "balance unavailable"):
+            runner.run_once()
+        with self.assertRaisesRegex(RuntimeError, "balance unavailable"):
+            runner.run_once()
+
+        self.assertEqual(gateway.claim_calls, 0)
+        self.assertEqual(calls, 1)
+
     def test_url_only_job_checkpoints_without_uploading_artifacts(self):
         class Gateway:
             def __init__(self):
@@ -141,6 +167,20 @@ class RemoteWorkerTests(unittest.TestCase):
 
         self.assertEqual(gateway.failed[0][2], "processing_failed")
         self.assertNotIn("secret", gateway.failed[0][3])
+
+    def test_known_processing_failure_keeps_its_safe_stage_error(self):
+        class KnownFailureProcessor:
+            def process(self, _job, _gateway):
+                raise RemoteProcessingError("notion_request_failed", "Notion request failed.")
+
+        gateway = _FakeGateway()
+        runner = RemoteWorker(gateway=gateway, processor=KnownFailureProcessor(), poll_seconds=0)
+
+        with self.assertRaises(RemoteProcessingError):
+            runner.run_once()
+
+        self.assertEqual(gateway.failed[0][2], "notion_request_failed")
+        self.assertEqual(gateway.failed[0][3], "Notion request failed.")
 
 
 if __name__ == "__main__":

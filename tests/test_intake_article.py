@@ -31,6 +31,7 @@ def _payload(figure_path: str = "images/figure-1.png", figure_sha256: str = "") 
         "classification": {
             "categories": ["推荐系统", "多模态推荐"],
             "tags": ["论文速读", "多模态推荐"],
+            "year": "2025",
             "venue_type": "arXiv预印本",
             "venue_name": "arXiv",
         },
@@ -121,10 +122,22 @@ class PaperArticleTests(unittest.TestCase):
         self.assertEqual(normalized.categories, ["推荐系统", "论文速递"])
         self.assertIn("classification_fallback", warnings)
 
+    def test_verified_conference_name_overrides_inconsistent_preprint_alias(self) -> None:
+        payload = _payload(figure_sha256=self.figure_sha256)
+        payload["classification"]["venue_type"] = "arxiv预印本"
+        payload["classification"]["venue_name"] = "WWW'26 (The ACM Web Conference 2026)"
+        article = PaperArticle.model_validate(payload)
+
+        normalized, warnings = normalize_classification(article.classification)
+
+        self.assertEqual(normalized.venue_type, "会议")
+        self.assertIn("venue_type_corrected_from_venue", warnings)
+
     def test_markdown_has_stable_frontmatter_sections_links_and_figure(self) -> None:
         markdown = render_article_markdown(self.valid_article())
 
         self.assertIn("title: 可靠推荐模型", markdown)
+        self.assertIn("year: 2025", markdown)
         self.assertIn("categories: [推荐系统, 多模态推荐]", markdown)
         self.assertIn("## 一、研究背景与问题", markdown)
         self.assertIn("## 二、方法", markdown)

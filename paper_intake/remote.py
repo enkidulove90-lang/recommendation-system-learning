@@ -112,11 +112,14 @@ class RemoteGatewayClient:
         payload = response.json()
         return RemoteJob.model_validate(payload.get("job") or payload)
 
-    def heartbeat(self, job_id: str, worker_id: str) -> bool:
+    def heartbeat(self, job_id: str, worker_id: str, stage: str = "") -> bool:
+        payload: dict[str, Any] = {"worker_id": worker_id, "lease_seconds": 600}
+        if stage:
+            payload["stage"] = stage
         response = self._request(
             "POST",
             f"/v1/worker/jobs/{job_id}/heartbeat",
-            json={"worker_id": worker_id, "lease_seconds": 600},
+            json=payload,
         )
         self._require_success(response)
         return True

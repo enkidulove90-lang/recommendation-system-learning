@@ -10,12 +10,14 @@ from .adapters import ExternalServiceError, NotionDraft
 from .article import (
     PaperArticle,
     normalize_classification,
+    publication_year,
     render_article_markdown,
     validate_article,
 )
 from .inputs import InputValidationError, PaperInputStore, canonicalize_url, sha256_file
 from .models import JobRecord, JobStatus, StepName, StepStatus
 from .repository import JobRepository
+from .remote import LeaseLost
 
 
 class PipelineFailure(RuntimeError):
@@ -61,12 +63,15 @@ class PaperPipeline:
         self,
         job_id: str,
         *,
+        before_step: Callable[[StepName], None] | None = None,
         on_step_completed: Callable[[StepName, dict[str, Any]], None] | None = None,
     ) -> JobRecord:
         try:
             for step_name in self.PROCESSING_STEPS:
                 if self._job(job_id).status == JobStatus.CANCELLED:
                     break
+                if before_step is not None:
+                    before_step(step_name)
                 output = self._run_step(job_id, step_name)
                 if on_step_completed is not None:
                     on_step_completed(step_name, output)
@@ -86,6 +91,10 @@ class PaperPipeline:
                     error_code="",
                     error_message="",
                 )
+        except LeaseLost:
+            # Losing distributed ownership is not a paper-processing failure.
+            # The remote ledger may already have assigned this job elsewhere.
+            raise
         except Exception:
             # _run_step persists the safe failure state. Returning the job keeps the
             # web worker alive and lets the user retry from the same checkpoint.
@@ -311,6 +320,11 @@ class PaperPipeline:
                 summary=article.article.introduction[:500],
                 markdown=markdown,
                 figure_paths=figure_paths,
+                categories=tuple(article.classification.categories),
+                tags=tuple(article.classification.tags),
+                year=publication_year(article),
+                venue_type=article.classification.venue_type,
+                venue_name=article.classification.venue_name,
             )
         )
         (bundle / "notion-before.md").write_text(page.before_markdown, encoding="utf-8")

@@ -21,6 +21,24 @@ const testEnv = env as AppEnv;
 afterEach(() => vi.restoreAllMocks());
 
 describe("owner security", () => {
+  it("exposes an unauthenticated health endpoint", async () => {
+    const response = await SELF.fetch("https://worker.test/health");
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({ status: "ok" });
+  });
+
+  it("refreshes a valid owner session without GitHub OAuth", async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const token = await signSession("owner@example.com", testEnv.SESSION_SIGNING_KEY, now);
+    const response = await SELF.fetch("https://worker.test/v1/session/refresh", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, origin: "http://127.0.0.1:4322" },
+    });
+    expect(response.status).toBe(200);
+    const payload = await response.json<{ token: string }>();
+    expect((await verifySession(payload.token, testEnv.SESSION_SIGNING_KEY, now))?.sub).toBe("owner@example.com");
+  });
+
   it("fails closed when machine or callback secrets are not configured", async () => {
     const missingSecrets = {
       ...testEnv,
@@ -62,14 +80,17 @@ describe("owner security", () => {
     );
   });
 
-  it("signs short-lived sessions and rejects tampering or expiry", async () => {
+  it("keeps owner sessions for a working day and rejects tampering or expiry", async () => {
     const now = 1_800_000_000;
     const token = await signSession("owner@example.com", testEnv.SESSION_SIGNING_KEY, now);
     expect((await verifySession(token, testEnv.SESSION_SIGNING_KEY, now))?.sub).toBe(
       "owner@example.com",
     );
     expect(await verifySession(`${token}x`, testEnv.SESSION_SIGNING_KEY, now)).toBeNull();
-    expect(await verifySession(token, testEnv.SESSION_SIGNING_KEY, now + 1801)).toBeNull();
+    expect((await verifySession(token, testEnv.SESSION_SIGNING_KEY, now + 8 * 60 * 60))?.sub).toBe(
+      "owner@example.com",
+    );
+    expect(await verifySession(token, testEnv.SESSION_SIGNING_KEY, now + 12 * 60 * 60 + 1)).toBeNull();
   });
 
   it("consumes a login code exactly once", async () => {

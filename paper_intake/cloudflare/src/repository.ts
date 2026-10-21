@@ -296,16 +296,19 @@ export class IntakeRepository {
     return row ? mapJob(row) : null;
   }
 
-  async heartbeat(jobId: string, workerId: string, leaseSeconds: number): Promise<boolean> {
+  async heartbeat(jobId: string, workerId: string, leaseSeconds: number, stage = ""): Promise<boolean> {
     const now = this.timestamp();
     const leaseUntil = new Date(this.now().getTime() + leaseSeconds * 1000).toISOString();
     const result = await this.db
       .prepare(
-        `UPDATE jobs SET lease_until = ?, updated_at = ?
+        `UPDATE jobs SET lease_until = ?, stage = CASE WHEN ? <> '' THEN ? ELSE stage END, updated_at = ?
          WHERE job_id = ? AND status = 'processing' AND lease_owner = ? AND lease_until >= ?`,
       )
-      .bind(leaseUntil, now, jobId, workerId, now)
+      .bind(leaseUntil, stage, stage, now, jobId, workerId, now)
       .run();
+    if (result.meta.changes === 1 && stage) {
+      await this.recordJobEvent(jobId, "job.stage_started", { stage });
+    }
     return result.meta.changes === 1;
   }
 
@@ -333,6 +336,7 @@ export class IntakeRepository {
       .bind(stage, JSON.stringify(checkpoints), this.timestamp(), jobId, workerId)
       .run();
     if (result.meta.changes !== 1) throw new Error("lease_lost");
+    await this.recordJobEvent(jobId, "job.stage_completed", { stage });
     return this.requireJob(jobId);
   }
 
@@ -373,6 +377,29 @@ export class IntakeRepository {
       .bind(ownerIdentity, Math.max(1, Math.min(limit, 100)))
       .all<JobRow>();
     return rows.results.map(mapJob);
+  }
+
+  async getOwnerJob(jobId: string, ownerIdentity: string): Promise<JobRecord | null> {
+    const row = await this.db
+      .prepare("SELECT * FROM jobs WHERE job_id = ? AND owner_identity = ? LIMIT 1")
+      .bind(jobId, ownerIdentity)
+      .first<JobRow>();
+    return row ? mapJob(row) : null;
+  }
+
+  async listJobEvents(jobId: string): Promise<Array<Record<string, unknown>>> {
+    const rows = await this.db
+      .prepare(
+        `SELECT event_type, details_json, created_at FROM job_events
+         WHERE job_id = ? ORDER BY event_id`,
+      )
+      .bind(jobId)
+      .all<{ event_type: string; details_json: string; created_at: string }>();
+    return rows.results.map((row) => ({
+      event_type: row.event_type,
+      details: parseCheckpoints(row.details_json),
+      created_at: row.created_at,
+    }));
   }
 
   async complete(
@@ -505,7 +532,14 @@ export class IntakeRepository {
     gitCommit = "",
   ): Promise<JobRecord> {
     const current = await this.requireJob(jobId);
-    if (success && current.status === "published") return current;
+    if (current.status !== "publishing") {
+      await this.recordJobEvent(jobId, "publication.stale_callback_ignored", {
+        observed_status: current.status,
+        callback_success: success,
+        git_commit: gitCommit,
+      });
+      return current;
+    }
     const timestamp = this.timestamp();
     if (success) {
       await this.db.batch([
@@ -542,6 +576,29 @@ export class IntakeRepository {
           .bind(timestamp, jobId),
       ]);
     }
+    return this.requireJob(jobId);
+  }
+
+  async failPublicationDispatch(jobId: string, githubStatus: number): Promise<JobRecord> {
+    const timestamp = this.timestamp();
+    await this.db.batch([
+      this.db
+        .prepare("UPDATE publications SET publish_status = 'dispatch_failed' WHERE job_id = ?")
+        .bind(jobId),
+      this.db
+        .prepare(
+          `UPDATE jobs SET status = 'failed', error_code = 'github_dispatch_failed',
+            error_message = 'GitHub 构建触发失败，请检查 Cloudflare GITHUB_TOKEN 的仓库权限。',
+            updated_at = ? WHERE job_id = ? AND status = 'publishing'`,
+        )
+        .bind(timestamp, jobId),
+      this.db
+        .prepare(
+          `INSERT INTO job_events (job_id, event_type, details_json, created_at)
+           VALUES (?, 'publication.dispatch_failed', ?, ?)`,
+        )
+        .bind(jobId, JSON.stringify({ github_status: githubStatus }), timestamp),
+    ]);
     return this.requireJob(jobId);
   }
 }

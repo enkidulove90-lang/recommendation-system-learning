@@ -6,12 +6,16 @@ import os
 import sqlite3
 import subprocess
 import sys
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 import requests
 from dotenv import dotenv_values
+
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,6 +30,12 @@ class Check:
     status: str
     detail: str
     action: str = ""
+
+
+def make_http_session() -> requests.Session:
+    session = requests.Session()
+    session.trust_env = False
+    return session
 
 
 def config() -> dict[str, str]:
@@ -57,13 +67,18 @@ def config() -> dict[str, str]:
 
 def process_alive(pid: int) -> bool:
     if sys.platform == "win32":
-        result = subprocess.run(
-            ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
-            capture_output=True,
-            text=True,
-            check=False,
+        import ctypes
+
+        process_query_limited_information = 0x1000
+        handle = ctypes.windll.kernel32.OpenProcess(
+            process_query_limited_information,
+            False,
+            pid,
         )
-        return result.returncode == 0 and str(pid) in result.stdout
+        if not handle:
+            return False
+        ctypes.windll.kernel32.CloseHandle(handle)
+        return True
     try:
         os.kill(pid, 0)
         return True
@@ -81,10 +96,30 @@ def http_check(
     auth_sensitive: bool = True,
 ) -> Check:
     accepted = ok_statuses or {200}
-    try:
-        response = requests.request(method, url, headers=headers, timeout=15, allow_redirects=False)
-    except requests.RequestException as exc:
-        return Check(component, "ERROR", f"network_unreachable ({type(exc).__name__})", "检查 DNS、代理和网络连接。")
+    response = None
+    last_error: requests.RequestException | None = None
+    with make_http_session() as session:
+        for attempt in range(3):
+            try:
+                response = session.request(
+                    method,
+                    url,
+                    headers=headers,
+                    timeout=15,
+                    allow_redirects=False,
+                )
+                break
+            except requests.RequestException as exc:
+                last_error = exc
+                if attempt < 2:
+                    time.sleep(0.25 * (2**attempt))
+    if response is None:
+        return Check(
+            component,
+            "ERROR",
+            f"network_unreachable ({type(last_error).__name__})",
+            "检查 DNS、代理和网络连接。",
+        )
     if response.status_code in accepted:
         return Check(component, "OK", f"HTTP {response.status_code}")
     if response.status_code in {401, 403} and auth_sensitive:

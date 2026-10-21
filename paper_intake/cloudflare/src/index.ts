@@ -426,7 +426,7 @@ async function dispatchPublication(
     }),
   });
   if (!response.ok) {
-    await repository.finishPublication(jobId, false);
+    await repository.failPublicationDispatch(jobId, response.status);
     throw new ApiError(502, "github_dispatch_failed", "GitHub Pages 构建触发失败。", true);
   }
   await repository.recordJobEvent(jobId, "publication.dispatched", { status: response.status });
@@ -522,10 +522,12 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     const body = await readJsonObject(request);
     const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
     const requestedLease = typeof body.lease_seconds === "number" ? body.lease_seconds : 600;
+    const stage = typeof body.stage === "string" ? body.stage.slice(0, 100) : "";
     const renewed = await repository.heartbeat(
       heartbeatMatch[1],
       workerId,
       Math.max(60, Math.min(900, Math.floor(requestedLease))),
+      stage,
     );
     if (!renewed) throw new ApiError(409, "lease_lost", "任务租约已经失效，请停止当前处理。", true);
     return machineResponse(200, requestId, { job_id: heartbeatMatch[1], status: "processing" });
@@ -696,6 +698,12 @@ async function routePublicationCallback(
 
 async function route(request: Request, env: AppEnv, requestId: string): Promise<Response> {
   const url = new URL(request.url);
+  if (url.pathname === "/health" && request.method === "GET") {
+    return new Response(JSON.stringify({ status: "ok", service: "paper-intake-gateway" }), {
+      status: 200,
+      headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+    });
+  }
   if (url.pathname.startsWith("/v1/worker/")) {
     return routeWorker(request, env, requestId, url);
   }
@@ -766,6 +774,10 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
   }
 
   const owner = await requireOwner(request, env);
+  if (url.pathname === "/v1/session/refresh" && request.method === "POST") {
+    const token = await signSession(owner.identity, env.SESSION_SIGNING_KEY, Math.floor(Date.now() / 1000));
+    return ownerJson(200, requestId, origin, env, { token, status: "authenticated" });
+  }
   let response: Response;
   if (url.pathname === "/v1/intake/url" && request.method === "POST") {
     response = await ingestUrl(request, env, owner, requestId);
@@ -774,6 +786,13 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
   } else if (url.pathname === "/v1/jobs" && request.method === "GET") {
     const jobs = await new IntakeRepository(env.DB).listOwnerJobs(owner.identity);
     return ownerJson(200, requestId, origin, env, { jobs: jobs.map(publicJob) });
+  } else if (request.method === "GET" && /^\/v1\/jobs\/[^/]+\/log$/u.test(url.pathname)) {
+    const jobId = url.pathname.split("/")[3];
+    const repository = new IntakeRepository(env.DB);
+    const job = await repository.getOwnerJob(jobId, owner.identity);
+    if (!job) throw new ApiError(404, "job_not_found", "任务不存在。", false);
+    const events = await repository.listJobEvents(jobId);
+    return ownerJson(200, requestId, origin, env, { job: publicJob(job), events });
   } else if (request.method === "POST" && /^\/v1\/jobs\/[^/]+\/retry$/u.test(url.pathname)) {
     const jobId = url.pathname.split("/")[3];
     try {

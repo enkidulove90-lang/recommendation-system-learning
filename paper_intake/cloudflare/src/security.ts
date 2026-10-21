@@ -73,7 +73,7 @@ export function assertOrigin(origin: string | null, env: AppEnv): string {
 
 export async function signSession(identity: string, key: string, now: number): Promise<string> {
   const payload = bytesToBase64Url(
-    encoder.encode(JSON.stringify({ sub: identity, exp: now + 1800 } satisfies SessionClaims)),
+    encoder.encode(JSON.stringify({ sub: identity, exp: now + 12 * 60 * 60 } satisfies SessionClaims)),
   );
   const signature = await crypto.subtle.sign("HMAC", await importHmacKey(key), encoder.encode(payload));
   return `${payload}.${bytesToBase64Url(new Uint8Array(signature))}`;

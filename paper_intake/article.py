@@ -52,6 +52,7 @@ class Classification(BaseModel):
 
     categories: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
+    year: str = ""
     venue_type: str = "arXiv预印本"
     venue_name: str = ""
 
@@ -129,7 +130,23 @@ def normalize_classification(classification: Classification) -> tuple[Classifica
     tags = list(dict.fromkeys(tag for tag in classification.tags if tag))
     if "论文速读" not in tags:
         tags.insert(0, "论文速读")
-    venue_type = classification.venue_type
+    venue_aliases = {
+        "arxiv预印本": "arXiv预印本",
+        "arxiv": "arXiv预印本",
+        "会议论文": "会议",
+        "期刊论文": "期刊",
+    }
+    venue_type = venue_aliases.get(classification.venue_type.casefold(), classification.venue_type)
+    venue_name = classification.venue_name or ""
+    conference_name = re.search(
+        r"\b(?:ACL|KDD|WWW|SIGIR|RECSYS|ICML|ICLR|WSDM|CIKM|ICDE|UMAP|NEURIPS|AAAI|IJCAI)\b|ACM\s+MM|WEB\s+CONFERENCE",
+        venue_name,
+        re.I,
+    )
+    journal_name = re.search(r"\b(?:JOURNAL|TRANSACTIONS|TORS|TOIS)\b|期刊", venue_name, re.I)
+    if venue_type == "arXiv预印本" and (conference_name or journal_name):
+        venue_type = "会议" if conference_name else "期刊"
+        warnings.append("venue_type_corrected_from_venue")
     if venue_type not in CONTROLLED_VENUE_TYPES:
         venue_type = "arXiv预印本"
         warnings.append("venue_type_fallback")
@@ -143,6 +160,20 @@ def normalize_classification(classification: Classification) -> tuple[Classifica
         ),
         warnings,
     )
+
+
+def publication_year(article: PaperArticle) -> str:
+    """Return the best available paper year, never the website publish year."""
+    explicit = str(article.classification.year or "").strip()
+    if re.fullmatch(r"(?:19|20)\d{2}", explicit):
+        return explicit
+    venue_year = re.search(r"(?:19|20)\d{2}", article.classification.venue_name or "")
+    if venue_year:
+        return venue_year.group(0)
+    arxiv = re.fullmatch(r"(\d{2})(?:\d{2})\.\d+(?:v\d+)?", article.paper.canonical_id or "")
+    if arxiv:
+        return str(2000 + int(arxiv.group(1)))
+    return ""
 
 
 def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> QualityResult:
@@ -218,6 +249,7 @@ def render_article_markdown(article: PaperArticle) -> str:
         f"title: {title}",
         f"slug: paper-{article.paper.canonical_id or 'draft'}",
         f"arxiv_id: {article.paper.canonical_id}",
+        f"year: {publication_year(article)}",
         f"venue_type: {classification.venue_type}",
         f"venue_name: {classification.venue_name}",
         f"categories: [{categories}]",

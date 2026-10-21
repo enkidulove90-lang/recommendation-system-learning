@@ -1,6 +1,6 @@
 param(
     [Parameter(Position = 0)]
-    [ValidateSet("start", "stop", "status", "restart")]
+    [ValidateSet("start", "stop", "status", "restart", "install-autostart", "uninstall-autostart")]
     [string]$Action = "status"
 )
 
@@ -11,6 +11,7 @@ $PidFile = Join-Path $RuntimeRoot "remote-worker.pid"
 $OutLog = Join-Path $RuntimeRoot "remote-worker.out.log"
 $ErrLog = Join-Path $RuntimeRoot "remote-worker.err.log"
 $EnvFile = Join-Path $RepoRoot ".env"
+$TaskName = "EnkiduPaperIntakeWorker"
 
 function Get-ConfiguredValue([string]$Name) {
     $value = [Environment]::GetEnvironmentVariable($Name, "Process")
@@ -112,5 +113,18 @@ switch ($Action) {
     "stop" { Stop-Worker }
     "status" { Show-Status | Out-Default }
     "restart" { Stop-Worker; Start-Worker }
+    "install-autostart" {
+        $shell = (Get-Command powershell.exe -ErrorAction Stop).Source
+        $arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$PSCommandPath`" start"
+        $taskAction = New-ScheduledTaskAction -Execute $shell -Argument $arguments -WorkingDirectory $RepoRoot
+        $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+        $settings = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit (New-TimeSpan -Days 3650)
+        Register-ScheduledTask -TaskName $TaskName -Action $taskAction -Trigger $trigger -Settings $settings -Description "Keeps the Enkidu paper intake worker available." -Force | Out-Null
+        Write-Output "AUTOSTART_INSTALLED task=$TaskName"
+    }
+    "uninstall-autostart" {
+        Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
+        Write-Output "AUTOSTART_REMOVED task=$TaskName"
+    }
 }
 

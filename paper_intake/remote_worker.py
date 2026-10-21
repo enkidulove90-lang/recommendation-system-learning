@@ -15,6 +15,18 @@ from .remote import LeaseLost, RemoteGatewayClient, RemoteJob
 
 logger = logging.getLogger(__name__)
 
+# Background workers must not inherit an interactive shell proxy accidentally.
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
+
+
+class RemoteProcessingError(RuntimeError):
+    """A pipeline failure whose code and message are safe for the owner UI."""
+
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
 
 class RemoteWorker:
     def __init__(
@@ -25,12 +37,18 @@ class RemoteWorker:
         worker_id: str | None = None,
         poll_seconds: float = 10,
         heartbeat_seconds: float = 30,
+        preflight=None,
+        preflight_interval_seconds: float = 60,
     ):
         self.gateway = gateway
         self.processor = processor
         self.worker_id = worker_id or f"{socket.gethostname()}-{os.getpid()}"
         self.poll_seconds = max(0, poll_seconds)
         self.heartbeat_seconds = max(0.05, heartbeat_seconds)
+        self.preflight = preflight
+        self.preflight_interval_seconds = max(0.0, preflight_interval_seconds)
+        self._last_preflight = 0.0
+        self._preflight_error: Exception | None = None
         self._stop = threading.Event()
 
     def stop(self) -> None:
@@ -60,12 +78,17 @@ class RemoteWorker:
                 publication = self.processor.process(job, self.gateway)
             except LeaseLost:
                 raise
-            except Exception:
+            except Exception as exc:
+                code = "processing_failed"
+                message = "The local paper processor failed. Inspect local logs for details."
+                if isinstance(exc, RemoteProcessingError):
+                    code = exc.code
+                    message = str(exc)
                 self.gateway.fail(
                     job.job_id,
                     worker_id,
-                    "processing_failed",
-                    "The local paper processor failed. Inspect local logs for details.",
+                    code,
+                    message,
                 )
                 raise
             if lost_lease.is_set():
@@ -78,6 +101,22 @@ class RemoteWorker:
             thread.join(timeout=2)
 
     def run_once(self) -> bool:
+        now = time.monotonic()
+        if self.preflight is not None:
+            due = (
+                self._last_preflight == 0.0
+                or now - self._last_preflight >= self.preflight_interval_seconds
+            )
+            if due:
+                self._last_preflight = now
+                try:
+                    self.preflight()
+                except Exception as exc:
+                    self._preflight_error = exc
+                    raise
+                self._preflight_error = None
+            elif self._preflight_error is not None:
+                raise self._preflight_error
         job = self.gateway.claim(self.worker_id)
         if job is None:
             return False
@@ -258,10 +297,18 @@ class RemotePipelineProcessor:
         self._restore_remote_checkpoints(job, gateway)
         result = self.pipeline.run(
             job.job_id,
+            before_step=lambda step: gateway.heartbeat(
+                job.job_id,
+                job.lease_owner,
+                step.value,
+            ),
             on_step_completed=lambda step, output: self._sync_step(job, gateway, step, output),
         )
         if result.status != JobStatus.PUBLISHING or not result.notion_page_id:
-            raise RuntimeError("Pipeline did not produce a publishable Notion page.")
+            raise RemoteProcessingError(
+                result.error_code or "processing_failed",
+                result.error_message or "The local paper processor did not produce a publishable Notion page.",
+            )
         slug = f"paper-{result.canonical_id}"
         return {
             "notion_page_id": result.notion_page_id,
@@ -297,14 +344,15 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         max_file_bytes=int(os.getenv("PAPER_INTAKE_MAX_FILE_MB", "100")) * 1024 * 1024,
     )
     notion = NotionGateway(required["NOTION_TOKEN"], required["NOTION_DATABASE_ID"])
+    deepseek = DeepSeekArticleAdapter(
+        api_key=required["DEEPSEEK_API_KEY"],
+        model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+    )
     pipeline = PaperPipeline(
         repository=repository,
         input_store=input_store,
         mineru=MinerUAdapter(),
-        deepseek=DeepSeekArticleAdapter(
-            api_key=required["DEEPSEEK_API_KEY"],
-            model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
-        ),
+        deepseek=deepseek,
         notion=notion,
         workflow_root=workflow_root,
     )
@@ -324,6 +372,8 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         worker_id=os.getenv("PAPER_INTAKE_WORKER_ID") or None,
         poll_seconds=float(os.getenv("PAPER_INTAKE_POLL_SECONDS", "10")),
         heartbeat_seconds=float(os.getenv("PAPER_INTAKE_HEARTBEAT_SECONDS", "30")),
+        preflight=lambda: (deepseek.preflight(), notion.preflight_schema()),
+        preflight_interval_seconds=float(os.getenv("PAPER_INTAKE_PREFLIGHT_SECONDS", "60")),
     )
     worker.repository = repository
     return worker

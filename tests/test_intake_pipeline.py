@@ -10,6 +10,7 @@ from paper_intake.article import PaperArticle
 from paper_intake.inputs import PaperInputStore
 from paper_intake.models import JobStatus, StepName, StepStatus
 from paper_intake.pipeline import PaperPipeline
+from paper_intake.remote import LeaseLost
 from paper_intake.repository import JobRepository
 
 
@@ -120,6 +121,39 @@ class PipelineHarness:
 
 
 class PaperPipelineTests(unittest.TestCase):
+    def test_lease_lost_from_checkpoint_callback_is_not_swallowed(self):
+        pipeline = object.__new__(PaperPipeline)
+        pipeline.PROCESSING_STEPS = (StepName.VALIDATE_INPUT,)
+        job = type("Job", (), {"status": JobStatus.RECEIVED})()
+        pipeline._job = lambda _job_id: job
+        pipeline._run_step = lambda _job_id, _step: {}
+        pipeline.repository = type("Repository", (), {"get_job": lambda _self, _job_id: job})()
+
+        with self.assertRaises(LeaseLost):
+            pipeline.run(
+                "job-1",
+                on_step_completed=lambda _step, _output: (_ for _ in ()).throw(LeaseLost("lost")),
+            )
+
+    def test_lease_guard_stops_before_the_next_external_step(self):
+        pipeline = object.__new__(PaperPipeline)
+        pipeline.PROCESSING_STEPS = (StepName.VALIDATE_INPUT, StepName.RESOLVE_METADATA)
+        job = type("Job", (), {"status": JobStatus.RECEIVED})()
+        executed = []
+        pipeline._job = lambda _job_id: job
+        pipeline._run_step = lambda _job_id, step: executed.append(step) or {}
+        pipeline.repository = type("Repository", (), {"get_job": lambda _self, _job_id: job})()
+        guards = iter((None, LeaseLost("lost")))
+
+        with self.assertRaises(LeaseLost):
+            pipeline.run(
+                "job-1",
+                before_step=lambda _step: (_ for _ in ()).throw(error)
+                if (error := next(guards))
+                else None,
+            )
+
+        self.assertEqual(executed, [StepName.VALIDATE_INPUT])
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.temp_dir.name)

@@ -115,4 +115,77 @@ describe("publication dispatch", () => {
     expect(failed?.errorCode).toBe("deploy_failed");
     expect((await repository.retry(job.jobId, "owner@example.com")).status).toBe("queued");
   });
+
+  it("distinguishes a rejected dispatch from a failed Pages build", async () => {
+    const { repository, job } = await seedClaimedJob();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("forbidden", { status: 403 }));
+    const completion = await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/complete`, {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({
+        worker_id: "worker-a",
+        publication: {
+          notion_page_id: "notion-page-dispatch-failed",
+          slug: "dispatch-failed",
+          site_url: "https://enkidulove90-lang.github.io/article/dispatch-failed/",
+        },
+      }),
+    });
+    expect(completion.status).toBe(502);
+    const failed = await repository.getJob(job.jobId);
+    expect(failed?.errorCode).toBe("github_dispatch_failed");
+    expect(failed?.errorMessage).toContain("GITHUB_TOKEN");
+    expect(await repository.hasJobEvent(job.jobId, "publication.dispatch_failed")).toBe(true);
+  });
+
+  it("ignores a stale failed callback after publication succeeded", async () => {
+    const { repository, job } = await seedClaimedJob();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
+    await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/complete`, {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({
+        worker_id: "worker-a",
+        publication: {
+          notion_page_id: "notion-page-stale",
+          slug: "stale-callback",
+          site_url: "https://enkidulove90-lang.github.io/article/stale-callback/",
+        },
+      }),
+    });
+    await repository.finishPublication(job.jobId, true, "good-commit");
+    await repository.finishPublication(job.jobId, false);
+
+    expect((await repository.getJob(job.jobId))?.status).toBe("published");
+    const publication = await testEnv.DB.prepare(
+      "SELECT publish_status FROM publications WHERE job_id = ?",
+    ).bind(job.jobId).first<{ publish_status: string }>();
+    expect(publication?.publish_status).toBe("published");
+    expect(await repository.hasJobEvent(job.jobId, "publication.stale_callback_ignored")).toBe(true);
+  });
+
+  it("ignores a stale success callback after deployment failed", async () => {
+    const { repository, job } = await seedClaimedJob();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
+    await SELF.fetch(`https://worker.test/v1/worker/jobs/${job.jobId}/complete`, {
+      method: "POST",
+      headers: machineHeaders,
+      body: JSON.stringify({
+        worker_id: "worker-a",
+        publication: {
+          notion_page_id: "notion-page-failed",
+          slug: "failed-then-success",
+          site_url: "https://enkidulove90-lang.github.io/article/failed-then-success/",
+        },
+      }),
+    });
+    await repository.finishPublication(job.jobId, false);
+    await repository.finishPublication(job.jobId, true, "late-commit");
+
+    expect((await repository.getJob(job.jobId))?.status).toBe("failed");
+    const publication = await testEnv.DB.prepare(
+      "SELECT publish_status FROM publications WHERE job_id = ?",
+    ).bind(job.jobId).first<{ publish_status: string }>();
+    expect(publication?.publish_status).toBe("deploy_failed");
+  });
 });
