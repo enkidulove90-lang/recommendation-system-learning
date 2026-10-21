@@ -186,6 +186,29 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(call["response_format"], {"type": "json_object"})
         self.assertEqual(article.paper.canonical_id, "2608.17316")
 
+    def test_deepseek_invalid_output_is_redacted_and_saved_for_diagnosis(self) -> None:
+        secret = "sk-super-secret-value"
+        content = '{"paper":{"title":"' + secret + '"}}'
+        client = _FakeDeepSeekClient(content)
+        adapter = DeepSeekArticleAdapter(api_key="secret", client=client)
+        failure_path = self.root / "diagnostics" / "deepseek-invalid.json"
+
+        with self.assertRaises(Exception) as caught:
+            adapter.generate(
+                markdown="# Full paper",
+                metadata={"canonical_id": "2608.17316", "title": "A Paper"},
+                figures=[],
+                failure_path=failure_path,
+            )
+
+        saved_text = failure_path.read_text(encoding="utf-8")
+        saved = json.loads(saved_text)
+        self.assertEqual(caught.exception.code, "deepseek_invalid_output")
+        self.assertIn("paper.paper_url", str(caught.exception))
+        self.assertNotIn(secret, saved_text)
+        self.assertIn("[REDACTED]", saved["response"])
+        self.assertTrue(saved["validation_errors"])
+
     def test_deepseek_preflight_rejects_unavailable_balance(self) -> None:
         balance = _FakeBalanceTransport({"is_available": False, "balance_infos": []})
         adapter = DeepSeekArticleAdapter(

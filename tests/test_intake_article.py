@@ -9,6 +9,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from paper_intake.article import (
+    ArticlePayloadError,
     PaperArticle,
     normalize_classification,
     parse_article_payload,
@@ -159,6 +160,28 @@ class PaperArticleTests(unittest.TestCase):
     def test_invalid_json_is_not_silently_converted_to_article(self) -> None:
         with self.assertRaises((ValueError, ValidationError)):
             parse_article_payload("not json")
+
+    def test_payload_repairs_wrapped_json_and_trailing_commas(self) -> None:
+        raw = "Model output:\n" + json.dumps(
+            _payload(figure_sha256=self.figure_sha256), ensure_ascii=False
+        )
+        raw = raw.replace("}]}", "},],}") + "\nDone"
+
+        article = parse_article_payload(raw)
+
+        self.assertEqual(article.paper.canonical_id, "2608.17316")
+
+    def test_payload_reports_full_schema_locations_without_input(self) -> None:
+        payload = _payload(figure_sha256=self.figure_sha256)
+        del payload["paper"]["title"]
+        payload["figures"][0]["section"] = "unknown"
+
+        with self.assertRaises(ArticlePayloadError) as caught:
+            parse_article_payload(json.dumps(payload, ensure_ascii=False))
+
+        details = caught.exception.details
+        self.assertEqual([item["loc"] for item in details], ["paper.title", "figures.0.section"])
+        self.assertTrue(all("input" not in item for item in details))
 
 
 if __name__ == "__main__":

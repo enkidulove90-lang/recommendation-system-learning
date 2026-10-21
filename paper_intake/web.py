@@ -204,6 +204,7 @@ def build_default_app() -> FastAPI:
     from .adapters import DeepSeekArticleAdapter, GitHubPagesGateway, MinerUAdapter, NotionGateway
     from .inputs import PaperInputStore
     from .pipeline import PaperPipeline
+    from .metadata import ArxivMetadataResolver
     from .repository import JobRepository
     from .service import PaperIntakeService
 
@@ -246,6 +247,7 @@ def build_default_app() -> FastAPI:
         ),
         notion=notion,
         workflow_root=workflow_root,
+        metadata_resolver=ArxivMetadataResolver(),
     )
     service = PaperIntakeService(
         repository=repository,

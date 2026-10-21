@@ -275,6 +275,7 @@ class PaperPipeline:
             markdown=markdown,
             metadata=metadata,
             figures=list(parse_step.output.get("figures") or []),
+            failure_path=bundle / "diagnostics" / "deepseek-invalid-response.json",
         )
         article_path = bundle / "article.json"
         article_path.write_text(article.model_dump_json(indent=2), encoding="utf-8")

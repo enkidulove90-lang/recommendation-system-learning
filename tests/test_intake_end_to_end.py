@@ -29,7 +29,7 @@ class _MinerU:
 
 
 class _DeepSeek:
-    def generate(self, *, markdown: str, metadata: dict, figures: list[dict]):
+    def generate(self, *, markdown: str, metadata: dict, figures: list[dict], failure_path=None):
         return PaperArticle.model_validate(
             {
                 "paper": {

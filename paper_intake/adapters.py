@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import mimetypes
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -11,7 +12,7 @@ from typing import Any
 
 import requests
 
-from .article import PaperArticle, parse_article_payload
+from .article import ArticlePayloadError, PaperArticle, parse_article_payload
 from .retry import request_with_retry
 
 
@@ -174,6 +175,7 @@ class DeepSeekArticleAdapter:
         markdown: str,
         metadata: dict[str, Any],
         figures: list[dict[str, str]],
+        failure_path: str | Path | None = None,
     ) -> PaperArticle:
         trimmed = markdown[:80000]
         prompt = {
@@ -204,17 +206,54 @@ class DeepSeekArticleAdapter:
                 ],
             ))
             raw = response.choices[0].message.content or ""
-            return parse_article_payload(raw)
+            try:
+                return parse_article_payload(raw)
+            except ArticlePayloadError as exc:
+                if failure_path:
+                    self._write_failure(Path(failure_path), raw, exc.details)
+                raise
         except ExternalServiceError:
             raise
         except Exception as exc:
             if isinstance(exc, (ValueError, json.JSONDecodeError)):
                 code = "deepseek_invalid_output"
-                message = "DeepSeek returned an invalid article payload."
+                message = str(exc)
             else:
                 code = "deepseek_request_failed"
                 message = "DeepSeek request failed."
             raise ExternalServiceError(code, message) from exc
+
+    @staticmethod
+    def _write_failure(path: Path, raw: str, details: list[dict[str, str]]) -> None:
+        redacted = raw
+        for name in (
+            "DEEPSEEK_API_KEY", "NOTION_TOKEN", "GITHUB_TOKEN",
+            "PAPER_INTAKE_WORKER_TOKEN", "MINERU_API_KEY",
+        ):
+            value = os.getenv(name, "")
+            if value:
+                redacted = redacted.replace(value, "[REDACTED]")
+        redacted = re.sub(
+            r"(?i)(?:bearer\s+)?(?:sk[-_]|ntn_|ghp_|github_pat_)[A-Za-z0-9_-]{8,}",
+            "[REDACTED]",
+            redacted,
+        )
+        limit = 256 * 1024
+        payload = {
+            "response_sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+            "response_chars": len(raw),
+            "truncated": len(redacted) > limit,
+            "response": redacted[:limit],
+            "validation_errors": details,
+        }
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        try:
+            os.chmod(temporary, 0o600)
+        except OSError:
+            pass
+        temporary.replace(path)
 
 
 class _RequestsTransport:

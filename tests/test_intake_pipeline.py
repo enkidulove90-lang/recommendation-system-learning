@@ -37,7 +37,7 @@ class _FakeDeepSeek:
         self.calls = 0
         self.fail_once = fail_once
 
-    def generate(self, *, markdown: str, metadata: dict, figures: list[dict]) -> PaperArticle:
+    def generate(self, *, markdown: str, metadata: dict, figures: list[dict], failure_path=None) -> PaperArticle:
         self.calls += 1
         if self.fail_once and self.calls == 1:
             raise ExternalServiceError("deepseek_timeout", "DeepSeek request timed out.")

@@ -322,6 +322,7 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
 
     from .adapters import DeepSeekArticleAdapter, MinerUAdapter, NotionGateway
     from .inputs import PaperInputStore
+    from .metadata import ArxivMetadataResolver
     from .pipeline import PaperPipeline
     from .repository import JobRepository
 
@@ -355,6 +356,7 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         deepseek=deepseek,
         notion=notion,
         workflow_root=workflow_root,
+        metadata_resolver=ArxivMetadataResolver(),
     )
     processor = RemotePipelineProcessor(
         repository=repository,

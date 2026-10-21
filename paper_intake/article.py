@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import ValidationError
 
 
 CONTROLLED_CATEGORIES = {
@@ -27,6 +28,14 @@ CONTROLLED_CATEGORIES = {
 }
 CONTROLLED_VENUE_TYPES = {"会议", "期刊", "arXiv预印本"}
 _CJK = re.compile(r"[\u3400-\u9fff]")
+
+
+class ArticlePayloadError(ValueError):
+    """A JSON or schema error safe to persist without echoing model inputs."""
+
+    def __init__(self, message: str, details: list[dict[str, str]]):
+        super().__init__(message)
+        self.details = details
 
 
 class PaperInfo(BaseModel):
@@ -103,16 +112,64 @@ class QualityResult:
         return [issue.code for issue in self.issues]
 
 
-def parse_article_payload(raw: str) -> PaperArticle:
+def _extract_json_object(text: str) -> str:
+    start = text.find("{")
+    if start < 0:
+        return text
+    depth = 0
+    in_string = False
+    escaped = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start : index + 1]
+    return text[start:]
+
+
+def repair_json_payload(raw: str) -> str:
+    """Repair formatting only; never invent or rename semantic fields."""
     text = raw.strip()
     fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", text, flags=re.DOTALL | re.IGNORECASE)
     if fenced:
         text = fenced.group(1)
+    text = _extract_json_object(text)
+    return re.sub(r",\s*([}\]])", r"\1", text)
+
+
+def parse_article_payload(raw: str) -> PaperArticle:
+    text = repair_json_payload(raw)
     try:
         payload = json.loads(text)
     except json.JSONDecodeError as exc:
-        raise ValueError(f"DeepSeek response is not valid JSON: {exc.msg}") from exc
-    return PaperArticle.model_validate(payload)
+        details = [{"loc": "$", "type": "json_invalid", "msg": f"{exc.msg} at line {exc.lineno} column {exc.colno}"}]
+        raise ArticlePayloadError("DeepSeek response is not valid JSON.", details) from exc
+    try:
+        return PaperArticle.model_validate(payload)
+    except ValidationError as exc:
+        details = [
+            {
+                "loc": ".".join(str(part) for part in item["loc"]),
+                "type": str(item["type"]),
+                "msg": str(item["msg"]),
+            }
+            for item in exc.errors(include_url=False, include_input=False)
+        ]
+        summary = "; ".join(f"{item['loc']}: {item['msg']}" for item in details)
+        raise ArticlePayloadError(f"DeepSeek article schema validation failed: {summary}", details) from exc
 
 
 def normalize_classification(classification: Classification) -> tuple[Classification, list[str]]:
