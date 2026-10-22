@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -136,6 +137,34 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+_IMAGE_PATTERN = re.compile(r"!\[([^\]]+)\]\(([^)]+)\)")
+
+
+def assemble_site_article(existing: bytes, generated: bytes) -> bytes:
+    """Preserve route metadata and already-deployed figure URLs for one refreshed post."""
+    previous = existing.decode("utf-8").replace("\r\n", "\n")
+    refreshed = generated.decode("utf-8").replace("\r\n", "\n")
+    date_match = re.search(r"(?m)^date:\s*.+$", previous)
+    if date_match and not re.search(r"(?m)^date:\s*.+$", refreshed):
+        frontmatter_end = refreshed.find("\n---", 4)
+        if not refreshed.startswith("---\n") or frontmatter_end < 0:
+            raise ReleaseSafetyError("generated article frontmatter is invalid")
+        refreshed = refreshed[:frontmatter_end] + "\n" + date_match.group(0) + refreshed[frontmatter_end:]
+
+    prior_images = {alt.strip(): url.strip() for alt, url in _IMAGE_PATTERN.findall(previous)}
+
+    def preserve_image(match: re.Match[str]) -> str:
+        alt = match.group(1).strip()
+        url = match.group(2).strip()
+        if alt in prior_images:
+            return f"![{match.group(1)}]({prior_images[alt]})"
+        if url.startswith("/images/papers/"):
+            raise ReleaseSafetyError(f"unmapped generated site image: {alt}")
+        return match.group(0)
+
+    return _IMAGE_PATTERN.sub(preserve_image, refreshed).encode("utf-8")
+
+
 class SinglePaperReprocessor:
     """Coordinates one exact paper while preserving all upstream checkpoints."""
 
@@ -260,8 +289,12 @@ class SinglePaperReprocessor:
         quoted_slug_line = f'slug: "{plan.slug}"'.encode()
         if slug_line not in generated and quoted_slug_line not in generated:
             raise ReleaseSafetyError("generated article slug identity mismatch")
+        assembled = assemble_site_article(
+            Path(plan.site_backup_path).read_bytes(),
+            generated,
+        )
         try:
-            source_path.write_bytes(generated)
+            source_path.write_bytes(assembled)
         except Exception:
             source_path.write_bytes(Path(plan.site_backup_path).read_bytes())
             self.notion.restore(

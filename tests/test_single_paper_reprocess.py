@@ -15,6 +15,7 @@ from scripts.reprocess_single_paper import (
     NotionTarget,
     ReleaseSafetyError,
     SinglePaperReprocessor,
+    assemble_site_article,
     build_parser,
 )
 from scripts.single_paper_evidence import EvidenceRecorder
@@ -94,12 +95,18 @@ def release_fixture(tmp_path: Path):
     site_root = tmp_path / "site" / "source" / "_posts"
     site_root.mkdir(parents=True)
     source_path = site_root / "paper-2610.05432.md"
-    source_path.write_bytes(b"---\ntitle: OpticalRec\n---\nold body\n")
+    source_path.write_bytes(
+        b'---\ntitle: OpticalRec\ndate: "2026-10-22"\n---\n'
+        b'old body\n![method](/images/existing-method.png)\n'
+    )
     notion = FakeNotion(
         [NotionTarget("notion-page-1", "paper-2610.05432", b"old notion body\n")]
     )
     generated_path = tmp_path / "workflow" / job.job_id / "generated.md"
-    generated_path.write_bytes(b"---\nslug: paper-2610.05432\n---\nnew generated body\n")
+    generated_path.write_bytes(
+        b"---\nslug: paper-2610.05432\n---\nnew generated body\n"
+        b"![method](/images/papers/2610.05432/new-method.jpg)\n"
+    )
     pipeline = FakePipeline(repository, generated_path)
     coordinator = SinglePaperReprocessor(
         repository=repository,
@@ -233,7 +240,10 @@ def test_publish_requires_audited_evidence_and_reuses_mineru(
     assert result.status == JobStatus.PUBLISHING
     assert pipeline.run_calls == 1
     assert pipeline.mineru_calls == 0
-    assert _source_path.read_bytes() == pipeline.generated_path.read_bytes()
+    published = _source_path.read_text(encoding="utf-8")
+    assert 'date: "2026-10-22"' in published
+    assert "![method](/images/existing-method.png)" in published
+    assert "/images/papers/2610.05432/new-method.jpg" not in published
     assert repository.get_step("job-opticalrec", StepName.MINERU_PARSE) is not None
     assert repository.get_step("job-opticalrec", StepName.DEEPSEEK_GENERATE) is None
 
@@ -369,3 +379,31 @@ def test_cli_script_can_be_executed_directly() -> None:
 
     assert completed.returncode == 0, completed.stderr
     assert "--reuse-mineru" in completed.stdout
+
+
+def test_site_assembly_rejects_a_new_image_without_existing_alt_mapping() -> None:
+    existing = b"---\ndate: 2026-10-22\n---\nold\n"
+    generated = (
+        b"---\nslug: paper-2610.05432\n---\n"
+        b"![unknown](/images/papers/2610.05432/new.jpg)\n"
+    )
+
+    with pytest.raises(ReleaseSafetyError, match="unmapped generated site image"):
+        assemble_site_article(existing, generated)
+
+
+def test_site_assembly_accepts_windows_newlines() -> None:
+    existing = (
+        b'---\r\ntitle: OpticalRec\r\ndate: "2026-10-22"\r\n---\r\n'
+        b'![method](/images/existing-method.png)\r\n'
+    )
+    generated = (
+        b'---\r\nslug: paper-2610.05432\r\n---\r\n'
+        b'![method](/images/papers/2610.05432/new-method.jpg)\r\n'
+    )
+
+    assembled = assemble_site_article(existing, generated).decode("utf-8")
+
+    assert 'date: "2026-10-22"' in assembled
+    assert "/images/existing-method.png" in assembled
+    assert "/images/papers/2610.05432/" not in assembled
