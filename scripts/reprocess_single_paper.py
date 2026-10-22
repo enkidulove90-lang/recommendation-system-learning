@@ -3,11 +3,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Protocol, Sequence
 
-from paper_intake.models import StepName
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from paper_intake.models import JobStatus, StepName
 from scripts.single_paper_evidence import EvidenceRecorder
 
 
@@ -49,6 +55,77 @@ class NotionReleaseGateway(Protocol):
     def find_targets(self, *, canonical_id: str, slug: str) -> list[NotionTarget]: ...
 
     def restore(self, page_id: str, content: bytes) -> None: ...
+
+
+def _notion_property_text(properties: dict, name: str) -> str:
+    value = properties.get(name) or {}
+    fragments = value.get("title") or value.get("rich_text") or []
+    return "".join(
+        str(fragment.get("plain_text") or (fragment.get("text") or {}).get("content") or "")
+        for fragment in fragments
+    ).strip()
+
+
+class LiveNotionReleaseGateway:
+    """Narrow adapter exposing only exact read/restore operations for release safety."""
+
+    def __init__(self, gateway):
+        self.gateway = gateway
+        self._identities: dict[str, tuple[str, str, str]] = {}
+
+    def find_targets(self, *, canonical_id: str, slug: str) -> list[NotionTarget]:
+        source_id = self.gateway._data_source()
+        property_names = self.gateway._property_names or set()
+        if "arxiv_id" in property_names:
+            property_name, property_value = "arxiv_id", canonical_id
+        elif "slug" in property_names:
+            property_name, property_value = "slug", slug
+        else:
+            raise ReleaseSafetyError("Notion identity properties are missing")
+        response = self.gateway._request(
+            "POST",
+            f"/data_sources/{source_id}/query",
+            json={
+                "filter": {
+                    "property": property_name,
+                    "rich_text": {"equals": property_value},
+                },
+                "page_size": 3,
+            },
+        )
+        targets: list[NotionTarget] = []
+        for page in response.get("results") or []:
+            properties = page.get("properties") or {}
+            actual_slug = _notion_property_text(properties, "slug") or slug
+            title = _notion_property_text(properties, "title") or canonical_id
+            page_id = str(page.get("id") or "")
+            content = self.gateway._snapshot_markdown(page_id).encode("utf-8")
+            self._identities[page_id] = (canonical_id, actual_slug, title)
+            targets.append(NotionTarget(page_id, actual_slug, content))
+        return targets
+
+    def restore(self, page_id: str, content: bytes) -> None:
+        try:
+            canonical_id, slug, title = self._identities[page_id]
+        except KeyError as exc:
+            raise ReleaseSafetyError("Notion restore identity was not frozen") from exc
+        from paper_intake.adapters import NotionDraft
+
+        self.gateway.upsert_published(
+            NotionDraft(
+                arxiv_id=canonical_id,
+                title=title,
+                slug=slug,
+                summary="",
+                markdown=content.decode("utf-8"),
+                figure_paths=(),
+                categories=(),
+                tags=(),
+                year="",
+                venue_type="",
+                venue_name="",
+            )
+        )
 
 
 def _sha256(path: Path) -> str:
@@ -168,7 +245,31 @@ class SinglePaperReprocessor:
             restart_from=StepName.DEEPSEEK_GENERATE,
             ordered_steps=tuple(self.pipeline.PROCESSING_STEPS),
         )
-        return self.pipeline.run(plan.job_id)
+        result = self.pipeline.run(plan.job_id)
+        if result.status != JobStatus.PUBLISHING:
+            raise ReleaseSafetyError(
+                f"single-paper pipeline did not reach publishing: {result.status.value}"
+            )
+        quality = self.repository.get_step(plan.job_id, StepName.QUALITY_CHECK)
+        article_value = (quality.output if quality else {}).get("article_path")
+        article_path = Path(article_value).resolve() if article_value else None
+        if article_path is None or not article_path.is_file():
+            raise ReleaseSafetyError("generated target article is missing")
+        generated = article_path.read_bytes()
+        slug_line = f"slug: {plan.slug}".encode()
+        quoted_slug_line = f'slug: "{plan.slug}"'.encode()
+        if slug_line not in generated and quoted_slug_line not in generated:
+            raise ReleaseSafetyError("generated article slug identity mismatch")
+        try:
+            source_path.write_bytes(generated)
+        except Exception:
+            source_path.write_bytes(Path(plan.site_backup_path).read_bytes())
+            self.notion.restore(
+                plan.notion_page_id,
+                Path(plan.notion_backup_path).read_bytes(),
+            )
+            raise
+        return result
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -181,14 +282,103 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--publish", action="store_true")
     parser.add_argument("--evidence-dir", type=Path, required=True)
+    parser.add_argument("--manifest-path", type=Path)
+    parser.add_argument("--require-evidence", default="TC-01,TC-02,TC-03,TC-04,TC-05,TC-06,TC-07,TC-08,TC-09,TC-10,TC-11,TC-12,TC-13,TC-14")
+    parser.add_argument("--project-root", type=Path, default=Path(__file__).resolve().parent.parent)
+    parser.add_argument("--site-posts-root", type=Path)
     return parser
 
 
-def main() -> int:
-    build_parser().parse_args()
-    raise SystemExit(
-        "Runtime adapters must be constructed by the intake bootstrap; no mutation was attempted."
+def build_runtime(*, project_root: Path, site_posts_root: Path | None):
+    from dotenv import load_dotenv
+
+    from paper_intake.adapters import DeepSeekArticleAdapter, MinerUAdapter, NotionGateway
+    from paper_intake.inputs import PaperInputStore
+    from paper_intake.metadata import ArxivMetadataResolver
+    from paper_intake.pipeline import PaperPipeline
+    from paper_intake.repository import JobRepository
+
+    root = Path(project_root).resolve()
+    load_dotenv(root / ".env", override=False)
+    required = {
+        "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY", ""),
+        "NOTION_TOKEN": os.getenv("NOTION_TOKEN", ""),
+        "NOTION_DATABASE_ID": os.getenv("NOTION_DATABASE_ID", ""),
+    }
+    missing = [name for name, value in required.items() if not value]
+    if missing:
+        raise ReleaseSafetyError("missing release configuration: " + ", ".join(missing))
+    runtime_root = root / "data" / "paper_intake" / "remote"
+    workflow_root = root / "data" / "workflow_state" / "paper_intake" / "remote"
+    repository = JobRepository(runtime_root / "jobs.sqlite3")
+    notion_gateway = NotionGateway(required["NOTION_TOKEN"], required["NOTION_DATABASE_ID"])
+    pipeline = PaperPipeline(
+        repository=repository,
+        input_store=PaperInputStore(runtime_root / "inbox"),
+        mineru=MinerUAdapter(),
+        deepseek=DeepSeekArticleAdapter(
+            api_key=required["DEEPSEEK_API_KEY"],
+            model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
+        ),
+        notion=notion_gateway,
+        workflow_root=workflow_root,
+        metadata_resolver=ArxivMetadataResolver(),
     )
+    posts_root = site_posts_root or root / ".worktrees" / "site-ui-fixes" / "source" / "_posts"
+    return (
+        SinglePaperReprocessor(
+            repository=repository,
+            pipeline=pipeline,
+            notion=LiveNotionReleaseGateway(notion_gateway),
+            site_posts_root=posts_root,
+        ),
+        repository,
+    )
+
+
+def main() -> int:
+    arguments = build_parser().parse_args()
+    coordinator, repository = build_runtime(
+        project_root=arguments.project_root,
+        site_posts_root=arguments.site_posts_root,
+    )
+    try:
+        plan = coordinator.prepare(
+            job_id=arguments.job_id,
+            canonical_id=arguments.canonical_id,
+            expected_slug=arguments.expected_slug,
+            reuse_mineru=arguments.reuse_mineru,
+            evidence_dir=arguments.evidence_dir,
+        )
+        if arguments.dry_run:
+            print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2, sort_keys=True))
+            return 0
+        if arguments.manifest_path is None:
+            raise ReleaseSafetyError("--manifest-path is required with --publish")
+        result = coordinator.publish(
+            plan,
+            manifest_path=arguments.manifest_path,
+            required_evidence_ids=[
+                item.strip() for item in arguments.require_evidence.split(",") if item.strip()
+            ],
+        )
+        print(
+            json.dumps(
+                {
+                    "canonical_id": result.canonical_id,
+                    "job_id": result.job_id,
+                    "notion_page_suffix": result.notion_page_id[-6:],
+                    "slug": plan.slug,
+                    "status": result.status.value,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return 0
+    finally:
+        repository.close()
 
 
 if __name__ == "__main__":

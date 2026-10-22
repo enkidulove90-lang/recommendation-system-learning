@@ -3,15 +3,19 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
 from paper_intake.models import JobStatus, StepName
 from paper_intake.repository import JobRepository
 from scripts.reprocess_single_paper import (
+    LiveNotionReleaseGateway,
     NotionTarget,
     ReleaseSafetyError,
     SinglePaperReprocessor,
+    build_parser,
 )
 from scripts.single_paper_evidence import EvidenceRecorder
 from scripts.verify_single_paper_release import restore_release, verify_allowed_changes
@@ -45,14 +49,21 @@ class FakePipeline:
         StepName.WRITE_NOTION_PUBLISHED,
     )
 
-    def __init__(self, repository: JobRepository):
+    def __init__(self, repository: JobRepository, generated_path: Path):
         self.repository = repository
+        self.generated_path = generated_path
         self.run_calls = 0
         self.mineru_calls = 0
 
     def run(self, job_id: str):
         self.run_calls += 1
         assert self.repository.get_step(job_id, StepName.MINERU_PARSE) is not None
+        self.repository.start_step(job_id, StepName.QUALITY_CHECK)
+        self.repository.complete_step(
+            job_id,
+            StepName.QUALITY_CHECK,
+            output={"article_path": str(self.generated_path), "publishable": True},
+        )
         return self.repository.update_job(job_id, status=JobStatus.PUBLISHING)
 
 
@@ -87,7 +98,9 @@ def release_fixture(tmp_path: Path):
     notion = FakeNotion(
         [NotionTarget("notion-page-1", "paper-2610.05432", b"old notion body\n")]
     )
-    pipeline = FakePipeline(repository)
+    generated_path = tmp_path / "workflow" / job.job_id / "generated.md"
+    generated_path.write_bytes(b"---\nslug: paper-2610.05432\n---\nnew generated body\n")
+    pipeline = FakePipeline(repository, generated_path)
     coordinator = SinglePaperReprocessor(
         repository=repository,
         pipeline=pipeline,
@@ -220,6 +233,7 @@ def test_publish_requires_audited_evidence_and_reuses_mineru(
     assert result.status == JobStatus.PUBLISHING
     assert pipeline.run_calls == 1
     assert pipeline.mineru_calls == 0
+    assert _source_path.read_bytes() == pipeline.generated_path.read_bytes()
     assert repository.get_step("job-opticalrec", StepName.MINERU_PARSE) is not None
     assert repository.get_step("job-opticalrec", StepName.DEEPSEEK_GENERATE) is None
 
@@ -271,3 +285,87 @@ def test_scope_verifier_and_rollback_restore_byte_identical_content(
     assert _sha256(source_path.read_bytes()) == plan.site_source_sha256
     assert notion.restore_calls == [("notion-page-1", b"old notion body\n")]
     assert _sha256(notion.restore_calls[0][1]) == plan.notion_backup_sha256
+
+
+class FakeRawNotion:
+    def __init__(self):
+        self.database_id = "database"
+        self._property_names = {"arxiv_id", "slug", "title"}
+        self.upserts = []
+
+    def _data_source(self):
+        return "source"
+
+    def _request(self, method, path, **kwargs):
+        assert method == "POST"
+        assert path == "/data_sources/source/query"
+        return {
+            "results": [
+                {
+                    "id": "page-1",
+                    "properties": {
+                        "slug": {"rich_text": [{"plain_text": "paper-2610.05432"}]},
+                        "title": {"title": [{"plain_text": "OpticalRec"}]},
+                    },
+                }
+            ]
+        }
+
+    def _snapshot_markdown(self, page_id):
+        assert page_id == "page-1"
+        return "notion body"
+
+    def upsert_published(self, draft):
+        self.upserts.append(draft)
+
+
+def test_live_notion_gateway_queries_exact_identity_and_can_restore() -> None:
+    raw = FakeRawNotion()
+    gateway = LiveNotionReleaseGateway(raw)
+
+    targets = gateway.find_targets(
+        canonical_id="2610.05432", slug="paper-2610.05432"
+    )
+    gateway.restore("page-1", b"old notion body")
+
+    assert targets == [
+        NotionTarget("page-1", "paper-2610.05432", b"notion body")
+    ]
+    assert len(raw.upserts) == 1
+    assert raw.upserts[0].arxiv_id == "2610.05432"
+    assert raw.upserts[0].slug == "paper-2610.05432"
+    assert raw.upserts[0].markdown == "old notion body"
+
+
+def test_cli_exposes_exact_dry_run_contract(tmp_path: Path) -> None:
+    arguments = build_parser().parse_args(
+        [
+            "--job-id",
+            "job-1",
+            "--canonical-id",
+            "2610.05432",
+            "--expected-slug",
+            "paper-2610.05432",
+            "--reuse-mineru",
+            "--dry-run",
+            "--evidence-dir",
+            str(tmp_path),
+        ]
+    )
+
+    assert arguments.dry_run is True
+    assert arguments.publish is False
+    assert arguments.reuse_mineru is True
+
+
+def test_cli_script_can_be_executed_directly() -> None:
+    completed = subprocess.run(
+        [sys.executable, "scripts/reprocess_single_paper.py", "--help"],
+        cwd=Path(__file__).resolve().parent.parent,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert "--reuse-mineru" in completed.stdout
