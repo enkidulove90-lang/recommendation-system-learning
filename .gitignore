@@ -55,6 +55,7 @@ data/paper_intake/
 .workbuddy/
 .worktrees/
 .paper-work/
+.superpowers/sdd/
 
 # OS
 .DS_Store
