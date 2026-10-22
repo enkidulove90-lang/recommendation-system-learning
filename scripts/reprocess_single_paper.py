@@ -329,6 +329,7 @@ def build_runtime(*, project_root: Path, site_posts_root: Path | None):
     from paper_intake.inputs import PaperInputStore
     from paper_intake.metadata import ArxivMetadataResolver
     from paper_intake.pipeline import PaperPipeline
+    from paper_intake.reference_links import load_pwc_snapshot
     from paper_intake.repository import JobRepository
 
     root = Path(project_root).resolve()
@@ -345,6 +346,12 @@ def build_runtime(*, project_root: Path, site_posts_root: Path | None):
     workflow_root = root / "data" / "workflow_state" / "paper_intake" / "remote"
     repository = JobRepository(runtime_root / "jobs.sqlite3")
     notion_gateway = NotionGateway(required["NOTION_TOKEN"], required["NOTION_DATABASE_ID"])
+    # Runtime data may intentionally live in the primary checkout while this
+    # release command executes from an isolated worktree.  Versioned lookup
+    # data belongs to the code being executed, not to the runtime-data root.
+    code_root = Path(__file__).resolve().parent.parent
+    code_links_path = code_root / "config" / "reference-code-links.json"
+    code_links = load_pwc_snapshot(code_links_path, _sha256(code_links_path))
     pipeline = PaperPipeline(
         repository=repository,
         input_store=PaperInputStore(runtime_root / "inbox"),
@@ -356,6 +363,7 @@ def build_runtime(*, project_root: Path, site_posts_root: Path | None):
         notion=notion_gateway,
         workflow_root=workflow_root,
         metadata_resolver=ArxivMetadataResolver(),
+        pwc_snapshot=code_links,
     )
     posts_root = site_posts_root or root / ".worktrees" / "site-ui-fixes" / "source" / "_posts"
     return (

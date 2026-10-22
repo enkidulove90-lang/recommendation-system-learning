@@ -174,6 +174,18 @@ def test_snapshot_accepts_only_github_repo_urls() -> None:
     assert snapshot.code_url_for(arxiv_id="2604.20937", doi=None) is None
 
 
+def test_curated_verified_link_supplies_stop_official_repository() -> None:
+    snapshot = load_pwc_snapshot(
+        Path("config/reference-code-links.json"),
+        hashlib.sha256(Path("config/reference-code-links.json").read_bytes()).hexdigest(),
+    )
+
+    assert snapshot is not None
+    assert snapshot.code_url_for(arxiv_id="2604.20937", doi=None) == (
+        "https://github.com/rlqja1107/SToP"
+    )
+
+
 def test_empty_candidates_omit_section_without_provider_calls() -> None:
     clients = FakeClients()
 

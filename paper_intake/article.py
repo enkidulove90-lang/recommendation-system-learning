@@ -442,7 +442,16 @@ def render_article_markdown(
     if conclusion_figures:
         parts.extend(["", conclusion_figures])
     parts.extend(["", "## References", ""])
-    parts.extend(f"- {reference}" for reference in article.article.references)
-    markdown = "\n".join(parts).rstrip() + "\n"
-    block = render_related_reading(resolved_references) if resolved_references else None
-    return replace_related_reading(markdown, block)
+    links_by_index: dict[int, list[str]] = {}
+    if resolved_references:
+        for resolved in resolved_references.references:
+            links = [f"[论文链接]({resolved.paper_url})"]
+            if resolved.code_url:
+                links.append(f"[代码链接]({resolved.code_url})")
+            links_by_index[resolved.candidate.original_index] = links
+    for index, reference in enumerate(article.article.references):
+        suffix = ""
+        if index in links_by_index:
+            suffix = " " + " · ".join(links_by_index[index])
+        parts.append(f"- {reference}{suffix}")
+    return "\n".join(parts).rstrip() + "\n"

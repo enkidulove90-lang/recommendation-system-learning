@@ -1,0 +1,9 @@
+[
+  {
+    "paper_arxiv_id": "2604.20937",
+    "paper_title": "Sink-Token-Aware Pruning for Fine-Grained Video Understanding in Efficient Video LLMs",
+    "repo_url": "https://github.com/rlqja1107/SToP",
+    "is_official": true,
+    "verification_source": "https://github.com/rlqja1107/SToP"
+  }
+]

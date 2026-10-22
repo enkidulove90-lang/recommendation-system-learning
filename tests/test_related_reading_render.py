@@ -27,7 +27,7 @@ def _resolved(
             year=year,
             arxiv_id=paper_url.rsplit("/", 1)[-1] if "arxiv.org" in paper_url else None,
             doi=None,
-            original_index=int(ref_id.rsplit("_", 1)[-1]),
+            original_index=int(ref_id.rsplit("_", 1)[-1]) - 1,
         ),
         paper_url=paper_url,
         code_url=code_url,
@@ -37,7 +37,7 @@ def _resolved(
     )
 
 
-def test_recommended_block_is_last_and_contains_one_marker_pair() -> None:
+def test_selected_links_are_appended_to_their_existing_reference_entries() -> None:
     result = ResolutionResult(
         mode="recommended",
         references=[
@@ -60,24 +60,29 @@ def test_recommended_block_is_last_and_contains_one_marker_pair() -> None:
         ],
     )
 
-    markdown = render_article_markdown(_article(), result)
+    article = _article()
+    article.article.references = ["First paper citation", "Second paper citation"]
+    markdown = render_article_markdown(article, result)
 
-    assert markdown.count("<!-- related-reading:start -->") == 1
-    assert markdown.count("<!-- related-reading:end -->") == 1
-    assert "## 延伸阅读" in markdown
-    assert "## 补充阅读" not in markdown
-    assert "[代码链接](https://github.com/example/first)" in markdown
-    second_section = markdown.split("### 2. Second paper", 1)[1]
-    assert "代码链接" not in second_section
-    assert markdown.rstrip().endswith("<!-- related-reading:end -->")
+    assert "补充阅读" not in markdown
+    assert "延伸阅读" not in markdown
+    references = markdown.split("## References", 1)[1]
+    first_line = references.splitlines()[2]
+    second_line = references.splitlines()[3]
+    assert first_line.endswith(
+        "[论文链接](https://arxiv.org/abs/2511.21631) · "
+        "[代码链接](https://github.com/example/first)"
+    )
+    assert second_line.endswith("[论文链接](https://arxiv.org/abs/2604.20937)")
+    assert "代码链接" not in second_line
 
 
-def test_supplemental_block_omits_fake_reason_for_fallback_item() -> None:
+def test_supplemental_selection_does_not_create_a_separate_section() -> None:
     result = ResolutionResult(
         mode="supplemental",
         references=[
             _resolved(
-                "ref_003",
+                "ref_001",
                 title="Latest fallback",
                 year=2026,
                 paper_url="https://arxiv.org/abs/2604.20937",
@@ -87,12 +92,14 @@ def test_supplemental_block_omits_fake_reason_for_fallback_item() -> None:
         ],
     )
 
-    block = render_related_reading(result)
+    article = _article()
+    article.article.references = ["Latest fallback citation"]
+    markdown = render_article_markdown(article, result)
 
-    assert "## 补充阅读" in block
-    assert "## 延伸阅读" not in block
-    assert "推荐理由" not in block
-    assert "相关" not in block
+    assert "## 补充阅读" not in markdown
+    assert "## 延伸阅读" not in markdown
+    assert "推荐理由" not in markdown
+    assert "[论文链接](https://arxiv.org/abs/2604.20937)" in markdown
 
 
 def test_replacing_generated_block_twice_is_byte_idempotent() -> None:
