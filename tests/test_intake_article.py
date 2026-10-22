@@ -10,9 +10,12 @@ from pydantic import ValidationError
 
 from paper_intake.article import (
     ArticlePayloadError,
+    GenerationEnvelope,
     PaperArticle,
+    ReferenceChoice,
     normalize_classification,
     parse_article_payload,
+    parse_generation_envelope,
     render_article_markdown,
     validate_article,
 )
@@ -182,6 +185,75 @@ class PaperArticleTests(unittest.TestCase):
         details = caught.exception.details
         self.assertEqual([item["loc"] for item in details], ["paper.title", "figures.0.section"])
         self.assertTrue(all("input" not in item for item in details))
+
+    def test_generation_envelope_accepts_two_unique_eligible_reference_choices(self) -> None:
+        raw = json.dumps(
+            {
+                "article": _payload(figure_sha256=self.figure_sha256),
+                "reference_choices": [
+                    {"ref_id": "ref_001", "reason": "与正文的核心表示学习方法直接相关。"},
+                    {"ref_id": "ref_003", "reason": "提供实验设置所依赖的经典基线。"},
+                ],
+            },
+            ensure_ascii=False,
+        )
+
+        envelope = parse_generation_envelope(raw, {"ref_001", "ref_002", "ref_003"})
+
+        self.assertIsInstance(envelope, GenerationEnvelope)
+        self.assertEqual(envelope.article.paper.canonical_id, "2608.17316")
+        self.assertEqual(
+            envelope.reference_choices,
+            [
+                ReferenceChoice(
+                    ref_id="ref_001", reason="与正文的核心表示学习方法直接相关。"
+                ),
+                ReferenceChoice(ref_id="ref_003", reason="提供实验设置所依赖的经典基线。"),
+            ],
+        )
+        self.assertIsNone(envelope.ranking_diagnostic)
+
+    def test_generation_envelope_soft_fails_invalid_ranking_but_keeps_article(self) -> None:
+        invalid_rankings = [
+            "not-a-list",
+            [{"ref_id": "ref_001", "reason": "有效"}],
+            [
+                {"ref_id": "ref_001", "reason": "有效"},
+                {"ref_id": "ref_001", "reason": "重复"},
+            ],
+            [
+                {"ref_id": "ref_001", "reason": "有效"},
+                {"ref_id": "ref_999", "reason": "越界"},
+            ],
+            [
+                {"ref_id": "ref_001", "reason": "有效"},
+                {"ref_id": "ref_002", "reason": ""},
+            ],
+        ]
+
+        for ranking in invalid_rankings:
+            with self.subTest(ranking=ranking):
+                raw = json.dumps(
+                    {
+                        "article": _payload(figure_sha256=self.figure_sha256),
+                        "reference_choices": ranking,
+                    },
+                    ensure_ascii=False,
+                )
+                envelope = parse_generation_envelope(raw, {"ref_001", "ref_002"})
+
+                self.assertEqual(envelope.article.paper.canonical_id, "2608.17316")
+                self.assertIsNone(envelope.reference_choices)
+                self.assertEqual(envelope.ranking_diagnostic, "reference_selection_invalid")
+
+    def test_generation_envelope_accepts_legacy_article_payload_without_ranking(self) -> None:
+        raw = json.dumps(_payload(figure_sha256=self.figure_sha256), ensure_ascii=False)
+
+        envelope = parse_generation_envelope(raw, {"ref_001", "ref_002"})
+
+        self.assertEqual(envelope.article.paper.canonical_id, "2608.17316")
+        self.assertIsNone(envelope.reference_choices)
+        self.assertEqual(envelope.ranking_diagnostic, "reference_selection_missing")
 
 
 if __name__ == "__main__":

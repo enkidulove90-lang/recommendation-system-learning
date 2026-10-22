@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from paper_intake.adapters import (
+    DEEPSEEK_ARTICLE_SYSTEM_PROMPT,
     DeepSeekArticleAdapter,
     GitHubPagesGateway,
     MinerUAdapter,
@@ -193,7 +194,7 @@ class AdapterTests(unittest.TestCase):
         client = _FakeDeepSeekClient(content)
         adapter = DeepSeekArticleAdapter(api_key="secret", model="deepseek-chat", client=client)
 
-        article = adapter.generate(
+        envelope = adapter.generate(
             markdown="# Full paper",
             metadata={"canonical_id": "2608.17316", "title": "A Paper"},
             figures=[{"path": "images/figure.png", "sha256": self.figure_hash}],
@@ -201,7 +202,73 @@ class AdapterTests(unittest.TestCase):
 
         call = client.chat.completions.calls[0]
         self.assertEqual(call["response_format"], {"type": "json_object"})
-        self.assertEqual(article.paper.canonical_id, "2608.17316")
+        self.assertEqual(envelope.article.paper.canonical_id, "2608.17316")
+
+    def test_deepseek_prompt_preserves_content_rules_and_adds_only_formula_and_selection(self) -> None:
+        content = json.dumps(
+            {
+                "article": _article_payload(self.figure_hash),
+                "reference_choices": [
+                    {"ref_id": "ref_001", "reason": "与核心方法直接相关。"},
+                    {"ref_id": "ref_002", "reason": "提供最新的对比方法。"},
+                ],
+            },
+            ensure_ascii=False,
+        )
+        client = _FakeDeepSeekClient(content)
+        adapter = DeepSeekArticleAdapter(api_key="secret", model="deepseek-chat", client=client)
+
+        envelope = adapter.generate(
+            markdown="# Full paper\n公式 $x$ 与 $$y$$",
+            metadata={"canonical_id": "2608.17316", "title": "A Paper"},
+            figures=[{"path": "images/figure.png", "sha256": self.figure_hash}],
+            reference_candidates=[
+                {"ref_id": "ref_001", "title": "First", "year": 2025},
+                {"ref_id": "ref_002", "title": "Second", "year": 2026},
+            ],
+        )
+
+        call = client.chat.completions.calls[0]
+        self.assertEqual(
+            call["messages"][0]["content"],
+            "你是推荐系统论文编辑。只输出符合给定 Schema 的 JSON；不得虚构实验数字、链接或图片路径。",
+        )
+        self.assertEqual(call["messages"][0]["content"], DEEPSEEK_ARTICLE_SYSTEM_PROMPT)
+        prompt = json.loads(call["messages"][1]["content"])
+        requirements = prompt["requirements"]
+        self.assertEqual(requirements["language"], "Chinese")
+        self.assertEqual(
+            requirements["sections"],
+            ["introduction", "method", "experiments", "conclusion", "references"],
+        )
+        self.assertEqual(
+            requirements["figure_rule"],
+            "Use only available figure paths and write an original Chinese explanation.",
+        )
+        self.assertEqual(
+            set(requirements),
+            {
+                "language",
+                "sections",
+                "figure_rule",
+                "output_schema",
+                "formula_format",
+                "reference_selection",
+            },
+        )
+        self.assertIn("$...$", requirements["formula_format"])
+        self.assertIn("$$...$$", requirements["formula_format"])
+        self.assertEqual(
+            [item["ref_id"] for item in requirements["reference_selection"]["candidates"]],
+            ["ref_001", "ref_002"],
+        )
+        self.assertNotIn(
+            "http", json.dumps(requirements["reference_selection"], ensure_ascii=False).lower()
+        )
+        self.assertEqual(
+            [choice.ref_id for choice in envelope.reference_choices or []],
+            ["ref_001", "ref_002"],
+        )
 
     def test_deepseek_invalid_output_is_redacted_and_saved_for_diagnosis(self) -> None:
         secret = "sk-super-secret-value"

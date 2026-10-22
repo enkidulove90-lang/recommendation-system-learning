@@ -93,6 +93,20 @@ class PaperArticle(BaseModel):
     figures: list[ArticleFigure] = Field(default_factory=list)
 
 
+class ReferenceChoice(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    ref_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
+@dataclass(frozen=True, slots=True)
+class GenerationEnvelope:
+    article: PaperArticle
+    reference_choices: list[ReferenceChoice] | None
+    ranking_diagnostic: str | None = None
+
+
 @dataclass(frozen=True, slots=True)
 class QualityIssue:
     code: str
@@ -170,6 +184,60 @@ def parse_article_payload(raw: str) -> PaperArticle:
         ]
         summary = "; ".join(f"{item['loc']}: {item['msg']}" for item in details)
         raise ArticlePayloadError(f"DeepSeek article schema validation failed: {summary}", details) from exc
+
+
+def generation_output_schema() -> dict:
+    return {
+        "type": "object",
+        "properties": {
+            "article": PaperArticle.model_json_schema(),
+            "reference_choices": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": ReferenceChoice.model_json_schema(),
+            },
+        },
+        "required": ["article", "reference_choices"],
+        "additionalProperties": False,
+    }
+
+
+def parse_generation_envelope(raw: str, eligible_ids: set[str]) -> GenerationEnvelope:
+    text = repair_json_payload(raw)
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as exc:
+        details = [
+            {
+                "loc": "$",
+                "type": "json_invalid",
+                "msg": f"{exc.msg} at line {exc.lineno} column {exc.colno}",
+            }
+        ]
+        raise ArticlePayloadError("DeepSeek response is not valid JSON.", details) from exc
+
+    is_legacy_article = isinstance(payload, dict) and "paper" in payload
+    article_payload = payload if is_legacy_article else payload.get("article")
+    article = parse_article_payload(json.dumps(article_payload, ensure_ascii=False))
+    if is_legacy_article or "reference_choices" not in payload:
+        return GenerationEnvelope(
+            article=article,
+            reference_choices=None,
+            ranking_diagnostic="reference_selection_missing",
+        )
+
+    raw_choices = payload.get("reference_choices")
+    if not isinstance(raw_choices, list) or len(raw_choices) != 2:
+        return GenerationEnvelope(article, None, "reference_selection_invalid")
+    try:
+        choices = [ReferenceChoice.model_validate(item) for item in raw_choices]
+    except (ValidationError, TypeError):
+        return GenerationEnvelope(article, None, "reference_selection_invalid")
+    ids = [choice.ref_id for choice in choices]
+    if len(set(ids)) != 2 or any(ref_id not in eligible_ids for ref_id in ids):
+        return GenerationEnvelope(article, None, "reference_selection_invalid")
+    return GenerationEnvelope(article=article, reference_choices=choices)
 
 
 def normalize_classification(classification: Classification) -> tuple[Classification, list[str]]:

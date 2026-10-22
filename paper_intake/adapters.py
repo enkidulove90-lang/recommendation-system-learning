@@ -12,7 +12,12 @@ from typing import Any
 
 import requests
 
-from .article import ArticlePayloadError, PaperArticle, parse_article_payload
+from .article import (
+    ArticlePayloadError,
+    GenerationEnvelope,
+    generation_output_schema,
+    parse_generation_envelope,
+)
 from .retry import request_with_retry
 from .trace_context import current_trace_id
 
@@ -110,6 +115,12 @@ class MinerUAdapter:
         return ParseResult(markdown_path=markdown_path, image_paths=images, text=text)
 
 
+DEEPSEEK_ARTICLE_SYSTEM_PROMPT = (
+    "你是推荐系统论文编辑。只输出符合给定 Schema 的 JSON；"
+    "不得虚构实验数字、链接或图片路径。"
+)
+
+
 class DeepSeekArticleAdapter:
     def __init__(
         self,
@@ -177,9 +188,18 @@ class DeepSeekArticleAdapter:
         markdown: str,
         metadata: dict[str, Any],
         figures: list[dict[str, str]],
+        reference_candidates: list[dict[str, Any]] | None = None,
         failure_path: str | Path | None = None,
-    ) -> PaperArticle:
+    ) -> GenerationEnvelope:
         trimmed = markdown[:80000]
+        safe_candidates = [
+            {
+                "ref_id": str(item.get("ref_id", "")),
+                "title": str(item.get("title", "")),
+                "year": item.get("year"),
+            }
+            for item in (reference_candidates or [])
+        ]
         prompt = {
             "metadata": metadata,
             "available_figures": figures,
@@ -188,7 +208,17 @@ class DeepSeekArticleAdapter:
                 "language": "Chinese",
                 "sections": ["introduction", "method", "experiments", "conclusion", "references"],
                 "figure_rule": "Use only available figure paths and write an original Chinese explanation.",
-                "output_schema": PaperArticle.model_json_schema(),
+                "output_schema": generation_output_schema(),
+                "formula_format": (
+                    "Use $...$ for inline formulas and $$...$$ for block formulas."
+                ),
+                "reference_selection": {
+                    "instruction": (
+                        "Choose exactly two eligible ref_id values most relevant to the article "
+                        "and provide one short reason for each. Do not create identifiers or links."
+                    ),
+                    "candidates": safe_candidates,
+                },
             },
         }
         try:
@@ -199,10 +229,7 @@ class DeepSeekArticleAdapter:
                 messages=[
                     {
                         "role": "system",
-                        "content": (
-                            "你是推荐系统论文编辑。只输出符合给定 Schema 的 JSON；"
-                            "不得虚构实验数字、链接或图片路径。"
-                        ),
+                        "content": DEEPSEEK_ARTICLE_SYSTEM_PROMPT,
                     },
                     {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
                 ],
@@ -210,7 +237,10 @@ class DeepSeekArticleAdapter:
             ))
             raw = response.choices[0].message.content or ""
             try:
-                return parse_article_payload(raw)
+                return parse_generation_envelope(
+                    raw,
+                    {item["ref_id"] for item in safe_candidates if item["ref_id"]},
+                )
             except ArticlePayloadError as exc:
                 if failure_path:
                     self._write_failure(Path(failure_path), raw, exc.details)
