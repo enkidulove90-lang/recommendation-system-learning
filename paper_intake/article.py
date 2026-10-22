@@ -5,10 +5,19 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic import ValidationError
+
+from .reference_candidates import (
+    RELATED_READING_END,
+    RELATED_READING_START,
+    strip_generated_related_reading,
+)
+
+if TYPE_CHECKING:
+    from .reference_links import ResolutionResult
 
 
 CONTROLLED_CATEGORIES = {
@@ -360,7 +369,37 @@ def _render_figures(article: PaperArticle, section: str, label: str) -> str:
     return "\n".join(rendered).rstrip()
 
 
-def render_article_markdown(article: PaperArticle) -> str:
+def render_related_reading(result: "ResolutionResult") -> str:
+    if result.mode == "omitted" or not result.references:
+        return ""
+    heading = "延伸阅读" if result.mode == "recommended" else "补充阅读"
+    parts = [RELATED_READING_START, f"## {heading}", ""]
+    for index, reference in enumerate(result.references, 1):
+        title = reference.candidate.title or reference.candidate.raw_text
+        parts.extend([f"### {index}. {title}", ""])
+        if reference.candidate.year is not None:
+            parts.extend([f"年份：{reference.candidate.year}", ""])
+        if reference.reason:
+            parts.extend([f"推荐理由：{reference.reason}", ""])
+        links = [f"[论文链接]({reference.paper_url})"]
+        if reference.code_url:
+            links.append(f"[代码链接]({reference.code_url})")
+        parts.extend([" · ".join(links), ""])
+    parts.append(RELATED_READING_END)
+    return "\n".join(parts).rstrip()
+
+
+def replace_related_reading(markdown: str, block: str | None) -> str:
+    base = strip_generated_related_reading(markdown).rstrip()
+    if not block:
+        return base + "\n"
+    return f"{base}\n\n{block.strip()}\n"
+
+
+def render_article_markdown(
+    article: PaperArticle,
+    resolved_references: "ResolutionResult | None" = None,
+) -> str:
     classification, _warnings = normalize_classification(article.classification)
     title = article.paper.chinese_title or article.paper.title
     categories = ", ".join(classification.categories)
@@ -404,4 +443,6 @@ def render_article_markdown(article: PaperArticle) -> str:
         parts.extend(["", conclusion_figures])
     parts.extend(["", "## References", ""])
     parts.extend(f"- {reference}" for reference in article.article.references)
-    return "\n".join(parts).rstrip() + "\n"
+    markdown = "\n".join(parts).rstrip() + "\n"
+    block = render_related_reading(resolved_references) if resolved_references else None
+    return replace_related_reading(markdown, block)
