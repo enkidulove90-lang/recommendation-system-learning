@@ -442,16 +442,27 @@ def render_article_markdown(
     if conclusion_figures:
         parts.extend(["", conclusion_figures])
     parts.extend(["", "## References", ""])
-    links_by_index: dict[int, list[str]] = {}
+    resolved_by_index: dict[int, "ResolvedReference"] = {}
     if resolved_references:
         for resolved in resolved_references.references:
-            links = [f"[论文链接]({resolved.paper_url})"]
-            if resolved.code_url:
-                links.append(f"[代码链接]({resolved.code_url})")
-            links_by_index[resolved.candidate.original_index] = links
+            resolved_by_index[resolved.candidate.original_index] = resolved
     for index, reference in enumerate(article.article.references):
-        suffix = ""
-        if index in links_by_index:
-            suffix = " " + " · ".join(links_by_index[index])
-        parts.append(f"- {reference}{suffix}")
+        resolved = resolved_by_index.get(index)
+        if resolved is not None:
+            title = resolved.candidate.title.strip()
+            if title:
+                title_pattern = re.compile(
+                    r"\s+".join(re.escape(part) for part in title.split()),
+                    re.IGNORECASE,
+                )
+                reference = title_pattern.sub(
+                    lambda match: f"[{match.group(0)}]({resolved.paper_url})",
+                    reference,
+                    count=1,
+                )
+            if resolved.code_url:
+                reference += f" （代码：[{resolved.code_url}]({resolved.code_url})）"
+            if resolved.reason:
+                reference += f" （相关性：{resolved.reason.strip()}）"
+        parts.append(f"- {reference}")
     return "\n".join(parts).rstrip() + "\n"

@@ -340,7 +340,9 @@ class PaperPipelineTests(unittest.TestCase):
 
             self.assertEqual(result.status, JobStatus.PUBLISHING)
             self.assertNotIn("## 补充阅读", markdown)
-            self.assertIn("[论文链接](https://arxiv.org/abs/2511.21631)", markdown)
+            references = markdown.split("## References", 1)[1]
+            self.assertNotIn("[论文链接]", references)
+            self.assertIn("https://arxiv.org/abs/pdf-3f972854841a", references)
             self.assertEqual(diagnostics["ranking_diagnostic"], "reference_selection_invalid")
             self.assertEqual(diagnostics["resolution_mode"], "supplemental")
             self.assertNotIn("traceback", json.dumps(diagnostics).lower())

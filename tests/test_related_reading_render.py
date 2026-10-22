@@ -37,7 +37,7 @@ def _resolved(
     )
 
 
-def test_selected_links_are_appended_to_their_existing_reference_entries() -> None:
+def test_selected_reference_titles_become_links_with_reason_and_raw_code_url() -> None:
     result = ResolutionResult(
         mode="recommended",
         references=[
@@ -61,7 +61,10 @@ def test_selected_links_are_appended_to_their_existing_reference_entries() -> No
     )
 
     article = _article()
-    article.article.references = ["First paper citation", "Second paper citation"]
+    article.article.references = [
+        "Alice Author. 2025. First paper. arXiv preprint arXiv:2511.21631.",
+        "Bob Author. 2026. SECOND PAPER. arXiv preprint arXiv:2604.20937.",
+    ]
     markdown = render_article_markdown(article, result)
 
     assert "补充阅读" not in markdown
@@ -69,12 +72,12 @@ def test_selected_links_are_appended_to_their_existing_reference_entries() -> No
     references = markdown.split("## References", 1)[1]
     first_line = references.splitlines()[2]
     second_line = references.splitlines()[3]
-    assert first_line.endswith(
-        "[论文链接](https://arxiv.org/abs/2511.21631) · "
-        "[代码链接](https://github.com/example/first)"
-    )
-    assert second_line.endswith("[论文链接](https://arxiv.org/abs/2604.20937)")
-    assert "代码链接" not in second_line
+    assert "[论文链接]" not in references
+    assert "[First paper](https://arxiv.org/abs/2511.21631)" in first_line
+    assert "[https://github.com/example/first](https://github.com/example/first)" in first_line
+    assert "相关性：与核心视觉语言表示直接相关。" in first_line
+    assert "[SECOND PAPER](https://arxiv.org/abs/2604.20937)" in second_line
+    assert "相关性：提供最新的模型剪枝视角。" in second_line
 
 
 def test_supplemental_selection_does_not_create_a_separate_section() -> None:
@@ -93,13 +96,15 @@ def test_supplemental_selection_does_not_create_a_separate_section() -> None:
     )
 
     article = _article()
-    article.article.references = ["Latest fallback citation"]
+    article.article.references = [
+        "Alice Author. 2026. Latest fallback. arXiv preprint arXiv:2604.20937."
+    ]
     markdown = render_article_markdown(article, result)
 
     assert "## 补充阅读" not in markdown
     assert "## 延伸阅读" not in markdown
     assert "推荐理由" not in markdown
-    assert "[论文链接](https://arxiv.org/abs/2604.20937)" in markdown
+    assert "[Latest fallback](https://arxiv.org/abs/2604.20937)" in markdown
 
 
 def test_replacing_generated_block_twice_is_byte_idempotent() -> None:
