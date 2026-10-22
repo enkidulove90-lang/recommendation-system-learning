@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "filename": "links-between-paper-and-code.json",
+  "revision": "PIN_REQUIRED",
+  "sha256": "PIN_REQUIRED",
+  "source_url": "https://huggingface.co/datasets/pwc-archive/links-between-paper-and-code"
+}

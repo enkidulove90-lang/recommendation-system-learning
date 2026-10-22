@@ -1,0 +1,14 @@
+[
+  {
+    "paper_arxiv_id": "2511.21631",
+    "paper_title": "Qwen3-VL Technical Report",
+    "repo_url": "https://github.com/QwenLM/Qwen3-VL",
+    "is_official": true
+  },
+  {
+    "paper_arxiv_id": "2604.20937",
+    "paper_title": "Sink-token-aware pruning",
+    "repo_url": "https://example.com/not-github",
+    "is_official": true
+  }
+]
