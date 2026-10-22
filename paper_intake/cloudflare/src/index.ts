@@ -1,5 +1,6 @@
 import { IntakeRepository } from "./repository";
-import type { JobRecord } from "./types";
+import { checkpointTitle, computeDiagnosis, retryPolicy, sanitizeDiagnostic, stageMetrics } from "./diagnostics";
+import type { FailureCategory, FailureDescriptor, JobRecord } from "./types";
 import {
   ApiError,
   assertOrigin,
@@ -81,18 +82,19 @@ function envelope(
 }
 
 function publicJob(job: JobRecord): Record<string, unknown> {
-  const checkpointTitle = job.checkpoints.title;
+  const title = checkpointTitle(job.checkpoints);
   return {
     job_id: job.jobId,
     paper_id: job.paperId,
-    title: typeof checkpointTitle === "string" ? checkpointTitle : null,
+    title,
+    trace_id: job.traceId,
     input_type: job.inputType,
     stage: job.stage,
     status: job.status,
     attempt: job.attempt,
     error_code: job.errorCode,
     error_message: job.errorMessage,
-    retryable: job.status === "failed",
+    retryable: retryPolicy(job.errorCode).retryable,
     created_at: job.createdAt,
     updated_at: job.updatedAt,
   };
@@ -405,6 +407,7 @@ async function dispatchPublication(
   slug: string,
 ): Promise<void> {
   const repository = new IntakeRepository(env.DB);
+  const job = await repository.getJob(jobId);
   if (await repository.hasJobEvent(jobId, "publication.dispatched")) return;
   const response = await fetch(`https://api.github.com/repos/${env.GITHUB_REPOSITORY}/dispatches`, {
     method: "POST",
@@ -422,6 +425,7 @@ async function dispatchPublication(
         paper_id: paperId,
         notion_page_id: notionPageId,
         slug,
+        trace_id: job?.traceId ?? null,
       },
     }),
   });
@@ -429,7 +433,7 @@ async function dispatchPublication(
     await repository.failPublicationDispatch(jobId, response.status);
     throw new ApiError(502, "github_dispatch_failed", "GitHub Pages 构建触发失败。", true);
   }
-  await repository.recordJobEvent(jobId, "publication.dispatched", { status: response.status });
+  await repository.recordJobEvent(jobId, "publication.dispatched", { status: response.status, trace_id: job?.traceId ?? null });
 }
 
 async function routeWorker(request: Request, env: AppEnv, requestId: string, url: URL): Promise<Response> {
@@ -629,6 +633,7 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
       lease_owner: job.leaseOwner,
       lease_until: job.leaseUntil,
       attempt: job.attempt,
+      trace_id: job.traceId,
       stage: job.stage,
       checkpoints: job.checkpoints,
       artifact_storage_enabled: env.ARTIFACT_STORAGE_ENABLED === "true" && Boolean(env.ARTIFACTS),
@@ -791,10 +796,31 @@ async function routeWorker(request: Request, env: AppEnv, requestId: string, url
     const workerId = requiredString(body.worker_id, "invalid_worker_id", "必须提供 Worker ID。");
     const errorCode = requiredString(body.error_code, "invalid_error_code", "必须提供错误代码。");
     const errorMessage = typeof body.error_message === "string"
-      ? body.error_message.slice(0, 1000)
+      ? sanitizeDiagnostic(body.error_message).slice(0, 1000)
       : "Processing failed.";
+    const rawFailure = body.failure && typeof body.failure === "object" && !Array.isArray(body.failure)
+      ? body.failure as Record<string, unknown> : {};
+    const category = ["validation", "network", "auth", "provider", "internal", "config", "publication"].includes(String(rawFailure.category))
+      ? String(rawFailure.category) as FailureCategory : retryPolicy(errorCode).category;
+    const failure: FailureDescriptor = {
+      stage: typeof rawFailure.stage === "string" ? rawFailure.stage.slice(0, 100) : "unknown",
+      code: errorCode.slice(0, 100), category,
+      retryable: typeof rawFailure.retryable === "boolean" ? rawFailure.retryable : retryPolicy(errorCode).retryable,
+      httpStatus: typeof rawFailure.http_status === "number" ? rawFailure.http_status : null,
+      providerErrorCode: typeof rawFailure.provider_error_code === "string" ? rawFailure.provider_error_code.slice(0, 100) : null,
+      providerRequestId: typeof rawFailure.provider_request_id === "string" ? rawFailure.provider_request_id.slice(0, 200) : null,
+      attempt: typeof rawFailure.attempt === "number" ? rawFailure.attempt : 0,
+      durationMs: typeof rawFailure.duration_ms === "number" ? rawFailure.duration_ms : null,
+      safeMessage: errorMessage,
+      diagnosticHint: typeof rawFailure.diagnostic_hint === "string" ? sanitizeDiagnostic(rawFailure.diagnostic_hint).slice(0, 500) : "Inspect the local worker log reference.",
+      errorFingerprint: typeof rawFailure.error_fingerprint === "string" ? rawFailure.error_fingerprint.slice(0, 100) : `legacy:${errorCode}`,
+      localLogRef: typeof rawFailure.local_log_ref === "string" ? rawFailure.local_log_ref.slice(0, 300) : null,
+      exceptionType: typeof rawFailure.exception_type === "string" ? rawFailure.exception_type.slice(0, 100) : null,
+      module: typeof rawFailure.module === "string" ? rawFailure.module.slice(0, 200) : null,
+      functionName: typeof rawFailure.function === "string" ? rawFailure.function.slice(0, 100) : null,
+    };
     try {
-      const job = await repository.fail(failureMatch[1], workerId, errorCode.slice(0, 100), errorMessage);
+      const job = await repository.fail(failureMatch[1], workerId, failure);
       return machineResponse(200, requestId, {
         job_id: job.jobId,
         paper_id: job.paperId,
@@ -823,6 +849,10 @@ async function routePublicationCallback(
     jobId,
     success,
     typeof body.git_commit === "string" ? body.git_commit : "",
+    {
+      workflowRunId: typeof body.workflow_run_id === "string" ? body.workflow_run_id.slice(0, 100) : "",
+      runUrl: typeof body.run_url === "string" ? body.run_url.slice(0, 500) : "",
+    },
   );
   return machineResponse(200, requestId, {
     job_id: job.jobId,
@@ -927,7 +957,17 @@ async function route(request: Request, env: AppEnv, requestId: string): Promise<
     const job = await repository.getOwnerJob(jobId, owner.identity);
     if (!job) throw new ApiError(404, "job_not_found", "任务不存在。", false);
     const events = await repository.listJobEvents(jobId);
-    return ownerJson(200, requestId, origin, env, { job: publicJob(job), events });
+    const paperIdentity = await repository.getPaperIdentity(job.paperId);
+    if (!paperIdentity.title) paperIdentity.title = checkpointTitle(job.checkpoints);
+    return ownerJson(200, requestId, origin, env, {
+      schema_version: 2,
+      trace_id: job.traceId,
+      job: publicJob(job),
+      paper_identity: paperIdentity,
+      diagnosis: computeDiagnosis(job, events),
+      stage_metrics: stageMetrics(events),
+      events,
+    });
   } else if (request.method === "POST" && /^\/v1\/jobs\/[^/]+\/retry$/u.test(url.pathname)) {
     const jobId = url.pathname.split("/")[3];
     const idempotencyKey = request.headers.get("idempotency-key")?.trim() ?? "";

@@ -98,6 +98,81 @@ describe("paper intake API", () => {
     expect(JSON.stringify(payload)).not.toContain("lease_owner");
   });
 
+  it("exports paper identity, trace id, stage metrics, and a deterministic diagnosis", async () => {
+    const submitted = await submitUrl("https://arxiv.org/abs/2601.00002");
+    const repository = new (await import("../src/repository")).IntakeRepository(testEnv.DB);
+    const claimed = await repository.claim("worker-diagnostics", 600);
+    expect(claimed?.jobId).toBe(submitted.job_id);
+    await repository.heartbeat(String(submitted.job_id), "worker-diagnostics", 600, "resolve_metadata");
+    await repository.checkpoint(String(submitted.job_id), "worker-diagnostics", "resolve_metadata", {
+      metadata: {
+        title: "A Real Paper Title",
+        authors: ["Author One"],
+        canonical_id: "2601.00002",
+        arxiv_id: "2601.00002",
+        metadata_source: "arxiv_xml",
+      },
+    });
+    await repository.heartbeat(String(submitted.job_id), "worker-diagnostics", 600, "deepseek_generate");
+    await repository.fail(String(submitted.job_id), "worker-diagnostics", {
+      stage: "deepseek_generate",
+      code: "deepseek_schema_invalid",
+      category: "validation",
+      retryable: false,
+      attempt: 1,
+      durationMs: 100,
+      safeMessage: "Schema validation failed.",
+      diagnosticHint: "Inspect missing generated fields.",
+      errorFingerprint: "fingerprint-1",
+    });
+
+    const response = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/log`, {
+      headers: { authorization: await authorization(), origin },
+    });
+    const payload = await response.json<any>();
+    expect(payload.job.title).toBe("A Real Paper Title");
+    expect(payload.job.trace_id).toMatch(/^tr_[0-9a-f-]{36}$/u);
+    expect(payload.paper_identity).toMatchObject({
+      title: "A Real Paper Title",
+      arxiv_id: "2601.00002",
+      metadata_source: "arxiv_xml",
+    });
+    expect(payload.diagnosis).toMatchObject({
+      result: "failed",
+      failed_stage: "deepseek_generate",
+      root_cause: "deepseek_schema_invalid",
+      retryable: false,
+    });
+    expect(payload.stage_metrics.resolve_metadata.duration_ms).toEqual(expect.any(Number));
+    expect(JSON.stringify(payload)).not.toMatch(/authorization|bearer\s|password|token=/iu);
+  });
+
+  it("removes credentials and URL query secrets from exported failure diagnostics", async () => {
+    const submitted = await submitUrl("https://papers.example/sanitized-log");
+    const repository = new (await import("../src/repository")).IntakeRepository(testEnv.DB);
+    await repository.claim("worker-sanitize", 600);
+    const failed = await SELF.fetch(`https://worker.test/v1/worker/jobs/${submitted.job_id}/fail`, {
+      method: "POST",
+      headers: { authorization: "Bearer test-worker-token", "content-type": "application/json" },
+      body: JSON.stringify({
+        worker_id: "worker-sanitize",
+        error_code: "timeout",
+        error_message: "Authorization: Bearer super-secret at https://api.example/run?token=hidden&x=1",
+        failure: {
+          stage: "download_pdf", category: "network", retryable: true, attempt: 1,
+          diagnostic_hint: "password=hunter2", error_fingerprint: "safe-fingerprint",
+        },
+      }),
+    });
+    expect(failed.status).toBe(200);
+    const exported = await SELF.fetch(`https://worker.test/v1/jobs/${submitted.job_id}/log`, {
+      headers: { authorization: await authorization(), origin },
+    });
+    const text = await exported.text();
+    expect(text).not.toMatch(/super-secret|hunter2|token=hidden|authorization\s*:|bearer\s+/iu);
+    expect(text).toContain("[REDACTED]");
+  });
+
   it("retries only failed jobs owned by the authenticated user", async () => {
     const submitted = await submitUrl("https://papers.example/retry-me");
     await testEnv.DB.prepare(

@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 from paper_intake.remote import LeaseLost, RemoteJob, RemoteMetadataRefresh
 from paper_intake.models import StepName
 from paper_intake.remote_worker import (
+    FailureDescriptor,
     PublishedMetadataRefresher,
     RemotePipelineProcessor,
     RemoteProcessingError,
@@ -44,8 +45,8 @@ class _FakeGateway:
     def complete(self, job_id, worker_id, publication):
         self.completed.append((job_id, worker_id, publication))
 
-    def fail(self, job_id, worker_id, code, message):
-        self.failed.append((job_id, worker_id, code, message))
+    def fail(self, job_id, worker_id, code, message, failure=None):
+        self.failed.append((job_id, worker_id, code, message, failure))
 
 
 class _CheckpointAwareProcessor:
@@ -290,6 +291,30 @@ class RemoteWorkerTests(unittest.TestCase):
         self.assertEqual(gateway.completed, [])
         self.assertEqual(gateway.failed, [])
 
+    def test_pipeline_updates_job_stage_before_a_step_can_fail(self):
+        class Repository:
+            def get_job(self, _job_id):
+                return object()
+
+        class Pipeline:
+            def run(self, _job_id, *, before_step, on_step_completed):
+                before_step(StepName.MINERU_PARSE)
+                raise RuntimeError("parse exploded")
+
+        class Gateway:
+            def heartbeat(self, *_args):
+                return True
+
+        job = _FakeGateway().claim()
+        job.artifact_storage_enabled = False
+        processor = RemotePipelineProcessor(
+            repository=Repository(), input_store=None, pipeline=Pipeline(),
+            workflow_root=".", site_url="https://example.github.io",
+        )
+        with self.assertRaisesRegex(RuntimeError, "parse exploded"):
+            processor.process(job, Gateway())
+        self.assertEqual(job.stage, StepName.MINERU_PARSE.value)
+
     def test_retry_reuses_parsed_checkpoint(self):
         gateway = _FakeGateway(checkpoints={"parsed": {"artifact_id": "parsed-1"}})
         processor = _CheckpointAwareProcessor()
@@ -314,6 +339,26 @@ class RemoteWorkerTests(unittest.TestCase):
 
         self.assertEqual(gateway.failed[0][2], "processing_failed")
         self.assertNotIn("secret", gateway.failed[0][3])
+        failure = gateway.failed[0][4]
+        self.assertIsInstance(failure, dict)
+        self.assertEqual(failure["category"], "internal")
+        self.assertEqual(failure["exception_type"], "RuntimeError")
+        self.assertFalse(failure["retryable"])
+        self.assertNotIn("secret", str(failure))
+        self.assertRegex(failure["error_fingerprint"], r"^[0-9a-f]{40}$")
+
+    def test_failure_descriptor_rejects_unsafe_diagnostic_fields(self):
+        with self.assertRaises(ValueError):
+            FailureDescriptor(
+                stage="download_pdf",
+                code="download_failed",
+                category="network",
+                retryable=True,
+                attempt=1,
+                safe_message="Authorization: Bearer secret-token",
+                diagnostic_hint="Retry the download.",
+                error_fingerprint="abc",
+            )
 
     def test_known_processing_failure_keeps_its_safe_stage_error(self):
         class KnownFailureProcessor:

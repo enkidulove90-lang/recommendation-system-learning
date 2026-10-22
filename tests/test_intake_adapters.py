@@ -14,6 +14,7 @@ from paper_intake.adapters import (
     NotionDraft,
     NotionGateway,
 )
+from paper_intake.trace_context import trace_scope
 
 
 def _article_payload(figure_sha256: str) -> dict:
@@ -172,6 +173,20 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(parser.calls[0]["pdf_path"], str(self.pdf))
         self.assertEqual(result.markdown_path, self.markdown)
         self.assertEqual(result.image_paths, (self.image,))
+
+    def test_trace_id_is_forwarded_to_mineru_and_deepseek(self) -> None:
+        parser = _FakeMinerUParser(
+            {"error": None, "markdown_path": str(self.markdown), "content": {"text": "parsed"}}
+        )
+        content = json.dumps(_article_payload(self.figure_hash), ensure_ascii=False)
+        client = _FakeDeepSeekClient(content)
+        with trace_scope("tr_test-chain"):
+            MinerUAdapter(parser=parser).parse(self.pdf, canonical_id="2608.17316")
+            DeepSeekArticleAdapter(api_key="secret", client=client).generate(
+                markdown="# Full paper", metadata={"canonical_id": "2608.17316", "title": "A Paper"}, figures=[]
+            )
+        self.assertEqual(parser.calls[0]["trace_id"], "tr_test-chain")
+        self.assertEqual(client.chat.completions.calls[0]["extra_headers"], {"X-Trace-Id": "tr_test-chain"})
 
     def test_deepseek_adapter_requests_json_and_parses_article(self) -> None:
         content = json.dumps(_article_payload(self.figure_hash), ensure_ascii=False)

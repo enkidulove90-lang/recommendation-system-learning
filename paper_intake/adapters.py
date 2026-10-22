@@ -14,6 +14,7 @@ import requests
 
 from .article import ArticlePayloadError, PaperArticle, parse_article_payload
 from .retry import request_with_retry
+from .trace_context import current_trace_id
 
 
 NOTION_API = "https://api.notion.com/v1"
@@ -89,6 +90,7 @@ class MinerUAdapter:
         try:
             result = request_with_retry(lambda: self.parser.execute(
                 pdf_path=str(path), arxiv_id=canonical_id, title=title,
+                trace_id=current_trace_id(),
             ))
         except Exception as exc:
             raise ExternalServiceError("mineru_request_failed", "MinerU request failed.") from exc
@@ -204,6 +206,7 @@ class DeepSeekArticleAdapter:
                     },
                     {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},
                 ],
+                extra_headers={"X-Trace-Id": current_trace_id()} if current_trace_id() else None,
             ))
             raw = response.choices[0].message.content or ""
             try:
@@ -265,6 +268,8 @@ class _RequestsTransport:
 
     def request(self, method: str, path: str, **kwargs):
         headers = dict(self.headers)
+        if current_trace_id():
+            headers["X-Trace-Id"] = current_trace_id()
         if "files" not in kwargs:
             headers.setdefault("Content-Type", "application/json")
         response = self.session.request(

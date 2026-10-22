@@ -33,6 +33,8 @@ class RemoteJob(BaseModel):
     lease_owner: str
     lease_until: datetime
     artifact_storage_enabled: bool = True
+    attempt: int = 0
+    trace_id: str | None = None
 
 
 class RemoteMetadataRefresh(BaseModel):
@@ -77,11 +79,16 @@ class RemoteGatewayClient:
         self.client = client or httpx.Client(**client_options)
         self.client.headers["Authorization"] = f"Bearer {token}"
         self.max_attempts = max(1, max_attempts)
+        self.trace_id = ""
 
     def close(self) -> None:
         self.client.close()
 
     def _request(self, method: str, url: str, **kwargs: Any) -> httpx.Response:
+        if self.trace_id:
+            headers = dict(kwargs.pop("headers", {}) or {})
+            headers.setdefault("X-Trace-Id", self.trace_id)
+            kwargs["headers"] = headers
         response: httpx.Response | None = None
         for attempt in range(1, self.max_attempts + 1):
             try:
@@ -135,7 +142,9 @@ class RemoteGatewayClient:
             return None
         self._require_success(response)
         payload = response.json()
-        return RemoteJob.model_validate(payload.get("job") or payload)
+        job = RemoteJob.model_validate(payload.get("job") or payload)
+        self.trace_id = job.trace_id or ""
+        return job
 
     def claim_metadata_refresh(self, worker_id: str) -> RemoteMetadataRefresh | None:
         response = self._request(
@@ -277,6 +286,7 @@ class RemoteGatewayClient:
         worker_id: str,
         code: str,
         message: str,
+        failure: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         response = self._request(
             "POST",
@@ -285,6 +295,7 @@ class RemoteGatewayClient:
                 "worker_id": worker_id,
                 "error_code": code[:100],
                 "error_message": message[:1000],
+                "failure": failure or {},
             },
         )
         return self._require_success(response).json()

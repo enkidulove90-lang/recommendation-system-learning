@@ -52,6 +52,8 @@ class RemoteGatewayClientTests(unittest.TestCase):
 
         def handler(request: httpx.Request) -> httpx.Response:
             requests.append(request)
+            if request.url.path != "/v1/worker/jobs/claim":
+                return httpx.Response(200, json={"ok": True})
             return httpx.Response(
                 200,
                 json={
@@ -64,6 +66,7 @@ class RemoteGatewayClientTests(unittest.TestCase):
                         "checkpoints": {},
                         "lease_owner": "worker-a",
                         "lease_until": "2026-10-20T12:00:00Z",
+                        "trace_id": "tr_11111111-1111-4111-8111-111111111111",
                     }
                 },
             )
@@ -75,10 +78,12 @@ class RemoteGatewayClientTests(unittest.TestCase):
         gateway = RemoteGatewayClient("https://gateway.test", "machine-secret", client=client)
 
         job = gateway.claim("worker-a")
+        gateway.heartbeat("job-1", "worker-a")
 
         self.assertEqual(job.job_id, "job-1")
         self.assertEqual(requests[0].url.path, "/v1/worker/jobs/claim")
         self.assertEqual(requests[0].headers["authorization"], "Bearer machine-secret")
+        self.assertEqual(requests[1].headers["x-trace-id"], job.trace_id)
 
     def test_claim_returns_none_for_no_content(self):
         client = httpx.Client(

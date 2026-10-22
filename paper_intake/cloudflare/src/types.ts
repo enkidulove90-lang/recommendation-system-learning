@@ -36,6 +36,28 @@ export interface CreateJobInput {
   ownerIdentity: string;
   inputType: "url" | "pdf";
   inputRef: string;
+  traceId?: string;
+}
+
+export type FailureCategory = "validation" | "network" | "auth" | "provider" | "internal" | "config" | "publication";
+
+export interface FailureDescriptor {
+  stage: string;
+  code: string;
+  category: FailureCategory;
+  retryable: boolean;
+  httpStatus?: number | null;
+  providerErrorCode?: string | null;
+  providerRequestId?: string | null;
+  attempt: number;
+  durationMs?: number | null;
+  safeMessage: string;
+  diagnosticHint: string;
+  errorFingerprint: string;
+  localLogRef?: string | null;
+  exceptionType?: string | null;
+  module?: string | null;
+  functionName?: string | null;
 }
 
 export interface JobRecord {
@@ -54,6 +76,7 @@ export interface JobRecord {
   errorMessage: string | null;
   createdAt: string;
   updatedAt: string;
+  traceId: string;
 }
 
 export interface PublicationInput {

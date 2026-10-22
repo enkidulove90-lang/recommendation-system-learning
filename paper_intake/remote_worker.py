@@ -5,14 +5,18 @@ import logging
 import json
 import os
 import socket
+import hashlib
+import re
 import threading
 import time
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 from .models import JobStatus, StepName, StepStatus
 from .remote import LeaseLost, RemoteGatewayClient, RemoteJob
 from .metadata_refresh import refresh_metadata_file
+from .trace_context import trace_scope
 
 
 logger = logging.getLogger(__name__)
@@ -28,6 +32,65 @@ class RemoteProcessingError(RuntimeError):
     def __init__(self, code: str, message: str):
         super().__init__(message)
         self.code = code
+
+
+_UNSAFE_DIAGNOSTIC = re.compile(r"(?:authorization\s*:|bearer\s+|token\s*=|password\s*=)", re.IGNORECASE)
+
+
+@dataclass(frozen=True)
+class FailureDescriptor:
+    stage: str
+    code: str
+    category: str
+    retryable: bool
+    attempt: int
+    safe_message: str
+    diagnostic_hint: str
+    error_fingerprint: str
+    exception_type: str | None = None
+    module: str | None = None
+    function: str | None = None
+    http_status: int | None = None
+    provider_error_code: str | None = None
+    provider_request_id: str | None = None
+    duration_ms: int | None = None
+    local_log_ref: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.category not in {"validation", "network", "auth", "provider", "internal", "config", "publication"}:
+            raise ValueError("invalid failure category")
+        serialized = json.dumps(asdict(self), ensure_ascii=False)
+        if _UNSAFE_DIAGNOSTIC.search(serialized):
+            raise ValueError("unsafe diagnostic content")
+
+    def payload(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+def failure_descriptor(exc: Exception, job: RemoteJob, worker_id: str) -> FailureDescriptor:
+    known = isinstance(exc, RemoteProcessingError)
+    code = exc.code if known else "processing_failed"
+    category = "provider" if known and any(name in code for name in ("deepseek", "mineru", "notion", "arxiv")) else "internal"
+    retryable = any(name in code for name in ("timeout", "unreachable", "rate_limited", "request_failed", "429", "5xx"))
+    safe_message = str(exc) if known else "The local paper processor failed. Inspect local logs for details."
+    fingerprint_source = f"{type(exc).__name__}:{exc.__class__.__module__}:{code}"
+    return FailureDescriptor(
+        stage=job.stage or "unknown",
+        code=code,
+        category=category,
+        retryable=retryable,
+        attempt=job.attempt,
+        safe_message=safe_message,
+        diagnostic_hint="Inspect the referenced local worker log and the failed stage metrics.",
+        error_fingerprint=hashlib.sha1(fingerprint_source.encode("utf-8")).hexdigest(),
+        exception_type=type(exc).__name__,
+        module=exc.__class__.__module__,
+        function="RemoteWorker.run_claimed",
+        http_status=getattr(exc, "status", None),
+        provider_error_code=getattr(exc, "provider_code", None),
+        provider_request_id=getattr(exc, "request_id", None),
+        local_log_ref=f"{worker_id}:remote-worker.err.log#job={job.job_id}",
+    )
 
 
 class RemoteWorker:
@@ -79,20 +142,18 @@ class RemoteWorker:
         thread.start()
         try:
             try:
-                publication = self.processor.process(job, self.gateway)
+                with trace_scope(job.trace_id):
+                    publication = self.processor.process(job, self.gateway)
             except LeaseLost:
                 raise
             except Exception as exc:
-                code = "processing_failed"
-                message = "The local paper processor failed. Inspect local logs for details."
-                if isinstance(exc, RemoteProcessingError):
-                    code = exc.code
-                    message = str(exc)
+                failure = failure_descriptor(exc, job, worker_id)
                 self.gateway.fail(
                     job.job_id,
                     worker_id,
-                    code,
-                    message,
+                    failure.code,
+                    failure.safe_message,
+                    failure.payload(),
                 )
                 raise
             if lost_lease.is_set():
@@ -365,13 +426,14 @@ class RemotePipelineProcessor:
     def process(self, job: RemoteJob, gateway) -> dict[str, Any]:
         self._ensure_local_job(job, gateway)
         self._restore_remote_checkpoints(job, gateway)
+
+        def before_step(step: StepName) -> None:
+            job.stage = step.value
+            gateway.heartbeat(job.job_id, job.lease_owner, step.value)
+
         result = self.pipeline.run(
             job.job_id,
-            before_step=lambda step: gateway.heartbeat(
-                job.job_id,
-                job.lease_owner,
-                step.value,
-            ),
+            before_step=before_step,
             on_step_completed=lambda step, output: self._sync_step(job, gateway, step, output),
         )
         if result.status != JobStatus.PUBLISHING or not result.notion_page_id:

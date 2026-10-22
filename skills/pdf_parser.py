@@ -59,6 +59,7 @@ class PDFParser(BaseSkill):
         self._model_version: str = kwargs.get("model_version", settings.MINERU_MODEL_VERSION)
         self._poll_interval: float = settings.MINERU_POLL_INTERVAL
         self._poll_max_retries: int = settings.MINERU_POLL_MAX_RETRIES
+        self._trace_id: str = ""
 
     @property
     def is_ready(self) -> bool:
@@ -106,6 +107,7 @@ class PDFParser(BaseSkill):
         arxiv_id: str = normalize_arxiv_id(kwargs.get("arxiv_id", ""))
         title: str = kwargs.get("title", "")
         output_dir: str = kwargs.get("output_dir", "")
+        self._trace_id = str(kwargs.get("trace_id") or "").strip()
 
         # ---- 确定输出目录（复用已有论文资产包） ----
         if not output_dir:
@@ -218,6 +220,8 @@ class PDFParser(BaseSkill):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self._api_key}",
         }
+        if self._trace_id:
+            headers["X-Trace-Id"] = self._trace_id
 
         if not pdf_url:
             return self._submit_local_batch(Path(pdf_path), headers)
@@ -294,6 +298,8 @@ class PDFParser(BaseSkill):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
         }
+        if self._trace_id:
+            headers["X-Trace-Id"] = self._trace_id
         poll_url = f"{MINERU_TASK_URL}/{task_id}"
 
         for attempt in range(1, self._poll_max_retries + 1):
@@ -345,6 +351,8 @@ class PDFParser(BaseSkill):
 
     def _poll_batch_task(self, batch_id: str) -> str | None:
         headers = {"Authorization": f"Bearer {self._api_key}"}
+        if self._trace_id:
+            headers["X-Trace-Id"] = self._trace_id
         poll_url = f"{MINERU_API_BASE}/api/v4/extract-results/batch/{batch_id}"
         for attempt in range(1, self._poll_max_retries + 1):
             try:

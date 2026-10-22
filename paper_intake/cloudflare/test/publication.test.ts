@@ -56,6 +56,7 @@ describe("publication dispatch", () => {
       paper_id: job.paperId,
       notion_page_id: "notion-page-1",
       slug: "consumer-search-transformer",
+      trace_id: expect.stringMatching(/^tr_/u),
     });
     expect((await repository.getJob(job.jobId))?.status).toBe("publishing");
 
@@ -65,7 +66,10 @@ describe("publication dispatch", () => {
         authorization: "Bearer test-callback-token",
         "content-type": "application/json",
       },
-      body: JSON.stringify({ job_id: job.jobId, ok: true, git_commit: "abc123" }),
+      body: JSON.stringify({
+        job_id: job.jobId, ok: true, git_commit: "abc123",
+        workflow_run_id: "987654", run_url: "https://github.com/example/actions/runs/987654",
+      }),
     });
     expect(callback.status).toBe(200);
     expect((await repository.getJob(job.jobId))?.status).toBe("published");
@@ -84,6 +88,13 @@ describe("publication dispatch", () => {
       "SELECT COUNT(*) AS count FROM job_events WHERE job_id = ? AND event_type = 'publication.completed'",
     ).bind(job.jobId).first<{ count: number }>();
     expect(completedEvents?.count).toBe(1);
+    const events = await repository.listJobEvents(job.jobId);
+    expect(events.find((event) => event.event_type === "publication.completed")).toMatchObject({
+      details: {
+        git_commit: "abc123", trace_id: expect.stringMatching(/^tr_/u),
+        workflow_run_id: "987654", run_url: "https://github.com/example/actions/runs/987654",
+      },
+    });
   });
 
   it("keeps a failed deployment retryable in the completed UI group", async () => {
@@ -113,7 +124,21 @@ describe("publication dispatch", () => {
     const failed = await repository.getJob(job.jobId);
     expect(failed?.status).toBe("failed");
     expect(failed?.errorCode).toBe("deploy_failed");
+    const failedEvents = await repository.listJobEvents(job.jobId);
+    expect(failedEvents).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        event_type: "publication.failed",
+        details: expect.objectContaining({ code: "deploy_failed", category: "publication" }),
+      }),
+    ]));
     expect((await repository.retry(job.jobId, "owner@example.com")).status).toBe("queued");
+    const retryEvents = await repository.listJobEvents(job.jobId);
+    expect(retryEvents).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        event_type: "job.retry_scheduled",
+        details: expect.objectContaining({ reason: "deploy_failed" }),
+      }),
+    ]));
   });
 
   it("distinguishes a rejected dispatch from a failed Pages build", async () => {

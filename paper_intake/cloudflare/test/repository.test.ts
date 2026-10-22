@@ -126,6 +126,97 @@ describe("IntakeRepository", () => {
     expect(retried.errorCode).toBeNull();
   });
 
+  it("records a structured stage failure and a retry event with the stable trace id", async () => {
+    const repository = new IntakeRepository(env.DB);
+    const paper = await repository.createOrReusePaper({ arxivId: "2601.00001" });
+    const job = await repository.createJob({
+      paperId: paper.paperId,
+      ownerIdentity: "owner@example.com",
+      inputType: "url",
+      inputRef: "https://arxiv.org/abs/2601.00001",
+      traceId: "tr_11111111-1111-4111-8111-111111111111",
+    });
+    await repository.claim("worker-a", 600);
+    await repository.heartbeat(job.jobId, "worker-a", 600, "deepseek_generate");
+    await repository.fail(job.jobId, "worker-a", {
+      stage: "deepseek_generate",
+      code: "deepseek_schema_invalid",
+      category: "validation",
+      retryable: false,
+      httpStatus: 200,
+      providerErrorCode: "invalid_json",
+      providerRequestId: "req-safe",
+      attempt: 1,
+      durationMs: 27510,
+      safeMessage: "模型返回内容未通过文章 Schema 校验",
+      diagnosticHint: "检查缺失字段和 JSON 局部修复记录",
+      errorFingerprint: "sha1-safe",
+      localLogRef: "worker-a:remote-worker.log#event-12",
+    });
+
+    const failed = await repository.getJob(job.jobId);
+    const events = await repository.listJobEvents(job.jobId);
+    const event = events.find((item) => item.event_type === "job.stage_failed");
+    expect(failed?.traceId).toBe("tr_11111111-1111-4111-8111-111111111111");
+    expect(event).toMatchObject({
+      event_type: "job.stage_failed",
+      details: {
+        trace_id: "tr_11111111-1111-4111-8111-111111111111",
+        stage: "deepseek_generate",
+        code: "deepseek_schema_invalid",
+        category: "validation",
+        retryable: false,
+        http_status: 200,
+        provider_request_id: "req-safe",
+      },
+    });
+
+    await expect(repository.retry(job.jobId, "owner@example.com")).rejects.toThrow("job_not_retryable");
+  });
+
+  it("records lease loss and retry exhaustion as explicit events", async () => {
+    const repository = new IntakeRepository(env.DB);
+    const paper = await repository.createOrReusePaper({ arxivId: "2601.00003" });
+    const job = await repository.createJob({
+      paperId: paper.paperId, ownerIdentity: "owner@example.com", inputType: "url",
+      inputRef: "https://arxiv.org/abs/2601.00003",
+    });
+    await repository.claim("worker-a", 600);
+    expect(await repository.heartbeat(job.jobId, "wrong-worker", 600, "download_pdf")).toBe(false);
+    await env.DB.prepare("UPDATE jobs SET attempt = 3 WHERE job_id = ?").bind(job.jobId).run();
+    await repository.fail(job.jobId, "worker-a", {
+      stage: "download_pdf", code: "timeout", category: "network", retryable: true,
+      attempt: 3, safeMessage: "Download timed out.", diagnosticHint: "Retry later.",
+      errorFingerprint: "timeout-fingerprint",
+    });
+    const events = await repository.listJobEvents(job.jobId);
+    expect((await repository.getJob(job.jobId))?.errorCode).toBe("retry_exhausted");
+    expect(events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ event_type: "job.lease_lost", details: expect.objectContaining({ worker_id: "wrong-worker" }) }),
+      expect.objectContaining({ event_type: "job.retry_exhausted", details: expect.objectContaining({ total_attempts: 3, last_code: "timeout" }) }),
+    ]));
+    await expect(repository.retry(job.jobId, "owner@example.com")).rejects.toThrow("job_retry_exhausted");
+  });
+
+  it.each([
+    ["pdf_url_malformed", "validation"],
+    ["deepseek_schema_invalid", "validation"],
+    ["notion_schema_incompatible", "config"],
+    ["file_io_error", "internal"],
+  ] as const)("refuses retries for %s", async (code, category) => {
+    const repository = new IntakeRepository(env.DB);
+    const paper = await repository.createOrReusePaper({ canonicalUrl: `https://papers.example/${code}` });
+    const job = await repository.createJob({
+      paperId: paper.paperId, ownerIdentity: "owner@example.com", inputType: "url", inputRef: paper.canonicalUrl,
+    });
+    await repository.claim(`worker-${code}`, 600);
+    await repository.fail(job.jobId, `worker-${code}`, {
+      stage: "validate_input", code, category, retryable: true, attempt: 1,
+      safeMessage: "Safe failure.", diagnosticHint: "Fix the input or configuration.", errorFingerprint: `fp-${code}`,
+    });
+    await expect(repository.retry(job.jobId, "owner@example.com")).rejects.toThrow("job_not_retryable");
+  });
+
   it("leases one idempotent published metadata refresh without changing publication state", async () => {
     const repository = new IntakeRepository(env.DB);
     const paper = await repository.createOrReusePaper({

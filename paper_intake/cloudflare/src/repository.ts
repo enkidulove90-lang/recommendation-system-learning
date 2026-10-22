@@ -2,6 +2,7 @@ import type {
   ArtifactInput,
   ArtifactRecord,
   CreateJobInput,
+  FailureDescriptor,
   JobRecord,
   PaperIdentity,
   PaperRecord,
@@ -37,6 +38,7 @@ interface JobRow {
   error_message: string | null;
   created_at: string;
   updated_at: string;
+  trace_id: string | null;
 }
 
 interface ArtifactRow {
@@ -150,6 +152,7 @@ function mapJob(row: JobRow): JobRecord {
     errorMessage: row.error_message,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    traceId: row.trace_id || `tr_${row.job_id}`,
   };
 }
 
@@ -287,14 +290,15 @@ export class IntakeRepository {
     await this.requirePaper(input.paperId);
     const jobId = crypto.randomUUID();
     const timestamp = this.timestamp();
+    const traceId = input.traceId?.trim() || `tr_${crypto.randomUUID()}`;
     try {
       await this.db.batch([
         this.db
           .prepare(
             `INSERT INTO jobs (
               job_id, paper_id, owner_identity, input_type, input_ref,
-              stage, status, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, 'received', 'queued', ?, ?)`,
+              stage, status, created_at, updated_at, trace_id
+            ) VALUES (?, ?, ?, ?, ?, 'received', 'queued', ?, ?, ?)`,
           )
           .bind(
             jobId,
@@ -304,13 +308,14 @@ export class IntakeRepository {
             input.inputRef,
             timestamp,
             timestamp,
+            traceId,
           ),
         this.db
           .prepare(
             `INSERT INTO job_events (job_id, event_type, details_json, created_at)
-             VALUES (?, 'job.created', '{}', ?)`,
+             VALUES (?, 'job.created', ?, ?)`,
           )
-          .bind(jobId, timestamp),
+          .bind(jobId, JSON.stringify({ trace_id: traceId }), timestamp),
       ]);
     } catch (error) {
       const raced = await this.getLatestJobForPaper(input.paperId);
@@ -326,6 +331,29 @@ export class IntakeRepository {
       .bind(jobId)
       .first<JobRow>();
     return row ? mapJob(row) : null;
+  }
+
+  async getPaperIdentity(paperId: string): Promise<Record<string, unknown>> {
+    const row = await this.db.prepare(
+      `SELECT p.normalized_title, p.arxiv_id, p.doi, p.metadata_source, p.metadata_json,
+              u.slug, u.site_url
+       FROM papers p LEFT JOIN publications u ON u.paper_id = p.paper_id
+       WHERE p.paper_id = ? LIMIT 1`,
+    ).bind(paperId).first<{
+      normalized_title: string; arxiv_id: string | null; doi: string | null;
+      metadata_source: string | null; metadata_json: string | null;
+      slug: string | null; site_url: string | null;
+    }>();
+    if (!row) return {};
+    const metadata = parseCheckpoints(row.metadata_json || "{}");
+    return {
+      title: row.normalized_title || metadata.title || null,
+      arxiv_id: row.arxiv_id,
+      doi: row.doi,
+      slug: row.slug,
+      metadata_source: row.metadata_source,
+      final_url: row.site_url,
+    };
   }
 
   async getLatestJobForPaper(paperId: string): Promise<JobRecord | null> {
@@ -389,6 +417,14 @@ export class IntakeRepository {
       .run();
     if (result.meta.changes === 1 && stage) {
       await this.recordJobEvent(jobId, "job.stage_started", { stage });
+    } else if (result.meta.changes !== 1) {
+      if (await this.getJob(jobId)) {
+        await this.recordJobEvent(jobId, "job.lease_lost", {
+          worker_id: workerId,
+          stage: stage || null,
+          elapsed_since_heartbeat_ms: null,
+        });
+      }
     }
     return result.meta.changes === 1;
   }
@@ -434,29 +470,66 @@ export class IntakeRepository {
          WHERE paper_id = ?`,
       ).bind(JSON.stringify(metadata), source || null, title, this.timestamp(), current.paperId).run();
     }
-    await this.recordJobEvent(jobId, "job.stage_completed", { stage });
+    const metrics: Record<string, unknown> = { stage };
+    for (const key of ["duration_ms", "http_status", "file_size_bytes", "sha256", "task_id", "page_count", "poll_count", "model", "input_tokens", "output_tokens", "json_repair_count", "domain", "year", "venue", "rule_version", "operation", "page_id_suffix", "workflow_run_id", "run_url", "commit", "final_url"]) {
+      if (key in envelope) metrics[key] = envelope[key];
+    }
+    await this.recordJobEvent(jobId, "job.stage_completed", metrics);
     return this.requireJob(jobId);
   }
 
   async fail(
     jobId: string,
     workerId: string,
-    errorCode: string,
-    errorMessage: string,
+    failureOrCode: FailureDescriptor | string,
+    legacyMessage = "Processing failed.",
   ): Promise<JobRecord> {
+    const current = await this.requireJob(jobId);
+    const failure: FailureDescriptor = typeof failureOrCode === "string" ? {
+      stage: current.stage, code: failureOrCode, category: "internal", retryable: false,
+      attempt: current.attempt, safeMessage: legacyMessage,
+      diagnosticHint: "Inspect the local worker log reference.", errorFingerprint: `legacy:${failureOrCode}`,
+    } : failureOrCode;
+    const errorCode = failure.code.slice(0, 100);
+    const errorMessage = failure.safeMessage.slice(0, 1000);
+    const { retryPolicy } = await import("./diagnostics");
+    const policy = retryPolicy(errorCode, failure.retryable);
+    const exhausted = current.attempt >= 3 && policy.retryable;
+    const storedErrorCode = exhausted ? "retry_exhausted" : errorCode;
     const result = await this.db
       .prepare(
         `UPDATE jobs SET status = 'failed', lease_owner = NULL, lease_until = NULL,
           error_code = ?, error_message = ?, updated_at = ?
          WHERE job_id = ? AND status = 'processing' AND lease_owner = ?`,
       )
-      .bind(errorCode, errorMessage, this.timestamp(), jobId, workerId)
+      .bind(storedErrorCode, errorMessage, this.timestamp(), jobId, workerId)
       .run();
     if (result.meta.changes !== 1) throw new Error("lease_lost");
+    await this.recordJobEvent(jobId, "job.stage_failed", {
+      trace_id: current.traceId, stage: failure.stage || current.stage, code: errorCode,
+      category: policy.category, retryable: policy.retryable,
+      http_status: failure.httpStatus ?? null, provider_error_code: failure.providerErrorCode ?? null,
+      provider_request_id: failure.providerRequestId ?? null, attempt: failure.attempt,
+      duration_ms: failure.durationMs ?? null, safe_message: errorMessage,
+      diagnostic_hint: failure.diagnosticHint, error_fingerprint: failure.errorFingerprint,
+      local_log_ref: failure.localLogRef ?? null, exception_type: failure.exceptionType ?? null,
+      module: failure.module ?? null, function: failure.functionName ?? null,
+    });
+    if (exhausted) {
+      await this.recordJobEvent(jobId, "job.retry_exhausted", {
+        trace_id: current.traceId,
+        total_attempts: current.attempt,
+        last_code: errorCode,
+      });
+    }
     return this.requireJob(jobId);
   }
 
   async retry(jobId: string, ownerIdentity: string): Promise<JobRecord> {
+    const current = await this.requireJob(jobId);
+    if (await this.hasJobEvent(jobId, "job.retry_exhausted")) throw new Error("job_retry_exhausted");
+    const { retryPolicy } = await import("./diagnostics");
+    if (!retryPolicy(current.errorCode).retryable) throw new Error("job_not_retryable");
     const result = await this.db
       .prepare(
         `UPDATE jobs SET status = 'queued', lease_owner = NULL, lease_until = NULL,
@@ -466,6 +539,10 @@ export class IntakeRepository {
       .bind(this.timestamp(), jobId, ownerIdentity)
       .run();
     if (result.meta.changes !== 1) throw new Error("job_not_retryable");
+    await this.recordJobEvent(jobId, "job.retry_scheduled", {
+      trace_id: current.traceId, attempt: current.attempt + 1,
+      reason: current.errorCode, next_at: this.timestamp(),
+    });
     return this.requireJob(jobId);
   }
 
@@ -496,6 +573,9 @@ export class IntakeRepository {
     if (current.ownerIdentity !== ownerIdentity || current.status !== "failed") {
       throw new Error("job_not_retryable");
     }
+    if (await this.hasJobEvent(jobId, "job.retry_exhausted")) throw new Error("job_retry_exhausted");
+    const { retryPolicy } = await import("./diagnostics");
+    if (!retryPolicy(current.errorCode).retryable) throw new Error("job_not_retryable");
     const timestamp = this.timestamp();
     const results = await this.db.batch([
       this.db.prepare(
@@ -526,6 +606,14 @@ export class IntakeRepository {
       `UPDATE retry_operations SET state = 'completed', response_json = ?, updated_at = ?
        WHERE idempotency_key = ?`,
     ).bind(JSON.stringify(response), this.timestamp(), idempotencyKey).run();
+    if (changed) {
+      await this.recordJobEvent(jobId, "job.retry_scheduled", {
+        trace_id: current.traceId,
+        attempt: current.attempt + 1,
+        reason: current.errorCode,
+        next_at: timestamp,
+      });
+    }
     return { job, replayed: !changed };
   }
 
@@ -788,12 +876,16 @@ export class IntakeRepository {
     eventType: string,
     details: Record<string, unknown> = {},
   ): Promise<void> {
+    const traceId = typeof details.trace_id === "string"
+      ? details.trace_id
+      : (await this.getJob(jobId))?.traceId ?? null;
+    const safeDetails = { ...details, trace_id: traceId };
     await this.db
       .prepare(
         `INSERT OR IGNORE INTO job_events (job_id, event_type, details_json, created_at)
          VALUES (?, ?, ?, ?)`,
       )
-      .bind(jobId, eventType, JSON.stringify(details), this.timestamp())
+      .bind(jobId, eventType, JSON.stringify(safeDetails), this.timestamp())
       .run();
   }
 
@@ -801,6 +893,7 @@ export class IntakeRepository {
     jobId: string,
     success: boolean,
     gitCommit = "",
+    metrics: { workflowRunId?: string; runUrl?: string } = {},
   ): Promise<JobRecord> {
     const current = await this.requireJob(jobId);
     if (current.status !== "publishing") {
@@ -831,7 +924,12 @@ export class IntakeRepository {
             `INSERT OR IGNORE INTO job_events (job_id, event_type, details_json, created_at)
              VALUES (?, 'publication.completed', ?, ?)`,
           )
-          .bind(jobId, JSON.stringify({ git_commit: gitCommit }), timestamp),
+          .bind(jobId, JSON.stringify({
+            git_commit: gitCommit,
+            trace_id: current.traceId,
+            workflow_run_id: metrics.workflowRunId || null,
+            run_url: metrics.runUrl || null,
+          }), timestamp),
       ]);
     } else {
       await this.db.batch([
@@ -846,6 +944,16 @@ export class IntakeRepository {
           )
           .bind(timestamp, jobId),
       ]);
+      await this.recordJobEvent(jobId, "publication.failed", {
+        trace_id: current.traceId,
+        stage: "github_pages_deploy",
+        code: "deploy_failed",
+        category: "publication",
+        retryable: true,
+        diagnostic_hint: "Open the GitHub Actions run and inspect the failed deployment step.",
+        workflow_run_id: metrics.workflowRunId || null,
+        run_url: metrics.runUrl || null,
+      });
     }
     return this.requireJob(jobId);
   }
