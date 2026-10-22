@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
 
 from paper_intake.adapters import ExternalServiceError, NotionPage, ParseResult
-from paper_intake.article import PaperArticle
+from paper_intake.article import GenerationEnvelope, PaperArticle, ReferenceChoice
 from paper_intake.inputs import PaperInputStore
 from paper_intake.models import JobStatus, StepName, StepStatus
 from paper_intake.pipeline import PaperPipeline
@@ -19,7 +20,12 @@ class _FakeMinerU:
         self.calls = 0
         self.markdown = root / "parsed" / "paper.md"
         self.markdown.parent.mkdir(parents=True)
-        self.markdown.write_text("# Full paper\n\nMethod and experiments", encoding="utf-8")
+        self.markdown.write_text(
+            "# Full paper\n\nMethod and experiments\n\n## References\n\n"
+            "A. Author. 2025. Related work. arXiv:2511.21631.\n\n"
+            "B. Author. 2026. New work. arXiv:2604.20937.\n",
+            encoding="utf-8",
+        )
         self.images: tuple[Path, ...] = ()
         if with_figure:
             image = self.markdown.parent / "images" / "figure.png"
@@ -33,14 +39,27 @@ class _FakeMinerU:
 
 
 class _FakeDeepSeek:
-    def __init__(self, *, fail_once: bool = False):
+    model = "deepseek-chat"
+
+    def __init__(self, *, fail_once: bool = False, invalid_ranking: bool = False):
         self.calls = 0
         self.fail_once = fail_once
+        self.invalid_ranking = invalid_ranking
         self.metadata_history = []
+        self.reference_candidate_history = []
 
-    def generate(self, *, markdown: str, metadata: dict, figures: list[dict], failure_path=None) -> PaperArticle:
+    def generate(
+        self,
+        *,
+        markdown: str,
+        metadata: dict,
+        figures: list[dict],
+        reference_candidates=None,
+        failure_path=None,
+    ) -> GenerationEnvelope:
         self.calls += 1
         self.metadata_history.append(dict(metadata))
+        self.reference_candidate_history.append(list(reference_candidates or []))
         if self.fail_once and self.calls == 1:
             raise ExternalServiceError("deepseek_timeout", "DeepSeek request timed out.")
         article_figures = []
@@ -53,7 +72,7 @@ class _FakeDeepSeek:
                     "explanation": "这张图展示了论文方法的核心模块、信息流向以及各组成部分之间的协作关系。",
                 }
             )
-        return PaperArticle.model_validate(
+        article = PaperArticle.model_validate(
             {
                 "schema_version": 1,
                 "paper": {
@@ -80,6 +99,33 @@ class _FakeDeepSeek:
                 "figures": article_figures,
             }
         )
+        if self.invalid_ranking:
+            return GenerationEnvelope(article, None, "reference_selection_invalid")
+        candidate_ids = [item["ref_id"] for item in (reference_candidates or [])]
+        choices = (
+            [
+                ReferenceChoice(ref_id=candidate_ids[0], reason="与方法相关"),
+                ReferenceChoice(ref_id=candidate_ids[1], reason="提供最新对照"),
+            ]
+            if len(candidate_ids) >= 2
+            else None
+        )
+        return GenerationEnvelope(article, choices, None if choices else "reference_selection_missing")
+
+
+class _FakeReferenceClients:
+    def __init__(self, *, fail: bool = False):
+        self.fail = fail
+
+    def verified_arxiv_ids(self, arxiv_ids):
+        if self.fail:
+            raise TimeoutError("provider timeout")
+        return set(arxiv_ids)
+
+    def doi_exists(self, _doi):
+        if self.fail:
+            raise TimeoutError("provider timeout")
+        return True
 
 
 class _FakeNotion:
@@ -94,14 +140,25 @@ class _FakeNotion:
 
 
 class PipelineHarness:
-    def __init__(self, root: Path, *, fail_once: bool = False, with_figure: bool = True):
+    def __init__(
+        self,
+        root: Path,
+        *,
+        fail_once: bool = False,
+        with_figure: bool = True,
+        invalid_ranking: bool = False,
+        reference_clients_fail: bool = False,
+    ):
         self.root = root
         self.repo = JobRepository(root / "jobs.sqlite3")
         self.input_store = PaperInputStore(root / "inbox")
         saved = self.input_store.store_upload("seed", "paper.pdf", b"%PDF-1.7\nbody")
         self.job = self.repo.create_job(source_type="upload", upload_path=str(saved.path))
         self.mineru = _FakeMinerU(root, with_figure=with_figure)
-        self.deepseek = _FakeDeepSeek(fail_once=fail_once)
+        self.deepseek = _FakeDeepSeek(
+            fail_once=fail_once,
+            invalid_ranking=invalid_ranking,
+        )
         self.notion = _FakeNotion()
         self.pipeline = PaperPipeline(
             repository=self.repo,
@@ -110,6 +167,7 @@ class PipelineHarness:
             deepseek=self.deepseek,
             notion=self.notion,
             workflow_root=root / "workflow",
+            reference_clients=_FakeReferenceClients(fail=reference_clients_fail),
             metadata_resolver=lambda canonical_id, _url: {
                 "canonical_id": canonical_id,
                 "title": "A Test Paper",
@@ -262,6 +320,69 @@ class PaperPipelineTests(unittest.TestCase):
             self.assertEqual(quality.status, StepStatus.SUCCEEDED)
             self.assertIn("figure_required", quality.output["issue_codes"])
             self.assertIsNone(harness.repo.get_step(harness.job.job_id, StepName.WRITE_NOTION_PUBLISHED))
+        finally:
+            harness.close()
+
+    def test_invalid_reference_ranking_degrades_without_blocking_article(self) -> None:
+        harness = PipelineHarness(self.root, invalid_ranking=True)
+        try:
+            result = harness.pipeline.run(harness.job.job_id)
+            markdown = (harness.pipeline._bundle(harness.job.job_id) / "article.md").read_text(
+                encoding="utf-8"
+            )
+            diagnostics = json.loads(
+                (
+                    harness.pipeline._bundle(harness.job.job_id)
+                    / "diagnostics"
+                    / "reference-selection.json"
+                ).read_text(encoding="utf-8")
+            )
+
+            self.assertEqual(result.status, JobStatus.PUBLISHING)
+            self.assertIn("## 补充阅读", markdown)
+            self.assertEqual(diagnostics["ranking_diagnostic"], "reference_selection_invalid")
+            self.assertEqual(diagnostics["resolution_mode"], "supplemental")
+            self.assertNotIn("traceback", json.dumps(diagnostics).lower())
+        finally:
+            harness.close()
+
+    def test_reference_provider_failure_omits_section_without_blocking_article(self) -> None:
+        harness = PipelineHarness(self.root, reference_clients_fail=True)
+        try:
+            result = harness.pipeline.run(harness.job.job_id)
+            markdown = (harness.pipeline._bundle(harness.job.job_id) / "article.md").read_text(
+                encoding="utf-8"
+            )
+
+            self.assertEqual(result.status, JobStatus.PUBLISHING)
+            self.assertNotIn("related-reading:start", markdown)
+            self.assertEqual(harness.notion.calls, 1)
+        finally:
+            harness.close()
+
+    def test_generation_cache_hit_skips_second_deepseek_call(self) -> None:
+        harness = PipelineHarness(self.root)
+        try:
+            first = harness.pipeline.run(harness.job.job_id)
+            second_output = harness.pipeline._step_deepseek_generate(harness.job.job_id)
+
+            self.assertEqual(first.status, JobStatus.PUBLISHING)
+            self.assertEqual(harness.deepseek.calls, 1)
+            self.assertTrue(second_output["article_cache_hit"])
+            self.assertTrue(second_output["ranking_cache_hit"])
+        finally:
+            harness.close()
+
+    def test_article_generation_failure_remains_a_hard_failure(self) -> None:
+        harness = PipelineHarness(self.root, fail_once=True)
+        try:
+            result = harness.pipeline.run(harness.job.job_id)
+
+            self.assertEqual(result.status, JobStatus.FAILED)
+            self.assertEqual(result.error_code, "deepseek_timeout")
+            self.assertIsNone(
+                harness.repo.get_step(harness.job.job_id, StepName.QUALITY_CHECK)
+            )
         finally:
             harness.close()
 

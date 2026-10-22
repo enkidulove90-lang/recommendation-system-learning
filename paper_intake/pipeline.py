@@ -1,24 +1,41 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import shutil
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Callable
 
 from .adapters import ExternalServiceError, NotionDraft
 from .article import (
+    GenerationEnvelope,
     PaperArticle,
+    ReferenceChoice,
     normalize_classification,
     publication_year,
     render_article_markdown,
     validate_article,
 )
+from .generation_cache import GenerationCache
 from .inputs import InputValidationError, PaperInputStore, canonicalize_url, sha256_file
 from .models import JobRecord, JobStatus, StepName, StepStatus
 from .metadata_refresh import refresh_metadata_file
 from .repository import JobRepository
 from .remote import LeaseLost
+from .reference_candidates import (
+    ReferenceCandidate,
+    candidate_hash,
+    extract_reference_candidates,
+    source_hash,
+)
+from .reference_links import (
+    ArxivCrossrefClients,
+    PwcSnapshot,
+    ResolutionResult,
+    resolve_selected_references,
+)
 
 
 class PipelineFailure(RuntimeError):
@@ -40,6 +57,8 @@ class PaperPipeline:
         StepName.QUALITY_CHECK,
         StepName.WRITE_NOTION_PUBLISHED,
     )
+    ARTICLE_PROMPT_VERSION = "article-v2-formula-reference-selection"
+    RANKING_RULE_VERSION = "latest-v1"
 
     def __init__(
         self,
@@ -51,6 +70,9 @@ class PaperPipeline:
         notion,
         workflow_root: str | Path,
         metadata_resolver: Callable[[str, str], dict[str, Any]] | None = None,
+        reference_clients=None,
+        pwc_snapshot: PwcSnapshot | None = None,
+        generation_cache: GenerationCache | None = None,
     ):
         self.repository = repository
         self.input_store = input_store
@@ -59,6 +81,11 @@ class PaperPipeline:
         self.notion = notion
         self.workflow_root = Path(workflow_root)
         self.metadata_resolver = metadata_resolver or self._fallback_metadata
+        self.reference_clients = reference_clients or ArxivCrossrefClients()
+        self.pwc_snapshot = pwc_snapshot
+        self.generation_cache = generation_cache or GenerationCache(
+            self.workflow_root / ".generation-cache"
+        )
 
     def run(
         self,
@@ -282,15 +309,114 @@ class PaperPipeline:
         markdown = Path(parse_step.output["markdown_path"]).read_text(
             encoding="utf-8", errors="replace"
         )
-        article = self.deepseek.generate(
-            markdown=markdown,
-            metadata=metadata,
-            figures=list(parse_step.output.get("figures") or []),
-            failure_path=bundle / "diagnostics" / "deepseek-invalid-response.json",
+        candidates = extract_reference_candidates(markdown)
+        source_digest = source_hash(markdown)
+        candidate_digest = candidate_hash(candidates)
+        model = str(getattr(self.deepseek, "model", "unknown"))
+        article = self.generation_cache.get_article(
+            source_digest,
+            model,
+            self.ARTICLE_PROMPT_VERSION,
         )
+        choices = self.generation_cache.get_ranking(
+            source_digest,
+            candidate_digest,
+            model,
+            self.ARTICLE_PROMPT_VERSION,
+            self.RANKING_RULE_VERSION,
+        )
+        article_cache_hit = article is not None
+        ranking_cache_hit = choices is not None
+        ranking_diagnostic: str | None = None
+        if article is None:
+            generation_arguments = {
+                "markdown": markdown,
+                "metadata": metadata,
+                "figures": list(parse_step.output.get("figures") or []),
+                "failure_path": bundle / "diagnostics" / "deepseek-invalid-response.json",
+            }
+            parameters = inspect.signature(self.deepseek.generate).parameters.values()
+            if any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in parameters) or any(
+                parameter.name == "reference_candidates" for parameter in parameters
+            ):
+                generation_arguments["reference_candidates"] = [
+                    asdict(candidate) for candidate in candidates
+                ]
+            generated = self.deepseek.generate(
+                **generation_arguments,
+            )
+            if isinstance(generated, PaperArticle):
+                envelope = GenerationEnvelope(
+                    generated,
+                    None,
+                    "reference_selection_missing",
+                )
+            else:
+                envelope = generated
+            article = envelope.article
+            ranking_diagnostic = envelope.ranking_diagnostic
+            if choices is None:
+                choices = envelope.reference_choices
+            self.generation_cache.put_article(
+                source_digest,
+                model,
+                self.ARTICLE_PROMPT_VERSION,
+                article,
+            )
+            if choices:
+                self.generation_cache.put_ranking(
+                    source_digest,
+                    candidate_digest,
+                    model,
+                    self.ARTICLE_PROMPT_VERSION,
+                    self.RANKING_RULE_VERSION,
+                    choices,
+                )
+        elif choices is None:
+            ranking_diagnostic = "ranking_cache_miss"
+
         article_path = bundle / "article.json"
         article_path.write_text(article.model_dump_json(indent=2), encoding="utf-8")
-        return {"article_path": str(article_path), "metadata": metadata}
+        candidate_path = bundle / "reference-candidates.json"
+        candidate_path.write_text(
+            json.dumps(
+                [asdict(candidate) for candidate in candidates],
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        diagnostics_dir = bundle / "diagnostics"
+        diagnostics_dir.mkdir(parents=True, exist_ok=True)
+        ranking_path = diagnostics_dir / "reference-selection.json"
+        ranking_path.write_text(
+            json.dumps(
+                {
+                    "article_cache_hit": article_cache_hit,
+                    "candidate_hash": candidate_digest,
+                    "choices": [choice.model_dump(mode="json") for choice in choices or []],
+                    "model": model,
+                    "prompt_version": self.ARTICLE_PROMPT_VERSION,
+                    "ranking_cache_hit": ranking_cache_hit,
+                    "ranking_diagnostic": ranking_diagnostic,
+                    "rule_version": self.RANKING_RULE_VERSION,
+                    "source_hash": source_digest,
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        return {
+            "article_path": str(article_path),
+            "metadata": metadata,
+            "candidate_path": str(candidate_path),
+            "ranking_path": str(ranking_path),
+            "article_cache_hit": article_cache_hit,
+            "ranking_cache_hit": ranking_cache_hit,
+        }
 
     def _load_article(self, job_id: str) -> PaperArticle:
         path = self._bundle(job_id) / "article.json"
@@ -310,8 +436,56 @@ class PaperPipeline:
         bundle = self._bundle(job_id)
         article = self._load_article(job_id)
         result = validate_article(article, artifact_root=bundle)
+        candidates: list[ReferenceCandidate] = []
+        candidate_path = bundle / "reference-candidates.json"
+        if candidate_path.is_file():
+            try:
+                candidates = [
+                    ReferenceCandidate(**item)
+                    for item in json.loads(candidate_path.read_text(encoding="utf-8"))
+                ]
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                candidates = []
+        ranking_path = bundle / "diagnostics" / "reference-selection.json"
+        ranking_payload: dict[str, Any] = {}
+        choices: list[ReferenceChoice] | None = None
+        if ranking_path.is_file():
+            try:
+                ranking_payload = json.loads(ranking_path.read_text(encoding="utf-8"))
+                raw_choices = ranking_payload.get("choices") or []
+                choices = [ReferenceChoice.model_validate(item) for item in raw_choices] or None
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                choices = None
+                ranking_payload = {"ranking_diagnostic": "reference_selection_unreadable"}
+        try:
+            resolved = resolve_selected_references(
+                candidates,
+                choices,
+                self.reference_clients,
+                self.pwc_snapshot,
+            )
+        except Exception:
+            resolved = ResolutionResult(mode="omitted", references=[])
+            ranking_payload["ranking_diagnostic"] = "reference_resolution_failed"
+        ranking_payload.update(
+            {
+                "resolution_mode": resolved.mode,
+                "resolved_ids": [item.candidate.ref_id for item in resolved.references],
+                "verification_statuses": [
+                    item.verification_status for item in resolved.references
+                ],
+            }
+        )
+        ranking_path.parent.mkdir(parents=True, exist_ok=True)
+        ranking_path.write_text(
+            json.dumps(ranking_payload, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
         article_md = bundle / "article.md"
-        article_md.write_text(render_article_markdown(article), encoding="utf-8")
+        article_md.write_text(
+            render_article_markdown(article, resolved),
+            encoding="utf-8",
+        )
         return {
             "publishable": result.publishable,
             "issue_codes": result.issue_codes,
