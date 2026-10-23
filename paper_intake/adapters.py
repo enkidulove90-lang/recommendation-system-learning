@@ -18,6 +18,7 @@ from .article import (
     generation_output_schema,
     parse_generation_envelope,
 )
+from .evidence import ContentIntegrityError, build_fact_pack, ensure_clean_text
 from .retry import request_with_retry
 from .trace_context import current_trace_id
 
@@ -111,13 +112,22 @@ class MinerUAdapter:
             if image_dir.is_dir()
             else ()
         )
-        text = markdown_path.read_text(encoding="utf-8", errors="replace")
+        try:
+            text = markdown_path.read_text(encoding="utf-8", errors="strict")
+            ensure_clean_text(text, stage="mineru_output")
+        except (UnicodeDecodeError, ContentIntegrityError) as exc:
+            raise ExternalServiceError(
+                "mineru_encoding_invalid",
+                "MinerU Markdown contains invalid UTF-8 or a replacement character.",
+                service="mineru",
+                retryable=False,
+            ) from exc
         return ParseResult(markdown_path=markdown_path, image_paths=images, text=text)
 
 
 DEEPSEEK_ARTICLE_SYSTEM_PROMPT = (
-    "你是推荐系统论文编辑。只输出符合给定 Schema 的 JSON；"
-    "不得虚构实验数字、链接或图片路径。"
+    "你是推荐系统论文编辑。只能依据事实包中的 evidence_id 组织中文表达；"
+    "只输出符合给定 Schema 的 JSON，不得补写事实、数字、链接、图号或图片路径。"
 )
 
 
@@ -191,7 +201,11 @@ class DeepSeekArticleAdapter:
         reference_candidates: list[dict[str, Any]] | None = None,
         failure_path: str | Path | None = None,
     ) -> GenerationEnvelope:
-        trimmed = markdown[:80000]
+        fact_pack = build_fact_pack(
+            markdown=markdown,
+            metadata=metadata,
+            figures=figures,
+        )
         safe_candidates = [
             {
                 "ref_id": str(item.get("ref_id", "")),
@@ -201,13 +215,16 @@ class DeepSeekArticleAdapter:
             for item in (reference_candidates or [])
         ]
         prompt = {
-            "metadata": metadata,
-            "available_figures": figures,
-            "paper_markdown": trimmed,
+            "fact_pack": fact_pack.model_dump(mode="json"),
             "requirements": {
                 "language": "Chinese",
+                "schema_version": 2,
                 "sections": ["introduction", "method", "experiments", "conclusion", "references"],
-                "figure_rule": "Use only available figure paths and write an original Chinese explanation.",
+                "evidence_rule": "Every paragraph must cite existing evidence_ids.",
+                "figure_rule": (
+                    "Select only an existing figure id and one stable anchor_id; "
+                    "write interpretation only, never path, SHA, label, caption, or source fields."
+                ),
                 "output_schema": generation_output_schema(),
                 "formula_format": (
                     "Use $...$ for inline formulas and $$...$$ for block formulas."
@@ -241,13 +258,62 @@ class DeepSeekArticleAdapter:
             ))
             raw = response.choices[0].message.content or ""
             try:
-                return parse_generation_envelope(
+                ensure_clean_text(raw, stage="deepseek_json")
+                envelope = parse_generation_envelope(
                     raw,
                     {item["ref_id"] for item in safe_candidates if item["ref_id"]},
                 )
-            except ArticlePayloadError as exc:
+                paper_updates = {
+                    key: metadata[key]
+                    for key in ("canonical_id", "title", "authors", "paper_url", "code_url")
+                    if key in metadata and metadata[key] not in (None, "")
+                }
+                deterministic_figures = {item.id: item for item in fact_pack.figures}
+                hydrated_figures = []
+                for figure in envelope.article.figures:
+                    fact = deterministic_figures.get(figure.id)
+                    if fact is None:
+                        fact = next(
+                            (item for item in fact_pack.figures if item.path == figure.path),
+                            None,
+                        )
+                    if fact is not None:
+                        figure = figure.model_copy(
+                            update={
+                                "id": fact.id,
+                                "path": fact.path,
+                                "sha256": fact.sha256,
+                                "figure_label": fact.figure_label,
+                                "original_caption": fact.original_caption,
+                            }
+                        )
+                    hydrated_figures.append(figure)
+                article = envelope.article.model_copy(
+                    update={
+                        "paper": envelope.article.paper.model_copy(update=paper_updates),
+                        "facts": fact_pack,
+                        "figures": hydrated_figures,
+                    }
+                )
+                return GenerationEnvelope(
+                    article=article,
+                    reference_choices=envelope.reference_choices,
+                    ranking_diagnostic=envelope.ranking_diagnostic,
+                )
+            except (ArticlePayloadError, ContentIntegrityError) as exc:
                 if failure_path:
-                    self._write_failure(Path(failure_path), raw, exc.details)
+                    details = getattr(
+                        exc,
+                        "details",
+                        [
+                            {
+                                "loc": "$",
+                                "type": "content_integrity",
+                                "msg": str(exc),
+                            }
+                        ],
+                    )
+                    self._write_failure(Path(failure_path), raw, details)
                 raise
         except ExternalServiceError:
             raise

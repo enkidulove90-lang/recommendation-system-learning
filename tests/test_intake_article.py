@@ -60,6 +60,79 @@ def _payload(figure_path: str = "images/figure-1.png", figure_sha256: str = "") 
     }
 
 
+def _v2_payload(figure_sha256: str) -> dict:
+    payload = _payload(figure_sha256=figure_sha256)
+    payload["schema_version"] = 2
+    payload["facts"] = {
+        "metadata": payload["paper"],
+        "metadata_source": "authoritative_metadata",
+        "evidence_blocks": [
+            {"id": "method.pipeline", "source_id": "mineru:l10-l14", "text": "统一编码流程"},
+            {"id": "experiment.main", "source_id": "mineru:l30-l35", "text": "NDCG@20 提升 2.12%"},
+        ],
+        "key_numbers": [
+            {"id": "metric.ndcg", "value": "2.12%", "source_id": "mineru:l30-l35"}
+        ],
+        "figures": [
+            {
+                "id": "fig3",
+                "path": "images/figure-1.png",
+                "sha256": figure_sha256,
+                "figure_label": "Figure 3",
+                "original_caption": "Unified optical encoding paths.",
+                "source_id": "mineru:figure:3",
+            }
+        ],
+        "anchor_ids": ["method.overview", "experiments.main-results"],
+    }
+    payload["sections"] = [
+        {
+            "id": "method",
+            "question": "它如何避免后融合的信息损失？",
+            "paragraphs": [
+                {
+                    "id": "method.overview",
+                    "text": "方法把图像和文字放入统一视觉空间。",
+                    "evidence_ids": ["method.pipeline"],
+                }
+            ],
+            "takeaways": ["统一输入先于统一编码。"],
+        },
+        {
+            "id": "experiments",
+            "question": "证据是否支持该设计？",
+            "paragraphs": [
+                {
+                    "id": "experiments.main-results",
+                    "text": "主实验报告 NDCG@20 提升 2.12%。",
+                    "evidence_ids": ["experiment.main", "metric.ndcg"],
+                }
+            ],
+            "takeaways": [],
+        },
+    ]
+    payload["figures"] = [
+        {
+            "id": "fig3",
+            "path": "images/figure-1.png",
+            "sha256": figure_sha256,
+            "section": "method",
+            "figure_label": "Figure 3",
+            "original_caption": "Unified optical encoding paths.",
+            "anchor_id": "method.overview",
+            "short_title": "三种编码路径对比",
+            "alt": "该图从左到右比较独立编码、提示编码和统一光学编码，并标出视觉与文本信息发生交互的位置。",
+            "interpretation": {
+                "shows": "图中展示三种编码路径。",
+                "focus": "先看右侧统一视觉空间中的双层交互。",
+                "evidence": "它对应方法流程的直接图示证据。",
+                "conclusion": "图只支持统一编码减少后融合步骤这一有限结论。",
+            },
+        }
+    ]
+    return payload
+
+
 class PaperArticleTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
@@ -255,6 +328,40 @@ class PaperArticleTests(unittest.TestCase):
         self.assertEqual(envelope.article.paper.canonical_id, "2608.17316")
         self.assertIsNone(envelope.reference_choices)
         self.assertEqual(envelope.ranking_diagnostic, "reference_selection_missing")
+
+    def test_v2_places_figure_after_stable_anchor_and_keeps_numbers_traceable(self) -> None:
+        article = PaperArticle.model_validate(_v2_payload(self.figure_sha256))
+
+        result = validate_article(article, artifact_root=self.root)
+        markdown = render_article_markdown(article)
+
+        self.assertTrue(result.publishable, result.issues)
+        paragraph_at = markdown.index("方法把图像和文字放入统一视觉空间。")
+        figure_at = markdown.index("![图 3：三种编码路径对比]")
+        takeaway_at = markdown.index("统一输入先于统一编码。")
+        self.assertLess(paragraph_at, figure_at)
+        self.assertLess(figure_at, takeaway_at)
+        self.assertIn("先看右侧统一视觉空间中的双层交互。", markdown)
+
+    def test_v2_blocks_unknown_evidence_untraceable_number_and_bad_anchor(self) -> None:
+        payload = _v2_payload(self.figure_sha256)
+        payload["sections"][0]["paragraphs"][0]["evidence_ids"] = ["invented.fact"]
+        payload["sections"][0]["paragraphs"][0]["text"] += " 提升 99.9%。"
+        payload["figures"][0]["anchor_id"] = "method.missing"
+
+        result = validate_article(PaperArticle.model_validate(payload), artifact_root=self.root)
+
+        self.assertIn("evidence_id_unknown", result.issue_codes)
+        self.assertIn("number_untraceable", result.issue_codes)
+        self.assertIn("figure_anchor_unresolved", result.issue_codes)
+
+    def test_v2_rejects_replacement_character_at_final_markdown_gate(self) -> None:
+        payload = _v2_payload(self.figure_sha256)
+        payload["sections"][0]["paragraphs"][0]["text"] += " \ufffd"
+        article = PaperArticle.model_validate(payload)
+
+        with self.assertRaisesRegex(ValueError, "final_markdown"):
+            render_article_markdown(article)
 
 
 if __name__ == "__main__":

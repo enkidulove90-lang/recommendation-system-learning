@@ -175,6 +175,15 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(result.markdown_path, self.markdown)
         self.assertEqual(result.image_paths, (self.image,))
 
+    def test_mineru_rejects_replacement_characters_instead_of_silently_replacing(self) -> None:
+        self.markdown.write_text("broken \ufffd output", encoding="utf-8")
+        parser = _FakeMinerUParser(
+            {"error": None, "markdown_path": str(self.markdown), "content": {"text": "parsed"}}
+        )
+
+        with self.assertRaisesRegex(Exception, "replacement character"):
+            MinerUAdapter(parser=parser).parse(self.pdf, canonical_id="2608.17316")
+
     def test_trace_id_is_forwarded_to_mineru_and_deepseek(self) -> None:
         parser = _FakeMinerUParser(
             {"error": None, "markdown_path": str(self.markdown), "content": {"text": "parsed"}}
@@ -204,7 +213,7 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(call["response_format"], {"type": "json_object"})
         self.assertEqual(envelope.article.paper.canonical_id, "2608.17316")
 
-    def test_deepseek_prompt_preserves_content_rules_and_adds_only_formula_and_selection(self) -> None:
+    def test_deepseek_prompt_uses_traceable_fact_pack_and_stable_anchors(self) -> None:
         content = json.dumps(
             {
                 "article": _article_payload(self.figure_hash),
@@ -231,32 +240,23 @@ class AdapterTests(unittest.TestCase):
         call = client.chat.completions.calls[0]
         self.assertEqual(
             call["messages"][0]["content"],
-            "你是推荐系统论文编辑。只输出符合给定 Schema 的 JSON；不得虚构实验数字、链接或图片路径。",
+            "你是推荐系统论文编辑。只能依据事实包中的 evidence_id 组织中文表达；只输出符合给定 Schema 的 JSON，不得补写事实、数字、链接、图号或图片路径。",
         )
         self.assertEqual(call["messages"][0]["content"], DEEPSEEK_ARTICLE_SYSTEM_PROMPT)
         prompt = json.loads(call["messages"][1]["content"])
         requirements = prompt["requirements"]
         self.assertEqual(requirements["language"], "Chinese")
+        self.assertEqual(requirements["schema_version"], 2)
         self.assertEqual(
             requirements["sections"],
             ["introduction", "method", "experiments", "conclusion", "references"],
         )
-        self.assertEqual(
-            requirements["figure_rule"],
-            "Use only available figure paths and write an original Chinese explanation.",
-        )
-        self.assertEqual(
-            set(requirements),
-            {
-                "language",
-                "sections",
-                "figure_rule",
-                "output_schema",
-                "formula_format",
-                "section_heading_format",
-                "reference_selection",
-            },
-        )
+        self.assertNotIn("paper_markdown", prompt)
+        self.assertIn("fact_pack", prompt)
+        self.assertIn("method.overview", prompt["fact_pack"]["anchor_ids"])
+        self.assertIn("evidence_blocks", prompt["fact_pack"])
+        self.assertEqual(requirements["evidence_rule"], "Every paragraph must cite existing evidence_ids.")
+        self.assertIn("anchor_id", requirements["figure_rule"])
         self.assertIn("$...$", requirements["formula_format"])
         self.assertIn("$$...$$", requirements["formula_format"])
         self.assertIn("body text only", requirements["section_heading_format"])
@@ -295,6 +295,25 @@ class AdapterTests(unittest.TestCase):
         self.assertNotIn(secret, saved_text)
         self.assertIn("[REDACTED]", saved["response"])
         self.assertTrue(saved["validation_errors"])
+
+    def test_deepseek_replacement_character_is_blocked_and_safely_diagnosed(self) -> None:
+        payload = _article_payload(self.figure_hash)
+        payload["paper"]["title"] = "broken \ufffd title"
+        client = _FakeDeepSeekClient(json.dumps(payload, ensure_ascii=False))
+        adapter = DeepSeekArticleAdapter(api_key="secret", client=client)
+        failure_path = self.root / "diagnostics" / "deepseek-encoding.json"
+
+        with self.assertRaisesRegex(Exception, "deepseek_json") as caught:
+            adapter.generate(
+                markdown="# Full paper",
+                metadata={"canonical_id": "2608.17316", "title": "A Paper"},
+                figures=[],
+                failure_path=failure_path,
+            )
+
+        self.assertEqual(caught.exception.code, "deepseek_invalid_output")
+        saved = json.loads(failure_path.read_text(encoding="utf-8"))
+        self.assertEqual(saved["validation_errors"][0]["type"], "content_integrity")
 
     def test_deepseek_preflight_rejects_unavailable_balance(self) -> None:
         balance = _FakeBalanceTransport({"is_available": False, "balance_infos": []})

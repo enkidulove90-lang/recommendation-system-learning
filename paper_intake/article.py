@@ -15,6 +15,7 @@ from .reference_candidates import (
     RELATED_READING_START,
     strip_generated_related_reading,
 )
+from .evidence import FactPack, ensure_clean_text
 
 if TYPE_CHECKING:
     from .reference_links import ResolutionResult
@@ -37,6 +38,7 @@ CONTROLLED_CATEGORIES = {
 }
 CONTROLLED_VENUE_TYPES = {"会议", "期刊", "arXiv预印本"}
 _CJK = re.compile(r"[\u3400-\u9fff]")
+_TRACEABLE_NUMBER = re.compile(r"(?<![\w@.])(?:\d+(?:\.\d+)?%|\d+(?:\.\d+)?)(?![\w.])")
 
 
 class ArticlePayloadError(ValueError):
@@ -88,10 +90,43 @@ class ArticleSections(BaseModel):
 class ArticleFigure(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    path: str
-    sha256: str
-    section: Literal["introduction", "method", "experiments", "conclusion"]
-    explanation: str
+    id: str = ""
+    path: str = ""
+    sha256: str = ""
+    section: Literal["introduction", "method", "experiments", "conclusion"] = "method"
+    explanation: str = ""
+    figure_label: str = ""
+    original_caption: str = ""
+    anchor_id: str = ""
+    short_title: str = ""
+    alt: str = ""
+    interpretation: "FigureInterpretation | None" = None
+
+
+class FigureInterpretation(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    shows: str
+    focus: str
+    evidence: str
+    conclusion: str
+
+
+class ArticleParagraph(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    id: str
+    text: str
+    evidence_ids: list[str] = Field(default_factory=list)
+
+
+class ArticleSectionPlan(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    id: Literal["introduction", "method", "experiments", "conclusion"]
+    question: str
+    paragraphs: list[ArticleParagraph] = Field(default_factory=list)
+    takeaways: list[str] = Field(default_factory=list)
 
 
 class PaperArticle(BaseModel):
@@ -100,6 +135,8 @@ class PaperArticle(BaseModel):
     classification: Classification
     article: ArticleSections
     figures: list[ArticleFigure] = Field(default_factory=list)
+    facts: FactPack | None = None
+    sections: list[ArticleSectionPlan] = Field(default_factory=list)
 
 
 class ReferenceChoice(BaseModel):
@@ -328,6 +365,30 @@ def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> Qua
     if not article.figures:
         issues.append(QualityIssue("figure_required", "At least one paper figure is required."))
 
+    paragraph_ids: set[str] = set()
+    known_evidence_ids: set[str] = set()
+    known_numbers: set[str] = set()
+    if article.schema_version >= 2:
+        if article.facts is None:
+            issues.append(QualityIssue("facts_required", "Schema V2 requires a deterministic fact pack."))
+        else:
+            known_evidence_ids.update(item.id for item in article.facts.evidence_blocks)
+            known_evidence_ids.update(item.id for item in article.facts.key_numbers)
+            known_numbers.update(item.value for item in article.facts.key_numbers)
+        if not article.sections:
+            issues.append(QualityIssue("content_plan_required", "Schema V2 requires content sections."))
+        for section in article.sections:
+            for paragraph in section.paragraphs:
+                paragraph_ids.add(paragraph.id)
+                if not paragraph.evidence_ids:
+                    issues.append(QualityIssue("evidence_id_required", f"{paragraph.id} has no evidence."))
+                for evidence_id in paragraph.evidence_ids:
+                    if evidence_id not in known_evidence_ids:
+                        issues.append(QualityIssue("evidence_id_unknown", f"Unknown evidence id: {evidence_id}"))
+                for number in _TRACEABLE_NUMBER.findall(paragraph.text):
+                    if number not in known_numbers:
+                        issues.append(QualityIssue("number_untraceable", f"Untraceable number: {number}"))
+
     root = Path(artifact_root).resolve()
     for index, figure in enumerate(article.figures, 1):
         candidate = (root / figure.path).resolve()
@@ -341,14 +402,30 @@ def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> Qua
             issues.append(
                 QualityIssue("figure_hash_mismatch", f"Figure {index} hash does not match.")
             )
-        explanation = figure.explanation.strip()
-        if len(explanation) < 24 or not _CJK.search(explanation):
-            issues.append(
-                QualityIssue(
-                    "figure_explanation_invalid",
-                    f"Figure {index} needs a substantive Chinese explanation.",
+        if article.schema_version >= 2:
+            if figure.anchor_id not in paragraph_ids:
+                issues.append(QualityIssue("figure_anchor_unresolved", f"Figure {index} anchor is missing."))
+            if len(figure.alt) < 40 or not _CJK.search(figure.alt):
+                issues.append(QualityIssue("figure_alt_invalid", f"Figure {index} alt text is too short."))
+            interpretation = figure.interpretation
+            if interpretation is None or any(
+                not getattr(interpretation, field).strip()
+                for field in ("shows", "focus", "evidence", "conclusion")
+            ):
+                issues.append(QualityIssue("figure_interpretation_invalid", f"Figure {index} needs four-part interpretation."))
+        else:
+            explanation = figure.explanation.strip()
+            if len(explanation) < 24 or not _CJK.search(explanation):
+                issues.append(
+                    QualityIssue(
+                        "figure_explanation_invalid",
+                        f"Figure {index} needs a substantive Chinese explanation.",
+                    )
                 )
-            )
+    if article.schema_version >= 2 and sum(
+        figure.section == "experiments" for figure in article.figures
+    ) > 3:
+        issues.append(QualityIssue("experiment_figure_limit", "Experiment section allows at most three figures."))
     return QualityResult(tuple(issues))
 
 
@@ -367,6 +444,48 @@ def _render_figures(article: PaperArticle, section: str, label: str) -> str:
             ]
         )
     return "\n".join(rendered).rstrip()
+
+
+def _render_v2_figure(article: PaperArticle, figure: ArticleFigure) -> list[str]:
+    basename = Path(figure.path).name
+    public_path = f"/images/papers/{article.paper.canonical_id or 'paper'}/{basename}"
+    label_number = re.search(r"\d+[a-z]?", figure.figure_label, re.IGNORECASE)
+    display_label = f"图 {label_number.group(0)}" if label_number else "图"
+    title = figure.short_title or "论文图示"
+    interpretation = figure.interpretation
+    lines = [f"![{display_label}：{title}]({public_path} \"{figure.alt}\")", ""]
+    if interpretation is not None:
+        lines.extend(
+            [
+                interpretation.shows,
+                "",
+                interpretation.focus,
+                "",
+                interpretation.evidence,
+                "",
+                interpretation.conclusion,
+                "",
+            ]
+        )
+    return lines
+
+
+def _render_v2_section(article: PaperArticle, section: ArticleSectionPlan) -> str:
+    lines: list[str] = []
+    if section.question:
+        lines.extend([f"*{section.question}*", ""])
+    figures_by_anchor: dict[str, list[ArticleFigure]] = {}
+    for figure in article.figures:
+        figures_by_anchor.setdefault(figure.anchor_id, []).append(figure)
+    for paragraph in section.paragraphs:
+        lines.extend([paragraph.text, ""])
+        for figure in figures_by_anchor.get(paragraph.id, []):
+            lines.extend(_render_v2_figure(article, figure))
+    if section.takeaways:
+        lines.extend(["**要点**", ""])
+        lines.extend(f"- {item}" for item in section.takeaways)
+        lines.append("")
+    return "\n".join(lines).rstrip()
 
 
 def render_related_reading(result: "ResolutionResult") -> str:
@@ -408,6 +527,14 @@ def render_article_markdown(
     if article.paper.code_url:
         links.append(f"[代码链接]({article.paper.code_url})")
 
+    plans = {section.id: section for section in article.sections}
+
+    def section_body(section_id: str, legacy: str) -> str:
+        plan = plans.get(section_id)
+        if article.schema_version >= 2 and plan is not None:
+            return _render_v2_section(article, plan)
+        return legacy.strip()
+
     parts = [
         "---",
         f"title: {title}",
@@ -424,21 +551,21 @@ def render_article_markdown(
         "",
         "## 研究背景与问题",
         "",
-        article.article.introduction.strip(),
+        section_body("introduction", article.article.introduction),
     ]
-    intro_figures = _render_figures(article, "introduction", "背景图")
+    intro_figures = "" if article.schema_version >= 2 else _render_figures(article, "introduction", "背景图")
     if intro_figures:
         parts.extend(["", intro_figures])
-    parts.extend(["", "## 方法", "", article.article.method.strip()])
-    method_figures = _render_figures(article, "method", "方法图")
+    parts.extend(["", "## 方法", "", section_body("method", article.article.method)])
+    method_figures = "" if article.schema_version >= 2 else _render_figures(article, "method", "方法图")
     if method_figures:
         parts.extend(["", method_figures])
-    parts.extend(["", "## 实验", "", article.article.experiments.strip()])
-    experiment_figures = _render_figures(article, "experiments", "实验图")
+    parts.extend(["", "## 实验", "", section_body("experiments", article.article.experiments)])
+    experiment_figures = "" if article.schema_version >= 2 else _render_figures(article, "experiments", "实验图")
     if experiment_figures:
         parts.extend(["", experiment_figures])
-    parts.extend(["", "## 总结", "", article.article.conclusion.strip()])
-    conclusion_figures = _render_figures(article, "conclusion", "总结图")
+    parts.extend(["", "## 总结", "", section_body("conclusion", article.article.conclusion)])
+    conclusion_figures = "" if article.schema_version >= 2 else _render_figures(article, "conclusion", "总结图")
     if conclusion_figures:
         parts.extend(["", conclusion_figures])
     parts.extend(["", "## References", ""])
@@ -446,7 +573,13 @@ def render_article_markdown(
     if resolved_references:
         for resolved in resolved_references.references:
             resolved_by_index[resolved.candidate.original_index] = resolved
-    for index, reference in enumerate(article.article.references):
+    if article.schema_version >= 2:
+        focal = f"[{article.paper.title}]({article.paper.paper_url})"
+        if article.paper.code_url:
+            focal += f" （代码：[{article.paper.code_url}]({article.paper.code_url})）"
+        parts.append(f"- {focal}")
+    references_to_render = [] if article.schema_version >= 2 else article.article.references
+    for index, reference in enumerate(references_to_render):
         resolved = resolved_by_index.get(index)
         if resolved is not None:
             title = resolved.candidate.title.strip()
@@ -465,4 +598,15 @@ def render_article_markdown(
             if resolved.reason:
                 reference += f" （相关性：{resolved.reason.strip()}）"
         parts.append(f"- {reference}")
-    return "\n".join(parts).rstrip() + "\n"
+    if article.schema_version >= 2 and resolved_references:
+        for resolved in resolved_references.references:
+            title = resolved.candidate.title.strip() or resolved.candidate.raw_text.strip()
+            reference = f"[{title}]({resolved.paper_url})"
+            if resolved.code_url:
+                reference += f" （代码：[{resolved.code_url}]({resolved.code_url})）"
+            if resolved.reason:
+                reference += f" （相关性：{resolved.reason.strip()}）"
+            parts.append(f"- {reference}")
+    rendered = "\n".join(parts).rstrip() + "\n"
+    ensure_clean_text(rendered, stage="final_markdown")
+    return rendered
