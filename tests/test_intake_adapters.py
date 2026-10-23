@@ -253,11 +253,14 @@ class AdapterTests(unittest.TestCase):
                 "figure_rule",
                 "output_schema",
                 "formula_format",
+                "section_heading_format",
                 "reference_selection",
             },
         )
         self.assertIn("$...$", requirements["formula_format"])
         self.assertIn("$$...$$", requirements["formula_format"])
+        self.assertIn("body text only", requirements["section_heading_format"])
+        self.assertIn("do not prefix", requirements["section_heading_format"])
         self.assertEqual(
             [item["ref_id"] for item in requirements["reference_selection"]["candidates"]],
             ["ref_001", "ref_002"],

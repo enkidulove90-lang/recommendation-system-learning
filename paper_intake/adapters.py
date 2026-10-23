@@ -212,6 +212,10 @@ class DeepSeekArticleAdapter:
                 "formula_format": (
                     "Use $...$ for inline formulas and $$...$$ for block formulas."
                 ),
+                "section_heading_format": (
+                    "Section titles are rendered by the publisher. Return section body text only; "
+                    "do not prefix section content with numbers or headings."
+                ),
                 "reference_selection": {
                     "instruction": (
                         "Choose exactly two eligible ref_id values most relevant to the article "

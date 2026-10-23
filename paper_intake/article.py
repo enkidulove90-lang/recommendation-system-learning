@@ -422,22 +422,22 @@ def render_article_markdown(
         "",
         " · ".join(links),
         "",
-        "## 一、研究背景与问题",
+        "## 研究背景与问题",
         "",
         article.article.introduction.strip(),
     ]
     intro_figures = _render_figures(article, "introduction", "背景图")
     if intro_figures:
         parts.extend(["", intro_figures])
-    parts.extend(["", "## 二、方法", "", article.article.method.strip()])
+    parts.extend(["", "## 方法", "", article.article.method.strip()])
     method_figures = _render_figures(article, "method", "方法图")
     if method_figures:
         parts.extend(["", method_figures])
-    parts.extend(["", "## 三、实验", "", article.article.experiments.strip()])
+    parts.extend(["", "## 实验", "", article.article.experiments.strip()])
     experiment_figures = _render_figures(article, "experiments", "实验图")
     if experiment_figures:
         parts.extend(["", experiment_figures])
-    parts.extend(["", "## 四、总结", "", article.article.conclusion.strip()])
+    parts.extend(["", "## 总结", "", article.article.conclusion.strip()])
     conclusion_figures = _render_figures(article, "conclusion", "总结图")
     if conclusion_figures:
         parts.extend(["", conclusion_figures])

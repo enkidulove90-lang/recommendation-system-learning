@@ -133,7 +133,7 @@ class IntakeEndToEndTests(unittest.TestCase):
 
             self.assertEqual(publishing.status, JobStatus.PUBLISHING)
             self.assertEqual(notion.status, "Published")
-            self.assertIn("## 二、方法", notion.draft_markdown)
+            self.assertIn("## 方法", notion.draft_markdown)
             self.assertTrue(original_pdf.is_file())
             self.assertEqual(github.calls, 0)
             published = service.verify_publication(job.job_id, checker=lambda _url: True)

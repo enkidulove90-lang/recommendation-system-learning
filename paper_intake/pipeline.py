@@ -57,7 +57,7 @@ class PaperPipeline:
         StepName.QUALITY_CHECK,
         StepName.WRITE_NOTION_PUBLISHED,
     )
-    ARTICLE_PROMPT_VERSION = "article-v2-formula-reference-selection"
+    ARTICLE_PROMPT_VERSION = "article-v3-plain-headings-formula-reference-selection"
     RANKING_RULE_VERSION = "latest-v1"
 
     def __init__(
