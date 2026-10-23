@@ -235,6 +235,13 @@ def publication_year(article: PaperArticle) -> str:
 
 def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> QualityResult:
     issues: list[QualityIssue] = []
+    if "\ufffd" in article.model_dump_json():
+        issues.append(
+            QualityIssue(
+                "replacement_character_forbidden",
+                "Generated article contains a Unicode replacement character.",
+            )
+        )
     sections = article.article
     for field_name in ("introduction", "method", "experiments", "conclusion"):
         if not getattr(sections, field_name).strip():

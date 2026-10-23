@@ -113,6 +113,16 @@ class PaperArticleTests(unittest.TestCase):
         self.assertFalse(result.publishable)
         self.assertIn("figure_explanation_invalid", result.issue_codes)
 
+    def test_replacement_character_in_generated_article_is_blocked(self) -> None:
+        payload = _payload(figure_sha256=self.figure_sha256)
+        payload["paper"]["title"] = "�-Rec"
+        payload["article"]["method"] = "方法正文包含损坏字符 �。"
+
+        result = validate_article(PaperArticle.model_validate(payload), artifact_root=self.root)
+
+        self.assertFalse(result.publishable)
+        self.assertIn("replacement_character_forbidden", result.issue_codes)
+
     def test_unknown_category_falls_back_to_controlled_taxonomy(self) -> None:
         payload = _payload(figure_sha256=self.figure_sha256)
         payload["classification"]["categories"] = ["模型自己发明的分类"]

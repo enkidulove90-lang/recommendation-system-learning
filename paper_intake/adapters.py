@@ -21,6 +21,7 @@ NOTION_API = "https://api.notion.com/v1"
 NOTION_API_VERSION = "2026-03-11"
 GITHUB_API = "https://api.github.com"
 _IMAGE_LINE = re.compile(r"^!\[([^]]*)\]\(([^)]+)\)$")
+_LATEX_INPUT = re.compile(r"(?<!%)\\(?:input|include)\{([^}]+)\}")
 
 
 class ExternalServiceError(RuntimeError):
@@ -38,6 +39,83 @@ class ExternalServiceError(RuntimeError):
         self.service = service
         self.http_status = http_status
         self.retryable = retryable
+
+
+def read_verified_utf8(path: str | Path) -> str:
+    """Read generated text without silently manufacturing replacement characters."""
+    try:
+        text = Path(path).read_text(encoding="utf-8", errors="strict")
+    except UnicodeDecodeError as exc:
+        raise ExternalServiceError(
+            "mineru_encoding_invalid",
+            "MinerU Markdown is not valid UTF-8.",
+            service="mineru",
+            retryable=False,
+        ) from exc
+    if "\ufffd" in text:
+        raise ExternalServiceError(
+            "mineru_encoding_invalid",
+            "MinerU Markdown contains a Unicode replacement character.",
+            service="mineru",
+            retryable=False,
+        )
+    return text
+
+
+def _expand_latex_inputs(path: Path, *, source_root: Path, active: frozenset[Path] = frozenset()) -> str:
+    """Expand local ``\\input``/``\\include`` statements without leaving the source tree."""
+    resolved = path.resolve()
+    root = source_root.resolve()
+    if root != resolved and root not in resolved.parents:
+        raise ExternalServiceError(
+            "authoritative_source_invalid",
+            "A LaTeX include points outside the authoritative source tree.",
+            service="arxiv",
+        )
+    if resolved in active:
+        raise ExternalServiceError(
+            "authoritative_source_invalid",
+            "The authoritative LaTeX source contains a cyclic include.",
+            service="arxiv",
+        )
+    text = read_verified_utf8(resolved)
+    next_active = active | {resolved}
+
+    def replace(match: re.Match[str]) -> str:
+        relative = Path(match.group(1).strip())
+        candidate = (resolved.parent / relative)
+        if not candidate.suffix:
+            candidate = candidate.with_suffix(".tex")
+        if not candidate.is_file():
+            return match.group(0)
+        return _expand_latex_inputs(candidate, source_root=root, active=next_active)
+
+    return _LATEX_INPUT.sub(replace, text)
+
+
+def load_authoritative_latex(source_root: str | Path, canonical_id: str) -> str:
+    """Load a local arXiv source bundle as deterministic evidence for a corrupted OCR result."""
+    paper_root = Path(source_root) / canonical_id / "arxiv_source"
+    main = next(
+        (paper_root / name for name in ("main.tex", "main_arxiv.tex") if (paper_root / name).is_file()),
+        None,
+    )
+    if main is None:
+        raise ExternalServiceError(
+            "mineru_encoding_invalid",
+            "MinerU text contains a replacement character and no authoritative arXiv source is available.",
+            service="mineru",
+            retryable=False,
+        )
+    text = _expand_latex_inputs(main, source_root=paper_root)
+    if "\ufffd" in text:
+        raise ExternalServiceError(
+            "authoritative_source_invalid",
+            "The authoritative arXiv source contains a Unicode replacement character.",
+            service="arxiv",
+            retryable=False,
+        )
+    return text
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,12 +156,15 @@ class DispatchResult:
 
 
 class MinerUAdapter:
-    def __init__(self, *, parser=None):
+    def __init__(self, *, parser=None, authoritative_source_root: str | Path | None = None):
         if parser is None:
             from skills.pdf_parser import PDFParser
 
             parser = PDFParser()
         self.parser = parser
+        self.authoritative_source_root = Path(authoritative_source_root or (
+            Path(__file__).resolve().parent.parent / "data" / "workflow_state"
+        ))
 
     def parse(self, pdf_path: str | Path, *, canonical_id: str, title: str = "") -> ParseResult:
         path = Path(pdf_path)
@@ -106,7 +187,21 @@ class MinerUAdapter:
             if image_dir.is_dir()
             else ()
         )
-        text = markdown_path.read_text(encoding="utf-8", errors="replace")
+        try:
+            text = read_verified_utf8(markdown_path)
+        except ExternalServiceError as exc:
+            raw_is_utf8 = True
+            try:
+                raw_text = markdown_path.read_text(encoding="utf-8", errors="strict")
+            except UnicodeDecodeError:
+                raw_is_utf8 = False
+                raw_text = ""
+            if not raw_is_utf8 or "\ufffd" not in raw_text:
+                raise
+            text = load_authoritative_latex(self.authoritative_source_root, canonical_id)
+            fallback_path = markdown_path.parent / "authoritative-source.tex"
+            fallback_path.write_text(text, encoding="utf-8", newline="\n")
+            markdown_path = fallback_path
         return ParseResult(markdown_path=markdown_path, image_paths=images, text=text)
 
 
@@ -188,6 +283,11 @@ class DeepSeekArticleAdapter:
                 "language": "Chinese",
                 "sections": ["introduction", "method", "experiments", "conclusion", "references"],
                 "figure_rule": "Use only available figure paths and write an original Chinese explanation.",
+                "formula_rule": (
+                    "Follow paper-site-formula-rendering: inline formulas use $...$; "
+                    "display formulas use $$...$$ on separate lines; keep LaTeX _ and ^ inside math; "
+                    "never use plain parentheses, code fences, or generated HTML to imitate formulas."
+                ),
                 "output_schema": PaperArticle.model_json_schema(),
             },
         }
@@ -202,6 +302,11 @@ class DeepSeekArticleAdapter:
                         "content": (
                             "你是推荐系统论文编辑。只输出符合给定 Schema 的 JSON；"
                             "不得虚构实验数字、链接或图片路径。"
+                            "如果正文包含数学表达，严格遵循 paper-site-formula-rendering："
+                            "行内公式使用 $...$，块级公式使用 $$...$$ 且独占一段；"
+                            "下标和上标在公式内使用 LaTeX 的 _ 与 ^，不得写成 \\_；"
+                            "不得用普通圆括号冒充公式，不得输出 MathJax HTML 或公式代码块；"
+                            "不得输出 Unicode 替换字符 �。"
                         ),
                     },
                     {"role": "user", "content": json.dumps(prompt, ensure_ascii=False)},

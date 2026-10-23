@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 from paper_intake.adapters import (
     DeepSeekArticleAdapter,
+    ExternalServiceError,
     GitHubPagesGateway,
     MinerUAdapter,
     NotionDraft,
@@ -174,6 +175,42 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(result.markdown_path, self.markdown)
         self.assertEqual(result.image_paths, (self.image,))
 
+    def test_mineru_adapter_rejects_invalid_utf8_instead_of_inserting_replacement_text(self) -> None:
+        self.markdown.write_bytes(b"# broken \xff title")
+        parser = _FakeMinerUParser(
+            {"error": None, "markdown_path": str(self.markdown), "content": {"text": "parsed"}}
+        )
+
+        with self.assertRaises(ExternalServiceError) as caught:
+            MinerUAdapter(parser=parser).parse(self.pdf, canonical_id="2606.10156")
+
+        self.assertEqual(caught.exception.code, "mineru_encoding_invalid")
+
+    def test_mineru_adapter_uses_expanded_authoritative_source_when_ocr_contains_replacement(self) -> None:
+        self.markdown.write_text("# \ufffd-Rec\n正文", encoding="utf-8")
+        source_root = self.root / "workflow"
+        arxiv_source = source_root / "2606.10156" / "arxiv_source"
+        (arxiv_source / "sections").mkdir(parents=True)
+        (arxiv_source / "main_arxiv.tex").write_text(
+            "\\title{$\\tau$-Rec}\\n\\input{sections/method}", encoding="utf-8"
+        )
+        (arxiv_source / "sections" / "method.tex").write_text(
+            "The benchmark uses $k$ trials.", encoding="utf-8"
+        )
+        parser = _FakeMinerUParser(
+            {"error": None, "markdown_path": str(self.markdown), "content": {"text": "parsed"}}
+        )
+
+        result = MinerUAdapter(
+            parser=parser, authoritative_source_root=source_root
+        ).parse(self.pdf, canonical_id="2606.10156")
+
+        self.assertEqual(result.markdown_path.name, "authoritative-source.tex")
+        self.assertNotIn("\ufffd", result.text)
+        self.assertIn("$\\tau$-Rec", result.text)
+        self.assertIn("The benchmark uses $k$ trials.", result.text)
+        self.assertEqual(result.image_paths, (self.image,))
+
     def test_trace_id_is_forwarded_to_mineru_and_deepseek(self) -> None:
         parser = _FakeMinerUParser(
             {"error": None, "markdown_path": str(self.markdown), "content": {"text": "parsed"}}
@@ -202,6 +239,12 @@ class AdapterTests(unittest.TestCase):
         call = client.chat.completions.calls[0]
         self.assertEqual(call["response_format"], {"type": "json_object"})
         self.assertEqual(article.paper.canonical_id, "2608.17316")
+        system_prompt = call["messages"][0]["content"]
+        user_prompt = json.loads(call["messages"][1]["content"])
+        self.assertIn("行内公式使用 $...$", system_prompt)
+        self.assertIn("块级公式使用 $$...$$", system_prompt)
+        self.assertIn("不得用普通圆括号冒充公式", system_prompt)
+        self.assertIn("formula_rule", user_prompt["requirements"])
 
     def test_deepseek_invalid_output_is_redacted_and_saved_for_diagnosis(self) -> None:
         secret = "sk-super-secret-value"

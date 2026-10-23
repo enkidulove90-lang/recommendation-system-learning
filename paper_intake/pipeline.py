@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable
 
-from .adapters import ExternalServiceError, NotionDraft
+from .adapters import ExternalServiceError, NotionDraft, read_verified_utf8
 from .article import (
     PaperArticle,
     normalize_classification,
@@ -279,9 +279,7 @@ class PaperPipeline:
         parse_step = self.repository.get_step(job_id, StepName.MINERU_PARSE)
         if parse_step is None or parse_step.status != StepStatus.SUCCEEDED:
             raise PipelineFailure("mineru_output_missing", "MinerU output is not available.")
-        markdown = Path(parse_step.output["markdown_path"]).read_text(
-            encoding="utf-8", errors="replace"
-        )
+        markdown = read_verified_utf8(parse_step.output["markdown_path"])
         article = self.deepseek.generate(
             markdown=markdown,
             metadata=metadata,
