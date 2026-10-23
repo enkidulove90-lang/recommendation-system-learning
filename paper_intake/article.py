@@ -255,7 +255,9 @@ def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> Qua
     if not sections.references:
         issues.append(QualityIssue("references_required", "At least one reference is required."))
     for index, reference in enumerate(sections.references, 1):
-        if not re.search(r"\[[^\]]+\]\(https?://[^)]+\)", reference):
+        has_verified_link = re.search(r"\[[^\]]+\]\(https?://[^)]+\)", reference)
+        is_explicitly_unresolved = "（未解析）" in reference
+        if not has_verified_link and not is_explicitly_unresolved:
             issues.append(
                 QualityIssue(
                     "reference_link_missing",

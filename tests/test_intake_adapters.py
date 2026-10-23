@@ -101,7 +101,7 @@ class _FakeNotionTransport:
         self.markdown = "old remote body"
         self.property_names = property_names or [
             "title", "status", "type", "slug", "summary", "arxiv_id",
-            "category", "tags", "year", "venue_type", "venue_name"
+            "category", "tags", "year", "date", "venue_type", "venue_name"
         ]
 
     def request(self, method: str, path: str, **kwargs):
@@ -402,6 +402,7 @@ class AdapterTests(unittest.TestCase):
                 categories=("推荐系统", "生成式推荐"),
                 tags=("论文速读", "Semantic ID"),
                 year="2026",
+                published="2026-06-10T17:39:41Z",
                 venue_type="会议",
                 venue_name="RecSys 2026",
             )
@@ -419,6 +420,10 @@ class AdapterTests(unittest.TestCase):
         )
         self.assertEqual(transport.last_properties["venue_type"]["select"]["name"], "会议")
         self.assertEqual(transport.last_properties["year"]["select"]["name"], "2026")
+        self.assertEqual(
+            transport.last_properties["date"]["date"]["start"],
+            "2026-06-10",
+        )
         self.assertEqual(
             transport.last_properties["venue_name"]["rich_text"][0]["text"]["content"],
             "RecSys 2026",

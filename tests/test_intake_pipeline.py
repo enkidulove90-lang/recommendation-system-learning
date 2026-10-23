@@ -118,6 +118,7 @@ class PipelineHarness:
                 "title": "A Test Paper",
                 "authors": ["Alice"],
                 "paper_url": f"https://arxiv.org/abs/{canonical_id}",
+                "published": "2026-06-10T17:39:41Z",
             },
         )
 
@@ -177,6 +178,7 @@ class PaperPipelineTests(unittest.TestCase):
             self.assertEqual(harness.mineru.calls, 1)
             self.assertEqual(harness.deepseek.last_figures[0]["width"], 640)
             self.assertEqual(harness.deepseek.last_figures[0]["height"], 320)
+            self.assertEqual(harness.notion.pages[0].published, "2026-06-10T17:39:41Z")
             step_names = [step.step_name for step in harness.repo.list_steps(harness.job.job_id)]
             self.assertEqual(
                 step_names,

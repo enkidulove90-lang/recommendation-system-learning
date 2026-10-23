@@ -136,6 +136,7 @@ class NotionDraft:
     categories: tuple[str, ...] = ()
     tags: tuple[str, ...] = ()
     year: str = ""
+    published: str = ""
     venue_type: str = ""
     venue_name: str = ""
 
@@ -486,6 +487,7 @@ class NotionGateway:
         categories: tuple[str, ...] = (),
         tags: tuple[str, ...] = (),
         year: str = "",
+        published: str = "",
         venue_type: str = "",
         venue_name: str = "",
     ) -> dict:
@@ -503,6 +505,9 @@ class NotionGateway:
                 "multi_select": [{"name": tag[:100]} for tag in tags if tag]
             },
             "year": {"select": {"name": year}},
+            "date": {"date": {"start": published[:10]}} if re.fullmatch(
+                r"\d{4}-\d{2}-\d{2}(?:T.*)?", published
+            ) else {"date": None},
             "venue_type": {"select": {"name": venue_type}},
             "venue_name": {"rich_text": self._rich_text(venue_name)},
         }
@@ -513,6 +518,7 @@ class NotionGateway:
                 (key in {"category", "year", "venue_type"} and not value["select"]["name"])
                 or (key == "tags" and not value["multi_select"])
                 or (key == "venue_name" and not value["rich_text"])
+                or (key == "date" and not value["date"])
             )
         }
         if self._property_names is not None:
@@ -680,6 +686,7 @@ class NotionGateway:
             categories=draft.categories,
             tags=draft.tags,
             year=draft.year,
+            published=draft.published,
             venue_type=draft.venue_type,
             venue_name=draft.venue_name,
         )
@@ -716,6 +723,7 @@ class NotionGateway:
             categories=draft.categories,
             tags=draft.tags,
             year=draft.year,
+            published=draft.published,
             venue_type=draft.venue_type,
             venue_name=draft.venue_name,
         )

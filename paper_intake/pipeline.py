@@ -339,6 +339,7 @@ class PaperPipeline:
     def _step_write_notion_published(self, job_id: str) -> dict[str, Any]:
         bundle = self._bundle(job_id)
         article = self._load_article(job_id)
+        metadata = json.loads((bundle / "metadata.json").read_text(encoding="utf-8"))
         markdown = (bundle / "article.md").read_text(encoding="utf-8")
         figure_paths = tuple((bundle / figure.path).resolve() for figure in article.figures)
         page = self.notion.upsert_published(
@@ -352,6 +353,7 @@ class PaperPipeline:
                 categories=tuple(article.classification.categories),
                 tags=tuple(article.classification.tags),
                 year=publication_year(article),
+                published=str(metadata.get("published") or ""),
                 venue_type=article.classification.venue_type,
                 venue_name=article.classification.venue_name,
             )
