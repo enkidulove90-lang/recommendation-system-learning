@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic import ValidationError
 
@@ -253,6 +254,14 @@ def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> Qua
             )
     if not sections.references:
         issues.append(QualityIssue("references_required", "At least one reference is required."))
+    for index, reference in enumerate(sections.references, 1):
+        if not re.search(r"\[[^\]]+\]\(https?://[^)]+\)", reference):
+            issues.append(
+                QualityIssue(
+                    "reference_link_missing",
+                    f"Reference {index} needs a clickable title linked to an HTTP(S) source.",
+                )
+            )
     if not article.paper.paper_url:
         issues.append(QualityIssue("paper_url_required", "A paper URL is required."))
     if not article.figures:
@@ -271,6 +280,20 @@ def validate_article(article: PaperArticle, *, artifact_root: str | Path) -> Qua
             issues.append(
                 QualityIssue("figure_hash_mismatch", f"Figure {index} hash does not match.")
             )
+        try:
+            with Image.open(candidate) as image:
+                width, height = image.size
+            if width < 320 or height < 120:
+                issues.append(
+                    QualityIssue(
+                        "figure_too_small",
+                        f"Figure {index} is {width}x{height}; formula crops cannot be paper figures.",
+                    )
+                )
+        except (UnidentifiedImageError, OSError):
+            # Existing callers separately verify the file and its digest; legacy
+            # non-image fixtures remain compatible while real images get the gate.
+            pass
         explanation = figure.explanation.strip()
         if len(explanation) < 24 or not _CJK.search(explanation):
             issues.append(

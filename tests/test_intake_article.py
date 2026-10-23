@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from PIL import Image
 from pydantic import ValidationError
 
 from paper_intake.article import (
@@ -42,8 +43,8 @@ def _payload(figure_path: str = "images/figure-1.png", figure_sha256: str = "") 
             "experiments": "论文在三个公开数据集上比较多种基线，并通过消融实验验证两个核心模块。",
             "conclusion": "该方法把模态可靠性显式纳入推荐流程，在准确率与鲁棒性之间取得稳定平衡。",
             "references": [
-                "论文：https://arxiv.org/abs/2608.17316",
-                "代码：https://github.com/example/reliable-rec",
+                "[A Reliable Recommendation Model](https://arxiv.org/abs/2608.17316)",
+                "[Official implementation](https://github.com/example/reliable-rec)",
             ],
         },
         "figures": [
@@ -112,6 +113,28 @@ class PaperArticleTests(unittest.TestCase):
 
         self.assertFalse(result.publishable)
         self.assertIn("figure_explanation_invalid", result.issue_codes)
+
+    def test_formula_crop_cannot_satisfy_the_paper_figure_gate(self) -> None:
+        image = self.root / "images" / "formula-crop.png"
+        Image.new("RGB", (223, 31), "white").save(image)
+        payload = _payload(
+            figure_path="images/formula-crop.png",
+            figure_sha256=hashlib.sha256(image.read_bytes()).hexdigest(),
+        )
+
+        result = validate_article(PaperArticle.model_validate(payload), artifact_root=self.root)
+
+        self.assertFalse(result.publishable)
+        self.assertIn("figure_too_small", result.issue_codes)
+
+    def test_reference_without_clickable_title_is_blocked(self) -> None:
+        payload = _payload(figure_sha256=self.figure_sha256)
+        payload["article"]["references"] = ["Rajput et al. Recommender Systems with Generative Retrieval."]
+
+        result = validate_article(PaperArticle.model_validate(payload), artifact_root=self.root)
+
+        self.assertFalse(result.publishable)
+        self.assertIn("reference_link_missing", result.issue_codes)
 
     def test_replacement_character_in_generated_article_is_blocked(self) -> None:
         payload = _payload(figure_sha256=self.figure_sha256)

@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from PIL import Image
 from paper_intake.adapters import ExternalServiceError, NotionPage, ParseResult
 from paper_intake.article import PaperArticle
 from paper_intake.inputs import PaperInputStore
@@ -24,7 +25,7 @@ class _FakeMinerU:
         if with_figure:
             image = self.markdown.parent / "images" / "figure.png"
             image.parent.mkdir()
-            image.write_bytes(b"figure-content")
+            Image.new("RGB", (640, 320), "white").save(image)
             self.images = (image,)
 
     def parse(self, _pdf_path, *, canonical_id: str, title: str = "") -> ParseResult:
@@ -37,10 +38,12 @@ class _FakeDeepSeek:
         self.calls = 0
         self.fail_once = fail_once
         self.metadata_history = []
+        self.last_figures = []
 
     def generate(self, *, markdown: str, metadata: dict, figures: list[dict], failure_path=None) -> PaperArticle:
         self.calls += 1
         self.metadata_history.append(dict(metadata))
+        self.last_figures = figures
         if self.fail_once and self.calls == 1:
             raise ExternalServiceError("deepseek_timeout", "DeepSeek request timed out.")
         article_figures = []
@@ -172,6 +175,8 @@ class PaperPipelineTests(unittest.TestCase):
             self.assertEqual(result.notion_page_id, "page-id")
             self.assertEqual(harness.notion.calls, 1)
             self.assertEqual(harness.mineru.calls, 1)
+            self.assertEqual(harness.deepseek.last_figures[0]["width"], 640)
+            self.assertEqual(harness.deepseek.last_figures[0]["height"], 320)
             step_names = [step.step_name for step in harness.repo.list_steps(harness.job.job_id)]
             self.assertEqual(
                 step_names,

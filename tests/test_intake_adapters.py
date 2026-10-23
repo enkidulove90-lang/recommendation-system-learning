@@ -14,6 +14,7 @@ from paper_intake.adapters import (
     MinerUAdapter,
     NotionDraft,
     NotionGateway,
+    _RequestsTransport,
 )
 from paper_intake.trace_context import trace_scope
 
@@ -148,6 +149,22 @@ class _FakeGitHubTransport:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_requests_transport_applies_only_the_explicit_service_proxy(self) -> None:
+        transport = _RequestsTransport(
+            base_url="https://api.notion.com/v1",
+            headers={},
+            proxy_url="http://127.0.0.1:7897",
+        )
+
+        self.assertFalse(transport.session.trust_env)
+        self.assertEqual(
+            transport.session.proxies,
+            {
+                "http": "http://127.0.0.1:7897",
+                "https": "http://127.0.0.1:7897",
+            },
+        )
+
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
         self.root = Path(self.temp_dir.name)

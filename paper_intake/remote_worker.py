@@ -476,7 +476,11 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         runtime_root / "inbox",
         max_file_bytes=int(os.getenv("PAPER_INTAKE_MAX_FILE_MB", "100")) * 1024 * 1024,
     )
-    notion = NotionGateway(required["NOTION_TOKEN"], required["NOTION_DATABASE_ID"])
+    notion = NotionGateway(
+        required["NOTION_TOKEN"],
+        required["NOTION_DATABASE_ID"],
+        proxy_url=os.getenv("PAPER_INTAKE_NOTION_PROXY_URL", ""),
+    )
     deepseek = DeepSeekArticleAdapter(
         api_key=required["DEEPSEEK_API_KEY"],
         model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),

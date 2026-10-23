@@ -282,7 +282,12 @@ class DeepSeekArticleAdapter:
             "requirements": {
                 "language": "Chinese",
                 "sections": ["introduction", "method", "experiments", "conclusion", "references"],
-                "figure_rule": "Use only available figure paths and write an original Chinese explanation.",
+                "figure_rule": (
+                    "Use only available figure paths and write an original Chinese explanation. "
+                    "Never select a formula crop, logo, or decorative fragment; eligible paper figures "
+                    "must have width >= 320 and height >= 120. Prefer one method overview plus up to "
+                    "two result or ablation figures when the eligible evidence exists."
+                ),
                 "formula_rule": (
                     "Follow paper-site-formula-rendering: inline formulas use $...$; "
                     "display formulas use $$...$$ on separate lines; keep LaTeX _ and ^ inside math; "
@@ -365,11 +370,13 @@ class DeepSeekArticleAdapter:
 
 
 class _RequestsTransport:
-    def __init__(self, *, base_url: str, headers: dict[str, str]):
+    def __init__(self, *, base_url: str, headers: dict[str, str], proxy_url: str = ""):
         self.base_url = base_url
         self.headers = headers
         self.session = requests.Session()
         self.session.trust_env = False
+        if proxy_url:
+            self.session.proxies.update({"http": proxy_url, "https": proxy_url})
 
     def request(self, method: str, path: str, **kwargs):
         headers = dict(self.headers)
@@ -396,6 +403,7 @@ class NotionGateway:
         *,
         transport=None,
         max_retries: int = 4,
+        proxy_url: str = "",
     ):
         if not token or not database_id:
             raise ValueError("Notion token and database ID are required")
@@ -406,6 +414,7 @@ class NotionGateway:
                 "Authorization": f"Bearer {token}",
                 "Notion-Version": NOTION_API_VERSION,
             },
+            proxy_url=proxy_url,
         )
         self.max_retries = max_retries
         self._source_id = ""

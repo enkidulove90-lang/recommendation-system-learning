@@ -6,6 +6,8 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable
 
+from PIL import Image, UnidentifiedImageError
+
 from .adapters import ExternalServiceError, NotionDraft, read_verified_utf8
 from .article import (
     PaperArticle,
@@ -14,6 +16,7 @@ from .article import (
     render_article_markdown,
     validate_article,
 )
+from .references import link_reference_titles
 from .inputs import InputValidationError, PaperInputStore, canonicalize_url, sha256_file
 from .models import JobRecord, JobStatus, StepName, StepStatus
 from .metadata_refresh import refresh_metadata_file
@@ -252,12 +255,16 @@ class PaperPipeline:
             used_names.add(name)
             destination = image_dir / name
             shutil.copy2(source, destination)
-            figures.append(
-                {
-                    "path": destination.relative_to(self._bundle(job_id)).as_posix(),
-                    "sha256": sha256_file(destination),
-                }
-            )
+            figure: dict[str, Any] = {
+                "path": destination.relative_to(self._bundle(job_id)).as_posix(),
+                "sha256": sha256_file(destination),
+            }
+            try:
+                with Image.open(destination) as image:
+                    figure["width"], figure["height"] = image.size
+            except (UnidentifiedImageError, OSError):
+                figure["width"], figure["height"] = 0, 0
+            figures.append(figure)
         return {
             "markdown_path": str(result.markdown_path),
             "figures": figures,
@@ -285,6 +292,18 @@ class PaperPipeline:
             metadata=metadata,
             figures=list(parse_step.output.get("figures") or []),
             failure_path=bundle / "diagnostics" / "deepseek-invalid-response.json",
+        )
+        article = article.model_copy(
+            update={
+                "article": article.article.model_copy(
+                    update={
+                        "references": link_reference_titles(
+                            article.article.references,
+                            markdown,
+                        )
+                    }
+                )
+            }
         )
         article_path = bundle / "article.json"
         article_path.write_text(article.model_dump_json(indent=2), encoding="utf-8")
