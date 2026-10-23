@@ -27,6 +27,18 @@ Do not claim success from source inspection or a unit test around one renderer c
 
 Read [references/troubleshooting.md](references/troubleshooting.md) when diagnosing a failure, changing the Hexo filter, or preparing regression evidence.
 
+## Normalize unsupported commands
+
+Treat red LaTeX command text inside an otherwise typeset formula as an unsupported MathJax command, not as a delimiter or cache failure.
+
+1. Inspect the exact self-hosted MathJax bundle and its loaded TeX packages before choosing a replacement.
+2. Prefer a supported command with the same meaning. For Latin vectors in the current paper pipeline, normalize `\bm{x}` to `\mathbf{x}` (or configure `bm` as a one-argument macro expanding to `\mathbf{#1}`). Do not expand `\bm` to `\boldsymbol` unless the deployed bundle actually loads the `boldsymbol` package.
+3. Preserve subscripts, superscripts, numerical values, and the surrounding formula. A compatibility rewrite may change only the unsupported command.
+4. Bump the injected script query version after changing browser-side normalization, but do not mistake the cache version for the repair itself.
+5. Verify the deployed DOM with a real browser: require `mjx-container > 0`, `mjx-merror == 0`, no raw `\bm` or `\boldsymbol`, and the expected MathML variant (for example `mathvariant="bold"`).
+
+This rule is intentionally scoped: `\mathbf` is suitable for the Latin vector symbols currently observed. If a paper requires bold Greek symbols, load and test a compatible MathJax package or define a semantically correct supported macro; do not silently replace it with `\mathbf`.
+
 ## Publication boundary
 
 Formula repair must not rewrite numerical claims or mathematical semantics. Stop publication when delimiters are unbalanced, a formula is truncated, `�` is present, or the deployed MathJax count differs from the generated formula count.
