@@ -1,0 +1,17 @@
+﻿upscale: data\parsed\2601.21452\images\fig_gradient_1p8x.png
+upscale: data\parsed\2601.21452\images\fig_evolution_1p8x.png
+numbers card: data\parsed\2601.21452\images\fig_card_numbers.png
+figures.json ok
+summary ok
+title (18): SAGE锛氬彧鎹紭鍖栧櫒锛屽喎鍚姩鍙洖缈诲€?
+body (999)
+   paper-all-pic.png              2454x1376  1812KB
+   paper-sft-sage.png             1710x1084  223KB
+   fig_gradient_1p8x.png          1843x1006  1214KB
+   fig_evolution_1p8x.png         1843x1006  777KB
+   fig_card_numbers.png           1840x1066  160KB
+   ablationstudy4.png             2816x1536  6535KB
+STAGED: {'ok': True, 'status': 'already_staged', 'path': 'publish_queue\\a0fc84042de4ea21064872f6067b36be\\xhs.json', 'staged_id': 'a0fc84042de4ea21064872f6067b36beee4292a85f9dbbeac8907daaef6920eb'}
+PUBLISH RESULT: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:c4a06989-3b51-426c-b0ac-f11b4aa20f93', 'topics': ['璁烘枃鍒嗕韩', '浜哄伐鏅鸿兘', '鎺ㄨ崘绯荤粺', '娣卞害瀛︿範', 'AI'], 'image_count': 6, 'pdf_name': '2601.21452_origin.pdf'}
+STAGED_ID: a0fc84042de4ea21064872f6067b36beee4292a85f9dbbeac8907daaef6920eb
+EXIT=0

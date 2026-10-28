@@ -16,6 +16,9 @@
   # 更新已有草稿而不是新建
   python leetcode/pipeline.py 754693208 --extra-lang cpp --slug <draftSlug>
 
+  # 人工改完 outputs/*.md 后就地回传更新草稿（跳过 LLM，保留代码 tab）
+  python leetcode/pipeline.py 754693208 --md leetcode/outputs/754693208_editorial.md --slug <draftSlug>
+
 流程：取提交详情 -> 取题目描述+话题标签 -> DeepSeek 生成题解(markdown) ->
       组装多语言 Code tab -> 转 Slate JSON -> autoSaveSolutionArticle 存草稿（不发布）。
 
@@ -24,6 +27,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -50,6 +54,37 @@ def _parse_extra_codes(items):
         with open(path, encoding="utf-8") as f:
             out.append((lang.strip(), f.read()))
     return out
+
+
+def _read_md(path):
+    """Read a locally edited markdown copy back for re-upload.
+
+    Strips the header lines written by `run()` (# title / 话题标签), and splits
+    off the trailing extra-language appendix as code tabs.
+    Returns (markdown_body, [(lang_key, code)]).
+    """
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    lines = text.split("\n")
+    if lines and lines[0].startswith("# "):
+        lines = lines[1:]
+    for _ in range(2):
+        while lines and not lines[0].strip():
+            lines.pop(0)
+        if lines and lines[0].startswith("话题标签:"):
+            lines = lines[1:]
+    md = "\n".join(lines).lstrip("\n")
+
+    extra = []
+    marker = "\n## Code（其他语言版本"
+    i = md.find(marker)
+    if i != -1:
+        appendix = md[i + len(marker):]
+        md = md[:i].rstrip() + "\n"
+        for m in re.finditer(r"###\s+[^\n]+\n+```([A-Za-z0-9+#]+)\n(.*?)\n```",
+                             appendix, re.S):
+            extra.append((_norm_lang(m.group(1)), m.group(2)))
+    return md, extra
 
 
 def _norm_lang(lang):
@@ -94,6 +129,27 @@ def build_code_tabs(cli, submission, args):
     return tabs
 
 
+def _resolve_submission_id(cli, raw):
+    """Accept a numeric submission id, a problem slug, or a leetcode.cn URL.
+
+    Non-numeric input is treated as a problem: pick the newest Accepted
+    submission of the current account on that problem.
+    """
+    raw = (raw or "").strip()
+    m = re.search(r"/problems/([a-z0-9\-]+)", raw)
+    if m:
+        raw = m.group(1)
+    if raw.isdigit():
+        return raw
+    subs = cli.submission_list(raw, limit=20)
+    ok = [s for s in subs if s.get("statusDisplay") == "Accepted"]
+    if not ok:
+        raise SystemExit(f"题目 {raw} 下没找到 Accepted 提交（共 {len(subs)} 条）")
+    print(f"  题目 {raw} -> 取最新 Accepted 提交 {ok[0].get('id')} "
+          f"({ok[0].get('lang')})")
+    return ok[0].get("id")
+
+
 def run(submission_id, args, save_markdown=True):
     cli = LeetCodeClient()
     me = cli.whoami()
@@ -101,6 +157,7 @@ def run(submission_id, args, save_markdown=True):
         raise RuntimeError("LEETCODE_SESSION 已失效，请从浏览器重新复制 cookie 更新 .env")
     print(f"[1/6] 登录账号: {me.get('username')}")
 
+    submission_id = _resolve_submission_id(cli, submission_id)
     sub = cli.submission_detail(submission_id)
     if not sub:
         raise RuntimeError(f"提交 {submission_id} 不存在或不属于当前账号")
@@ -125,10 +182,19 @@ def run(submission_id, args, save_markdown=True):
         tags = [t.strip() for t in args.tags.split(",") if t.strip()]
         print(f"[3/6] 话题标签(手动): {tags}")
 
-    md = generate_editorial(problem, sub)
-    print(f"[4/6] 题解已生成（{len(md)} 字符 markdown）")
+    local_tabs = []
+    if getattr(args, "md", None):
+        md, local_tabs = _read_md(args.md)
+        print(f"[4/6] 使用本地 markdown 回传（{len(md)} 字符）: {args.md}")
+    else:
+        md = generate_editorial(problem, sub)
+        print(f"[4/6] 题解已生成（{len(md)} 字符 markdown）")
 
     tabs = build_code_tabs(cli, sub, args)
+    for lang, code in local_tabs:
+        if not any(l == lang for l, _ in tabs):
+            tabs.append((lang, code))
+            print(f"  附加语言 ({lang}，来自本地 markdown)")
     blocks = markdown_to_slate(md)
     if len(tabs) > 1 and not args.no_multitab:
         blocks = attach_code_tabs(blocks, tabs, active_index=0)
@@ -153,15 +219,20 @@ def run(submission_id, args, save_markdown=True):
     if save_markdown:
         os.makedirs(OUT_DIR, exist_ok=True)
         out_path = os.path.join(OUT_DIR, f"{submission_id}_editorial.md")
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(f"# {title}\n\n")
-            f.write(f"话题标签: {', '.join(tags) or '（无）'}\n\n")
-            f.write(md)
-            if len(tabs) > 1:
-                f.write("\n## Code（其他语言版本，编辑器中为可切换 tab）\n")
-                for lang, code in tabs[1:]:
-                    f.write(f"\n### {LANG_DISPLAY.get(lang, lang)}\n\n```{lang}\n{code}\n```\n")
-        print(f"  markdown 副本: {out_path}")
+        if (getattr(args, "md", None)
+                and os.path.abspath(args.md) == os.path.abspath(out_path)):
+            print(f"  markdown 副本: {out_path}（就地回传，未覆盖）")
+        else:
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(f"# {title}\n\n")
+                f.write(f"话题标签: {', '.join(tags) or '（无）'}\n\n")
+                f.write(md)
+                if len(tabs) > 1:
+                    f.write("\n## Code（其他语言版本，编辑器中为可切换 tab）\n")
+                    for lang, code in tabs[1:]:
+                        f.write(f"\n### {LANG_DISPLAY.get(lang, lang)}\n\n"
+                                f"```{lang}\n{code}\n```\n")
+            print(f"  markdown 副本: {out_path}")
 
     editor_url = (f"https://leetcode.cn/post-editor/solution/create/"
                   f"?submissionId={submission_id}")
@@ -171,7 +242,9 @@ def run(submission_id, args, save_markdown=True):
 
 def main():
     ap = argparse.ArgumentParser(description="LeetCode 题解自动生成（存草稿）")
-    ap.add_argument("submission_id")
+    ap.add_argument("submission_id",
+                    help="提交 id，也可直接给题目 slug 或 leetcode.cn 题目链接"
+                         "（自动取该题最新 Accepted 提交）")
     ap.add_argument("--tags", default="auto",
                     help="话题标签: auto(取题目自带，默认) | none | slug1,slug2")
     ap.add_argument("--extra-lang", default=None,
@@ -183,6 +256,8 @@ def main():
     ap.add_argument("--slug", default=None, help="更新已有草稿的 slug（不传=新建）")
     ap.add_argument("--title-suffix", default=None)
     ap.add_argument("--no-multitab", action="store_true", help="只保留主语言，不做多 tab")
+    ap.add_argument("--md", default=None,
+                    help="用本地改好的 markdown 回传草稿（跳过 LLM 生成）")
     args = ap.parse_args()
     args.extra_lang = ([l.strip() for l in args.extra_lang.split(",") if l.strip()]
                        if args.extra_lang else [])

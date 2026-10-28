@@ -7,4 +7,4 @@
  5 | imgs=5 | s:92f201db-7f26-4910-bcd9-4181ed850729        | MSCA | 多模态推荐新SOTA 
  6 | imgs=4 | s:96153f47-1e08-420a-bf4c-017a71d29d56        | VRAgent-R1｜RL增强视频推荐
  7 | imgs=4 | s:a4599a1a-9037-4a1c-bcfd-29c075e44800        | OSWorld｜AI 电脑操作仅 12%
- 8 | imgs=6 | s:aa30c40d-1b64-4cd5-9f07-0e4eda2ed104        | 召回+排序合成一个模型，延迟降11%
+ 8 | imgs=6 | s:c4a06989-3b51-426c-b0ac-f11b4aa20f93        | SAGE：只换优化器，冷启动召回翻倍
