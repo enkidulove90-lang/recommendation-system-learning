@@ -36,6 +36,9 @@ output/
 !data/learning_paths/*.json
 !data/metadata/papers/*.json
 !data/metadata/recommendations/*.json
+!config/paper_catalog_sources.json
+data/paper_catalog/
+.superpowers/
 
 # OS
 .DS_Store

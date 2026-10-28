@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "refresh_interval_seconds": 1800,
+  "arxiv": [
+    {
+      "name": "recommendation-and-information-retrieval",
+      "query": "cat:cs.IR",
+      "cache_ttl_seconds": 86400,
+      "max_results": 100,
+      "sort_by": "submittedDate",
+      "sort_order": "descending"
+    },
+    {
+      "name": "natural-language-processing",
+      "query": "cat:cs.CL",
+      "cache_ttl_seconds": 86400,
+      "max_results": 100,
+      "sort_by": "submittedDate",
+      "sort_order": "descending"
+    }
+  ],
+  "acl_events": [
+    {
+      "venue_name": "ACL 2026",
+      "cache_ttl_seconds": 1800,
+      "include_id_prefixes": [
+        "2026.acl-long.",
+        "2026.acl-short.",
+        "2026.acl-demo.",
+        "2026.acl-srw.",
+        "2026.acl-tutorials.",
+        "2026.acl-industry.",
+        "2026.findings-acl."
+      ],
+      "url": "https://aclanthology.org/events/acl-2026/"
+    }
+  ],
+  "recsys_pages": [
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-1/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-2/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-3/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-4/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-5/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-6/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-7/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/session-8/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/posters-1/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/posters-2/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/posters-3/"},
+    {"publication_year": 2026, "url": "https://recsys.acm.org/recsys26/demo-presentations/"}
+  ],
+  "openalex_enrichment": {
+    "enabled": false,
+    "mailto": "",
+    "max_records_per_run": 50
+  }
+}
