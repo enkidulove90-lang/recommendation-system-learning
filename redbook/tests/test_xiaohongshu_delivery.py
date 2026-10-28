@@ -105,6 +105,24 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
                 OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(payload)
         self.assertEqual(runner.calls, [])
 
+    def test_explicit_pdf_waiver_allows_a_private_image_draft_without_attachment(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            payload = self._payload(Path(folder))
+            waived = DraftPayload(
+                payload.title, payload.body, payload.image_paths, payload.topics, None,
+                require_pdf_attachment=False,
+            )
+            waived.validate()
+            delivery = OpenCliXiaohongshuDelivery(runner=FakeRunner([]))
+            delivery.attach_pdf_by_cdp = lambda *_: self.fail("waived draft must not upload a PDF")  # type: ignore[method-assign]
+            prepared = DraftPayload(
+                waived.title, waived.body, waived.image_paths, (), None,
+                require_real_topics=False, resume_prepared_editor=True, require_pdf_attachment=False,
+            )
+            delivery._prepare_editor_before_draft_save(prepared)
+
+        self.assertIsNone(waived.pdf_path)
+
     def test_plain_hashtag_mode_allows_empty_entities_and_omits_topics_option(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             payload = self._payload(Path(folder))
@@ -272,12 +290,53 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         verification = next(call[-1] for call in calls if "eval" in call and "tiptap-topic[data-topic]" in call[-1])
         self.assertIn("data-topic", verification)
 
+    def test_native_topic_picker_accepts_opencli_v2_true_eval_envelope(self) -> None:
+        """OpenCLI 2 returns browser-eval results inside an ``ok/data`` envelope."""
+        with tempfile.TemporaryDirectory() as folder:
+            payload = self._payload(Path(folder))
+
+            def runner(command: list[str]) -> subprocess.CompletedProcess[str]:
+                if "eval" in command and "tiptap-topic[data-topic]" in command[-1]:
+                    return subprocess.CompletedProcess(command, 0, '{"ok":true,"data":"true"}', "")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            OpenCliXiaohongshuDelivery(runner=runner)._bind_real_topics_in_editor(payload)
+
     def test_rich_text_fill_accepts_written_content_when_line_break_verification_differs(self) -> None:
         def runner(command: list[str]) -> subprocess.CompletedProcess[str]:
             return subprocess.CompletedProcess(command, 1, '{"filled": true, "verified": false}', "")
 
         delivery = OpenCliXiaohongshuDelivery(runner=runner)
         delivery._fill_editor_field(("[contenteditable=true]",), "第一行\n第二行", "body")
+
+    def test_rich_text_fill_accepts_creator_paragraph_normalization_only_for_body(self) -> None:
+        response = (
+            '{"ok":false,"error":{"code":"value_mismatch",'
+            '"expected":"第一段\\n\\n第二段",'
+            '"actual":"第一段\\n\\n\\n\\n\\n第二段"}}'
+        )
+
+        def runner(command: list[str]) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(command, 1, response, "")
+
+        delivery = OpenCliXiaohongshuDelivery(runner=runner)
+        delivery._fill_editor_field(("[contenteditable=true]",), "第一段\n\n第二段", "body")
+        with self.assertRaisesRegex(DeliveryError, "could not fill the title"):
+            delivery._fill_editor_field(("[contenteditable=true]",), "第一段\n\n第二段", "title")
+
+    def test_rich_text_fill_accepts_creator_conversion_of_each_line_to_a_paragraph(self) -> None:
+        response = (
+            '{"ok":false,"error":{"code":"value_mismatch",'
+            '"expected":"标题\\n正文",'
+            '"actual":"标题\\n\\n正文"}}'
+        )
+
+        def runner(command: list[str]) -> subprocess.CompletedProcess[str]:
+            return subprocess.CompletedProcess(command, 1, response, "")
+
+        OpenCliXiaohongshuDelivery(runner=runner)._fill_editor_field(
+            ("[contenteditable=true]",), "标题\n正文", "body"
+        )
 
     def test_resume_prepared_editor_only_attaches_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

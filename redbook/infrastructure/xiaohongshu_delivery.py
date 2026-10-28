@@ -67,11 +67,12 @@ class DraftPayload:
     body: str
     image_paths: tuple[Path, ...]
     topics: tuple[str, ...]
-    pdf_path: Path
+    pdf_path: Path | None
     require_real_topics: bool = True
     resume_prepared_editor: bool = False
     pdf_already_verified: bool = False
     resume_draft_id: str | None = None
+    require_pdf_attachment: bool = True
 
     def validate(self) -> None:
         if not self.title or len(self.title) > 20:
@@ -82,10 +83,15 @@ class DraftPayload:
             raise DeliveryError(f"at most {MAX_DRAFT_IMAGES} images are supported by the current creator upload flow")
         if self.require_real_topics and not self.topics:
             raise DeliveryError("real topic binding is mandatory; do not fall back to body hashtags")
-        missing = [str(path) for path in (*self.image_paths, self.pdf_path) if not path.is_file()]
+        required_assets = list(self.image_paths)
+        if self.require_pdf_attachment:
+            if self.pdf_path is None:
+                raise DeliveryError("a PDF is required unless the explicit per-run waiver is enabled")
+            required_assets.append(self.pdf_path)
+        missing = [str(path) for path in required_assets if not path.is_file()]
         if missing:
             raise DeliveryError(f"missing local delivery assets: {missing}")
-        if self.pdf_path.suffix.casefold() != ".pdf":
+        if self.require_pdf_attachment and self.pdf_path and self.pdf_path.suffix.casefold() != ".pdf":
             raise DeliveryError("the paper attachment must be a PDF")
 
 
@@ -95,7 +101,7 @@ class DeliveryReceipt:
     title: str
     image_count: int
     topics: tuple[str, ...]
-    pdf_name: str
+    pdf_name: str | None
 
 
 class OpenCliXiaohongshuDelivery:
@@ -417,12 +423,51 @@ class OpenCliXiaohongshuDelivery:
             # this pre-save editor session.
             for output in (result.stdout, result.stderr):
                 try:
-                    if json.loads(output).get("filled") is True:
+                    response = json.loads(output)
+                    if response.get("filled") is True:
+                        return
+                    # Creator represents blank lines as multiple paragraph
+                    # separators.  OpenCLI's literal verifier consequently
+                    # returns value_mismatch even when every non-whitespace
+                    # character was written.  This tolerance is deliberately
+                    # limited to the rich-text body and only to runs of three
+                    # or more newlines; titles retain exact verification.
+                    error = response.get("error") if isinstance(response, dict) else None
+                    if (
+                        name == "body"
+                        and isinstance(error, dict)
+                        and error.get("code") == "value_mismatch"
+                        and self._normalize_creator_body(str(error.get("expected", "")))
+                        == self._normalize_creator_body(str(error.get("actual", "")))
+                    ):
                         return
                 except (json.JSONDecodeError, AttributeError):
                     pass
             errors.append(result.stderr or result.stdout or selector)
         raise DeliveryError(f"CDP could not fill the {name} field: {' | '.join(errors[-2:])}")
+
+    @staticmethod
+    def _normalize_creator_body(value: str) -> str:
+        # Creator serializes each visible line as an independent paragraph,
+        # so textContent may gain blank-only lines without changing any
+        # author-provided characters.  Compare the non-empty line sequence,
+        # not the DOM paragraph spacing.
+        return "\n".join(line.strip() for line in value.replace("\r\n", "\n").split("\n") if line.strip())
+
+    @staticmethod
+    def _browser_eval_is_true(output: str) -> bool:
+        """Accept both legacy browser-eval output and OpenCLI 2's JSON envelope."""
+        value = output.strip().casefold()
+        if value in {"true", '"true"'}:
+            return True
+        try:
+            envelope = json.loads(output)
+        except json.JSONDecodeError:
+            return False
+        if not isinstance(envelope, dict) or envelope.get("ok") is not True:
+            return False
+        result = envelope.get("data")
+        return result is True or (isinstance(result, str) and result.strip().casefold() == "true")
 
     def _bind_real_topics_in_editor(self, payload: DraftPayload) -> None:
         """Select each topic through the creator's native inline picker.
@@ -487,7 +532,7 @@ class OpenCliXiaohongshuDelivery:
                 "})()"
             )
             verified = self.runner(self._command("browser", self.session, "eval", verify))
-            if verified.returncode or verified.stdout.strip().casefold() not in {"true", '"true"'}:
+            if verified.returncode or not self._browser_eval_is_true(verified.stdout):
                 raise TopicEntityUnavailable((topic,))
 
     def _insert_text_at_creator_caret(self, focus_script: str, text: str) -> None:
@@ -559,15 +604,18 @@ class OpenCliXiaohongshuDelivery:
                 "})()"
             )
                 verified = self.runner(self._command("browser", self.session, "eval", verify))
-                if verified.returncode or verified.stdout.strip().casefold() not in {"true", '"true"'}:
+                if verified.returncode or not self._browser_eval_is_true(verified.stdout):
                     # A failed run may leave a complete, unsaved editor.  Bind
                     # only its missing topics in that same editor rather than
                     # discarding verified images/text or using a hashtag.
                     self._bind_real_topics_in_editor(DraftPayload(
                         payload.title, payload.body, payload.image_paths, (topic,), payload.pdf_path,
                         require_real_topics=True, resume_prepared_editor=True,
+                        require_pdf_attachment=payload.require_pdf_attachment,
                     ))
-            if not payload.pdf_already_verified:
+            if payload.require_pdf_attachment and not payload.pdf_already_verified:
+                if payload.pdf_path is None:
+                    raise DeliveryError("PDF attachment was required but no local PDF was provided")
                 self.attach_pdf_by_cdp(payload.title, payload.pdf_path)
             return
         open_result = self.runner(self._command("browser", self.session, "open", self.creator_url, "--window", "foreground"))
@@ -631,7 +679,10 @@ class OpenCliXiaohongshuDelivery:
         self._fill_editor_field(self.title_selectors, payload.title, "title")
         self._fill_editor_field(self.body_selectors, payload.body, "body")
         self._bind_real_topics_in_editor(payload)
-        self.attach_pdf_by_cdp(payload.title, payload.pdf_path)
+        if payload.require_pdf_attachment:
+            if payload.pdf_path is None:
+                raise DeliveryError("PDF attachment was required but no local PDF was provided")
+            self.attach_pdf_by_cdp(payload.title, payload.pdf_path)
 
     def _save_editor_as_draft(self, before: list[dict], payload: DraftPayload) -> dict:
         self._trigger_editor_draft_save()
@@ -707,13 +758,13 @@ class OpenCliXiaohongshuDelivery:
             raise
         return DeliveryReceipt(
             draft_id=str(draft["id"]), title=payload.title, image_count=len(payload.image_paths),
-            topics=payload.topics, pdf_name=payload.pdf_path.name,
+            topics=payload.topics, pdf_name=payload.pdf_path.name if payload.pdf_path else None,
         )
 
     def recover_verified_draft(self, payload: DraftPayload) -> DeliveryReceipt:
         """Recover a just-saved, already PDF-verified draft without new UI writes."""
         payload.validate()
-        if not payload.pdf_already_verified:
+        if payload.require_pdf_attachment and not payload.pdf_already_verified:
             raise DeliveryError("recovery requires a PDF filename verified in the current editor session")
         matches = [
             draft for draft in self._drafts()
@@ -724,7 +775,7 @@ class OpenCliXiaohongshuDelivery:
         draft = matches[0]
         return DeliveryReceipt(
             draft_id=str(draft["id"]), title=payload.title, image_count=len(payload.image_paths),
-            topics=payload.topics, pdf_name=payload.pdf_path.name,
+            topics=payload.topics, pdf_name=payload.pdf_path.name if payload.pdf_path else None,
         )
 
     @staticmethod

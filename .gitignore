@@ -41,6 +41,7 @@ paper_intake/cloudflare/src/worker-configuration.d.ts
 !data/learning_paths/*.json
 !data/metadata/papers/*.json
 !data/metadata/recommendations/*.json
+!config/paper_catalog_sources.json
 
 # Runtime paper assets (backed up outside Git; published content lives in Notion/site)
 data/discovery/
@@ -51,10 +52,12 @@ data/summaries/
 data/workflow_state/
 data/workflow_state/paper_intake/
 data/paper_intake/
+data/paper_catalog/
 .redbook_tmp/
 .workbuddy/
 .worktrees/
 .paper-work/
+.superpowers/
 
 # OS
 .DS_Store
