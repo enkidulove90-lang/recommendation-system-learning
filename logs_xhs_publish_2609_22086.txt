@@ -1,1 +1,0 @@
-﻿PUBLISH RESULT: {'ok': False, 'method': 'opencli-cdp', 'error': 'ok: false\nerror:\n  code: UNKNOWN\n  message: Navigation rejected.\n  exitCode: 1\n# AutoFix: re-run with --trace=retain-on-failure for trace artifact\n# opencli xiaohongshu drafts --trace retain-on-failure\n'}
