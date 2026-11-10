@@ -209,10 +209,12 @@ data/amazon-baby-mmssl/ 仅 train.txt / valid.txt / test.txt，无 meta 文件
 
 | # | 特征 | 来源 | 归一化 |
 |---|---|---|---|
-| A1 | `log1p(item_train_freq)` | train 频次 | / `log1p(max_freq)` |
-| A2 | `repeat_flag` | item 是否已在用户历史出现 | 0/1 |
-| A3 | `pos_ratio` | 样本在用户序列中的相对位置 | /(seq_len−1)，clamp |
-| A4 | `log1p(seq_len)` | 用户序列长 | / `log1p(max_len)` |
+| A1 | `log1p(item_train_freq)` | **train.txt 频次表（冻结）** | / `log1p(max_freq)` |
+| A2 | `repeat_flag` | item 是否已在用户 **train 前缀**出现 | 0/1 |
+| A3 | `pos_ratio` | 目标相对 **train 前缀内**的位置 | /(prefix_len−1)，clamp |
+| A4 | `log1p(seq_len)` | 用户 **train 段**序列长 | / `log1p(max_len)` |
+
+**统计范围铁律（params §4.5 v1.3）**：频次表只从 `train.txt` 计数并冻结（valid/test 查表，冷 item 记 0）；A3 分母用 train 前缀长（**不用全序列长**）；A4 只算 train 段（valid/test 新增交互不计）；`max_freq`/`max_len` 等**归一化常数只在 train 上算一次**，冻结进 `configs/aux_norm.json` 并随 ckpt 校验。`audit_split.py` 加负向审计：用全量重算的表必须与冻结表**不一致**（证明没有偷用全量统计）。
 
 **申报口径（写进报告）**：这 4 维是"可得的行为语义代理"，**不是论文的动作模态**，命名不得用 `[ACT_*]`。代码里保留 `act_head.enabled` 开关（默认 false），换 Amazon-2023 时可开启，主路径不编译该分支。
 
@@ -277,11 +279,15 @@ split:                                 # ★ per-user chronological holdout（�
   sasrec_internal_holdout: 0.10         # train 尾部 10%，SASRec 早停专用
 
 sasrec:
-  hidden: 512                          # ★ 对齐论文 behavioral d=512（params §6）
+  hidden: 512                          # ★ 对齐论文 behavioral d=512（params §6 v1.3 重估）
   layers: 2
   max_len: 50
   epochs: 300                          # Baby 规模下调（params §6）
-  patience: 20
+  patience: 20                         # 按"评估次数"计（见 eval_interval）
+  eval_interval: 2                     # ★ 每 2 epoch 评估一次（512 维下评估占比高）
+  amp: fp16                            # ★ 强制缓解：hidden=512 每 seed 7–20h → 4–10h
+  batch_size: 256                      # 显存峰值估 4–6GB，16GB 充裕
+  timing_gate: true                    # ★ P1 第一步：1 epoch 计时外推，>24h/seed → 触发 L3 降 hidden=256（D11）
   seeds: [42, 2025, 2026]
   ckpt: baseline/sab_anc/ckpt/sasrec_best.pt
   freeze: true                         # ★ 下游阶段强制冻结
@@ -380,7 +386,12 @@ policy:                                # 失败升级策略见 sab_anc_params.md
 downstream:
   d_model: 128
   tokens: {vis: 1, txt: 1, beh: 1, behavior_steps: 5}       # [VIS][TXT][BHV] + [BEH_1..5]
-  aux_feat: [item_freq, repeat_flag, pos_ratio, seq_len]     # 4 维（params §4.5）
+  aux_feat: [item_freq, repeat_flag, pos_ratio, seq_len]     # 4 维（params §4.5 v1.3）
+  aux_stats:
+    freq_table: train_only             # ★ 频次表只从 train.txt 计数，冻结 + sha256
+    norm_consts: train_only            # max_freq/max_len 只在 train 算一次 → configs/aux_norm.json
+    cold_item_value: 0.0               # 查表无此 item → log1p(0)=0（冷编码）
+    audit_negative_check: true         # 全量重算必须与冻结表不一致，否则判泄漏
   heads: {rec: bilinear_softmax}                             # 单头（v1.2）
   act_head: {enabled: false, vocab: null}                    # D5；换 Amazon-2023 才可开
   negatives: all                                             # 18,357 全量 softmax，无需采样
