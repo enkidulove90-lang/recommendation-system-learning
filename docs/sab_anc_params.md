@@ -193,7 +193,7 @@ L_align = L / 3
 | **D8** | behavioral 由论文 SASRec 出 | 本地重训 SASRec（同架构、权重不同） | 低 | §3 约定 | "behavioral 特征来自本地重训 SASRec" |
 | **D9** | baseline = WuKong/HSTU/MTGR/QARM/PSRQ+MCCA/DLRM | 本地 LightGCN++ 同切分重跑 | 中 | §7 | "表中本地复现行为 LightGCN++；其余为原文引用" |
 | **D10** | 内容侧含类别/品牌等语义先验 | Baby **无 meta 文件**，类别/品牌字段不存在 | 中 | `[CAT]/[BRD]` token 删除（design §5.1） | "内容侧仅 image+text 两路，无类别/品牌先验" |
-| **D11**（条件项，未触发不生效） | behavioral `d=512` | 仅当 P1 计时外推 >24h/seed 时触发：`hidden=256` + 进 CGA 前线性升维 256→512 | 低 | L3 降级路径（§6），触发才登记 | "behavioral 编码器容量减半，接口维经投影补偿" |
+| **D11**（条件项，未触发不生效） | behavioral `d=512` | 仅当 P1 计时外推 >24h/seed 时触发：`hidden=256` + 进 CGA 前线性升维 256→512 | 低 | L3 降级路径（§6），触发才登记 | "behavioral 编码器容量减半，接口维经投影补偿；**接口对齐 ≠ 信息容量对齐**——升维只保证 shape 可进 CGA，不恢复 256 维编码器损失的表征容量，模态消融结论须按容量受限口径解读" |
 
 **级别判据**：高 = 可能改变洞见有效性（必须在正文声明，不能只放附录）；中 = 影响数字可比性（表注声明）；低 = 仅实现差异（附表）。
 
@@ -430,7 +430,7 @@ train.txt 前两行： "0 3369 13372 5458 11981 17787"
 | A4 | `seq_len` = **train 段前缀长**，与 SASRec 输入前缀严格一致；valid/test 期间新增交互**不计入** | 用全历史长度 → 活跃度特征吸收了测试期行为量 |
 | 归一化常数 | `max_freq` / `max_len` 等**只在 train 上算一次**，冻结进 `configs/aux_norm.json`（含 hash），落进 ckpt 随 `split_hash` 一起校验 | 每个 split 各算各的 → 同一物品在不同 split 语义漂移，且间接泄分布 |
 
-**审计（并入 `audit_split.py`）**：①正向——断言 `aux_freq_table` 的 hash == config 记录值；②负向——用 train+valid+test 重算一份频次表，**必须与冻结表不一致**（证明代码确实没用全量）；③评估脚本加载 ckpt 时校验 `aux_stats_hash`，与 `split_hash` 任一不符直接报错拒绝运行。
+**审计（并入 `audit_split.py`，v1.4 放宽负向断言）**：①正向——断言 `aux_freq_table` 的 hash == config 记录值；②负向——用 train+valid+test 重算一份频次表，**期望与冻结表不一致**（正常情况 valid/test 必然贡献新计数）；若两表**一致** → **不硬失败**，但 `status: warn_review_required`，必须在 `split_audit.json` 落 `review_note` 字段并人工复核签字后才允许进 P1——因为"一致"还有一种更危险的成因：重算脚本自己读错了文件（比如也只读了 train），静默放行会把审计变成摆设；③评估脚本加载 ckpt 时校验 `aux_stats_hash`，与 `split_hash` 任一不符直接报错拒绝运行。该放宽同步登记为 design 风险表 **R15**（断言放宽后防泄漏强度下降，靠复核流程兜底）。
 
 接入方式：4 维 → 1 层 MLP（4→16）→ 与 `h_beh` 逐元素相加（或 concat 后线性降维回 `d_model`），**不做独立预测头**。
 
@@ -494,6 +494,17 @@ sampling:
 | 峰值显存 | <1GB | **2–4GB**（batch128 fp32）/ **4–6GB**（batch256+AMP）；主导项是 `B×L×N` logits ≈ 117M fp32 ≈ 0.5GB | 16GB **充裕，瓶颈是墙钟时间而非显存** |
 
 **强制缓解（P1 执行）**：AMP fp16 + batch 256 + 评估间隔放宽为每 2 epoch（patience 按评估次数计，等效 40 epoch）→ 每 seed 压到 **4–10h**。**P1 第一步必须先跑 1 epoch 计时并外推**；外推 >24h/seed → 触发 L3 降级 `hidden=256` 并登记新偏差 **D11**（行为维度 256，进 CGA 前加线性升维 256→512 补偿，保住"第三模态接口维=512"）。
+
+**patience × eval_interval 语义（v1.4 锁死，消除"20 是 epoch 还是评估次数"的二义）**：
+
+| 规则 | 内容 |
+|---|---|
+| 计数单位 | `patience` 一律以**评估次数**为单位（与 config 注释一致），**禁止**按 epoch 解释 |
+| 等效容忍 | `effective_epochs = patience × eval_interval` = 20 × 2 = **40 epoch**；§6 表中各阶段同理换算 |
+| 早停判定 | 每次评估取该次 valid 指标；连续 `patience` 次评估无提升 → 停 |
+| 恢复权重 | 恢复 **best-by-eval**（历史最优评估点的权重），不是 last |
+| 代码强制 | 训练循环只维护 `eval_counter`，不出现"epoch 版 patience"变量；`config_hash` 覆盖 `patience/eval_interval`，改任一即新 run |
+| 误配风险 | 若实现者把 20 当 epoch 用 → 等效容忍减半（20 ep），早停偏早、best 偏差大 → 列入 design 风险表 R14 |
 - Baby 规模（19 万交互）比 Amazon-2023 小两个量级，SASRec max epoch 从 500 降到 300。
 - 早停指标唯一（NDCG@10）；R@20 只做 guard（NDCG 升而 R@20 跌 >2 点 → 判不稳定，lr 回退一档）。
 - 梯度裁剪 1.0；AdamW：下游/SASRec `lr=1e-3`，码本 `1e-4`；warmup 5% steps；cosine → `lr×0.01`。
@@ -579,6 +590,9 @@ baseline/sab_anc/
 | 2026-11-10 | Hi-SAM 6 baseline | 待定是否复现 | **不复现**，仅原文引用 | 复现成本远超预算（§7） |
 | 2026-11-10 | **SASRec hidden=512 成本** | "2–3 倍，估 1–2h/300ep"（128 维口径误用） | **每 seed 7–20h（缓解后 4–10h），显存 2–6GB**；P1 先 1 epoch 计时外推，>24h/seed 触发 L3 降 256 + D11 | 重估：参数 ×4–5、attn/FFN O(d²)（§6） |
 | 2026-11-10 | **4 维辅助特征统计范围** | "全部从 train.txt 计算"（一句带过） | **逐维锁死 train-only 规则 + 冻结归一化常数 + 负向审计**（§4.5 表） | 防跨时段泄漏（A1 频次表/A3 位置分母/A4 长度） |
+| 2026-11-10 | D11 表述 | "接口维经投影补偿" | 补强为 **"接口对齐 ≠ 信息容量对齐"**（升维不恢复表征容量） | 外部 v4 复核意见（§2.6） |
+| 2026-11-10 | patience 语义 | 散文一句"按评估次数计" | **规则条款锁死**：patience=评估次数，effective=patience×eval_interval=40ep，best-by-eval 恢复，代码禁出现 epoch 版变量（§6） | 消除二义，防等效容忍减半（R11） |
+| 2026-11-10 | 负向审计断言 | "必须与冻结表不一致"（过强） | **放宽为 warn+强制复核**：一致 → `warn_review_required` + review_note 签字后才进 P1 | 一致也可能是重算脚本读错文件，硬断言漏报该 bug（R12） |
 
 ---
 
@@ -608,3 +622,24 @@ v1.0/v1.1 遗留 5 项，v1.2 全部封闭：
 | 8 | `run_baseline_lightgcnpp.sh` 同切分重跑 | baseline 数字（warm/cold 分开） | 必须与 SAB-ANC 用同一 `split_hash` |
 
 > 顺序说明：把闸门-0 放在 SASRec 重训**之前**，是因为它只依赖已有特征、几分钟可跑完；若 `V–T` 失败，整个方案的视觉/文本对齐环节要重做数据源，此时烧 3 seed SASRec 是纯浪费。
+
+---
+
+## 11. 与外部 v4 方案"仍待拍板 10 项"的对照映射【v1.4 新增】
+
+> 背景：并行会话产出的 v4 方案把 10 项列为"待拍板"。本文件（v1.0–v1.3）已对其中 8 项定值，本节逐项映射，**避免两套文档各自演化出冲突数值**。v4 的 3 点待确认（D11 措辞 / patience 语义 / 负向审计放宽）已全部吸收进本文 v1.4。
+
+| # | v4 待拍板项 | 本文件定值 | 状态 | 依据章节 |
+|---|---|---|---|---|
+| 1 | τ 与 anchor 轮换 | **τ=0.07 主**，敏感性 {0.05, 0.07, 0.1, 0.2}；anchor **逐一轮换 N_m 组取平均**（3 模态 3 组，data=其余模态均值） | ✅ 已定 | §2.3 / §2.4 |
+| 2 | Φ_fuse 融合方式 | **mean 主**，attention 仅消融；升级判据：valid NDCG@10 提升 >1 seed std 且 ≥2/3 seed 同向且无稳定性问题 | ✅ 已定 | §3.1 |
+| 3 | q_proj 结构 | **2 层 MLP** 256→256→256（GELU+LN），**全头共享**；k/v 按头独立；输入 = 残差 + z_j probe（d=256，item 特征） | ✅ 已定 | §3.2 / §2.2 |
+| 4 | vCLUB 细节 | 2 层 MLP hidden 256 ELU → μ/log σ²，logvar clamp ±6，λ_vcl=0.05（网格 {0.01, 0.05, 0.1}），batch<512 时 MI 只记录 | ✅ 已定 | §3.4 |
+| 5 | β/λ 扫法 | **两端优先** {0.1, 10}，健康再补 1.0；guard：codebook perplexity 51–154、L_cgal/L_rec ∈ [0.1, 10] | ✅ 已定 | §3.3 |
+| 6 | 负采样参数 | 池=train item only（评估 full+100neg 辅）；in-batch+4、batch 有效负例 ≥256 不足退固定池；uniform 主 + freq^0.75 消融；派生种子 `base*100003+epoch*1009+batch_idx` + neg_hash | ✅ 已定 | §5 |
+| 7 | 上游训练轮数 | SASRec 300ep / 码本预热 20 / 主训练 100 / 网格格 40（完整表见 §6，含早停指标与 ckpt 规则） | ✅ 已定 | §6 |
+| 8 | patience 语义 | **patience=评估次数**，effective = patience × eval_interval = 40 epoch；best-by-eval 恢复；代码强制只维护 eval_counter | ✅ **v1.4 新定** | §6 |
+| 9 | 交付产物 | 六类：configs（resolved）/ logs（train+metrics.jsonl+instability+neg_audit）/ metrics JSON（强制 schema 含 status 四态）/ figures（7 张必备）/ reports / ckpt（gitignore） | ✅ 已定 | §8 |
+| 10 | 失败默认策略 | 四级：L1 实现 ≤2h → L2 调参 ≤1d → L3 缩规模 ≤1d → L4 停止+失败报告；五条硬禁；同 bug 修两次复现直接 L4 | ✅ 已定 | §8 |
+
+**结论：v4 的 10 项中 9 项以本文件为准（8 项既有 + patience 语义本轮新定），无需重复拍板。** 若 v4 后续给出与本表冲突的数值，以本表为准并须在变更记录（§9）登记冲突来源。

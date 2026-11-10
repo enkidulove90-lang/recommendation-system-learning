@@ -430,6 +430,8 @@ env:                                   # ★ 4 个变量必设（torch 段错误
 | **R11** | **behavioral 与标签同源 → 提升可能是捷径**（D8） | 7 行模态消融矩阵 + **主结论只落 cold-item**；`B` 行须 ≈ 已知 SASRec 水平（偏离则该行判实现 bug）；报告中显式承认 behavioral 是 ID 空间特征、非内容特征 |
 | **R12** | **视觉/文本非同源 → 跨模态可对齐性弱于论文**（D1，最实质的偏离） | **闸门-0**（params §2.7）前置于 P2；`V–T` 失败即停并改附录 A；`V–B/T–B` 接近随机属预期，须在报告中说明"几何对齐主要发生在 V–T 对" |
 | **R13** | **无 meta → 类别/品牌先验缺失**（D10） | `[CAT]/[BRD]` token 已删除；不得用 item id / 频次等伪造"内容特征"；内容侧只有 image+text 两路，须声明 |
+| **R14** | **patience × eval_interval 语义错配**（params §6 v1.4） | patience 一律按**评估次数**计（等效 = patience × eval_interval = 40 epoch）；代码只维护 `eval_counter`，禁出现 epoch 版 patience 变量；误按 epoch 用 → 等效容忍减半、早停偏早 |
+| **R15** | **辅助特征负向审计断言放宽后的防泄漏强度下降**（params §4.5 v1.4） | 两表一致 → `warn_review_required`（不静默放行）：`review_note` 人工签字后才进 P1；一致的高危成因是重算脚本读错文件，复核必须核对脚本实际读取的文件路径 |
 
 ---
 
