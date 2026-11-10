@@ -43,6 +43,46 @@ class DeliveryError(RuntimeError):
     """A platform-side prerequisite was not completed; never silently downgrade."""
 
 
+def build_deliver_payload(args) -> "DraftPayload":
+    """Build a DraftPayload from ``save-xhs-draft`` CLI args with mutual-exclusion checks.
+
+    Kept beside :class:`DraftPayload` (stdlib-only) so CLI flag rules are
+    testable without importing the heavyweight CLI module. Raises ValueError
+    on ambiguous flags.
+    """
+    if args.skip_pdf_attachment and args.pdf is not None:
+        raise ValueError("use either --pdf or --skip-pdf-attachment, not both")
+    if not args.skip_pdf_attachment and args.pdf is None:
+        raise ValueError("--pdf is required unless --skip-pdf-attachment is explicitly provided")
+    draft = json.loads(args.draft.read_text(encoding="utf-8"))
+    topics = tuple(str(item).lstrip("#") for item in draft.get("topics", []) if str(item).strip())
+    return DraftPayload(
+        title=str(draft["title"]), body=str(draft["body"]),
+        image_paths=tuple(args.image), topics=topics,
+        pdf_path=args.pdf,
+        require_pdf_attachment=not args.skip_pdf_attachment,
+        require_real_topics=not args.skip_topic_binding,
+    )
+
+
+class TopicEntityUnavailable(DeliveryError):
+    """A requested Xiaohongshu topic has no selectable platform entity.
+
+    Terminal eligibility result for the current paper: skip it (and record the
+    candidates for the manual queue) instead of retrying or silently binding a
+    wrong suggestion. Never falls back to body hashtags.
+    """
+
+    def __init__(self, topics: tuple[str, ...], detail: str = "") -> None:
+        self.topics = topics
+        rendered = ", ".join(repr(topic) for topic in topics)
+        super().__init__(
+            f"real Xiaohongshu topic entity unavailable for {rendered}"
+            + (f"; {detail}" if detail else "")
+            + "; skip the current paper (no body-hashtag fallback)"
+        )
+
+
 Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 
 #: Creator-center automation (image upload, topic picker, PDF dialog, save) can
@@ -89,19 +129,24 @@ class DraftPayload:
     body: str
     image_paths: tuple[Path, ...]
     topics: tuple[str, ...]
-    pdf_path: Path
+    pdf_path: Path | None
+    require_real_topics: bool = True
+    require_pdf_attachment: bool = True
 
     def validate(self) -> None:
         if not self.title or len(self.title) > 20:
             raise DeliveryError("Xiaohongshu title is required and must contain at most 20 characters")
         if not self.body.strip() or not self.image_paths:
             raise DeliveryError("body and at least one image are required")
-        if not self.topics:
+        if self.require_real_topics and not self.topics:
             raise DeliveryError("real topic binding is mandatory; do not fall back to body hashtags")
-        missing = [str(path) for path in (*self.image_paths, self.pdf_path) if not path.is_file()]
+        assets: tuple[Path, ...] = self.image_paths + ((self.pdf_path,) if self.pdf_path else ())
+        missing = [str(path) for path in assets if not path.is_file()]
         if missing:
             raise DeliveryError(f"missing local delivery assets: {missing}")
-        if self.pdf_path.suffix.casefold() != ".pdf":
+        if self.require_pdf_attachment and self.pdf_path is None:
+            raise DeliveryError("a PDF is required unless the explicit per-run waiver is enabled")
+        if self.pdf_path is not None and self.pdf_path.suffix.casefold() != ".pdf":
             raise DeliveryError("the paper attachment must be a PDF")
 
 
@@ -265,15 +310,22 @@ class OpenCliXiaohongshuDelivery:
                 "})(" + json.dumps(topic) + ")"
             )
             self._eval(js, f"type '#{topic}' into body")
-            # 3. Wait for ``div.items div.item`` suggestions to render.
-            self._must(
-                f"wait topic dropdown for '{topic}'",
-                self._browser("wait", "selector", "div.items div.item", "--timeout", "15000"),
-            )
-            # 4. Click the best-matching dropdown item.
+            # 3. Wait for ``div.items div.item`` suggestions to render. No
+            # dropdown means the platform offers no entity for this topic:
+            # terminal ineligibility, never a silent skip.
+            try:
+                self._must(
+                    f"wait topic dropdown for '{topic}'",
+                    self._browser("wait", "selector", "div.items div.item", "--timeout", "15000"),
+                )
+            except DeliveryError as error:
+                raise TopicEntityUnavailable((topic,), detail=str(error)) from error
+            # 4. Click the exactly-matching dropdown item. Exact match only:
+            # no ``items[0]`` fallback, wrong-entity binding is a failure.
             res = self._eval(self._click_suggestion_js(topic), f"click suggestion for '{topic}'")
-            if res.get("ok"):
-                bound += 1
+            if not res.get("ok"):
+                raise TopicEntityUnavailable((topic,), detail=f"no exact suggestion match: {res}")
+            bound += 1
             self._browser("wait", "time", "0.5")
         return bound
 
@@ -374,7 +426,7 @@ class OpenCliXiaohongshuDelivery:
         sels = json.dumps(self._topic_suggestion_selectors_json())
         return (
             "(function(topicName){"
-            "const norm=v=>(v||'').replace(/^#/,'').replace(/\\s+/g,'').trim();"
+            "const norm=v=>((v||'').split('\\n')[0]).replace(/^#/,'').replace(/\\s+/g,'').trim();"
             "const want=norm(topicName);"
             "const SUG=" + sels + ";"
             "const seen=new Set();const items=[];"
@@ -384,8 +436,8 @@ class OpenCliXiaohongshuDelivery:
             "seen.add(n);items.push(n);}}"
             "if(!items.length)return JSON.stringify({ok:false,count:0});"
             "let t=items.find(n=>norm(n.innerText||n.textContent)===want);"
-            "if(!t)t=items.find(n=>norm(n.innerText||n.textContent).includes(want));"
-            "if(!t)t=items[0];"
+            "if(!t)return JSON.stringify({ok:false,count:items.length,reason:'no exact match',"
+            "candidates:items.slice(0,10).map(n=>((n.innerText||n.textContent||'').trim().slice(0,20)))});"
             "try{t.click();return JSON.stringify({ok:true,count:items.length,"
             "text:(t.innerText||t.textContent||'').trim().slice(0,40)});}"
             "catch(e){return JSON.stringify({ok:false,count:items.length,message:String(e)});}"
@@ -457,12 +509,12 @@ class OpenCliXiaohongshuDelivery:
         return draft
 
     def deliver(self, payload: DraftPayload) -> DeliveryReceipt:
-        """Full flow: topics + PDF attached in-session, then saved as a draft."""
-        draft = self._compose_and_save(payload, attach_pdf=True)
+        """Full flow: topics (+PDF when provided) attached in-session, then saved as a draft."""
+        draft = self._compose_and_save(payload, attach_pdf=payload.pdf_path is not None)
         return DeliveryReceipt(
             draft_id=str(draft.get("id", "")), title=payload.title,
             image_count=len(payload.image_paths), topics=payload.topics,
-            pdf_name=payload.pdf_path.name,
+            pdf_name=payload.pdf_path.name if payload.pdf_path else "",
         )
 
     def save_image_draft(self, payload: DraftPayload) -> dict:

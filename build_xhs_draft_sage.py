@@ -234,6 +234,7 @@ package = PublicationPackage(
     links={"paper": PAPER_URL, "pdf": "https://arxiv.org/pdf/2601.21452", "code": ""},
     metadata={
         "topics": ["论文分享", "人工智能", "推荐系统", "深度学习", "AI"],
+        "visual_review": "ViewImage 逐张目检 6 张（含 1.8x 放大伪影复核）",
         "pdf_path": str(PARSED / "2601.21452_origin.pdf"),
         "author": "",
         "source_attribution": "图表摘自论文，仅作学术解读。",

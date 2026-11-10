@@ -21,6 +21,7 @@ from typing import Any, Protocol
 
 from .common import utc_now, write_json
 from ..infrastructure import opencli_runtime
+from ..services.xhs_content_gate import validate_visual_review, validate_xhs_content
 import subprocess
 
 
@@ -302,6 +303,11 @@ class XhsPublisher(FilePublisher):
             errors.append("xhs requires at least one image")
         if len(package.image_paths) > 9:
             errors.append("xhs supports at most 9 images per note")
+        # 与 compose-post / render_post 共用 config/xhs_content_rules.yaml 的同一份铁律：
+        # 正文纯文本、≤1000 字、必须有局限段、话题白名单、图片逐张目检标记。
+        errors.extend(validate_xhs_content(
+            package.body_markdown, package.metadata.get("topics", ())))
+        errors.extend(validate_visual_review(package.metadata))
         return errors
 
     def publish(self, staged_id: str) -> dict[str, Any]:

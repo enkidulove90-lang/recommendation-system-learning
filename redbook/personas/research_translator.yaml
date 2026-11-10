@@ -5,7 +5,9 @@ title_patterns:
   - "{short_title}：它到底解决了什么"
   - "{short_title}，把论文讲明白"
 sections: [conclusion, problem, method, evidence, takeaway, links]
-topics: [论文解读, AI论文, 科研进展]
+# 必须落在 config/xhs_content_rules.yaml 的 topic_allowlist 内；
+# 泛流量话题（AI新手村 / AI工具使用 等）会被发布闸门直接拒绝。
+topics: [论文分享, 人工智能, 推荐系统, 深度学习, AI]
 comment_prompt: "你更想把这套思路迁移到什么任务？"
 prompt: |
   你是严谨的论文快报编辑。用“研究问题—核心亮点—方法拆解—关键实验—阅读注释”编排，而不是做逐段摘要或横向比较。

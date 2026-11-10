@@ -81,6 +81,7 @@ class PersonaPostComposer:
         "datasets": ("benchmark", "数据集", "实验设置"),
         "results": ("实验结果", "实验效果", "结果", "experimental results"),
         "relevance": ("借鉴", "agent relevance", "启发"),
+        "limitation": ("局限", "限制", "不足", "limitations", "limitation"),
     }
 
     def __init__(self, catalog: PersonaCatalog | None = None) -> None:
@@ -169,19 +170,35 @@ class PersonaPostComposer:
         evidence = self._bullet(facts.get("results", facts.get("datasets", "")), "原文未披露可直接引用的结果")
         relevance = self._bullet(facts.get("relevance", ""), "可从问题定义、方法设计和实验设置三个维度继续阅读")
         reproducibility = self._bullet(facts.get("datasets", ""), "代码、数据和完整实验条件以论文及官方仓库为准")
+        highlight = self._bullet(facts.get("innovation", ""), "原文未披露独立创新点；见下方方法拆解与关键实验。")
+        limitation = self._bullet(facts.get("limitation", ""), "原文未披露")
         links = LINKS.format(
             paper=f"https://arxiv.org/abs/{arxiv_id}", pdf=f"https://arxiv.org/pdf/{arxiv_id}",
             github=f"\nGitHub：{github_url}" if github_url else "\nGitHub：暂无官方代码",
         )
         formats = {
-            "research_translator": f"🎓 论文在解决什么？\n{problem}\n\n✨ 核心亮点\n• {problem}\n• {method}\n\n🧠 方法拆解\n{method}\n\n📊 关键实验\n{evidence}\n\n📝 阅读注释\n{relevance}\n\n💻 代码状态\n{'已提供官方 GitHub，见文末链接。' if github_url else '暂无官方代码；不要把匿名数据或第三方仓库当作官方实现。'}",
+            # 每个事实槽位只出现一次。旧版把 problem / method 各插入两次
+            # （"论文在解决什么" ≡ "核心亮点"第1条、"核心亮点"第2条 ≡ "方法拆解"），
+            # 导致草稿像复制粘贴的填表；见 docs/publishing-pipeline-diagnosis.md §2.4。
+            "research_translator": (
+                f"🎓 论文在解决什么？\n{problem}\n\n"
+                f"✨ 核心亮点\n{highlight}\n\n"
+                f"🧠 方法拆解\n{method}\n\n"
+                f"📊 关键实验\n{evidence}\n\n"
+                f"📝 阅读注释\n{relevance}\n\n"
+                "💻 代码状态\n"
+                + ("已提供官方 GitHub，见文末链接。" if github_url
+                   else "暂无官方代码；不要把匿名数据或第三方仓库当作官方实现。")
+            ),
             "implementation_reviewer": f"🔍 复现判断\n{problem}\n\n核心模块\n{method}\n\n实验依据\n{evidence}\n\n复现信息\n{reproducibility}\n\n⚠️ 边界\n没有明示的参数、代码或数据，不补写推测。",
             "industry_analyst": f"一个问题：这条路线为什么值得关注？\n{problem}\n\n我会先问三个问题\n1. 它要替换或补强哪一环？\n2. 方法怎么落到系统里？\n3. 证据是否支撑这个判断？\n\n论文的回答\n{method}\n\n已验证的证据\n{evidence}\n\n可能的影响（推断）\n{relevance}",
             "study_coach": f"读这篇前，先抓四件事\n\n① 问题\n{problem}\n\n② 方法\n{method}\n\n③ 证据\n{evidence}\n\n④ 读完后可迁移什么\n{relevance}\n\n建议：带着‘它比什么基线好、为何会更好’回到原图和实验表核对。",
             "evidence_auditor": f"主张\n{problem}\n\n证据链\n{evidence}\n\n方法与对照\n{method}\n\n复现边界\n{reproducibility}\n\n结论\n目前能确认的是论文报告的结果；外推到其他任务前仍需验证。",
             "weekly_curator": f"为什么选它\n{problem}\n\n一句话看懂\n方法：{method}\n证据：{evidence}\n\n适合谁读\n{relevance}\n\n收藏前先看原图、实验表和代码状态。",
         }
-        body = f"{formats[persona.id]}\n\n📎 论文与代码\n{links}"
+        # 局限段是所有 persona 共用的发布铁律，统一在此追加，避免各模板各自实现
+        # 或遗漏（xhs_content_gate 会强制校验这一段）。
+        body = f"{formats[persona.id]}\n\n⚠️ 局限\n{limitation}\n\n📎 论文与代码\n{links}"
         return PostDraft(
             persona_id=persona.id, requested_persona_id=persona_id, persona_selection_reason=selection_reason,
             title=title, body=body, topics=persona.topics,

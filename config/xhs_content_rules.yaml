@@ -1,0 +1,67 @@
+# 小红书论文帖发布闸门 · 单一事实源
+# 人类可读规范见 redbook/docs/xhs-content-spec.md
+# 改规则只改本文件：compose-post / render_post / XhsPublisher.validate 三处会自动读取同一份。
+# 注意：仓库 .gitignore 有 `*.json`，规则文件刻意用 .yaml，确保能被 git 跟踪并让 Codex 拉到。
+
+title_max_chars: 20
+body_max_chars: 1000
+images_min: 1
+images_max: 9
+
+# 正文必须有独立的短题头段包含这些关键词
+required_section_keywords:
+  - 局限
+
+# 小红书编辑器按纯文本渲染，Markdown 语法会原样显示；话题只走平台真实实体绑定
+forbidden_body_markers:
+  - "#"
+  - "**"
+  - "__"
+  - "~~"
+  - "`"
+  - "]("
+
+# 与 redbook/infrastructure/xiaohongshu_delivery.py::_topic_allow_set 的 base 集对齐
+# 并补入各 persona 使用的学术垂直标签。泛流量话题（AI新手村 / AI工具使用 等）不在此列。
+topic_allowlist:
+  - 论文解读
+  - 科研
+  - 学术论文
+  - 论文精读
+  - 科研干货
+  - 学术
+  - 人工智能
+  - 机器学习
+  - 推荐系统
+  - 大模型
+  - 智能体
+  - agent
+  - llm
+  - ai
+  - 论文分享
+  - 算法
+  - 神经网络
+  - 自然语言处理
+  - nlp
+  - 数据分析
+  - 深度学习
+  - 实验设计
+  - AI研究
+  - 论文复现
+  - 算法工程
+  - AI论文
+  - 读论文
+  - 科研成长
+  - AI学习
+  - AI资讯
+  - 科技前沿
+  - AI趋势
+
+# 图片必须逐张目视检查后显式留痕，不能缺失或停在 pending
+visual_review_key: visual_review
+visual_review_pending_values:
+  - ""
+  - pending
+  - none
+  - "false"
+  - no
