@@ -9,8 +9,12 @@ fetch_mm_data.py — 拉取真实 Amazon 多模态数据(MMSSL / LATTICE 约定)
 重要对齐说明:
   - 本仓库 data/amazon-sports/ 目录虽名为 "amazon-sports", 但其统计为
     35598 用户 / 18357 物品 —— 这正是 MMSSL 的 **Amazon-Baby**(Sports 仅 7050 物品).
-    故此处拉取 Amazon-Baby, 其 image_feat.npy(CLIP-ViT 4096) 与 text_feat.npy
-    (Sentence-BERT 1024) 的行序 = item id, 与本仓库现有交互数据的 item 索引天然对齐.
+    故此处拉取 Amazon-Baby, 其 image_feat.npy 与 text_feat.npy 的行序 = item id,
+    与本仓库现有交互数据的 item 索引天然对齐.
+    特征口径(勿混淆, 曾写错): image_feat.npy = 4096 维 **CNN** 特征(非 CLIP、非 BLIP-2);
+    text_feat.npy = sentence-transformers 特征, 维度以实际 load 的 shape 为准
+    (MMSSL 发布档署 1024, 但 MARGO/2504.16524 对同源 Baby 记 384, 两种预处理版本并存).
+    据: code/prep_amazon_sports.py:9, baseline/prism_analysis.md:353.
   - 拉取后会: (a) 用 MMSSL 的 json 交互重写成 LightGCN++ 分组格式(保证与特征同序);
               (b) 覆盖合成 image_feat.npy, 并写入真实 text_feat.npy.
   - 覆盖前 bash 调用方应已备份(见 fetch_mm_data 运行前备份 amazon-sports.bak_*).

@@ -1,7 +1,8 @@
-# SAB-ANC 参数决议与默认值 · Decision Record v1.1
+# SAB-ANC 参数决议与默认值 · Decision Record v1.2
 
 > 配套：`docs/sab_anc_design.md`（设计基线）
 > 状态：**本文件为参数唯一权威来源**。代码/设计中任何数值与本文件冲突，以本文件为准，并须在同一提交内改掉冲突处。
+> v1.2（2026-11-10）：三项偏离裁决封闭 —— ①第三模态定为 **behavioral(SASRec)**（非类别品牌）；②动作头 **关闭**，rating/verified 不可得 → 改 4 维可计算行为辅助输入；③BLIP-2 → 预计算特征（路径 A）正式拍板，新增 **偏差登记册**（§2.6）与 **闸门-0 跨模态可对齐性预检**（§2.7）。
 > v1.1（2026-11-10）：按论文原文定值 Eq.1、弃用 `CGAd`、修正 PSGR 输入、数据集基准切到 MMSSL Baby + 5k item 子集。
 > v1.0（2026-11-10）：首版（基于 Amazon-2023 假设，部分内容已被 v1.1 取代）
 
@@ -32,7 +33,8 @@
 | 体积定义 | `Vol_i = √det(G_i)`，`G_i[j,k] = z_{i,j}ᵀ z_{i,k}` | 【锚】 | §2.1 |
 | 对齐损失 | **对称对比 `L_align = (L_D2A + L_A2D)/2`** | 【锚】 | §2.2，Eq.1 |
 | `τ`（体积对比温度） | **0.07** 主，0.1 敏感性 | 【拍】 | §2.3 |
-| `N_m`（模态数） | 3（论文）→ **本地只有 2 路，见 §2.4** | ⚠️冲突 | 需补第三模态或改 2 组轮换 |
+| `N_m`（模态数） | **3 = visual + textual + behavioral** | 【定】 | v1.2 裁决，见 §2.5；与论文结构一一对应 |
+| 码本组数 | **6 组 = 3 共享（`RQN_sh`）+ 3 模态特定** | 【定】 | 由 `N_m=3` 推出，与论文一致 |
 | anchor 轮换 | **3 模态逐一轮换，3 组 D2A/A2D 取平均** | 【拍】 | §2.4 |
 | `Φ_fuse` | **mean 为主**，attention 为消融 | 【拍】 | §3.1 |
 | 码本更新 | STE + commitment `sg[·]` | 【锚】 | 前向最近码字，反向直通 |
@@ -135,24 +137,92 @@ L_align = L / 3
 
 理由：不轮换等于随机指定 anchor，结果依赖模态顺序（不可复现的隐性变量）；轮换后损失对模态排列对称，与"几何对齐"语义一致，且代价只有 3 倍（B×B 矩阵，B=1024 时每步多 ~2ms）。
 
-**⚠️ 本地数据只有 2 路模态**（`image_feat` + `text_feat`），见 §2.5——`N_m=2` 时改为 2 组轮换，`data` 即另一路单模态，不做平均。
+**v1.2 更新**：第三模态已定为 **behavioral(SASRec)**（§2.5），`N_m=3` 成立，本节 3 组轮换可完整执行，**不再有 2 模态降级路径**。
 
-### 2.5 第三模态缺口（阻塞项）
+### 2.5 第三模态 = behavioral(SASRec)【v1.2 裁决】
 
-| 事实 | 证据 |
-|---|---|
-| 本地 Baby 只有 2 路特征：`image_feat`(4096) + `text_feat`(1024) | MMSSL 官方发布，`prism_analysis.md` L353 |
-| 论文 `N_m=3` | 用户提供的论文原文 |
+论文的 `N_m=3` 是 **visual / textual / behavioral**，不是三类内容特征。因此第三模态必须用行为侧表征，类别/品牌不能顶替。
 
-三条补法（P0 必须选一条，否则 `N_m` 只能取 2，Eq.1 的 3 组轮换退化为 2 组）：
-
-| 方案 | 做法 | 成本 | 风险 |
+| 模态 | 本地实现 | 输入维 | 状态 |
 |---|---|---|---|
-| **A（推荐）** | 第 3 模态 = **类别/品牌元数据编码**（`categories` 多热 或 `brand` embedding），与 image/text 一并进 CGA | 低（Baby meta 可得） | 需先有 meta 文件，本地同样缺 |
-| B | 第 3 模态 = **文本再编码的第二视角**（标题 SBERT 384 + 描述 TF-IDF） | 低 | 与 text 同源，几何多样性弱，审稿人会质疑"第三个模态"名不副实 |
-| C | 直接 `N_m=2`，论文口径改为"双模态"，Eq.1 只跑 2 组轮换 | 零 | 与论文 `N_m=3` 不一致，必须在报告中声明偏差 |
+| visual | MMSSL `image_feat.npy` | **4096（CNN）** | 【定】⚠️ 非 BLIP-2、非 CLIP，见 §2.6 D2 |
+| textual | MMSSL `text_feat.npy` | **1024**（sentence-transformers 系，型号未留档；以实际 `load` 打印 shape 为准） | 【定】⚠️ 见 §2.6 D3 |
+| behavioral | **冻结 SASRec 的 item embedding 表**（`train.txt` 序列训练，L2 归一化后进 CGA） | **512**（对齐论文 `d=512`） | 【定】 |
 
-**默认执行 A**，若 meta 不可得则退 C 并在报告写明"仅 2 模态，已偏离论文 N_m=3"。
+**结构后果（全部自动成立，无需额外决策）**：
+- Eq.1 → 3 组 anchor 轮换（§2.4）；
+- 码本 → `RQN_sh=3` 共享 + 3 组模态特定 = **6 组**，与论文一致；
+- 5k 子集不改变 `N_m`，码本组数仍 6。
+
+**边界（防混淆）**：`[CAT_i]/[BRD_i]` 是**下游内容输入**，属 SAB-ANC 自有设计，**不是模态**。若用它们顶替 behavioral，则名义 `N_m=3` 但结构与论文不对应 → **禁止**，且 `CAT/BRD` 本地同样无 meta 文件（Baby 无 meta），实际也造不出来。
+
+#### ⚠️ behavioral 模态的两个固有风险（必须写进报告）
+
+**风险 1：同源捷径（与标签同源）**。SASRec item embedding 与下游标签都来自 `train.txt` 的 next-item 目标 → behavioral 是最强捷径，`behavior-only` 可能已接近全模型。这不是 bug，**论文自己的消融就是这个结论**（behavior-only 是强基线，甚至超过 Text+Image）。
+
+因此：
+- **禁止**把"三模态 > 全模态对比"当作主结论的唯一形式（会被质疑提升来自行为侧）；
+- **主结论必须落在 cold-start 子集**（行为不可靠处），与论文 "Image+Behavior 的 Cold AUC +3.50%" 叙事对齐；
+- 强制报告 **7 行消融矩阵**：`V / T / B / V+T / V+B / T+B / V+T+B`，且 **warm 与 cold 分开列**。
+
+**cold / warm 定义（可复现，写死）**：
+
+| 桶 | 定义 | 依据 |
+|---|---|---|
+| cold-item | `train.txt` 中该 item 交互频次 **≤ 5** | 实测频次分布 p25=4 / median=6，`≤5` 约占 30–40%，规模够 |
+| warm-item | 频次 **> 5** | 同上 |
+| cold-user | 该用户 `train.txt` 序列长 **≤ 3** | 实测 min=3 |
+| 主指标 | **cold-item 上的 AUC / NDCG@10** | 与论文 Cold 口径对应 |
+| 辅指标 | warm-item 同指标；cold-user 单列 | |
+
+**风险 2：behavior-only 消融 ≈ SASRec 本身**。这是好事——可当 sanity check：若 `B` 行显著低于已知 SASRec 水平，说明特征抽取链路有 bug，先查实现不查方法。
+
+### 2.6 偏差登记册（Deviation Register）【v1.2 新增】
+
+论文设定 vs 本地实况的逐项偏离登记。**报告/论文中每一行都必须对应一句显式声明**，不得沉默处理。
+
+| ID | 论文设定 | 本地实况 | 级别 | 处理 | 报告必须写 |
+|---|---|---|---|---|---|
+| **D1** | 视觉与文本**同出一个 BLIP-2**（visual 2560 / textual 1408） | 视觉 CNN 4096 + 文本 SBERT 1024，**两个异质模型** | **高** | 闸门-0 预检（§2.7）；结论不得声称"复现论文编码器条件" | "视觉/文本**非同源**编码器，跨模态可对齐性前提弱于论文" |
+| **D2** | BLIP-2 (2.7B) 视觉编码 | MMSSL 预计算 **CNN**（多篇论文口径一致：4096-d CNN） | 中 | 路径 A（§4.4） | "视觉特征为 CNN，非 BLIP-2" |
+| **D3** | BLIP-2 文本编码 | sentence-transformers 系，**编码器型号未留档** | 中 | 同上 | "文本编码器型号未随数据发布，无法追溯" |
+| **D4** | 维 2560 / 1408 | 4096 / 1024 | 低 | CGA 的 `W_j` 按输入维自适应 | 附表列维度即可 |
+| **D5** | 动作模态 `a_t` 入 token 流 + 动作 NLL（SFT） | **无 rating、无 verified、无 timestamp、无评论文本** | **高（结构）** | 动作头关闭（§4.5），改 4 维行为辅助输入 | "数据集无动作监督信号，动作预测分支未实现" |
+| **D6** | 多数据集（Baby/Sports/Clothing 等） | **仅 Baby，且 5k item 子集** | 中 | 原型定位，最终数字回全集 | "单数据集原型验证；子集 sha256 见附表" |
+| **D7** | 全局时间切分 | per-user 前缀/后段 holdout | 低-中 | §4.2 | "per-user chronological holdout，**非**全局时间切分" |
+| **D8** | behavioral 由论文 SASRec 出 | 本地重训 SASRec（同架构、权重不同） | 低 | §3 约定 | "behavioral 特征来自本地重训 SASRec" |
+| **D9** | baseline = WuKong/HSTU/MTGR/QARM/PSRQ+MCCA/DLRM | 本地 LightGCN++ 同切分重跑 | 中 | §7 | "表中本地复现行为 LightGCN++；其余为原文引用" |
+| **D10** | 内容侧含类别/品牌等语义先验 | Baby **无 meta 文件**，类别/品牌字段不存在 | 中 | `[CAT]/[BRD]` token 删除（design §5.1） | "内容侧仅 image+text 两路，无类别/品牌先验" |
+
+**级别判据**：高 = 可能改变洞见有效性（必须在正文声明，不能只放附录）；中 = 影响数字可比性（表注声明）；低 = 仅实现差异（附表）。
+
+**合计 10 项偏离，其中高级 2 项（D1 非同源编码器、D5 无动作信号）**。D1 由闸门-0（§2.7）兜底，D5 由"动作头关闭 + 4 维辅助特征"兜底且在正文声明。这两项决定了本方案的性质：**是"结构复现 + 条件偏离下的原型验证"，不是论文方法的严格复刻**。任何对外表述都必须守住这条边界。
+
+### 2.7 闸门-0：跨模态可对齐性预检【v1.2 新增，P2 前强制】
+
+**为什么必须做**：D1 的实质含义是——论文的"可对齐性"由 BLIP-2 单模型保证，本地换成两个异质编码器后，这个前提**退化为待验证假设**。若 `image_feat` 与 `text_feat` 之间本就没有可学的对应关系，Eq.1 的 `Vol` 无法有意义地下降，CGA 整个环节的结论都不可信。
+
+**做法**（`code/gate0_alignability.py`，5k 子集、冻结特征、5-fold）：
+
+| 指标 | 计算 |
+|---|---|
+| M1 跨模态检索 | 在 train-item 上 5-fold 学线性映射 `W: R^{d1}→R^{d2}`（岭回归，`α` 由内层 valid 选），held-out 上算 `image→text` **R@10** |
+| M2 随机基线 | `R@10_random = 10 / N_item_subset`（5k → 0.2%） |
+| M3 打乱对照 | 打乱配对标签重跑 M1（10 次），应 ≈ M2 ± 2σ（不≈则说明有标签泄漏或数据重复） |
+
+**三对全测**：`V–T`、`V–B`、`T–B`（B = behavioral item embedding）。
+
+| 对 | 通过 | 告警 | 失败 |
+|---|---|---|---|
+| **V–T** | R@10 ≥ **10× M2** | 3–10× → 可跑但结论须弱化为"弱可对齐条件下" | < 3× |
+| **V–B / T–B** | ≥ 10× | 其余一律 **仅告警**（SASRec embedding 是 ID 空间，与内容空间本不同构，不可对齐是预期） | — |
+
+**判定规则**：
+- `V–T` **通过或告警** → 开训；
+- `V–T` **失败** → CGA 无可对齐信号 → 判 D1 致命，**停**，写失败报告，改走附录 A（Amazon-2023 + BLIP-2）或另换特征源；
+- `V–B / T–B` 接近随机 → **不算失败**，反而是 CGA 的价值所在（把不可对齐的拉到一起），但必须在报告中说明"几何对齐主要发生在 V–T 对，行为侧对齐信号弱"。
+
+输出 `metrics/gate0_alignability.json`（含三对 R@10、随机基线、打乱对照均值与 σ、`verdict`）。**该文件缺失 → P2 禁止启动。**
 
 ---
 
@@ -189,6 +259,16 @@ L_align = L / 3
 | `λ`（L_align 权重） | 1.0 | 对齐项与重建项需在首 100 step 内量级可比 | `L_align / L_rec` 健康区间 **[0.1, 10]** | >10 → λ↓；<0.1 且 Vol 不降 → λ↑ |
 
 注：VQ-VAE 原论文 commitment 用 0.25，但那是无体积竞争项的场景；此处 CGAL 同时拉扯 encoder，不照搬，由 guard 决定落点。
+
+**搜索顺序【v1.2 定】**（不做 3×3 全交叉，省预算且先看失效模式）：
+
+```
+Step 1  固定 β=λ=1，扫 τ ∈ {0.05, 0.07, 0.1, 0.2}       → 定 τ
+Step 2  固定 λ=1、τ=τ*，扫 β ∈ {0.1, 10}（两端）          → 看两侧失效模式
+        两端都健康 → 补 β=1.0 三选一；某端明显崩 → 直接排除该侧区间
+Step 3  固定 β=β*、τ=τ*，扫 λ ∈ {0.1, 10} → 同上
+```
+每格 40 epoch、单 seed；只有进入最终候选的组合才补 3 seed。
 
 ### 3.4 vCLUB 完整默认值
 
@@ -283,29 +363,67 @@ Step 5 验收（任一不过则换 sub_seed 重抽，最多 3 次）
 | B | 下载 Amazon-2014 Baby 元数据（含 `imUrl`）→ 抓图 → BLIP-2 自产 | 1.8 万图，Amazon 老图失效率高（经验 30–40%） | 保住 BLIP-2，但数据缩水、耗时 1–2 天 |
 | C | 改回 Amazon-2023 Movies&TV（HF meta 自带 images URL，失效少） | 推翻 v3 裁决-3 | 保住 BLIP-2 + 全局时间切分，但丢掉与 MMSSL 同协议可比性 |
 
-**默认执行 A**（先让模型链路跑通），B/C 作为"BLIP-2 复现"独立里程碑，不与主实验混跑。此决策需你确认（见 §10-1）。
+### 4.4 特征来源：路径 A 已拍板【v1.2 封闭】
 
-### 4.5 动作头存废（新基准下的第二个硬冲突）
+**裁决：走路径 A —— 用 MMSSL 预计算特征，BLIP-2 不在本轮实现。** 登记为偏离 D1–D4（§2.6），不是"等价替换"。
 
-design §5.3 的动作词表 `[ACT_R1..R5] + [ACT_NOVER] + [ACT_VERIFY]/[ACT_UNVERIFIED]` **完全建立在 Amazon-2023 的 `rating` 与 `verified_purchase` 字段上**。
+**先说清一个仓库内部的错误记载（必须纠正，否则整篇方案的特征描述都是错的）**：
 
-MMSSL Baby 的实测字段：只有 `user_id` + `item_id` 序列，**无 rating、无 verified、无 timestamp、无 review 文本**。
-
-| 项 | 结论 |
-|---|---|
-| 动作词表可行性 | ❌ 8 个 token 全部无法构造（无评分桶、无验证购买标记） |
-| 动作头可行性 | ❌ 监督信号不存在 → 双头退化为**单头（只有召回头）** |
-| 方案表述影响 | 论文中若保留"双头/动作词表"章节即数据不支持，审稿人一查即穿（与 design R5 同类风险，但这次是致命级） |
-
-三条出路：
-
-| 方案 | 做法 | 代价 |
+| 出处 | 说法 | 判定 |
 |---|---|---|
-| **A（推荐）** | **砍掉动作头**，方案改为单任务召回；[ANC] + Eq.1 + 量化链路全部保留 | 论文少一个创新点，但方案自洽 |
-| B | 用可得信号造伪动作词表：如"该物品是否出现在用户序列的前半/后半""序列内位置桶" | 语义勉强，审稿人可能质疑"这不是动作" |
-| C | 换回 Amazon-2023（有 rating + verified） | 与 v3 裁决冲突，且 BLIP-2 问题仍在 |
+| `code/prep_amazon_sports.py:9` | `image_feat.npy: [n_items,4096] CNN 特征(MMSSL 维度)` | ✅ **正确** |
+| `baseline/prism_analysis.md:353` | MMSSL 提供 `image_feat`(4096, **CNN**) + `text_feat`(1024, Sentence-BERT) | ✅ 正确 |
+| **`code/fetch_mm_data.py:12`** | "其 `image_feat.npy`(**CLIP-ViT** 4096)" | ❌ **错误**，需修正注释 |
+| 外部独立证据 | 仓库内 MARGO 论文（`data/parsed/2504.16524_MARGO`）："the image feature is a **4096-dimensional vector extracted by a CNN model**, and the text feature is a **384-dimensional vector** extracted by a pretrained sentence-transformers" | ✅ 4096 = CNN 得到第三方确认 |
 
-**默认 A**，并在设计文档删除 §5.3 词表与 §5.4 动作头。需你确认（§10-2）。
+**结论：`4096` 维是 CNN 特征，不是 CLIP，也不是 BLIP-2。** 全仓库唯一真实的 CLIP 是 PRISM `process_clip.py` 的 `ViT-B/32`（512 维）与合成的 64 维版本。**任何文档/报告不得把 4096 称作 CLIP**。
+
+**文本维度存疑（P0 必须实测确认）**：MMSSL 发布档按仓库记载为 1024，但 MARGO 对同源处理的 Baby 写的是 384。两者可能来自不同预处理版本。**P0 第一步动作**：
+
+```bash
+python -c "import numpy as np; \
+  print(np.load('data/amazon-baby-mmssl/image_feat.npy').shape); \
+  print(np.load('data/amazon-baby-mmssl/text_feat.npy').shape)"
+```
+
+以实测 shape 为准回填 §1.1 与 config；若 `text=384`，则 `d_txt=384`，与 `D4` 一并更新。
+
+**路径 B/C 处置**：保留为"BLIP-2 复现"独立里程碑，不与主实验混跑；C（改回 Amazon-2023）与本轮 v3 预算前提冲突，除非闸门-0 判定 `V–T` 失败（§2.7）才会被动启用。
+
+### 4.5 动作头：关闭，改 4 维行为辅助输入【v1.2 裁决】
+
+**先纠正一个前提**：上一轮建议"砍掉动作头但把 `rating`/`verified_purchase` 保留为辅助输入"——**这条在 Baby 上无法执行**，因为两个字段都不存在。
+
+实测证据（2026-11-10）：
+
+```
+data/amazon-baby-mmssl/  只有 train.txt / valid.txt / test.txt，无任何 meta 文件
+train.txt 前两行： "0 3369 13372 5458 11981 17787"
+                   "1 8802 5044 6554 7215 3087 11502 15278 4281 2322 2374 6677 9198 15249"
+→ 每行只有 user_id + item 序列，无第三列 rating、无 verified、无 timestamp
+```
+
+| 项 | 裁决 |
+|---|---|
+| 动作头 | ❌ **关闭**（`act_head.enabled: false`），代码路径保留以便将来换 Amazon-2023 时开启 |
+| 动作词表（8 个 `[ACT_*]`） | ❌ **删除**，不再出现在设计/论文中（D5） |
+| `rating` / `verified` 作辅助输入 | ❌ **不可执行**（字段不存在），不做 |
+| 替代方案 | ✅ **4 维可计算行为辅助特征**（见下），只作输入、不设预测头 |
+
+**4 维辅助特征**（每条 `(u, i)` 样本，全部从 `train.txt` 计算，无标签泄漏）：
+
+| # | 特征 | 含义 | 归一化 |
+|---|---|---|---|
+| A1 | `log1p(item_train_freq)` | 物品流行度 | 除以 `log1p(max_freq)` |
+| A2 | `repeat_flag` | 该 item 是否已出现在该用户历史 | 0/1 |
+| A3 | `pos_ratio` | 样本在用户序列中的相对位置 | /（seq_len−1），clamp [0,1] |
+| A4 | `log1p(seq_len)` | 用户序列长（活跃度） | 除以 `log1p(max_len)` |
+
+接入方式：4 维 → 1 层 MLP（4→16）→ 与 `h_beh` 逐元素相加（或 concat 后线性降维回 `d_model`），**不做独立预测头**。
+
+**为什么值得做**：这 4 维是 Baby 里唯一可得的"行为语义"，成本近乎零，且能让方案在"纯序列 + 内容特征"之外多一层可解释性。但**必须在报告中声明它们不是论文的动作模态**（D5），不得用 `[ACT_*]` 命名。
+
+**将来若要恢复动作头**（换 Amazon-2023）：`act_head.enabled: true` + 词表 `[ACT_R1..R5] + [ACT_NOVER] + [ACT_VERIFY]/[ACT_UNVERIFIED]`，代码里按 flag 分支，不在主路径上编译。
 
 ---
 
@@ -320,7 +438,7 @@ MMSSL Baby 的实测字段：只有 `user_id` + `item_id` 序列，**无 rating�
 | 场景 | 比例 |
 |---|---|
 | 召回训练 | in-batch（B−1）+ 每正例采 4 个 → B=1024 时 ≈1027 |
-| 动作头 | 无需负采样 |
+| 动作头 | **已关闭**（§4.5，Baby 无监督信号）；开启时也无需负采样 |
 | L_align | batch 内，τ_align=0.07 |
 
 - **下限**：任何 batch 有效负例 ≥ 256，否则退固定池，不允许"负例不够照跑"。
@@ -351,6 +469,7 @@ sampling:
 | 主训练（DST+RQN+PSGR+vCLUB） | 100 | valid **NDCG@10** | 10 | best+last |
 | 网格单格 | 40 | 同上 | 8 | 仅 best |
 
+- **SASRec `hidden=512`**【定】：对齐论文 behavioral `d=512`，使第三模态输入维与论文一致（D8 只偏离"权重来源"，不偏离"维度"）。代价：参数量约 25M、训练时间约为 `hidden=128` 的 2–3 倍（估 1–2h/300ep，含评估），16GB 显存充裕。
 - Baby 规模（19 万交互）比 Amazon-2023 小两个量级，SASRec max epoch 从 500 降到 300。
 - 早停指标唯一（NDCG@10）；R@20 只做 guard（NDCG 升而 R@20 跌 >2 点 → 判不稳定，lr 回退一档）。
 - 梯度裁剪 1.0；AdamW：下游/SASRec `lr=1e-3`，码本 `1e-4`；warmup 5% steps；cosine → `lr×0.01`。
@@ -367,7 +486,7 @@ sampling:
 | 切分 | 必须用 §4.3 的同一份 `baby_5k_item.json` + 同一份 train/valid/test |
 | 旧数字 | LightGCN++ P0-P2 的现成结果只能标"协议不一致（旧切分/全量）"，**不得进同一张表** |
 | 同协议可直接对标 | MMSSL / MSCA / MMRec 等已发表 Baby 结果（同一官方划分），可作为外部参照并在表注写明"引用自原论文" |
-| Hi-SAM 的 baseline | WuKong / HSTU / MTGR / QARM / PSRQ+MCCA / DLRM 是**论文 baseline，不是本地模型**；引用时必须标注"原文结果"，不得让读者误以为本地复现 |
+| Hi-SAM 的 baseline | WuKong / HSTU / MTGR / QARM / PSRQ+MCCA / DLRM 是**论文 baseline，不是本地模型**；**v1.2 定：一律不复现**，只作原文引用，表注标"原文结果" |
 | 报告必须写 | 切分方式（per-user chronological holdout）、边界定义（无绝对日期）、冷启动定义、子集抽取 sha256 |
 
 审计脚本 `code/audit_split.py`（P0 交付）：核验①train/valid/test 用户集合一致 ②无 train 项泄漏进 valid/test ③子集 item 全覆盖 ④sha256 与 config 记录一致。
@@ -389,9 +508,13 @@ baseline/sab_anc/
 └── reports/     # 入库
 ```
 
-指标 JSON 必含：`run_id / stage / seed / config_hash / split_hash / git_commit / valid{...} / test{...} / act_head{...} / diagnostics{cgal_mode, gram_volume, gram_min_sv_ratio, codebook_perplexity, vclub_mi, phi_fuse} / runtime{wall_sec, peak_vram_mb} / status(ok|unstable|aborted|degraded)`。
+指标 JSON 必含：`run_id / stage / seed / config_hash / split_hash / git_commit / n_m / feature_source / valid{...} / test{warm{...}, cold_item{...}, cold_user{...}} / aux_feat{enabled:true} / act_head{enabled:false} / diagnostics{cgal_mode, gram_volume, gram_min_sv_ratio, codebook_perplexity, codebook_groups:6, vclub_mi, phi_fuse} / runtime{wall_sec, peak_vram_mb} / status(ok|unstable|aborted|degraded)`。
 
-7 张必备图：五项 loss 分线、valid NDCG 曲线、Gram 体积 vs step、码本使用直方图、vCLUB MI 曲线、模态对齐余弦分布、消融柱状（误差棒=3 seed std）。
+- `n_m=3` 与 `feature_source=mmssl_precomputed` 必须落进 JSON（对应 D1/D6，事后可审计）。
+- **warm / cold 分开成三个键**，禁止只报总体均值——主结论在 `cold_item`（§2.5 风险 1）。
+- `act_head.enabled=false` 显式写出，避免读者误以为双头模型。
+
+9 张必备图：五项 loss 分线、valid NDCG 曲线、Gram 体积 vs step、码本使用直方图（6 组分开）、vCLUB MI 曲线、模态对齐余弦分布（3 对分开）、**7 行消融矩阵柱状（warm/cold 并排，误差棒=3 seed std）**、闸门-0 检索 R@10 对比、codebook 组间使用熵。
 
 ### 8.2 四级升级
 
@@ -420,13 +543,42 @@ baseline/sab_anc/
 | 2026-11-10 | 子集口径 | 5k 用户分层 | **5k item 分层** | v3 口径 |
 | 2026-11-10 | baseline | 复用 P0-P2 数字 | 同切分重跑，旧数字标"协议不一致" | 跨切分不可比 |
 | 2026-11-10 | 动作头 | 双头（召回+动作分类） | **默认砍掉动作头**（Baby 无 rating/verified，词表不可构造） | 实测字段缺失（§4.5） |
+| 2026-11-10 | **第三模态** | 类别/品牌编码（默认 A） | **behavioral(SASRec item embedding, d=512)** | 论文 `N_m=3` = visual/textual/behavioral；CAT/BRD 属下下游输入（§2.5） |
+| 2026-11-10 | `N_m` / 码本组数 | 2 路 / 降级待定 | **3 / 6 组（3 共享 + 3 特定）** | 同上 |
+| 2026-11-10 | BLIP-2 | 待拍板（§4.4 A/B/C） | **路径 A 正式拍板**，登记偏差 D1–D4 | 成本/收益（§4.4） |
+| 2026-11-10 | 特征命名 | `4096` 被称 "CLIP-ViT"（`fetch_mm_data.py:12`） | **`4096` = CNN 特征**，禁止称 CLIP | MARGO 2504.16524 原文 + `prep_amazon_sports.py:9` |
+| 2026-11-10 | rating/verified 辅助输入 | 拟保留为辅助特征 | **不可执行**（字段不存在）→ 改 4 维可计算辅助特征 | 实测目录无 meta、序列无第三列（§4.5） |
+| 2026-11-10 | 评估口径 | 总体均值 | **warm / cold-item / cold-user 三分开**，主结论在 cold-item | 论文 Cold AUC 叙事（§2.5） |
+| 2026-11-10 | 新增门禁 | 无 | **闸门-0 跨模态可对齐性预检**，`gate0_alignability.json` 缺失禁启 P2 | D1 偏离的必然配套（§2.7） |
+| 2026-11-10 | SASRec hidden | 64–128 | **512**（对齐论文 `d=512`） | 第三模态维度一致（§6） |
+| 2026-11-10 | `β`/`λ` 网格 | 9 格全跑 | **先扫两端 {0.1, 10}**，健康再补 1.0 | 省预算、先看失效模式（§3.3） |
+| 2026-11-10 | Hi-SAM 6 baseline | 待定是否复现 | **不复现**，仅原文引用 | 复现成本远超预算（§7） |
 
 ---
 
-## 10. 仍需你拍板（5 项）
+## 10. 拍板状态：全部封闭（0 项待定）+ P0 执行清单
 
-1. **BLIP-2 怎么办（§4.4）**：A 退预计算 CNN 4096（零成本、改叙述）／ B 抓 Amazon-2014 Baby 图自产（1–2 天、失效率 30–40%）／ C 改回 Amazon-2023（推翻 v3，但保住 BLIP-2 + 全局时间切分）。**建议 A 先跑通链路，B/C 另开里程碑。**
-2. **动作头存废（§4.5）**：A 砍掉动作头改单任务（方案自洽）／ B 造伪动作词表（语义勉强）／ C 换数据。**建议 A。**
-3. **第三模态（§2.5）**：A 类别/品牌编码（需 meta 文件，本地同样缺）／ B 文本第二视角／ C 只做 2 模态并声明偏离论文 `N_m=3`。
-4. **`β` 与 `λ` 的网格优先级**：9 格全跑（5k 子集约 9×40 epoch）还是先粗扫 {0.1, 10} 两端再定中间？**建议后者**（先看两端失效模式，再定落点）。
-5. **Hi-SAM 的 6 个 baseline**（WuKong/HSTU/MTGR/QARM/PSRQ+MCCA/DLRM）是否也要本地复现（成本高），还是仅作外部引用？**建议仅引用**，本地只复现 LightGCN++。
+v1.0/v1.1 遗留 5 项，v1.2 全部封闭：
+
+| # | 事项 | 裁决 | 依据 |
+|---|---|---|---|
+| 1 | BLIP-2 路径 | **A**（预计算特征），登记 D1–D4 | 成本/收益 + v3 预算前提 |
+| 2 | 动作头 | **关闭**，改 4 维可计算辅助特征 | Baby 无 rating/verified（实测） |
+| 3 | 第三模态 | **behavioral(SASRec d=512)**，`N_m=3`、6 组码本 | 论文模态定义 |
+| 4 | `β`/`λ` 网格 | **两端优先**：{0.1, 10} → 健康再补 1.0 | 省预算、先看失效模式 |
+| 5 | Hi-SAM 6 baseline | **不复现**，仅原文引用 | 成本远超原型预算 |
+
+**P0 执行清单（按序，前项不过不进下一项）**：
+
+| # | 动作 | 产物 | 门禁 |
+|---|---|---|---|
+| 1 | `fetch_mm_data.py` 拉特征（走代理/GDrive） | `image_feat.npy` / `text_feat.npy` | 缺失则停（R8） |
+| 2 | **打印特征 shape 回填 config** | 更新 §1.1 `d_txt`（1024 还是 384） | 维度不符 §2.5 表 → 先改表再改码 |
+| 3 | `build_item_subset.py` 抽 5k item | `data/splits/baby_5k_item.json` + sha256 | 验收表 §4.3 |
+| 4 | `audit_split.py` | `metrics/split_audit.json` | 无 train 项泄漏进 valid/test |
+| 5 | **`gate0_alignability.py`（闸门-0）** | `metrics/gate0_alignability.json` | `V–T` 不得 fail（§2.7） |
+| 6 | `train_sasrec.py`（hidden=512，3 seed） | `ckpt/sasrec_best.pt` ×3 | 内部 holdout R@20 达 E15-TF 量级 |
+| 7 | `extract_sasrec_feat.py` | `beh_feat.npy`（用户侧）/ `sasrec_item_emb.npy`（behavioral 模态） | 后者 L2 范数≈1 |
+| 8 | `run_baseline_lightgcnpp.sh` 同切分重跑 | baseline 数字（warm/cold 分开） | 必须与 SAB-ANC 用同一 `split_hash` |
+
+> 顺序说明：把闸门-0 放在 SASRec 重训**之前**，是因为它只依赖已有特征、几分钟可跑完；若 `V–T` 失败，整个方案的视觉/文本对齐环节要重做数据源，此时烧 3 seed SASRec 是纯浪费。
