@@ -4,7 +4,8 @@ description: >
   MUST USE when the task is to turn an academic paper into a Xiaohongshu (小红书) draft
   in this repository: 发小红书 / 论文帖 / 论文速递 / arxiv 发小红书 / compose-post /
   save-xhs-draft / XHS paper draft. Covers paper facts, figure selection, copy rules,
-  staging, draft saving and verification.
+  staging, draft saving and verification. Also触发：redbook.cli note / note spec /
+  redbook/notes/*.yaml.
   NOT for: 微信公众号 / 知乎 / 纯论文摘要（无发布意图）。
 ---
 
@@ -21,26 +22,33 @@ description: >
 | `redbook/docs/xhs-content-spec.md` | 完整规范、架构、命令、迁移说明 |
 | `config/xhs_content_rules.yaml` | **单一事实源**：字数/话题白名单/标记符/目检规则 |
 
-实现入口：`redbook/services/render_post.py`、`redbook/services/xhs_content_gate.py`。
+实现入口：`redbook/cli.py note`、`redbook/services/note_spec.py`、
+`redbook/application/paper_workflow.py`、`redbook/services/render_post.py`、
+`redbook/services/xhs_content_gate.py`。单篇字段规范：`redbook/notes/_schema.yaml`。
 
-## 1. 铁律：唯一内容生成入口
+## 1. 铁律：一篇一个 spec，一条命令
 
-**所有正文必须来自 `render_post(platform, summary, figures)`。**
+**发新帖只新增一个 `redbook/notes/<slug>.yaml`，不新增 .py。**
+唯一运行入口是 `python -m redbook.cli note <slug> --validate | --stage | --publish`。
 
 禁止：
-- 新建 `build_xhs_draft_<name>.py` 手写 `BODY` 当新稿入口（历史脚本仅作存档/复现）；
-- 直接调 `PersonaPostComposer().compose()` 后自己拼正文；
-- 自己发明一套 emoji 分节模板或话题列表。
-
-两条投递路径都从 `render_post` 取内容，共用同一份发布闸门：
+- 新建 `build_xhs_draft_<name>.py` 手写 `BODY`（14 个历史脚本已归档到 `archive/xhs_drafts/`，只作溯源）；
+- 绕过 CLI 自己拼 `PublicationPackage`；
+- 直接调 `PersonaPostComposer().compose()` 当入口，或自造分节模板 / 话题列表。
 
 ```
-render_post → {title, body, topics, images, metadata}
-   ├─ CLI:  redbook.cli compose-post → save-xhs-draft --draft
-   └─ Py:   render_package() → PublicationPackage → XhsPublisher.stage()/publish()
-                                     ↓
-                    OpenCliXiaohongshuDelivery.deliver()   ← 同一个投递器
+redbook/notes/<slug>.yaml  (title / body / figures / topics / links / pdf_path / visual_review)
+        ↓
+redbook.cli note <slug> → PaperCreationWorkflow.build_note_package()
+        ↓ 定稿正文走 render_post(body=...)：跳过模板，只过闸门
+render_package() → PublicationPackage → XhsPublisher.validate() → stage()/publish()
+        ↓
+OpenCliXiaohongshuDelivery.deliver()   ← 同一个投递器，topics → PDF → 存草稿
 ```
+
+`compose-post` / `save-xhs-draft` 仅作生成稿的向后兼容路径；本仓库里发布论文帖不再走它们。
+MCP 只开放 `list_note_specs` / `validate_note_spec` / `stage_note_spec`，**没有 publish**，
+真实草稿箱写入必须由人在 CLI 显式执行。
 
 ## 2. 五条硬约束（会被代码拒绝，不是建议）
 
@@ -73,21 +81,26 @@ render_post → {title, body, topics, images, metadata}
 ## 5. 最短命令
 
 ```bash
-python -m redbook.cli compose-post \
-  --summary data/workflow_state/<id>/paper_brief.md \
-  --arxiv-id <id> --output data/workflow_state/<id>/draft.json
-
-python -m redbook.cli save-xhs-draft \
-  --draft data/workflow_state/<id>/draft.json \
-  --image <img1> --image <img2> --pdf data/papers/<id>.pdf \
-  --output data/workflow_state/<id>/delivery_receipt.json
+# 1) 复制一份 spec 模板（不要复制 .py 脚本）
+cp redbook/notes/2601.21452.yaml redbook/notes/<slug>.yaml
+# 2) 改 paper_id / slug / title / body / figures / topics / links / pdf_path / visual_review
+# 3) 三步走，最后一步只在人工目检后执行
+python -m redbook.cli note --list
+python -m redbook.cli note <slug> --validate
+python -m redbook.cli note <slug> --stage
+python -m redbook.cli note <slug> --publish
 ```
+
+`--validate` 不检查图片文件是否存在（另一台机器 clone 后没有 `data/parsed/*.png`），
+`--stage` 才检查；`status: published` 的历史归档稿会被拒绝重发。
 
 发布前自检（应全过）：
 
 ```bash
 python -m pytest redbook/tests/test_xhs_content_gate.py \
-  redbook/tests/test_content_spec.py redbook/tests/test_automation.py -q
+  redbook/tests/test_content_spec.py redbook/tests/test_automation.py \
+  redbook/tests/test_note_spec.py redbook/tests/test_note_migration.py \
+  redbook/tests/test_cards_and_mcp.py -q
 ```
 
 ## 6. 工程坑（跨机器已验证）
@@ -98,7 +111,11 @@ python -m pytest redbook/tests/test_xhs_content_gate.py \
 - `drafts` 列表 API 不暴露 PDF 字段，最终在创作者后台目测 PDF 卡片。
 - 发布不幂等；改内容要重新 stage 拿新 hash，先发新稿成功后再删旧稿。
 - 换机器先探测依赖：`python -c "import yaml, openai, pydantic, pytest; print('deps ok')"`。托管 venv 可能缺 `openai`/`pydantic`，导致 `redbook.cli` 顶层 import 失败。
-- 历史手写脚本要继续跑，需补 `metadata.visual_review`（见 spec §6）。
+- 历史手写脚本已整体归档到 `archive/xhs_drafts/`，映射表见该目录 README；不要再执行它们。
+- spec 路径一律相对**仓库根**（`parsed_dir` / `pdf_path`），`figures[].file` 相对 `parsed_dir`；旧脚本的 `ROOT = Path(".")` 依赖 cwd，换机器就断。
+- 同一论文有多个版本时用 `slug` 区分文件名（如 `2605.29322_ace_v2.yaml`），`slug` 必须等于文件名 stem。
+- 「局限」段按**独立一行**判定（长度上限见 `config/xhs_content_rules.yaml` 的 `section_line_max_chars`），`⚠️ 局限：……` 题头与内容同行也合规。
+- 自制数字卡用 `redbook/services/cards.py`，不要在每篇脚本里复制一份 `draw_numbers_card`。
 
 ## 7. 参考原文
 

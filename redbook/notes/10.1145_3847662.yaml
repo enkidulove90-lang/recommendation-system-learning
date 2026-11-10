@@ -1,0 +1,64 @@
+paper_id: 10.1145/3847662
+slug: '10.1145_3847662'
+title: 两张图+双阶段融合，冷启动涨97%
+status: published
+source: handwritten
+parsed_dir: data/parsed/sihg_rec
+pdf_path: data/parsed/sihg_rec/10.1145_3847662.pdf
+body: |-
+  🎓 一句话：多模态推荐里图文特征都长在物品上、用户身上没有，所以冷用户最难。这篇 ACM TORS 论文给用户也建了图：每个冷用户只留 3 条交互时，四项指标比最强基线高 87%~97%。
+
+  🧠 问题：用户侧没有「内容」可用
+  以前做法缺两块：① 同构图基本只按「图文像不像」建边，「行为像不像」被丢了；② 融合多为单阶段——早融合抹掉各模态特点，晚融合又抓不住模态间关系。
+
+  ✨ 怎么做的（看图 1）
+  两张同构图一起建，用户侧物品侧各一张：语义图按图文相似度连边，交互图按历史共现连边。用户没有自己的图文特征，就用「他交互过的物品特征取平均」当他的多模态表示。两张图都在训练前算好并冻结，不增加训练开销。
+  融合分两步：早期先用行为信号校准（压掉与推荐无关的噪声、保住各模态特性），后期再融合各模态表示。最后加自适应优化——哪个模态学得差就给它更高权重（图 5：行为模态从 0.7 提到 1.0）。
+
+  📊 数字
+  1. 冷启动（抽走 20% 用户、每人只留 3 条交互）：Baby 的 R@10 从 0.0145 升到 0.0286（+97.2%）、N@10 +97.4%；Sports R@10 +90.3%；Clothing N@10 +87.3%。四项指标三个数据集，涨幅 87.3%~97.4%，全部 p<0.01。
+  2. 常规设置也全面最优，但幅度很小：Baby R@20 0.1052→0.1055、Sports 0.1137→0.1150（对 COHESION）。
+  3. 消融（图 2）：去掉语义图 / 交互图 / 自适应，不校准行为模态，或换成早融合、晚融合，都会掉——四个部件都必要。
+  4. 效率：Baby 上 3.66 秒/epoch（COHESION 4.47、HPMRec 21.03）。
+
+  💡 对我们的意义
+  用户侧没内容，可以用「他碰过的东西」补上；图分开建（语义+交互）比揉在一起更可控。也别只看总体指标——卖点几乎全在冷启动那一档。
+
+  ⚠️ 局限：只在 Baby/Sports/Clothing（+TikTok）验证；冷启动涨幅大但绝对值仍低（R@10 0.0286≈2.9%）；图预计算冻结，依赖上游图文特征质量。
+
+  📄 论文（ACM TORS 2026-09）：https://doi.org/10.1145/3847662
+  ✨ 关注我，持续拆解推荐系统最新论文 📚
+figures:
+- file: images/fig1_overview.png
+  type: architecture
+  description: 论文总览架构图（Fig. 1. The overview structure of SIHG-Rec）。左上：语义与交互同构图构建（训练前，用户/物品各有语义图与交互图，物品图用文本/图像特征求相似度后 Top-k 建边，交互图按共现关系建边）；右上：双阶段融合的早期阶段（文本/ID/图像编码后用行为引导校准）；中下：同构图增强（训练中）四条边分别对应 semantic-item / interactive-item / semantic-user / interactive-user；右下：后期融合；左下：自适应优化损失（L_Adaptive + L_Standard BPR + λ||Θ||）。
+- file: images/fig0_coldstart_card.png
+  type: custom_card
+  description: 自制数字卡（标注为自制）：把论文 Table 6 的冷启动结果整理成手机可读版——三个数据集 × 四个指标，COHESION → SIHG-Rec 的绝对值和相对提升。
+- file: images/fig2_ablation.png
+  type: result
+  description: 消融实验（Fig. 2）：8 个变体在 Baby/Sports/Clothing 上的 Recall@20 与 NDCG@20。变体含 w/o Semantic（去语义图）、w/o Interactive（去交互图）、w/o Adaptive（去自适应损失）、w/o Behavior（不校准行为模态）、r MeanPool、w Early（换早融合）、w Late（换晚融合）与完整 SIHG-Rec。
+- file: images/fig3_sparsity.png
+  type: result
+  description: 稀疏度分析（Fig. 3）：按训练交互数把用户分桶后各方法的 Recall@20。越稀疏的一段差距越明显，说明增益主要来自交互证据极少的用户。
+- file: images/fig11_adaptive.png
+  type: mechanism
+  description: 自适应权重动态（Fig. 11）：训练过程中文本/视觉/行为三个模态的权重变化。此外附了 Fig. 10（clothing 数据集交互图统计）以说明图构建前的邻居数分布。
+- file: images/fig5_hyper_lr.png
+  type: hyperparameter
+  description: 超参分析（Fig. 5）：学习率 × 正则化权重的 Recall@20 热力图（三个数据集各一张）。
+topics:
+- 论文分享
+- 人工智能
+- 推荐系统
+- 深度学习
+- AI
+links:
+  paper: https://doi.org/10.1145/3847662
+  pdf: https://dl.acm.org/doi/pdf/10.1145/3847662
+  code: ''
+visual_review: 历史稿：迁移前已发布，逐张目检记录未随仓库留存；重发前必须重新目检
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文（CC-BY），仅作学术解读。

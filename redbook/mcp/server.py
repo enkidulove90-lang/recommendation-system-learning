@@ -98,7 +98,36 @@ def publish_content(
     return _run(command, timeout=180)
 
 
+def call_note_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
+    """声明式 note spec 的只读 / 本地暂存入口。
+
+    刻意不暴露 publish：真实草稿箱写入必须由人在 CLI 显式执行
+    ``redbook.cli note <slug> --publish``，避免 MCP 调用误触发。
+    """
+    try:
+        from pathlib import Path
+
+        from redbook.application.paper_workflow import PaperCreationWorkflow
+        from redbook.services.note_spec import list_notes
+    except ImportError as exc:
+        return {"ok": False, "error": f"note tool dependencies unavailable: {exc}",
+                "hint": "use the Python interpreter that has the project deps installed (see redbook/docs/xhs-content-spec.md §7)"}
+    if name == "list_note_specs":
+        return {"ok": True, "notes": list_notes()}
+    slug = str(args.get("slug", "")).strip()
+    if not slug:
+        return {"ok": False, "error": "slug is required (filename stem in redbook/notes/)"}
+    workflow = PaperCreationWorkflow(Path(str(args.get("data_root", "data"))))
+    if name == "validate_note_spec":
+        return workflow.validate_note(slug)
+    if name == "stage_note_spec":
+        return workflow.stage_note(slug)
+    return {"ok": False, "error": f"Unknown note tool: {name}"}
+
+
 def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
+    if name in {"list_note_specs", "validate_note_spec", "stage_note_spec"}:
+        return call_note_tool(name, args)
     if name in {"check_login_status", "get_self_info"}:
         return run_opencli("whoami")
     if name == "search_feeds":
@@ -123,6 +152,41 @@ def call_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
 
 
 TOOLS: list[dict[str, Any]] = [
+    {
+        "name": "list_note_specs",
+        "description": "List declarative Xiaohongshu note specs in redbook/notes/ with status and figure counts.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "validate_note_spec",
+        "description": (
+            "Run the repository content gate on one note spec without writing files or "
+            "touching the draft box. Reports title/body/figure counts and gate errors."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "slug": {"type": "string", "description": "filename stem in redbook/notes/, e.g. 2601.21452"},
+                "data_root": {"type": "string", "description": "publish queue root", "default": "data"},
+            },
+            "required": ["slug"],
+        },
+    },
+    {
+        "name": "stage_note_spec",
+        "description": (
+            "Write an immutable local review package for one note spec. Never publishes. "
+            "Requires the image and PDF assets to exist on this machine."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "slug": {"type": "string", "description": "filename stem in redbook/notes/"},
+                "data_root": {"type": "string", "description": "publish queue root", "default": "data"},
+            },
+            "required": ["slug"],
+        },
+    },
     {
         "name": "check_login_status",
         "description": "Check the current Xiaohongshu login state.",

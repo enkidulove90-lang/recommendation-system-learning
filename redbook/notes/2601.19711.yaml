@@ -1,0 +1,69 @@
+paper_id: '2601.19711'
+slug: '2601.19711'
+title: 让推荐损失回头去调语义 ID
+status: published
+source: handwritten
+parsed_dir: data/parsed/2601.19711
+pdf_path: data/parsed/2601.19711/2601.19711_origin.pdf
+body: |-
+  🎓 一句话：生成式推荐把商品压成一串离散的「语义 ID」，但它只按「能不能还原内容」来学，跟「推荐准不准」是两套目标；DIGER 让推荐损失能反过来更新它，B-Shop 上 Recall@10 最高涨 14%。
+
+  🧠 问题：两套目标，各学各的
+  生成式推荐通常分两步：先用 tokenizer（如 RQ-VAE）把商品内容压成语义 ID，再交给推荐器预测下一次交互。麻烦是 tokenizer 训完就冻住了——推荐损失传不回去，索引只管「还原得像不像」，推荐只管「排得准不准」（看图 2）。
+
+  ✨ 直接做成可微？会崩
+  论文试了：让推荐梯度直接穿过量化步骤（STE），结果码本塌缩——只用到少数几个码，优化极不稳定。B-Shop 上 Recall@10 从两阶段的 0.0610 掉到 0.0134。
+
+  🔧 DIGER 的两步改法（看图 1 的上下对比）
+  ① 量化选择里加 Gumbel 噪声：早期强制它去试不同的码，避免一开始就锁死（对应图 4 的码本使用热力图，DIGER 用得更均匀）。
+  ② 两种不确定性衰减（SDUD 按标准差 / FrqUD 按使用频率，图 6）：随训练把噪声降下来，从「探索」过渡到「利用」。
+  这样量化这一步仍然可微（软更新），但不会因为早期乱选而塌缩。
+
+  📊 效果（Recall@10 / NDCG@10）
+  • B-Shop：R@10 0.0610 → 0.0657–0.0696，N@10 0.0331 → 0.0361–0.0376。
+  • I-Shop：R@10 0.1058 → 0.1124–0.1138。
+  • Yelp：R@10 0.0407 → 0.0432–0.0439。
+  • 在 B-Shop 与 I-Shop 上超过所有列出的基线（TIGER / ETEGRec / LETTER 等）。
+
+  💡 对我们的意义
+  只要系统里有「独立训练 + 离散化」的环节，梯度就会断。修法不一定要硬拆成两段，而是让梯度能过去，同时给早期探索留点噪声，再逐步退火。
+
+  ⚠️ 局限：三个公开数据集、离散语义 ID 场景；噪声强度与衰减超参（r、λ）需要调。
+
+  📄 论文：https://arxiv.org/abs/2601.19711
+  💻 代码：https://github.com/junchen-fu/DIGER
+  ✨ 关注我，持续拆解推荐系统 / 大模型最新论文 📚
+figures:
+- file: images/fig_arch_compare.png
+  type: architecture
+  description: 论文核心架构对比图（Figure：Comparison of conventional two-stage generative recommendation and training with differentiable semantic IDs）。上排 STE：商品内容 → Encoder → Codebook → **硬更新（红色虚线）** → 生成式推荐器；下排 DIGER：商品内容 → Encoder → **DRIL Codebook（加入 Gumbel 噪声 + 不确定性衰减）** → **软更新（可微，红色虚线）** → 生成式推荐器。
+- file: images/fig_motivation_old.png
+  type: framework
+  description: 动机图：传统两阶段流水线把 RQ-VAE 语义 ID 冻结（预训练后不再更新），推荐器的梯度传不回 tokenizer，造成 gradient blocking 与 objective mismatch。
+- file: images/fig_diger_vs_ste.png
+  type: result
+  description: 关键对比（B-Shop 数据集）：上图为 DIGER 与朴素 STE 的验证集 NDCG@10 随 epoch 的变化曲线；下图用三层码本覆盖率的均值（含标准差）刻画码本平衡度。STE 出现明显塌缩，DIGER 保持较高码本利用率。
+- file: images/fig_codebook_heatmap.png
+  type: result
+  description: 最好 checkpoint 下四种方法的码本使用分布：每个 16×16 网格对应 256 个码字，颜色深浅代表使用概率，三列对应三层量化——直观展示哪些方法只用了少数码（塌缩）而 DIGER 用得更均匀。
+- file: images/fig_sid_drift.png
+  type: result
+  description: 四种语义 ID 分配方法随训练轮次的演化对比（含 Incremental SID Drift 等），说明静态/增量式分配与可微分配的差异。
+- file: images/fig_uncertainty_decay.png
+  type: framework
+  description: 两种不确定性衰减策略：基于标准差的 SDUD 与基于使用频率的 FrqUD，用于把早期探索逐步退火为对已学语义 ID 的利用。
+topics:
+- 论文分享
+- 人工智能
+- 大模型
+- 推荐系统
+- 深度学习
+links:
+  paper: https://arxiv.org/abs/2601.19711
+  pdf: https://arxiv.org/pdf/2601.19711
+  code: https://github.com/junchen-fu/DIGER
+visual_review: 历史稿：迁移前已发布，逐张目检记录未随仓库留存；重发前必须重新目检
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文，仅作学术解读。

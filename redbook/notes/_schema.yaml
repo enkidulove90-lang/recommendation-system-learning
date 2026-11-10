@@ -1,0 +1,56 @@
+# 小红书论文帖 note spec 字段规范（本文件以 _ 开头，list_notes 会跳过）
+#
+# 每篇论文只新增一个 <paper_id>.yaml，不再新增根目录 .py。
+# 执行骨架由 redbook.cli note 提供：
+#   python -m redbook.cli note 2601.21452 --validate
+#   python -m redbook.cli note 2601.21452 --stage
+#   python -m redbook.cli note 2601.21452 --publish   # 人工目检后才执行
+#   python -m redbook.cli note --list
+#
+# 人类可读的内容铁律见 redbook/docs/xhs-content-spec.md，
+# 机器规则在 config/xhs_content_rules.yaml（单一事实源，不要在此重复定义）。
+
+fields:
+  paper_id:      "必填，与文件名 stem 一致；arXiv id 或 DOI 短名"
+  title:         "必填，<= 20 字"
+  body:          "必填，人工定稿正文；用 |- 块标量保留换行，纯文本禁 Markdown，<= 1000 字，必须有独立的局限段"
+  status:        "draft | validated | staged | published；published 为历史已发布归档，stage 会拒绝重发，须先改回 validated 并补真实目检"
+  slug:          "可选，文件名 stem；同一论文有多个版本（如 ACE 原稿/v2）时必填，用于区分 spec 文件"
+  source:        "handwritten（默认；跳过 persona 模板，只过闸门）| generated"
+  parsed_dir:    "必填，相对仓库根的图片目录；不由 cwd 解析"
+  pdf_path:      "相对仓库根的论文 PDF；投递时按 topics -> PDF -> draft 顺序附加"
+  figures:       "必填非空列表；file 相对 parsed_dir；type/description 为逐张目检留痕"
+  topics:        "必填列表，必须全部落在 config/xhs_content_rules.yaml 白名单内"
+  links:         "必填映射，paper 与 pdf 不得为空；code 可为空串"
+  visual_review: "必填，逐张目视检查的真实记录；缺或写 pending 会被闸门拒绝"
+  review_status: "默认 pending，透传给 PublicationPackage"
+  metadata:      "可选，额外透传给 PublicationPackage.metadata（如 author / source_attribution）"
+
+constraints:
+  - "validate 只跑内容闸门，不检查图片文件是否存在：data/parsed/**/*.png 被 .gitignore 挡掉，另一台机器 clone 后天然没有图"
+  - "stage 才检查图片与 PDF 文件存在性，随后 XhsPublisher.validate 复核全部铁律"
+  - "publish 必须先有人工目检记录；CLI 不提供自动发布开关以外的批量入口"
+  - "正文一律原样保留，不为过闸门而改写；若旧文案含 Markdown 标记，迁移时显式报错交人工决策"
+
+example: |
+  paper_id: "2601.21452"
+  title: "示例标题"
+  status: draft
+  source: handwritten
+  parsed_dir: data/parsed/2601.21452
+  pdf_path: data/parsed/2601.21452/2601.21452_origin.pdf
+  body: |-
+    这里是一段人工定稿正文。
+
+    ⚠️ 局限
+    这里写局限。
+  figures:
+    - file: images/paper-all-pic.png
+      type: motivation
+      description: "论文图 1 的逐张目检说明"
+  topics: [论文分享, 人工智能, 推荐系统, 深度学习, AI]
+  links:
+    paper: https://arxiv.org/abs/2601.21452
+    pdf: https://arxiv.org/pdf/2601.21452
+    code: ""
+  visual_review: "ViewImage 逐张目检 1 张"

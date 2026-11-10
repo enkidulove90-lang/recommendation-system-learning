@@ -60,10 +60,15 @@ def validate_xhs_content(body: str, topics: Sequence[str] | None = None,
     if len(body) > limit:
         errors.append(f"body is {len(body)} chars, over the {limit}-char hard limit")
 
-    short_lines = [line.strip() for line in body.splitlines() if len(line.strip()) <= 24]
+    line_limit = int(spec.get("section_line_max_chars", 120))
+    section_lines = [line.strip() for line in body.splitlines()
+                     if line.strip() and len(line.strip()) <= line_limit]
     for keyword in spec["required_section_keywords"]:
-        if not any(keyword in line for line in short_lines):
-            errors.append(f"body must contain a dedicated '{keyword}' section (short header line)")
+        if not any(keyword in line for line in section_lines):
+            errors.append(
+                f"body must contain a dedicated '{keyword}' section line "
+                f"(<= {line_limit} chars, e.g. '⚠️ 局限：...')"
+            )
 
     allowed = {normalize_topic(item) for item in spec["topic_allowlist"]}
     for topic in topics or ():

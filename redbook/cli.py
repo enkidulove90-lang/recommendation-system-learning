@@ -63,6 +63,16 @@ def main() -> None:
         help="deliver without binding real topic entities (non-paper content only); body must not contain '#'",
     )
     deliver.add_argument("--output", type=Path, help="optional delivery receipt JSON")
+    note = commands.add_parser(
+        "note", help="validate / stage / publish a declarative spec in redbook/notes/<paper_id>.yaml"
+    )
+    note.add_argument("paper_id", nargs="?", help="paper id; omit only with --list")
+    note.add_argument("--list", action="store_true", help="list all note specs")
+    note.add_argument("--validate", action="store_true", help="content gate only (the safe default)")
+    note.add_argument("--stage", action="store_true", help="write an immutable local review package")
+    note.add_argument("--publish", action="store_true", help="save to the XHS draft box after human review")
+    note.add_argument("--data-root", type=Path, default=Path("data"))
+    note.add_argument("--notes-dir", type=Path, help="override redbook/notes for tests")
     args = parser.parse_args()
     if args.command == "prepare-figures":
         reviewer = ModelScopeVisionReviewer() if args.vision else None
@@ -111,6 +121,24 @@ def main() -> None:
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
         _emit_json(value)
+    elif args.command == "note":
+        from redbook.services.note_spec import list_notes
+
+        if args.list:
+            _emit_json(list_notes(args.notes_dir))
+            return
+        if not args.paper_id:
+            parser.error("note requires <paper_id> (or --list)")
+        workflow = PaperCreationWorkflow(args.data_root)
+        if args.publish:
+            result = workflow.publish_note(args.paper_id, notes_dir=args.notes_dir)
+        elif args.stage:
+            result = workflow.stage_note(args.paper_id, notes_dir=args.notes_dir)
+        else:
+            result = workflow.validate_note(args.paper_id, notes_dir=args.notes_dir)
+        _emit_json(result)
+        if not result.get("ok"):
+            raise SystemExit(2)
 
 
 if __name__ == "__main__":

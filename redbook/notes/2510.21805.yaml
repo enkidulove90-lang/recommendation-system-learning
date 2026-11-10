@@ -1,0 +1,63 @@
+paper_id: '2510.21805'
+slug: '2510.21805'
+title: DiffGRM：把逐位生成换成并行补全
+status: published
+source: handwritten
+parsed_dir: data/parsed/2510.21805
+pdf_path: data/parsed/2510.21805/2510.21805_origin.pdf
+body: |-
+  🎓 一句话：生成式推荐把物品编成 4 位语义 ID 再逐位写；DiffGRM 改成"掩码扩散、任意顺序并行补全"，NDCG@10 比最强基线高 6.9%~15.5%（WWW 2026）。
+
+  🧠 自回归的两个毛病
+  组内一致性：4 位共同指向一个物品（品类/品牌/类型/尺码），但因果注意力只看得见前缀。图 1 里品牌位该是 <134>，模型只凭 <233> 猜成 <131>，后两位顺着错下去，生成一个毫不相干的球。
+  数字间异质性：品牌位远比尺码位难，损失却给每位同样权重——简单的过训、难的欠训。
+
+  ✨ 三处改造
+  🔤 PSE 分词：先学一个正交旋转矩阵把物品向量转一下（降量化失真），再均分成 4 段，各段在 256 码本里找最近质心。关键是没残差依赖——RQ 后一位依赖前一位，4 位解耦才能并行。
+  🎯 OCN 训练：先做一次全掩码探测，用 1−最大概率给每位打难度分，再按难度从高到低做一组嵌套掩码，把加噪预算压在难位上。这步必需：4 位码本下自回归只有 4 条监督信号、一条样本够用，掩码扩散有 4×2³=32 条，全覆盖要 15 种配置，硬枚举不现实。
+  ⚡ CPD 推理：从全掩码起步，每步在（位置, 码字）里挑置信度最高的一对填上，其余继续掩着；beam 32~256 就能产出多样 Top-K。
+
+  📊 数字（Amazon 三件套，vs 最强基线）
+  NDCG@10：0.0305（+15.5%）、0.0502（+8.2%）、0.0524（+6.9%），12 个指标 11 个第一；同等 ESP 追平 k 倍相干加噪。
+  消融最狠的是分词：PSE 换回 RQ-Kmeans，Sports 从 0.0305 掉到 0.0200；换随机码字只剩 0.0138；去 OCN 0.0250，去 CPD 0.0273。跌得最狠说明前提是"4 位解耦"，不是换解码器就行。
+
+  ⚠️ 局限
+  Toys 的 Recall@10 比 RPG 低 4.03%（NDCG 仍更高）；隐藏维按数据集调（Sports/Beauty 256、Toys 1024）；换更强编码器，Sports/Beauty 涨、Toys 反降。
+
+  📄 https://arxiv.org/abs/2510.21805
+  💻 https://github.com/liuzhao09/DiffGRM
+  ✨ 关注我，持续拆解推荐系统论文 📚
+figures:
+- file: images/intro.png
+  type: motivation
+  description: 论文图 1（动机，封面）：(a) 一个物品由 n 位 SID 共同定义（Dior Rouge 999 Velvet 拆成品类/品牌/类型/尺码），四位之间是双向的组内一致性，而各位的语义粒度与可预测性不同（数字间异质性）。(b) 上排 ARM：Ball<233> 猜对后，难位品牌只依据前缀 <233> 被误判成 <131>（应为 <134>），因果约束不许回看后面的数字，错误继续传到 <55>、<88>，最终生成一个毫不相干的球。(b) 下排 Ours：先填置信度高的第三位 <56>，再带着 <233>+<56> 回改难位到 <134>，最后补完 <90>，得到正确的 Spalding 篮球。
+- file: images/framework.png
+  type: architecture
+  description: 论文图 2（总架构）：左侧编码器把用户历史的 SID 序列编码成 H_u；(a) 训练侧 MD-Decoder 用非因果自注意力 + 对 H_u 的 cross-attention，由 OCN 决定掩哪些位——先全掩码探测得到每位置信度/难度，按难度从高到低构造嵌套视图（掩 1→2→…→n 位），把加噪预算压在难位上；(b) 推理侧 CPD 从 t_R=1 全掩码起步逐级反解到 t_1=0，每一步在（位, 码字）联合空间里选置信度最高的填上，其余保持 MASK，可并行出多个 Top-K 候选。
+- file: images/sup.png
+  type: mechanism
+  description: 论文附录图（ARM 与 MDM 的对照）：左半是 ARM——因果自注意力，每个位置只在前缀下受监督，黄色格是被预测的目标、橙色格是它拿到的监督信号，能看到监督被压成一条从左到右的对角路径；右半是 MDM——非因果自注意力，配合不同的掩码视图，黄色目标可以拿到多组上下文的监督，监督信号在矩阵上铺开。这张图直观解释了「每样本 n 条 vs n·2^(n−1) 条」的差别。
+- file: images/fig_card_numbers.png
+  type: custom_card
+  description: 自制数字卡（标注为自制）：把论文 Table 2（主结果 NDCG@10 与相对最强基线提升）与 Table 3（消融，Sports）重排成手机可读版——完整模型 0.0305，换回 RQ-Kmeans 分词跌到 0.0200，随机码字 0.0138，去 OCN 0.0250，去 on-policy 0.0263，去 CPD 0.0273。
+- file: images/exp.png
+  type: result
+  description: 论文图 3（样本效率）：横轴是有效样本轮次 ESP = best_epoch × 每样本每 epoch 视图数（相干加噪 k 倍则视图为 n×k），纵轴为 NDCG@10（上排）与 Recall@10（下排）。星号是 DiffGRM，圆点是 k=1…10 倍相干加噪的基线，虚线是对这些点的对数拟合。三个数据集上星号都落在拟合曲线左上方——用更少的 ESP 拿到同等或更好的效果。
+- file: images/beam.png
+  type: result
+  description: 论文图 4（CPD 的 beam size）：beam 从 32 增到 256，三个数据集的 NDCG@10 都单调上升，Beauty/Toys 在 128→256 后趋于饱和，Sports 在 64 之后基本走平。说明并行去噪同样吃 beam 的收益，但边际递减。
+topics:
+- 论文分享
+- 人工智能
+- 推荐系统
+- 深度学习
+- AI
+links:
+  paper: https://arxiv.org/abs/2510.21805
+  pdf: https://arxiv.org/pdf/2510.21805
+  code: https://github.com/liuzhao09/DiffGRM
+visual_review: ViewImage 逐张目检 6 张（含自制数字卡溢出复核）
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文，仅作学术解读。

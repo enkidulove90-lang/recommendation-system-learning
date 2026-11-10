@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from .persona_composer import PersonaPostComposer
-from .xhs_content_gate import ContentSpecError, load_rules, validate_xhs_content
+from .xhs_content_gate import ContentSpecError, load_rules, validate_xhs_content, validate_xhs_post
 
 
 def _as_summary_markdown(summary: str | Mapping[str, str]) -> str:
@@ -43,9 +43,45 @@ def _as_image_paths(figures: Sequence[Any] | None) -> list[str]:
     return result
 
 
+def _adopt_post(platform: str, body: str, figures: Sequence[Any] | None, *,
+                arxiv_id: str, title: str, topics: Sequence[str] | None,
+                visual_review: str | None, metadata: Mapping[str, Any] | None,
+                source: str, rules: Mapping[str, Any]) -> dict[str, Any]:
+    """人工定稿正文分支：跳过 PersonaPostComposer，只过同一份发布闸门。
+
+    14 篇已发布的 note 是逐字打磨的中文正文（钩子、局限段、口语化改写），
+    若塞回 persona 模板会退化成填表稿。因此「内容生成」与「内容准入」在此
+    解耦：body 由 note spec 提供，本模块只负责校验与组装，出口仍是 render_package。
+    """
+    post_metadata: dict[str, Any] = {
+        "visual_review": visual_review or "",
+        "source": source,
+        "persona_id": "handwritten",
+    }
+    if metadata:
+        post_metadata.update(dict(metadata))
+    post: dict[str, Any] = {
+        "platform": platform,
+        "paper_id": arxiv_id,
+        "persona_id": "handwritten",
+        "persona_selection_reason": "note spec 提供人工定稿正文，跳过模板生成",
+        "title": title,
+        "body": body,
+        "topics": [str(item) for item in (topics or ())],
+        "comment_prompt": "",
+        "generation_prompt": "",
+        "images": _as_image_paths(figures),
+        "metadata": post_metadata,
+    }
+    errors = validate_xhs_post(post, require_visual_review=True, rules=rules)
+    if errors:
+        raise ContentSpecError("xhs content gate failed: " + "; ".join(errors))
+    return post
+
+
 def render_post(
     platform: str,
-    summary: str | Mapping[str, str],
+    summary: str | Mapping[str, str] | None = None,
     figures: Sequence[Any] | None = None,
     *,
     arxiv_id: str = "",
@@ -56,11 +92,18 @@ def render_post(
     visual_review: str | None = None,
     metadata: Mapping[str, Any] | None = None,
     rules_path: Path | None = None,
+    body: str | None = None,
+    title: str = "",
+    source: str = "render_post",
 ) -> dict[str, Any]:
     """生成一篇受仓库闸门约束的平台帖子，返回可直接落盘的 dict。
 
     ``summary`` 是论文事实摘要（MinerU Markdown 或分节映射）；``figures``
-    是已选好的图片资产。生成的 dict 同时兼容两条投递路径：
+    是已选好的图片资产。传入 ``body`` 时走「人工定稿正文」分支：不调用
+    persona 模板，正文由 ``redbook/notes/<paper_id>.yaml`` 提供，只过闸门。
+    两条分支共用同一份规则、同一个 ``render_package`` 出口，不产生第二条内容路径。
+
+    生成的 dict 同时兼容两条投递路径：
 
     - ``redbook.cli save-xhs-draft --draft`` 读 ``title`` / ``body`` / ``topics``
     - ``render_package()`` 读全量字段组装 ``PublicationPackage``
@@ -73,13 +116,20 @@ def render_post(
             "add a platform branch in render_post.py instead of reviving a second content path"
         )
     spec = load_rules(rules_path)
+    if body is not None:
+        return _adopt_post(
+            platform, body, figures, arxiv_id=arxiv_id, title=title, topics=topics,
+            visual_review=visual_review, metadata=metadata, source=source, rules=spec,
+        )
+    if summary is None:
+        raise ContentSpecError("render_post needs either a summary or a handwritten body")
     draft = PersonaPostComposer().compose(
         _as_summary_markdown(summary), arxiv_id, persona_id, github_url, paper_title
     )
     chosen_topics = [str(item) for item in (topics if topics is not None else draft.topics)]
     post_metadata: dict[str, Any] = {
         "visual_review": visual_review or "pending",
-        "source": "render_post",
+        "source": source,
         "persona_id": draft.persona_id,
     }
     if metadata:

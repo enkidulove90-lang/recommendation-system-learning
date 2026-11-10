@@ -8,9 +8,12 @@ body_max_chars: 1000
 images_min: 1
 images_max: 9
 
-# 正文必须有独立的短题头段包含这些关键词
+# 正文必须有独立的一行包含这些关键词。
+# 历史稿常写成「⚠️ 局限：……」题头与内容同行（45~90 字），故按独立行判定，
+# 不再用 <=24 字的短题头口径误杀；120 字上限用于排除长段落中顺带提及。
 required_section_keywords:
   - 局限
+section_line_max_chars: 120
 
 # 小红书编辑器按纯文本渲染，Markdown 语法会原样显示；话题只走平台真实实体绑定
 forbidden_body_markers:
@@ -56,6 +59,10 @@ topic_allowlist:
   - AI资讯
   - 科技前沿
   - AI趋势
+  # 历史已发布稿在用的学术垂直话题（迁移时补齐，非泛流量标签）
+  - 知识图谱
+  - AI编程
+  - AI绘画
 
 # 图片必须逐张目视检查后显式留痕，不能缺失或停在 pending
 visual_review_key: visual_review

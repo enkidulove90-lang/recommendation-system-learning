@@ -88,3 +88,90 @@ class PaperCreationWorkflow:
             vision_reviews={path: asdict(review) for path, review in reviews.items()},
             vision_warning=vision_error,
         )
+
+    # ── note spec 编排：复用上面同一套 checkpoint 状态机，不另建编排层 ──
+    def _xhs_publisher(self):
+        from redbook.automation.publishing import XhsPublisher
+        return XhsPublisher(self.data_root)
+
+    def build_note_package(self, paper_id: str, *, notes_dir: Path | None = None,
+                           repo_root: Path | None = None):
+        """读 redbook/notes/<paper_id>.yaml，产出唯一一份 PublicationPackage。
+
+        人工定稿正文经 render_post 的 body 分支进入，跳过 persona 模板；
+        出口仍是 XhsPublisher，与旧脚本完全一致。
+        """
+        from redbook.services.note_spec import REPO_ROOT, load_note
+        from redbook.services.render_post import render_package, render_post
+
+        root = Path(repo_root) if repo_root else REPO_ROOT
+        spec = load_note(paper_id, notes_dir)
+        post = render_post("xhs", **spec.as_post_kwargs(root))
+        package = render_package(
+            post, canonical_url=spec.canonical_url, links=spec.links,
+            pdf_path=spec.resolved_pdf_path(root), review_status=spec.review_status,
+        )
+        return spec, package
+
+    def validate_note(self, paper_id: str, *, notes_dir: Path | None = None,
+                      repo_root: Path | None = None) -> dict[str, Any]:
+        """只跑内容闸门，不检查图片文件（另一台机器 clone 后天然没有图）。"""
+        from redbook.services.note_spec import NoteSpecError
+        from redbook.services.xhs_content_gate import ContentSpecError
+
+        try:
+            spec, package = self.build_note_package(paper_id, notes_dir=notes_dir, repo_root=repo_root)
+        except (ContentSpecError, NoteSpecError) as error:
+            return {"ok": False, "paper_id": paper_id, "errors": [str(error)]}
+        errors = self._xhs_publisher().validate(package)
+        return {
+            "ok": not errors, "paper_id": paper_id, "title": package.title,
+            "body_chars": len(package.body_markdown), "figures": len(package.image_paths),
+            "status": spec.status, "errors": errors,
+        }
+
+    def stage_note(self, paper_id: str, *, notes_dir: Path | None = None,
+                   repo_root: Path | None = None, require_files: bool = True) -> dict[str, Any]:
+        """落盘不可变 review 包；成功后把 checkpoint 推进到 PACKAGED。"""
+        from redbook.services.note_spec import NoteSpecError
+        from redbook.services.xhs_content_gate import ContentSpecError
+
+        try:
+            spec, package = self.build_note_package(paper_id, notes_dir=notes_dir, repo_root=repo_root)
+        except (ContentSpecError, NoteSpecError) as error:
+            return {"ok": False, "paper_id": paper_id, "errors": [str(error)]}
+        # 历史已发布稿只作归档，回溯目检标记不能让它们被误重发。
+        if spec.status == "published":
+            return {"ok": False, "paper_id": paper_id, "errors": [
+                "published note is archived; set status to 'validated' and record a fresh "
+                "per-image visual review before staging again"
+            ]}
+        if require_files:
+            missing = [path for path in package.image_paths if not Path(path).is_file()]
+            pdf = str(package.metadata.get("pdf_path", ""))
+            if pdf and not Path(pdf).is_file():
+                missing.append(pdf)
+            if missing:
+                return {"ok": False, "paper_id": paper_id,
+                        "errors": [f"missing asset: {path}" for path in missing]}
+        publisher = self._xhs_publisher()
+        errors = publisher.validate(package)
+        if errors:
+            return {"ok": False, "paper_id": paper_id, "errors": errors}
+        receipt = publisher.stage(package)
+        if receipt.get("ok"):
+            self._advance(self.load(paper_id), WorkflowStage.PACKAGED,
+                          note_spec=str(spec.path), staged_id=str(receipt["staged_id"]))
+        return receipt
+
+    def publish_note(self, paper_id: str, *, notes_dir: Path | None = None,
+                     repo_root: Path | None = None) -> dict[str, Any]:
+        """先 stage 再投递草稿箱；成功后把 checkpoint 推进到 DRAFT_SAVED。"""
+        staged = self.stage_note(paper_id, notes_dir=notes_dir, repo_root=repo_root)
+        if not staged.get("ok"):
+            return staged
+        receipt = self._xhs_publisher().publish(str(staged["staged_id"]))
+        if receipt.get("ok"):
+            self._advance(self.load(paper_id), WorkflowStage.DRAFT_SAVED,
+                          draft_id=str(receipt.get("draft_id", "")))
+        return receipt

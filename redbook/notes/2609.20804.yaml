@@ -1,0 +1,63 @@
+paper_id: '2609.20804'
+slug: '2609.20804'
+title: 编码 Agent：脚手架该加还是该减？
+status: published
+source: handwritten
+parsed_dir: data/parsed/2609.20804
+pdf_path: data/parsed/2609.20804/2609.20804_origin.pdf
+body: |-
+  🎓 一句话：模型之外的一切都算 harness——它到底给你提分，还是只让你烧钱？
+
+  🧠 解决什么问题
+  上下文管理、规划、工具集被当成一整套「最佳实践」到处抄，但几乎没人单独量过每个部件的贡献，也没人验证过：模型变强之后，这些收益还在吗？
+
+  ✨ 怎么做的
+  固定执行循环不动，只变三个部件：planning、action space、context management。4 个模型（Nemotron-3 30B/120B/550B + Mistral-3.5 128B）× SWE-Bench Verified + Terminal-Bench 2.1 × 4 个上下文窗口（32k/64k/96k/128k），共 176 组匹配设置。
+
+  📊 四个结论
+  1. 上下文管理是「防猝死」：窗口越紧越值钱。managed 与无管理的差距从 32k 的 35.7 个百分点，缩到 128k 的 2.7；而 T0 因窗口溢出而失败的比例从 78.7% 掉到 8.7%，所有 managed 档位在四个窗口下溢出数都是 0。它买的是「别把任务撑死」，不是「模型更聪明」。
+  2. 机制不是越多越好：先规则化省略、再 LLM 摘要最划算；而把省略内容做成可召回的 external store，64 组里 36 组从头到尾没调用过一次，用量最重的配置反而比 T1 低 3.37 个百分点。
+  3. 规划看模型：对弱一点的 30B 是提分项（SWE-Bench +11.6pp、Terminal-Bench +4.5pp），到 120B 精度收益缩到 1.6%/4.5%，主要价值变成「更省」。
+  4. 工具集是给弱 bash 模型的：550B 只给 bash，成功率反而 +3.6%/+5.6%，成本降 53%/30%。能写好命令行的模型，不需要预定义工具。
+
+  💡 给做 Agent 的人
+  别照抄别人的 harness 配置：它应该是模型能力的函数。先量你的模型弱在哪（窗口溢出 / 命令行不熟 / 擅长跑长），再决定加什么——加错机制不会掉太多精度，但会稳定地让你多花钱。
+
+  ⚠️ 局限：4 个模型、2 个基准，成本按 OpenRouter 价目估算；单次运行未报多次重复的方差。
+
+  📄 论文：https://arxiv.org/abs/2609.20804
+  ✨ 关注我，持续拆解 Agent / 大模型最新论文 📚
+figures:
+- file: images/fig_graphical_abstract.png
+  type: architecture
+  description: 'Graphical abstract of the study: coding harness components (context management T0-T4, planning on/off, tool set vs bash-only), 4 models (Nemotron-3 30B/120B/550B, Mistral-3.5 128B), 2 benchmarks (SWE-Bench Verified, Terminal-Bench 2.1), 4 context windows (32k-128k), 176 settings.'
+- file: images/fig_harness_overview_v2.png
+  type: framework
+  description: 'Overview of the coding harness: ReAct loop (input assembly -> coding model -> tool execution -> observation -> context history) and the T4 context-management strategy (M1 placeholder elision, M2 external store + recall_event, M3 mid-region summarization; soft/hard thresholds B1<B2).'
+- file: images/fig_window_overflow.png
+  type: result
+  description: Success rate and window-overflow rate vs context-window budget across 4 models x 2 benchmarks. Managed tiers (blue) vs T0 no management (black); orange = T0 overflow rate. Managed-T0 gap shrinks from 35.7pp at 32k to 2.7pp at 128k on SWE-Bench; T0 overflow falls 78.7%->8.7%; managed tiers have zero overflow.
+- file: images/fig_tier_cost.png
+  type: result
+  description: Success rate (capsules, min-max over 4 window budgets) and mean cost per task (orange line) for context-management tiers T0-T4. T4 highlighted (green) as the default tier; elision-then-summarization gives the best efficiency.
+- file: images/fig_planning_effect.png
+  type: result
+  description: Absolute performance and cost with vs without planning (T4, 128k, full tool set). Planning raises success for the weaker 30B (+11.6pp SWE-Bench, +4.5pp Terminal-Bench) but mainly cuts cost for stronger models.
+- file: images/fig_tool_effect.png
+  type: result
+  description: 'Effect of the action space: bash-only vs full tool set (T4, 128k, planning on). Success rate, mean cost per task, and share of actions issued through bash when all tools are enabled.'
+topics:
+- 论文分享
+- 人工智能
+- 大模型
+- 智能体
+- AI编程
+links:
+  paper: https://arxiv.org/abs/2609.20804
+  pdf: https://arxiv.org/pdf/2609.20804
+  code: ''
+visual_review: 历史稿：迁移前已发布，逐张目检记录未随仓库留存；重发前必须重新目检
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文，仅作学术解读。

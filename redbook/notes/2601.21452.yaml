@@ -1,0 +1,70 @@
+paper_id: '2601.21452'
+title: SAGE：只换优化器，冷启动召回翻倍
+status: staged
+source: handwritten
+parsed_dir: data/parsed/2601.21452
+pdf_path: data/parsed/2601.21452/2601.21452_origin.pdf
+body: |-
+  🎓 模型和 SFT→RLHF 流程都不动，只把 RLHF 里那个"截断式更新"的优化器换掉，冷启动召回 0.326→0.619。
+
+  🧠 原来的优化器哪里"瞎"
+  生成式推荐先给视频编语义 ID，再让模型自回归吐 10 个候选，SFT 后过一遍 RLHF。OneRec-V2 的 GBPO 用梯度边界稳住了训练，但它的截断逐样本、对称、跟推荐信号无关：
+  · 新视频的稀有正样本也被压在 r≤1 里，线上冷启动曝光 -44.7%。
+  · 拒识占多数，静态负向边界拦不住多样性塌缩，簇密度 +11.7%。
+  · 多目标奖励各自归一化再加和，点击和评论压成同一个优势值。
+
+  ✨ 只改三处（图 2 链路，图 3 核心）
+  ① 比率：逐 token 换成整条列表的几何平均（L=10），一个列表一个更新幅度。
+  ② 边界不对称：优势 ≥0 上界抬到 1+ε（ε=0.3）可超线性涨；优势 <0 按列表熵压边界，熵比历史均值越低惩罚越重（β=0.5）。
+  ③ 优势先解耦再聚合：每个目标组内归一化、加权求和，再整批 z-score。
+
+  📊 数字（Amazon 三件套，vs GBPO）
+  · 冷启动召回@10：0.326→0.619、0.282→0.567、0.365→0.705（+89.9%/+101%/+93.2%）
+  · 多样性 Entropy@10：+11.2%~+11.6%
+  · 精度没掉：NDCG@10 +0.7%~+1.3%
+  原生文本空间（TextRec）更进一步：NDCG 比 GBPO 高 6.3%~7.8%。
+  消融最直白：去掉 Boost 冷启动召回剩 0.50、去掉熵惩罚多样性剩 0.78、去掉解耦 NDCG 剩 0.90——各管一件事。
+
+  💡 两点
+  "让 RLHF 稳定"和"让 RLHF 适合推荐"是两件事：GBPO 解决前者，SAGE 说病根在截断本身——逐样本、对称、看不见推荐特有的信号。
+  同一个优化器放进语义 ID 空间，探索过激、精度只持平；放进原生文本空间才最好——动作空间是隐藏变量。
+
+  ⚠️ 局限
+  冷启动取训练集频次最低 5%、熵按二级类目算，换数据集要重调口径；原生文本要先渲染商品，对延迟敏感的系统不友好。
+
+  📄 https://arxiv.org/abs/2601.21452
+  ✨ 做生成式推荐后训练的话，成本最低的一次实验：只把逐样本截断换成按优势符号分区截断，其他都不动。
+figures:
+- file: images/paper-all-pic.png
+  type: motivation
+  description: 论文图 1（动机示意）：一条 prompt 的构成。上半部分把用户画像（骑行/旅行/健身/时尚等兴趣簇）与近期行为（近 7 天与近 1 年的品类次数）拼成自然语言描述；中间是最终拼出的 prompt 段落；下半部分是模型按这条 prompt 生成的 10 个真实笔记缩略图，呈现明显的主题一致性与多样性。
+- file: images/paper-sft-sage.png
+  type: architecture
+  description: 论文图 2（建模总览，两阶段）：Input → Feature Engineering（用户画像与历史行为构造 / prompt 构造 / 物品侧描述特征构造）→ Stage 1 Supervised Fine-tuning（LLM，Qwen3-8B 做 SFT 热启动）→ Stage 2 RLHF（SAGE 替换掉原有的 GBPO 优化器）→ 输出长度为 L=10 的推荐列表。全图的关键在于 Stage 2 只换优化器，模型与 SFT→RLHF 的接口都不动。
+- file: images/fig_gradient_1p8x.png
+  type: mechanism
+  description: 论文图 3（梯度边界对比，SAGE 的核心机制）：横轴是 slate 级重要性比率 r，纵轴是有效梯度系数 r/Φ。红色虚线 GBPO 在 r>1 处被硬截到 1.0（对称保守）；深蓝实线 SAGE 在 r>1 处继续上抬到 1+ε_boost——这是 Case A，正样本可以超线性更新（冷启动 Boost）；在 r<1 一侧，SAGE 给低多样性负样本（浅蓝）比高多样性负样本（深蓝）更低的系数——这是 Case B，熵越低惩罚越重。
+- file: images/fig_evolution_1p8x.png
+  type: result
+  description: 论文图 4（训练动态演化）：(a) 冷启动物品的平均生成概率——GBPO 一万步后仍停在 0.05 附近，SAGE 升到约 0.18；(b) 平均列表熵——GBPO 从 3.8 一路掉到 2.5（多样性塌缩），SAGE 稳定在 3.7 附近。两个面板分别对应 Positive Boost 与 Entropy-Aware Penalty 的作用。
+- file: images/fig_card_numbers.png
+  type: custom_card
+  description: 自制数字卡（标注为自制）：把论文 Table 1 / Table 2 里「同骨架只换优化器（OneRec-GBPO → OneRec-SAGE）」的三组指标重排成手机可读版——冷启动召回@10、多样性 Entropy@10、NDCG@10 在 Beauty/Sports/Toys 上的变化，并附 TextRec（原生文本空间）的精度增益与消融结论。
+- file: images/ablationstudy4.png
+  type: result
+  description: 论文图 5（Amazon-Beauty 消融，数值归一化到完整 SAGE）：去掉 Positive Boost 后冷启动召回掉到 0.50（近腰斩）而多样性与精度基本不变；去掉 Entropy Penalty 后多样性掉到 0.78；去掉 Signal Decoupling 后 NDCG 掉到 0.90。三个组件各自只负责一个目标，互不替代。
+topics:
+- 论文分享
+- 人工智能
+- 推荐系统
+- 深度学习
+- AI
+links:
+  paper: https://arxiv.org/abs/2601.21452
+  pdf: https://arxiv.org/pdf/2601.21452
+  code: ''
+visual_review: ViewImage 逐张目检 6 张（含 1.8x 放大伪影复核）
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文，仅作学术解读。

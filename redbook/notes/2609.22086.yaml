@@ -1,0 +1,66 @@
+paper_id: '2609.22086'
+slug: '2609.22086'
+title: 不重训模型，给设计 Agent 加技能库
+status: published
+source: handwritten
+parsed_dir: data/parsed/2609.22086
+pdf_path: data/parsed/2609.22086/2609.22086_origin.pdf
+body: |-
+  🎓 一句话：不改一个权重，让设计 Agent 五轮把执行成功率从 72.7% 抬到 99.3%。
+
+  🧠 解决什么问题
+  专业设计是长程任务——要产出可编辑的工程文件（PS/AI/ID），几十步互相依赖，而且还说不出什么叫「做对了」。没有可靠的程序化对错信号，模型怎么持续变强？微调贵、还会遗忘。
+
+  ✨ 怎么做的
+  冻结前沿模型，让它操作 Photoshop / Illustrator / InDesign 的 230+ 工具；在模型外面挂一个「自然语言技能库」，用两种机制自我演化：
+  1. 拓宽：把没检索到技能的失败历史聚类成重复覆盖缺口，蒸馏出新技能。
+  2. 深化：拿失败与成功的历史做对比反思，重写容易翻车的旧技能。
+  3. 回放门控：任何改动都要在「原本会失败的 prompt」上通过验证，且不能回退已成功的案例。
+
+  📊 关键数字
+  • 5 轮 / 1406 条 brief / 1869 条自动评分轨迹，零权重更新、零人工标注。
+  • 技能库从 76 条（内部文档冷启动）长到 139 条（其中 63 条从用户数据新铸）。
+  • GenEval2 执行成功率：Claude-Sonnet-4 上 72.7% → 99.3%，生成质量 +11.99 分。
+  • 对「无技能」Agent 的两两胜率：Sonnet-4 61.8%、Opus-4.6 67.6%。
+  • 消融（200 条留出 brief）：只拓宽 49.4%、只深化 48.6%，两者组合 58.5%（p=0.025）——单独做都没优势，合起来才有超加性。
+
+  💡 最直观的证据是「个性化」那张对比：同一句 prompt、同一个冻结模型，没技能时雪是稀疏圆点，加上用户标注的技能后就变成密集风雪——技能是可以用自然语言写、能改、能回滚的。
+
+  ⚠️ 局限：依赖 Graphic-Eval 自动评分器与用户流量 brief，设计域特化；本地小模型（Qwen3.6-27B）受部署稳定性限制。
+
+  📄 论文：https://arxiv.org/abs/2609.22086
+  ✨ 关注我，持续拆解 Agent / 大模型最新论文 📚
+figures:
+- file: images/fig_teaser.png
+  type: architecture
+  description: 'System overview. Phase 1 Creation & Evaluation: brief from user prompt enters the graphic-design agent; the Skill Bank retrieves matching skills and filters the tool list; the agent executes >230 design tools through intermediate document states. Phase 2 Reflection & Evolution: skill deepening (contrastive reflection over success vs failure, load-balance selection, rewrite, pairwise verification gate), skill widening (cluster unmatched-request gaps, distill new skills, replay gate), and personalization (multi-turn distillation).'
+- file: images/fig_snow_before.png
+  type: result
+  description: 'Personalization, Base arm (no personalized skill): the default renders snow as a sparse particle / bokeh field on the frozen backbone.'
+- file: images/fig_snow_after.png
+  type: result
+  description: 'Personalization, Ours arm (with the user-flagged skill): the same frozen backbone now renders snow as a dense, realistic streak field, matching the user''s stated method preference.'
+- file: images/fig_skill_bank_growth.png
+  type: result
+  description: Skill-bank evolution over five rounds (BGE-small-en-v1.5 embeddings, UMAP, cosine). Hollow markers = 76 cold-start skills distilled from internal documentation; filled = 63 skills minted from user data; colours mark the target application (Photoshop 55 / Illustrator 47 / InDesign 37). Bank grows 76 -> 139 with no weight updates.
+- file: images/fig_widening_pipeline.png
+  type: framework
+  description: 'Widening pipeline: histories with no skill retrieved are clustered into recurring coverage gaps, distilled into candidate skills, and admitted to the bank only through the replay performance gate (pass -> Skill Bank, fail -> discarded).'
+- file: images/fig_deepening_pipeline.png
+  type: framework
+  description: 'Deepening pipeline: failure-prone skills are revised by contrasting failed and successful histories; a candidate enters the bank only if it wins at the replay gate on the skill''s worst failing prompts.'
+topics:
+- 论文分享
+- 人工智能
+- 大模型
+- 智能体
+- AI绘画
+links:
+  paper: https://arxiv.org/abs/2609.22086
+  pdf: https://arxiv.org/pdf/2609.22086
+  code: ''
+visual_review: 历史稿：迁移前已发布，逐张目检记录未随仓库留存；重发前必须重新目检
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文，仅作学术解读。

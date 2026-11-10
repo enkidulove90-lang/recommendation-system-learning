@@ -1,0 +1,63 @@
+paper_id: '2609.05339'
+slug: '2609.05339'
+title: 换模型后，Agent会失忆？记忆移植实测
+status: published
+source: handwritten
+parsed_dir: data/parsed/2609.05339
+pdf_path: data/parsed/2609.05339/2609.05339_origin.pdf
+body: |-
+  🎓 一句话：换一个大模型，Agent 记的事可能就变味。
+
+  🧠 解决什么问题
+  升级模型是工程日常，迁移记忆不是。同一个 memory store，换个 reader 就能「记错」：压缩笔记被新模型读偏、混合嵌入索引让检索半失灵、原文不存就修不回来。
+
+  ✨ 关键设计
+  1. 同一份 48 段合成多轮历史，存成 4 种记忆格式（LC-RAW / RAG / NOTES / KG-fixed）。
+  2. 两个开源 7-8B 模型互换读 + 三种 RAG 嵌入版本（bge-large-en v1.0/混合/v1.5）。
+  3. 端到端准确率精确匹配 + 损失拆到「构造 vs 检索」两个阶段。
+
+  📊 三个最关键数字
+  • KG-fixed 换作者后仅漂移 +0.0004 ± 0.0020 个百分点；结构化记忆真的能跨模型。
+  • NOTES 跨模型迁移呈强烈方向性：Llama→Qwen 掉 13.3，Qwen→Llama 反涨 9.9；同一份笔记谁写谁读决定一切。
+  • RAG 嵌入升级 bge-large-en v1.0→v1.5：全量重嵌 +12 个百分点；只把新旧向量混在同一个索引里只 +5，丢了一半的潜在收益。
+
+  💡 给做 Agent 的人
+  • 跨模型前先做 5-10 条样本的双向迁移测试，不要拍脑袋。
+  • 升级 retriever 就全量重嵌，半新半旧是最差的中间态。
+  • 模型压缩的笔记一定要存原文——只存 notes，48 条历史换模型后修复 0 条能达标。
+
+  ⚠️ 局限：合成历史 + 2 个 10B 级开源模型；真实多模态/长程/工具调用场景待补。
+
+  📄 论文：https://arxiv.org/abs/2609.05339
+  ✨ 关注我，下一篇继续拆最新 LLM/Agent 论文
+figures:
+- file: images/study_design.png
+  type: ''
+  description: ''
+- file: images/memory_formats.png
+  type: ''
+  description: ''
+- file: images/key_results.png
+  type: ''
+  description: ''
+- file: images/card_takeaways.png
+  type: ''
+  description: ''
+- file: images/card_builder_checklist.png
+  type: ''
+  description: ''
+topics:
+- 论文分享
+- 人工智能
+- 大模型
+- 智能体
+- 知识图谱
+links:
+  paper: https://arxiv.org/abs/2609.05339
+  pdf: https://arxiv.org/pdf/2609.05339
+  code: ''
+visual_review: 历史稿：迁移前已发布，逐张目检记录未随仓库留存；重发前必须重新目检
+review_status: pending
+metadata:
+  author: ''
+  source_attribution: 图表摘自论文，仅作学术解读。

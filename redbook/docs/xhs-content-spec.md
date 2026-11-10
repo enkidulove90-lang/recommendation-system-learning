@@ -4,32 +4,37 @@
 > 背景：`docs/publishing-pipeline-diagnosis.md` §2.3「双投递路径冲突」、§2.4「两条独立的内容生成路径，且格式不统一」。
 > 2026-11-08 同项目在两台机器（WorkBuddy / Codex）产出差异极大的草稿，根因是各自走了不同的内容生成路径。本文把口径固化到仓库，任何一方 clone 后读到的都是同一份约束。
 
-## 1. 架构：一个入口，两条投递路径，一份闸门
+## 1. 架构：一篇一个 spec，一条命令，一份闸门
+
+**2026-11-10 二次收敛**：14 个 `build_xhs_draft_*.py` 已整体迁到
+`archive/xhs_drafts/`（映射表见该目录 README），每篇论文只留一个
+`redbook/notes/<slug>.yaml`。字段规范在 `redbook/notes/_schema.yaml`。
 
 ```
-论文事实摘要 (summary) + 图片资产 (figures)
+redbook/notes/<slug>.yaml        ← 每篇唯一新增物：标题 / 定稿正文 / 图序 / 话题 / 链接 / 目检
         │
         ▼
-  render_post(platform, summary, figures)     ← 唯一内容生成入口
-  redbook/services/render_post.py
-        │  产出 {title, body, topics, images, metadata}
-        │  内容闸门：纯文本 / ≤1000 字 / 局限段 / 话题白名单
-        │
-        ├── 路径 A（CLI，Codex 常用）
-        │     redbook.cli compose-post --output draft.json
-        │       → redbook.cli save-xhs-draft --draft draft.json --image ...
-        │
-        └── 路径 B（Python，WorkBuddy 常用）
-              render_package(post, ...) → PublicationPackage
-                → XhsPublisher(root).stage() / .publish()
-                  发布闸门：在内容闸门之上再查图片数 + 目检标记
+python -m redbook.cli note <slug> --list | --validate | --stage | --publish
         │
         ▼
-  OpenCliXiaohongshuDelivery.deliver(DraftPayload)
-  （两边汇合到同一个投递器：topics → PDF → 存草稿，只存草稿不发布）
+PaperCreationWorkflow.build_note_package()   ← 复用已有 checkpoint 状态机
+        │  定稿正文走 render_post(body=...)：跳过 persona 模板，只过闸门
+        │  生成稿走 render_post(summary, figures)：persona 模板
+        ▼
+render_package() → PublicationPackage → XhsPublisher.validate()
+        │  发布闸门：纯文本 / ≤1000 字 / 局限段 / 话题白名单 / 图片数 / 目检标记
+        ▼
+XhsPublisher.stage() → publish() → OpenCliXiaohongshuDelivery.deliver()
+        （topics → PDF → 存草稿，只存草稿不发布）
 ```
 
-**不要再做的事**：新建 `build_xhs_draft_<name>.py` 手写 `BODY`、直接调 `PersonaPostComposer().compose()` 当入口、或另写一份正文模板。内容必须从 `render_post` 出来。
+**不要再做的事**：新建根目录 `build_xhs_draft_<name>.py`、把正文硬编码进 Python、
+或绕过 `redbook.cli note` 自己拼 `PublicationPackage`。内容由 note spec 声明，
+`render_post` 只是唯一的组装器，`PublicationPackage` 只是投递载体。
+
+MCP 侧（`redbook/mcp/server.py`）另暴露 `list_note_specs` / `validate_note_spec` /
+`stage_note_spec` 三个 tool；**刻意不暴露 publish**，真实草稿箱写入只能由人在 CLI
+显式执行，避免自动化误触。
 
 ## 2. 五条铁律
 
@@ -37,7 +42,7 @@
 |---|---|---|---|
 | 1 | 正文纯文本 | 不含 `#`、`**`、`__`、`~~`、`` ` ``、`](` | `validate_xhs_content` |
 | 2 | 字数上限 | `len(body) <= 1000` | 同上 |
-| 3 | 必须有局限段 | 存在 ≤24 字的短题头行且含「局限」 | 同上 |
+| 3 | 必须有局限段 | 存在独立一行含「局限」且长度 ≤ `section_line_max_chars`（默认 120） | 同上 |
 | 4 | 话题白名单 | 每个话题归一后在 `topic_allowlist` 内 | 同上 |
 | 5 | 图片目检标记 | `metadata.visual_review` 为真实目视记录，不能缺失或 `pending` | `validate_visual_review` |
 
@@ -84,51 +89,43 @@
 4. 内联图（tikz/pgfplots）按图注 clip 裁 + 6x 渲染，横向必须留出坐标轴刻度文本的空间。
 5. **逐张目视检查**每张图（画了什么、坐标/图例、字是否看得清、自制卡是否溢出），把结果写进 `metadata.visual_review`。没有目检记录的包会被发布闸门拒绝。
 
-## 5. 最短可用命令
-
-路径 A（CLI）：
+## 5. 最短可用命令（唯一入口）
 
 ```bash
-python -m redbook.cli compose-post \
-  --summary data/workflow_state/<id>/paper_brief.md \
-  --arxiv-id <id> --persona research_translator \
-  --output data/workflow_state/<id>/draft.json
-
-python -m redbook.cli save-xhs-draft \
-  --draft data/workflow_state/<id>/draft.json \
-  --image <img1> --image <img2> --pdf data/papers/<id>.pdf \
-  --output data/workflow_state/<id>/delivery_receipt.json
+python -m redbook.cli note --list                  # 列出全部 spec 与状态
+python -m redbook.cli note <slug> --validate      # 只跑内容闸门，不检查图片文件
+python -m redbook.cli note <slug> --stage         # 落盘不可变 review 包 + 推进 checkpoint
+python -m redbook.cli note <slug> --publish       # 人工目检后才投递草稿箱
 ```
 
-路径 B（Python）：
+`--validate` 刻意不检查图片文件是否存在：`data/parsed/**/*.png` 被 `.gitignore`
+挡掉，另一台机器 clone 后天然没有图；`--stage` 才检查图片与 PDF 并调用
+`XhsPublisher.validate()` 复核全部铁律。
 
-```python
-from pathlib import Path
-from redbook.services.render_post import render_post, render_package
-from redbook.automation.publishing import XhsPublisher
+向后兼容仍保留 `compose-post` / `save-xhs-draft`（生成稿走 persona 模板），
+但新发一篇论文帖**只需新增一个 YAML**，不再新增 `.py`。
 
-post = render_post("xhs", summary_text, figures,
-                   arxiv_id="<id>", visual_review="逐张目检 N 张，含数字卡溢出复核")
-package = render_package(post, canonical_url="https://arxiv.org/abs/<id>",
-                         links={"paper": "...", "pdf": "..."},
-                         pdf_path="data/parsed/<id>/<id>_origin.pdf")
-print(XhsPublisher(root=Path(".")).stage(package))
-print(XhsPublisher(root=Path(".")).publish(package.content_hash[:32]))
-```
+**已发布归档稿**：`status: published` 的 spec 只作溯源，`stage_note()` 会拒绝重发；
+要重发须先把 status 改回 `validated` 并补一条真实逐张目检记录。
 
-**取舍说明**：`compose-post` 与 `PublicationPackage` 没有强行删掉一个，而是让两者都不再各自生产内容 —— `compose-post` 变成 `render_post` 的薄封装，`PublicationPackage` 变成纯投递载体。这样 Codex 与 WorkBuddy 两种既有调用方式都不必改，但内容只可能来自一处。
+## 6. 旧脚本迁移（已完成）
 
-## 6. 旧脚本迁移
+14 个草稿脚本 + 8 个工具脚本已移到 `archive/xhs_drafts/`，逐个加了
+`DEPRECATED` 头指向对应 spec / 新模块，映射表见该目录 README。迁移遵循
+「正文原样搬、不为过闸门改写」，`test_note_migration.py` 逐字比对锁死。
 
-`build_xhs_draft_*.py` 这类手写脚本仍可运行，但 `XhsPublisher.validate()` 现在会强制查 `metadata.visual_review`。已在 `build_xhs_draft_sage.py`、`build_xhs_draft_diffgrm.py` 补上标记；其余旧脚本按需补一行：
+其余能力归位：
 
-```python
-metadata={
-    "topics": [...],
-    "visual_review": "逐张目检 N 张",   # ← 新增
-    "pdf_path": ...,
-}
-```
+| 旧工具 | 新位置 |
+|---|---|
+| 图注定位裁矢量图 | `redbook/services/figure_crop.py` |
+| ACM PDF / Cloudflare 探测 | `redbook/infrastructure/paper_sources/acm_dl.py` |
+| 草稿箱清点 / 核验 / 删除 | `redbook/scripts/xhs_drafts.py` |
+| 自制数字卡 / 位图放大 | `redbook/services/cards.py`（新稿可声明式调用） |
+
+两篇历史稿不符合新闸门且**正文未改**：`2608.14429`（用「⚠️ 一点提醒」代替
+局限题头）、`3773078.3831765`（冻结 7 段口径 1328 字）。它们会被闸门拦住、
+无法重发；如需重新启用须由人工决定补写还是维持归档。
 
 ## 7. 环境与验证
 
