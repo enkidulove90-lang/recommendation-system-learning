@@ -2,6 +2,7 @@
 
 > 项目代号：**SAB-ANC**（**SASRec-Anchored Behavior/Content downstream**，命名可改，全局替换即可）
 > 状态：设计基线 v1.0（2026-11-09）｜分支：`experiments`
+> **参数数值以 `docs/sab_anc_params.md`（Decision Record v1.0）为唯一权威来源**，本文与之处突时以参数决议文件为准。
 > 前置阅读：`docs/EXPERIMENT_HANDOFF.md`（环境与 4 个 OMP 变量）、`docs/e14bis_mechanism_diagnosis.md`（锚定机制教训来源）、`docs/e15_tf_report.md`（SASRec 训练成本实测）
 
 ---
@@ -124,7 +125,7 @@ docs/
 | `[BEH]` 区段 | SASRec 末层隐状态近 K=5 步 mean-pool，经 1 层线性投影 | 冻结，仅投影层可学 |
 | `[ANC]` | **可学习锚点 token（1 个）**，物理插在行为段与内容段之间 | 两侧信息必须经过它 → 结构性锚定 |
 | `[VIS_i]` | BLIP-2 Q-Former 32×256 → MLP 压成 **1 个** token（省显存；book 规模下 32 token 会拖垮 batch） | blip2_feat.npy `[n_items,256]` |
-| `[TXT_i]` | 标题 SBERT / BLIP-2 文本特征 | txt_feat.npy |
+| `[TXT_i]` | 标题 SBERT（`all-MiniLM-L6-v2`，**384 维**） | txt_feat.npy `[n_items,384]` |
 | `[CAT_i]` | 类别离散 token（Top-N 频次 + `[UNK]`），可学习 embedding | 词表随 config |
 | `[BRD_i]` | 品牌/store 离散 token，同上 | 词表随 config |
 
@@ -211,6 +212,63 @@ feat:
     qformer_tokens: 32
     pooled_dim: 256                    # 压缩后维度
   txt_model: "sentence-transformers/all-MiniLM-L6-v2"
+  txt_dim: 384                         # ★ 已核实：all-MiniLM-L6-v2 = 384 维（非 1024）
+                                        #   4096 维是 MMSSL 的 CNN 特征，与 CLIP 无关，见 sab_anc_params.md §6
+
+# ---- 上游 DST / CGAd 参数模块（数值全部见 sab_anc_params.md §1.1）----
+dst:
+  cgad_dim: 256                        # 【锚】
+  manifold: unit_sphere                # 【锚】L2 归一化，eps 1e-8
+  cgal_mode: full_eq1                  # 【定】full_eq1（主）/ volume_only（降级备选）
+  phi_fuse: mean                       # 【拍】mean 主；attention 仅消融
+  phi_fuse_attn_renorm: true           # attention 版本输出 LayerNorm + L2
+  rqn_shared_layers: 3                 # 【锚】
+  codebook_size: 512                   # 【锚】
+  proj_dim: [512, 256]                 # 【锚】
+  ste: true                            # 【锚】直通估计
+  commitment_sg: true                  # 【锚】sg[·] 只推 encoder
+  beta: 1.0                            # 【拍】网格 {0.1, 1, 10}
+  lambda_cgal: 1.0                     # 【拍】网格 {0.1, 1, 10}
+
+psgr:
+  heads: 4                             # 【定】主；8 为容量消融
+  head_dim: 64                         # 256 / heads
+  q_proj: mlp2                         # 【拍】256→256→256, GELU + LayerNorm
+  q_proj_shared: true                  # 【拍】全头共享；k/v 按头独立
+
+vclub:
+  q_hidden: 256
+  q_layers: 2
+  q_act: elu
+  gaussian: true                       # 【锚】μ / log σ²
+  logvar_clip: [-6, 6]
+  mi_weight: 0.05                      # 【拍】网格 {0.01, 0.05, 0.1}
+  ema_decay: 0.99
+  detach_main: true
+
+sampling:                              # 负采样全规格见 sab_anc_params.md §3
+  pool_train: train_items_only
+  pool_eval: full_catalog
+  n_neg_train: 4                       # in-batch 之外另采
+  n_neg_books: 4096
+  min_neg_per_batch: 256
+  popularity_alpha: 0.0                # 0 = uniform（主）；0.75 仅鲁棒性消融
+  neg_seed_rule: "base*100003 + epoch*1009 + batch_idx"
+  tau_align: 0.07
+
+subset:                                # 5k 子集协议见 sab_anc_params.md §5
+  enabled: true
+  n_users: 5000
+  min_train_inter: 5
+  strata: [[5,6],[7,10],[11,20],[21,50],[51,null]]
+  per_stratum: 1000
+  min_item_coverage: 0.60
+
+policy:                                # 失败升级策略见 sab_anc_params.md §8
+  forbid_test_tuning: true
+  forbid_skip_nan_batch: true
+  report_all_seeds: true
+  escalation: [L1_impl, L2_tune, L3_scale, L4_stop]
 
 downstream:
   d_model: 128
