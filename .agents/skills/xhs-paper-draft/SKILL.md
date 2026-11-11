@@ -14,6 +14,12 @@ description: >
 本 skill 是跨 IDE 版本：WorkBuddy、Codex、Claude Code、Cursor 读到的是同一份约束。
 **规则的可执行定义在仓库代码与配置里，不在任何一台机器的用户目录里。**
 
+> **优先级（2026-11-11）**：本文件 + `AGENTS.md` + `config/xhs_content_rules.yaml` 高于任何用户级
+> skill。用户级 `~/.workbuddy/skills/multi-platform-publishing/` 已整份迁入仓库
+> `.agents/skills/multi-platform-publishing/`，本机只留路由指针；其旧版
+> `canonical: build_xhs_draft.py` / `render_note` 口径、以及
+> `.claude/skills/redbook-publish/SKILL.md` 的手写模板路径都已作废。
+
 ## 0. 先读这三份
 
 | 文件 | 作用 |

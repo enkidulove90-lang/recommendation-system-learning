@@ -5,6 +5,12 @@ description: 论文→小红书草稿全自动发布流水线。下载论文→�
 
 # 论文→小红书发布 Skill
 
+> ⚠️ **已废弃为规范入口（2026-11-11）**：本文的「手写模板正文 + `opencli xiaohongshu publish`」
+> 路径不再是发布论文帖的入口。跨 IDE 统一走 `AGENTS.md` →
+> `.agents/skills/xhs-paper-draft/SKILL.md` → `python -m redbook.cli note <slug>`，
+> 发布闸门见 `config/xhs_content_rules.yaml`，单篇内容只写 `redbook/notes/<slug>.yaml`。
+> 本文保留作 OpenCLI / CDP 底层故障排查与历史发布记录参考。
+
 ## 前置条件
 
 - Chrome 已打开，OpenCLI Extension 已连接
