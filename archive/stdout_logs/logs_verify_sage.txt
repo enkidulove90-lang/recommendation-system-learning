@@ -1,0 +1,3 @@
+﻿dumped -> xhs_drafts_dump.json / xhs_drafts_dump.txt ( 8 drafts )
+no delete targets
+EXIT=0

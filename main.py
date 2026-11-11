@@ -68,6 +68,7 @@ from skills.deepseek_summarizer import DeepSeekSummarizer
 from crawler.arxiv_crawler import ArxivCrawler
 from pipeline.merge_pipeline import DocumentMerger
 from redbook.scripts.publish import main as publish_main
+from redbook.infrastructure import run_log
 from storage.asset_governance import AssetGovernance
 from storage.paper_metadata import save_paper_metadata
 from storage.paper_assets import find_parsed_markdown, paper_id_from_folder
@@ -881,6 +882,7 @@ def cmd_pipeline_all(
 
 def main() -> None:
     setup_logging()
+    run_log.install_jsonl_handler()
 
     parser = argparse.ArgumentParser(
         description="arXiv Recommendation System Paper Pipeline",
@@ -1060,6 +1062,7 @@ Examples:
     pub_parser.add_argument("--dry-run", action="store_true", help="Preview only, do not publish")
 
     args = parser.parse_args()
+    run_log.log_event("cli_start", command=args.command, argv=sys.argv[1:])
 
     if args.command == "list":
         cmd_list()
@@ -1126,6 +1129,7 @@ Examples:
         publish_main()
     else:
         parser.print_help()
+    run_log.log_event("cli_end", command=args.command, status="ok")
 
 
 if __name__ == "__main__":

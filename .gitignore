@@ -105,3 +105,15 @@ data/parsed/**/*.otf
 
 # WorkBuddy 本地工作记忆 (个人日志, 不入库)
 .workbuddy/
+
+# ===== 根目录一次性产物（2026-11-10 收敛）=====
+# 历史 34 个 stdout/会话日志已归档到 archive/stdout_logs/，
+# 12 个一次性脚本已归档到 archive/session_scripts/，勿执行、勿再往根目录写。
+# 运行记录统一写 data/logs/runs.jsonl（redbook.infrastructure.run_log），
+# 会话转储用 python -m redbook.scripts.session_inspect <session.jsonl>。
+/logs_*.txt
+/_*.txt
+/_*.py
+/xhs_drafts_dump.txt
+/e15_numbers_audit.txt
+/data/logs/*.jsonl

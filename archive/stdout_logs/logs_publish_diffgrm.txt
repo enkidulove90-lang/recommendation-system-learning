@@ -1,0 +1,15 @@
+﻿numbers card: data\parsed\2510.21805\images\fig_card_numbers.png
+figures.json ok
+summary ok
+title (19): DiffGRM锛氭妸閫愪綅鐢熸垚鎹㈡垚骞惰琛ュ叏
+body (995)
+   intro.png                  1275x784  101KB
+   framework.png              2827x1243  331KB
+   sup.png                    2654x915  313KB
+   fig_card_numbers.png       1840x1310  198KB
+   exp.png                    2469x1112  777KB
+   beam.png                   1622x525  182KB
+STAGED: {'ok': True, 'status': 'already_staged', 'path': 'publish_queue\\27b9e61f5e2fe7f187d2c8e9d1f0b01f\\xhs.json', 'staged_id': '27b9e61f5e2fe7f187d2c8e9d1f0b01f107ac6c56417fba2155c0822c0bf2de3'}
+PUBLISH RESULT: {'ok': True, 'method': 'opencli-cdp', 'draft_id': 's:70f3bb55-9e38-4681-aa6e-07f30113de8a', 'topics': ['璁烘枃鍒嗕韩', '浜哄伐鏅鸿兘', '鎺ㄨ崘绯荤粺', '娣卞害瀛︿範', 'AI'], 'image_count': 6, 'pdf_name': '2510.21805_origin.pdf'}
+STAGED_ID: 27b9e61f5e2fe7f187d2c8e9d1f0b01f107ac6c56417fba2155c0822c0bf2de3
+EXIT=0

@@ -16,6 +16,7 @@ from redbook.services.xhs_content_gate import ContentSpecError
 from redbook.infrastructure.xiaohongshu_delivery import (
     DraftPayload, OpenCliXiaohongshuDelivery, build_deliver_payload,
 )
+from redbook.infrastructure import run_log
 
 
 def _emit_json(value: object) -> None:
@@ -130,12 +131,20 @@ def main() -> None:
         if not args.paper_id:
             parser.error("note requires <paper_id> (or --list)")
         workflow = PaperCreationWorkflow(args.data_root)
+        action = "publish" if args.publish else "stage" if args.stage else "validate"
         if args.publish:
             result = workflow.publish_note(args.paper_id, notes_dir=args.notes_dir)
         elif args.stage:
             result = workflow.stage_note(args.paper_id, notes_dir=args.notes_dir)
         else:
             result = workflow.validate_note(args.paper_id, notes_dir=args.notes_dir)
+        run_log.log_event(
+            "note",
+            action=action,
+            paper_id=args.paper_id,
+            ok=bool(result.get("ok")),
+            status="ok" if result.get("ok") else "failed",
+        )
         _emit_json(result)
         if not result.get("ok"):
             raise SystemExit(2)

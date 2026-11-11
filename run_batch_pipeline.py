@@ -37,6 +37,7 @@ from skills.deepseek_summarizer import DeepSeekSummarizer
 from skills.paper_classifier import PaperClassifier
 from skills.folder_standardizer import FolderStandardizer
 from storage.paper_assets import find_parsed_markdown, paper_id_from_folder
+from redbook.infrastructure import run_log
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,15 @@ def save_step_log(step: int, results: list[dict]) -> Path:
         encoding="utf-8",
     )
     logger.info("[Step %d] Log saved -> %s", step, log_path)
+    run_log.log_event(
+        "batch_step",
+        step=step,
+        total=log_data["total"],
+        succeeded=log_data["succeeded"],
+        failed=log_data["failed"],
+        status="ok" if not log_data["failed"] else "partial",
+        log_path=str(log_path),
+    )
     return log_path
 
 
@@ -696,6 +706,7 @@ def main():
     import argparse
 
     setup_logging()
+    run_log.install_jsonl_handler()
 
     parser = argparse.ArgumentParser(description="Batch Pipeline Runner")
     parser.add_argument("--step", required=True, help="Step number (1-6) or 'all'")
@@ -761,6 +772,7 @@ def main():
     logger.info("=" * 60)
     for entry in all_logs:
         logger.info("  Step %s: %.1fs -> %s", entry["step"], entry["elapsed_sec"], entry["log"])
+    run_log.log_event("batch_run", command="run_batch_pipeline", steps=len(all_logs), status="ok")
 
 
 if __name__ == "__main__":

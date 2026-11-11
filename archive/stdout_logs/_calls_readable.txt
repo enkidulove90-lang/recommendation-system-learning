@@ -1,0 +1,715 @@
+#1 10-28 10:23:49 Skill
+  skill: xhs-latest-paper-draft  args=None
+
+#2 10-28 10:23:53 Skill
+  skill: multi-platform-publishing  args=None
+
+#3 10-28 10:23:56 Bash
+  desc: 检查论文目录是否存在
+  cmd: ls -d C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452 2>/dev/null || echo "NOT_EXIST"
+
+#4 10-28 10:23:56 WebFetch
+  url: https://arxiv.org/abs/2601.21452
+  prompt: Extract the paper title, authors, submission date, venue/comments, and the full abstract. Also note any code/GitHub link mentioned.
+
+#5 10-28 10:24:00 Bash
+  desc: 下载论文 PDF
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && mkdir -p data/parsed/2601.21452/source && curl -sL -A "Mozilla/5.0" -o data/parsed/2601.21452/2601.21452_origin.pdf https://arxiv.org/pdf/2601.21452v3 && ls -la data/parsed/2601.21452/ | head
+
+#6 10-28 10:24:00 Bash
+  desc: 下载论文源包并列出内容
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && curl -sL -A "Mozilla/5.0" -o data/parsed/2601.21452/source/src.tar.gz https://arxiv.org/e-print/2601.21452v3 && ls -la data/parsed/2601.21452/source/ && tar -tzf data/parsed/2601.21452/source/src.tar.gz | head -60
+
+#7 10-28 10:26:06 Bash
+  desc: 查看源包大小
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && ls -la data/parsed/2601.21452/source/ && file data/parsed/2601.21452/source/src.tar.gz
+
+#8 10-28 10:26:09 Bash
+  desc: 重新下载论文源包
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && curl -sL -A "Mozilla/5.0" -o data/parsed/2601.21452/source/src.tar.gz https://arxiv.org/e-print/2601.21452v3 && ls -l data/parsed/2601.21452/source/
+  timeout: 300000
+
+#9 10-28 10:26:15 Bash
+  desc: 列出并解压源包内图片
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/source && python -c "
+import tarfile, os
+t = tarfile.open('src.tar.gz')
+names = t.getnames()
+print('total', len(names))
+for n in names:
+    if n.lower().endswith(('.png','.jpg','.jpeg','.pdf','.eps','.svg')):
+        print('IMG', n)
+t.extractall('.')
+" 2>&1 | head -60
+
+#10 10-28 10:26:19 Bash
+  desc: 列出源文件并查图注
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/source && ls -la && echo "---GREP---" && grep -rn "includegraphics\|\\\\caption" *.tex 2>/dev/null | head -60
+
+#11 10-28 10:26:24 Bash
+  desc: 检查各图分辨率
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/source && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+from PIL import Image
+import glob
+for f in sorted(glob.glob('*.png')):
+    im = Image.open(f)
+    print(f, im.size, im.mode)
+"
+
+#12 10-28 10:26:24 Bash
+  desc: 阅读实验与结果章节
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/source && sed -n '250,440p' public.tex
+
+#13 10-28 10:26:30 Bash
+  desc: 阅读引言与方法前半部分
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/source && sed -n '1,250p' public.tex
+
+#14 10-28 10:26:34 Bash
+  desc: 阅读消融与结论部分
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/source && sed -n '440,560p' public.tex
+
+#15 10-28 10:26:45 Bash
+  desc: 复制图片到 images 目录
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && mkdir -p data/parsed/2601.21452/images && cp data/parsed/2601.21452/source/*.png data/parsed/2601.21452/images/ && ls -l data/parsed/2601.21452/images/
+
+#16 10-28 10:26:48 Read
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2601.21452/images/paper-all-pic.png
+
+#17 10-28 10:26:51 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\paper-all-pic.png
+  q: Describe this figure in detail: what panels/diagrams does it contain, is text readable at small size, is it colorful, does it show a comparison (e.g., GBPO vs S
+
+#18 10-28 10:26:57 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\paper-sft-sage.png
+  q: Describe this figure in detail: what is the pipeline/architecture? List the boxes, stages, and labels. Is it readable, are labels legible, is it SFT then RLHF?
+
+#19 10-28 10:27:00 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\gradient1.png
+  q: Describe this figure precisely: axes labels, ranges, which curves exist (GBPO vs SAGE, case A/B), colors, legend. Is it readable?
+
+#20 10-28 10:27:04 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\Evolution2.png
+  q: Describe this figure: how many panels, axes labels and ranges, which curves (SAGE vs GBPO), what trend each shows.
+
+#21 10-28 10:27:07 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\ablationstudy4.png
+  q: Describe this ablation figure: how many panels, what metrics are on y-axis for each, what variants are compared (bar labels), what are the approximate values.
+
+#22 10-28 10:27:26 Read
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_unipinrec.py
+
+#23 10-28 10:27:43 Bash
+  desc: 检查 PDF 内嵌图分辨率
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import fitz
+doc = fitz.open('data/parsed/2601.21452/2601.21452_origin.pdf')
+print('pages', doc.page_count)
+for i,p in enumerate(doc):
+    for im in p.get_images(full=True):
+        xref=im[0]
+        info=doc.extract_image(xref)
+        print(i+1, xref, info['width'], 'x', info['height'], info['ext'], len(info['image'])//1024, 'KB')
+"
+
+#24 10-28 10:28:17 Write
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_sage.py
+  content_len: 11774
+
+#25 10-28 10:28:21 Bash
+  desc: 干跑构建脚本检查字数与图片
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_sage.py 2>&1 | tail -25
+
+#26 10-28 10:28:27 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\fig_card_numbers.png
+  q: Check this card for layout problems: is any text overlapping, clipped at the edges, or overflowing the canvas? Are all column values aligned and fully inside th
+
+#27 10-28 10:28:39 Edit
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_sage.py
+
+#28 10-28 10:28:43 Bash
+  desc: 重新干跑检查字数
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_sage.py 2>&1 | tail -18
+
+#29 10-28 10:29:02 Edit
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_sage.py
+
+#30 10-28 10:29:06 Bash
+  desc: 再次干跑检查字数
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_sage.py 2>&1 | tail -18
+
+#31 10-28 10:29:20 Bash
+  desc: 批量精简正文措辞
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe - <<'PY'
+import io, re
+p = 'build_xhs_draft_sage.py'
+s = io.open(p, encoding='utf-8').read()
+subs = [
+ ('🎓 一句话：模型和 SFT→RLHF', '🎓 模型和 SFT→RLHF'),
+ ('生成式推荐先给每个视频编一个语义 ID，再让模型自回归吐 10 个候选，SFT 之后过一遍 RLHF 对齐。',
+  '生成式推荐先给视频编语义 ID，再让模型自回归吐 10 个候选，SFT 之后过一遍 RLHF。'),
+ ('线上冷启动曝光掉了 44.7%', '线上冷启动曝光 -44.7%'),
+ ('簇密度涨了 11.7%', '簇密度 +11.7%'),
+ ('点击和评论被压成同一个优势值', '点击和评论压成同一个优势值'),
+ ('✨ 只改了三处（图 2 链路，图 3 核心）', '✨ 只改三处（图 2 链路，图 3 核心）'),
+ ('优势 ≥0 上界抬到 1+ε（ε=0.3），成功列表可超线性涨；',
+  '优势 ≥0 上界抬到 1+ε（ε=0.3）可超线性涨；'),
+ ('③ 优势先解耦再聚合：每个目标组内归一化，加权求和后再整批 z-score。',
+  '③ 优势先解耦再聚合：每个目标组内归一化、加权求和，再整批 z-score。'),
+ ('是两件事。GBPO 解决前者；SAGE', '是两件事：GBPO 解决前者，SAGE'),
+ ('放进原生文本空间才最好。"只换优化器"这条路上，动作空间是隐藏变量。',
+  '放进原生文本空间才最好——动作空间是隐藏变量。'),
+ ('对延迟敏感的线上系统不友好', '对延迟敏感的系统不友好'),
+ ('✨ 如果你在做生成式推荐后训练，成本最低的一次实验：', '✨ 做生成式推荐后训练的话，成本最低的一次实验：'),
+]
+for a,b in subs:
+    assert a in s, a
+    s = s.replace(a,b)
+io.open(p,'w',encoding='utf-8').write(s)
+print('patched')
+PY
+
+#32 10-28 10:29:23 Bash
+  desc: 再次干跑检查字数
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_sage.py 2>&1 | tail -18
+
+#33 10-28 10:29:33 Bash
+  desc: 最后精简并干跑
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe - <<'PY'
+import io
+p='build_xhs_draft_sage.py'
+s=io.open(p,encoding='utf-8').read()
+subs=[('📊 数字（Amazon 三件套，vs OneRec-GBPO）','📊 数字（Amazon 三件套，vs GBPO）'),
+      ('SFT 之后过一遍 RLHF。','SFT 后过一遍 RLHF。'),
+      ('——三个零件各管一件事。','——各管一件事。')]
+for a,b in subs:
+    assert a in s, a
+    s=s.replace(a,b)
+io.open(p,'w',encoding='utf-8').write(s)
+print('ok')
+PY
+DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_sage.py 2>&1 | tail -16
+
+#34 10-28 10:29:42 Bash
+  desc: 导出待审正文
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import json,io
+d=json.load(io.open('publish_queue/a0fc84042de4ea21064872f6067b36be/xhs.json',encoding='utf-8'))
+out=[]
+out.append('TITLE: '+d['title'])
+out.append('BODY_LEN: %d'%len(d['body_markdown']))
+out.append('IMAGES: %d'%len(d['image_paths']))
+out.append('TOPICS: '+','.join(d['metadata']['topics']))
+out.append('PDF: '+str(d['metadata'].get('pdf_path')))
+out.append('---BODY---')
+out.append(d['body_markdown'])
+io.open('_sage_review.txt','w',encoding='utf-8').write('\n'.join(out))
+print('written')
+"
+
+#35 10-28 10:29:46 Read
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/_sage_review.txt
+
+#36 10-28 10:29:52 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2601.21452\images\fig_gradient_1p8x.png
+  q: Is this chart crisp and readable? Any artifacts from upscaling (halos, blur, distortion) on the text or lines? Is the whole figure inside the frame (no clipped
+
+#37 10-28 10:29:59 PowerShell
+  desc: 发布 SAGE 草稿到小红书
+  cmd: $env:PYTHONIOENCODING="utf-8"; $py="C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe"; $log="C:/Users/xu.yan1/papers/recommendation-system-learning/logs_publish_sage.txt"; & $py "C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_sage.py" 2>&1 | Out-File -FilePath $log -Encoding utf8; "EXIT=$LASTEXITCODE" | Out-File -Append -FilePath $log -Encoding utf8; Get-Content $log -Encoding utf8 | Select-Object -Last 12
+  timeout: 300000
+
+#38 10-28 10:31:28 PowerShell
+  desc: 导出草稿列表核验
+  cmd: $env:PYTHONIOENCODING="utf-8"; $py="C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe"; $log="C:/Users/xu.yan1/papers/recommendation-system-learning/logs_verify_sage.txt"; & $py "C:/Users/xu.yan1/papers/recommendation-system-learning/verify_xhs_drafts.py" --dump 2>&1 | Out-File -FilePath $log -Encoding utf8; "EXIT=$LASTEXITCODE" | Out-File -Append -FilePath $log -Encoding utf8; Get-Content $log -Encoding utf8 | Select-Object -Last 6
+  timeout: 180000
+
+#39 10-28 10:31:55 Bash
+  desc: 核对新稿是否在草稿箱
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import json,io
+d=json.load(io.open('xhs_drafts_dump.json',encoding='utf-8'))
+print('type',type(d))
+items = d if isinstance(d,list) else d.get('drafts',[])
+print('count', len(items))
+target='c4a06989'
+for i,it in enumerate(items):
+    sid=str(it.get('draft_id') or it.get('id') or '')
+    print(i+1, sid[:14], it.get('images') or it.get('image_count'), repr(it.get('title'))[:60])
+print('TARGET HITS', sum(1 for it in items if target in json.dumps(it,ensure_ascii=False)))
+"
+
+#40 10-28 10:32:03 Bash
+  desc: 查看记忆目录
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && ls .workbuddy/memory/ 2>/dev/null | tail -5
+
+#41 10-28 10:32:07 Read
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/.workbuddy/memory/2026-10-28.md
+
+#42 10-28 10:32:12 Edit
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/.workbuddy/memory/2026-10-28.md
+
+#43 10-28 10:32:16 present_files
+  files: ["C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\_sage_review.txt", "C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\data\\parsed\\2601.21452\\images\\fig_card_numbers.png", "C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\data\\parsed\\2601.21452\\images\\paper-sft-sage.png"]
+  expl: SAGE 草稿已发布到小红书，附上待核对正文与自制数字卡，便于目检。
+
+#44 11-09 18:00:08 Bash
+  desc: 下载 DiffGRM 论文 PDF
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && mkdir -p data/parsed/2510.21805/source data/parsed/2510.21805/images && curl -sL -A "Mozilla/5.0" -o data/parsed/2510.21805/2510.21805_origin.pdf https://arxiv.org/pdf/2510.21805 && ls -l data/parsed/2510.21805/
+  timeout: 300000
+
+#45 11-09 18:00:09 WebFetch
+  url: https://arxiv.org/abs/2510.21805
+  prompt: Extract the exact title, all authors, submission date, latest version date, and the complete comments field (venue info if any). Also give the full abstract verbatim.
+
+#46 11-09 18:00:16 Bash
+  desc: 下载并列出源包图片
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2510.21805/source && curl -sL -A "Mozilla/5.0" -o src.tar.gz https://arxiv.org/e-print/2510.21805 && ls -l src.tar.gz && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import tarfile
+t=tarfile.open('src.tar.gz')
+names=t.getnames()
+print('total',len(names))
+for n in names:
+    if n.lower().endswith(('.png','.jpg','.jpeg','.pdf','.eps','.svg')):
+        print('IMG',n)
+"
+  timeout: 300000
+
+#47 11-09 18:00:25 Bash
+  desc: 解压并查图注
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2510.21805/source && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import tarfile
+t=tarfile.open('src.tar.gz'); t.extractall('.')
+" && ls -la && echo "---CAPTIONS---" && grep -rn "includegraphics\|\\\\caption" *.tex | head -40
+
+#48 11-09 18:00:32 Bash
+  desc: 3x 渲染全部矢量图
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import fitz, os
+from pathlib import Path
+src=Path('data/parsed/2510.21805/source/Figures')
+dst=Path('data/parsed/2510.21805/images')
+for f in sorted(src.glob('*.pdf')):
+    doc=fitz.open(f)
+    p=doc[0]
+    r=p.rect
+    for z in (3.0,):
+        pix=p.get_pixmap(matrix=fitz.Matrix(z,z), alpha=False)
+        out=dst/(f.stem+'.png')
+        pix.save(str(out))
+    print('%-12s pt=%.0fx%.0f  px=%dx%d  %dKB' % (f.stem, r.width, r.height, pix.width, pix.height, out.stat().st_size//1024))
+"
+
+#49 11-09 18:00:40 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\framework.png
+  q: Describe this architecture figure in detail: what are the major blocks/panels (left to right, top to bottom), and their labels? Does it show PSE tokenization, O
+
+#50 11-09 18:00:46 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\intro.png
+  q: Describe this figure: what does panel (a) show and what does panel (b) show? Are there concrete SID examples with digits and arrows? Is it readable?
+
+#51 11-09 18:00:51 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\exp.png
+  q: Describe this figure: how many panels, what are the axes and legends, which curves are plotted, and what is the message?
+
+#52 11-09 18:00:55 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\beam.png
+  q: Describe this figure: panels, axes, what the trend shows.
+
+#53 11-09 18:01:01 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\dim.png
+  q: Describe this figure: panels, axes, dual y-axis? what trend does it show?
+
+#54 11-09 18:01:07 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\sup.png
+  q: Describe this figure: panels, axes, legend, what does it compare?
+
+#55 11-09 18:01:13 Bash
+  desc: 阅读数据集与主结果表
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2510.21805/source && sed -n '380,500p' main.tex
+
+#56 11-09 18:01:18 Bash
+  desc: 阅读消融与 OCN 变体
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2510.21805/source && sed -n '500,640p' main.tex
+
+#57 11-09 18:01:24 Bash
+  desc: 阅读方法章节
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2510.21805/source && sed -n '166,382p' main.tex
+
+#58 11-09 18:01:32 Bash
+  desc: 阅读超参与监督信号计数表
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning/data/parsed/2510.21805/source && sed -n '700,740p' main.tex && echo "=== SPACE ===" && sed -n '805,830p' main.tex
+
+#59 11-09 18:01:37 Bash
+  desc: 克隆官方代码仓库查看结构
+  cmd: cd /tmp && rm -rf diffgrm 2>/dev/null; git clone --depth 1 https://github.com/liuzhao09/DiffGRM diffgrm 2>&1 | tail -3 && ls -R /tmp/diffgrm | head -40
+  timeout: 180000
+
+#60 11-09 18:01:46 Bash
+  desc: 查看 README
+  cmd: cd /tmp/diffgrm && head -60 README.md
+
+#61 11-09 18:02:39 Write
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_diffgrm.py
+  content_len: 11667
+
+#62 11-09 18:02:43 Bash
+  desc: 干跑检查字数与图片
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_diffgrm.py 2>&1 | tail -16
+
+#63 11-09 18:02:48 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\fig_card_numbers.png
+  q: Check for layout problems: any text overlapping, clipped, or overflowing outside the canvas or outside row backgrounds? Are right-aligned numbers and percentage
+
+#64 11-09 18:03:06 Bash
+  desc: 修正数字卡右侧溢出
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe - <<'PY'
+import io
+p='build_xhs_draft_diffgrm.py'
+s=io.open(p,encoding='utf-8').read()
+subs=[('d.text((x1 - 330, y + 22), val, font=f_val, fill=DARK)','d.text((x1 - 400, y + 22), val, font=f_val, fill=DARK)'),
+      ('d.text((x1 - 176, y + 30), pct, font=f_pct, fill=ACCENT)','d.text((x1 - 235, y + 30), pct, font=f_pct, fill=ACCENT)')]
+for a,b in subs:
+    assert a in s, a
+    s=s.replace(a,b)
+io.open(p,'w',encoding='utf-8').write(s)
+print('card patched')
+PY
+
+#65 11-09 18:03:17 Edit
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_diffgrm.py
+
+#66 11-09 18:03:21 Bash
+  desc: 再次干跑检查字数
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_diffgrm.py 2>&1 | tail -14
+
+#67 11-09 18:03:41 Bash
+  desc: 精简正文并干跑
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe - <<'PY'
+import io
+p='build_xhs_draft_diffgrm.py'
+s=io.open(p,encoding='utf-8').read()
+subs=[
+('🎓 一句话：生成式推荐先把物品编成 4 位语义 ID，再一位一位写出来。DiffGRM 把"从左往右写"换成"掩码扩散、任意顺序并行补全"，NDCG@10 比最强基线高 6.9%~15.5%（WWW 2026）。',
+ '🎓 一句话：生成式推荐把物品编成 4 位语义 ID 再一位位写出来；DiffGRM 换成"掩码扩散、任意顺序并行补全"，NDCG@10 比最强基线高 6.9%~15.5%（WWW 2026）。'),
+('🧠 自回归的两个结构性毛病','🧠 自回归的两个毛病'),
+('（品类/品牌/类型/尺码），但因果注意力只看得到前缀。','（品类/品牌/类型/尺码），但因果注意力只看得见前缀。'),
+('后面两位顺着错的写，最后生成一个毫不相干的球。','后两位顺着错下去，最后生成一个毫不相干的球。'),
+('数字间异质性：品牌位远比尺码位难，损失却给每个位置同样的权重——简单的过训、难的欠训。',
+ '数字间异质性：品牌位远比尺码位难，损失却给每位同样权重——简单的过训、难的欠训。'),
+('再均分成 4 段，各段在自己那张 256 码本里找最近质心。','再均分成 4 段，各段在 256 码本里找最近质心。'),
+('用 1−最大概率给每个位置打难度分','用 1−最大概率给每位打难度分'),
+('把加噪预算压在难位上。这步是必需的：','把加噪预算压在难位上。这步必需：'),
+('全覆盖要 15 种掩码配置，硬枚举不现实。','全覆盖要 15 种配置，硬枚举不现实。'),
+('每步在所有（位置, 码字）里挑置信度最高的一对填上，其余继续掩着；beam 32~256 就能产出多样 Top-K，不再是从左到右的束搜索。',
+ '每步在（位置, 码字）里挑置信度最高的一对填上，其余继续掩着；beam 32~256 就能产出多样 Top-K。'),
+('12 个指标 11 个第一；同等 ESP 就追平 k 倍相干加噪。','12 个指标 11 个第一；同等 ESP 追平 k 倍相干加噪。'),
+('去掉 OCN 是 0.0250，去掉 CPD 是 0.0273。分词换错跌得最狠——说明前提是"4 位解耦"，不是换个解码器就完事。',
+ '去 OCN 是 0.0250，去 CPD 0.0273。分词换错跌最狠——前提是"4 位解耦"，不是换个解码器就完事。'),
+('\n\n💡 代价\n解码器多一个 n 倍因子（O(B·n²·N·d)），但历史长的时候编解码总账差不多，墙钟时间接近 ARM。',''),
+('去 CPD 0.0273。分词换错跌最狠——','去 CPD 0.0273；代价是解码器多个 n 倍因子，历史长时总账差不多。分词换错跌最狠——'),
+('Toys 上 Recall@10 比 RPG 低 4.03%（NDCG 仍更高）；隐藏维要按数据集调（Sports/Beauty 256、Toys 1024）；换更强的语义编码器，Sports/Beauty 涨、Toys 反而掉。',
+ 'Toys 的 Recall@10 比 RPG 低 4.03%（NDCG 仍更高）；隐藏维按数据集调（Sports/Beauty 256、Toys 1024）；换更强的编码器，Sports/Beauty 涨、Toys 反降。'),
+]
+for a,b in subs:
+    assert a in s, a
+    s=s.replace(a,b)
+io.open(p,'w',encoding='utf-8').write(s)
+print('patched')
+PY
+DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_diffgrm.py 2>&1 | tail -12
+
+#68 11-09 18:03:47 Bash
+  desc: 按行查看正文长度
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import io,re
+s=io.open('build_xhs_draft_diffgrm.py',encoding='utf-8').read()
+b=s.split('BODY = \"\"\"')[1].split('\"\"\"')[0]
+for i,line in enumerate(b.split(chr(10))):
+    if line.strip(): print('%3d %s' % (len(line), line))
+"
+
+#69 11-09 18:04:02 Bash
+  desc: 测算候选正文长度
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe - <<'PY'
+# -*- coding: utf-8 -*-
+import io
+cand = """🎓 一句话：生成式推荐把物品编成 4 位语义 ID 再逐位写；DiffGRM 改成"掩码扩散、任意顺序并行补全"，NDCG@10 比最强基线高 6.9%~15.5%（WWW 2026）。
+
+🧠 自回归的两个毛病
+组内一致性：4 位共同指向一个物品（品类/品牌/类型/尺码），但因果注意力只看得见前缀。图 1 里品牌位该是 <134>，模型只凭 <233> 猜成 <131>，后两位顺着错下去，生成一个毫不相干的球。
+数字间异质性：品牌位远比尺码位难，损失却给每位同样权重——简单的过训、难的欠训。
+
+✨ 三处改造
+🔤 PSE 分词：先学一个正交旋转矩阵把物品向量转一下（降量化失真），再均分成 4 段，各段在 256 码本里找最近质心。关键是没残差依赖——RQ 后一位依赖前一位，4 位解耦才能并行。
+🎯 OCN 训练：先做一次全掩码探测，用 1−最大概率给每位打难度分，再按难度从高到低做一组嵌套掩码，把加噪预算压在难位上。这步必需：4 位码本下自回归只有 4 条监督信号、一条样本够用，掩码扩散有 4×2³=32 条，全覆盖要 15 种配置，硬枚举不现实。
+⚡ CPD 推理：从全掩码起步，每步在（位置, 码字）里挑置信度最高的一对填上，其余继续掩着；beam 32~256 就能产出多样 Top-K。
+
+📊 数字（Amazon 三件套，vs 最强基线）
+NDCG@10：0.0305（+15.5%）、0.0502（+8.2%）、0.0524（+6.9%），12 个指标 11 个第一；同等 ESP 追平 k 倍相干加噪。
+消融最狠的是分词：PSE 换回 RQ-Kmeans，Sports 从 0.0305 掉到 0.0200；换随机码字只剩 0.0138；去 OCN 0.0250，去 CPD 0.0273。跌得最狠说明前提是"4 位解耦"，不是换解码器就行。
+
+⚠️ 局限
+Toys 的 Recall@10 比 RPG 低 4.03%（NDCG 仍更高）；隐藏维按数据集调（Sports/Beauty 256、Toys 1024）；换更强编码器，Sports/Beauty 涨、Toys 反降。
+
+📄 https://arxiv.org/abs/2510.21805
+💻 https://github.com/liuzhao09/DiffGRM
+✨ 关注我，持续拆解推荐系统论文 📚"""
+print('len', len(cand))
+io.open('_cand_diffgrm.txt','w',encoding='utf-8').write(cand)
+PY
+
+#70 11-09 18:04:10 Bash
+  desc: 替换正文并干跑
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe - <<'PY'
+# -*- coding: utf-8 -*-
+import io, re
+p='build_xhs_draft_diffgrm.py'
+s=io.open(p,encoding='utf-8').read()
+body=io.open('_cand_diffgrm.txt',encoding='utf-8').read()
+new, n = re.subn(r'BODY = """.*?"""\nprint\("title', 'BODY = """'+body+'"""\nprint("title', s, flags=re.S)
+assert n==1, n
+io.open(p,'w',encoding='utf-8').write(new)
+print('body replaced, len', len(body))
+PY
+DRY_RUN=1 C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe build_xhs_draft_diffgrm.py 2>&1 | tail -14
+
+#71 11-09 18:04:17 ViewImage
+  img: C:\Users\xu.yan1\papers\recommendation-system-learning\data\parsed\2510.21805\images\fig_card_numbers.png
+  q: Check the right side of the ablation rows: do the percentage values stay inside the row background and within the canvas? Any overlap between the score number a
+
+#72 11-09 18:04:22 PowerShell
+  desc: 发布 DiffGRM 草稿到小红书
+  cmd: $env:PYTHONIOENCODING="utf-8"; $py="C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe"; $log="C:/Users/xu.yan1/papers/recommendation-system-learning/logs_publish_diffgrm.txt"; & $py "C:/Users/xu.yan1/papers/recommendation-system-learning/build_xhs_draft_diffgrm.py" 2>&1 | Out-File -FilePath $log -Encoding utf8; "EXIT=$LASTEXITCODE" | Out-File -Append -FilePath $log -Encoding utf8; Get-Content $log -Encoding utf8 | Select-Object -Last 6
+  timeout: 300000
+
+#73 11-09 18:05:39 PowerShell
+  desc: 导出草稿列表核验
+  cmd: $env:PYTHONIOENCODING="utf-8"; $py="C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe"; $log="C:/Users/xu.yan1/papers/recommendation-system-learning/logs_verify_diffgrm.txt"; & $py "C:/Users/xu.yan1/papers/recommendation-system-learning/verify_xhs_drafts.py" --dump 2>&1 | Out-File -FilePath $log -Encoding utf8; "EXIT=$LASTEXITCODE" | Out-File -Append -FilePath $log -Encoding utf8; Get-Content $log -Encoding utf8 | Select-Object -Last 4
+  timeout: 180000
+
+#74 11-09 18:06:02 Bash
+  desc: 核对新稿入库情况
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import json,io
+items=json.load(io.open('xhs_drafts_dump.json',encoding='utf-8'))
+print('count',len(items))
+for i,it in enumerate(items):
+    sid=str(it.get('draft_id') or it.get('id') or '')
+    print(i+1, sid[:14], it.get('images') or it.get('image_count'), it.get('title'))
+print('TARGET', sum(1 for it in items if '70f3bb55' in json.dumps(it,ensure_ascii=False)))
+"
+
+#75 11-09 18:06:09 Bash
+  desc: 检查今日记忆文件
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && ls .workbuddy/memory/ | tail -4
+
+#76 11-09 18:06:17 Write
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/.workbuddy/memory/2026-11-09.md
+  content_len: 1064
+
+#77 11-09 18:06:22 Bash
+  desc: 导出正文供核对
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe -c "
+import json,io
+d=json.load(io.open('publish_queue/27b9e61f5e2fe7f187d2c8e9d1f0b01f/xhs.json',encoding='utf-8'))
+out=['TITLE: '+d['title'],'BODY_LEN: %d'%len(d['body_markdown']),'IMAGES: %d'%len(d['image_paths']),'TOPICS: '+','.join(d['metadata']['topics']),'---BODY---',d['body_markdown']]
+io.open('_diffgrm_review.txt','w',encoding='utf-8').write(chr(10).join(out))
+print('ok')
+"
+
+#78 11-09 18:06:26 Read
+  file: C:/Users/xu.yan1/papers/recommendation-system-learning/_diffgrm_review.txt
+
+#79 11-09 18:06:33 present_files
+  files: ["C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\_diffgrm_review.txt", "C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\data\\parsed\\2510.21805\\images\\fig_card_numbers.png", "C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\data\\parsed\\2510.21805\\images\\framework.png", "C:\\Users\\xu.yan1\\papers\\recommendation-system-learning\\data\\parsed\\2510.21805\\images\\intro.png"]
+  expl: DiffGRM 草稿已进小红书草稿箱，附正文与两张关键图便于目检。
+
+#80 11-10 14:12:13 Bash
+  desc: 查看会话记录文件大小
+  cmd: ls -l "C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+
+#81 11-10 14:12:17 Bash
+  desc: 探查会话记录结构
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _scan_session.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io, os
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+n=0
+kinds={}
+with io.open(p, encoding='utf-8') as f:
+    for line in f:
+        if not line.strip(): continue
+        n+=1
+        try: o=json.loads(line)
+        except Exception as e:
+            kinds['PARSE_FAIL']=kinds.get('PARSE_FAIL',0)+1; continue
+        t=o.get('type')
+        kinds[t]=kinds.get(t,0)+1
+        if n<=3:
+            print('LINE',n,'keys',list(o.keys()))
+            c=o.get('message',{}).get('content') if isinstance(o.get('message'),dict) else o.get('content')
+            print(' content type', type(c).__name__)
+            if isinstance(c,list):
+                for b in c:
+                    if isinstance(b,dict): print('   block', b.get('type'), list(b.keys()))
+print('total lines', n)
+print(kinds)
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _scan_session.py
+
+#82 11-10 14:12:22 Bash
+  desc: 查看工具调用记录格式
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _scan2.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+cnt=0
+with io.open(p, encoding='utf-8') as f:
+    for line in f:
+        if not line.strip(): continue
+        o=json.loads(line)
+        if o.get('type')=='function_call':
+            print('KEYS', list(o.keys()))
+            print(json.dumps(o, ensure_ascii=False)[:1200])
+            cnt+=1
+            if cnt>=2: break
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _scan2.py
+
+#83 11-10 14:12:29 Bash
+  desc: 列出会话中的用户消息定位起点
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _extract_session.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io, datetime
+
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+rows = []
+with io.open(p, encoding='utf-8') as f:
+    for line in f:
+        if not line.strip(): continue
+        o = json.loads(line)
+        rows.append(o)
+
+# 1) 找用户消息，定位小红书相关会话起点
+users = []
+for o in rows:
+    if o.get('type') == 'message':
+        c = o.get('content') or []
+        if isinstance(c, list):
+            txt = ''.join(b.get('text','') for b in c if isinstance(b,dict) and b.get('type')=='input_text')
+            if txt.strip():
+                users.append((o.get('timestamp'), txt.strip()[:90].replace('\n',' ')))
+print('=== USER MESSAGES (%d) ===' % len(users))
+for ts, t in users:
+    print(datetime.datetime.fromtimestamp(ts/1000).strftime('%H:%M:%S'), '|', t)
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _extract_session.py
+
+#84 11-10 14:12:34 Bash
+  desc: 提取真实用户输入定位小红书会话
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _extract2.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io, datetime
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+rows=[json.loads(l) for l in io.open(p,encoding='utf-8') if l.strip()]
+for o in rows:
+    if o.get('type')=='message':
+        c=o.get('content') or []
+        if isinstance(c,list):
+            for b in c:
+                if isinstance(b,dict) and b.get('type')=='text':
+                    t=b.get('text','').strip()
+                    if t and not t.startswith('<'):
+                        print(datetime.datetime.fromtimestamp(o['timestamp']/1000).strftime('%m-%d %H:%M'), '|', t[:80].replace('\n',' '))
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _extract2.py
+
+#85 11-10 14:12:38 Bash
+  desc: 查看用户消息块类型
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _extract3.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+rows=[json.loads(l) for l in io.open(p,encoding='utf-8') if l.strip()]
+n=0
+for o in rows:
+    if o.get('type')=='message' and o.get('role')=='user':
+        c=o.get('content') or []
+        if isinstance(c,list):
+            kinds=[b.get('type') for b in c if isinstance(b,dict)]
+            if n<6:
+                print('---', kinds)
+                print(json.dumps(c, ensure_ascii=False)[:500])
+            n+=1
+print('user msgs', n)
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _extract3.py
+
+#86 11-10 14:12:44 Bash
+  desc: 提取 user_query 定位小红书会话起点
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _extract4.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io, datetime, re
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+rows=[json.loads(l) for l in io.open(p,encoding='utf-8') if l.strip()]
+
+def uq(o):
+    c=o.get('content') or []
+    if not isinstance(c,list): return ''
+    t=''.join(b.get('text','') for b in c if isinstance(b,dict))
+    m=re.search(r'<user_query>(.*?)</user_query>', t, re.S)
+    return m.group(1).strip() if m else ''
+
+print('=== 真实 user_query 消息 ===')
+marks=[]
+for i,o in enumerate(rows):
+    if o.get('type')=='message' and o.get('role')=='user':
+        q=uq(o)
+        if q:
+            marks.append((i,o['timestamp'],q))
+            print(len(marks), datetime.datetime.fromtimestamp(o['timestamp']/1000).strftime('%m-%d %H:%M'), '|', q[:70].replace('\n',' '))
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _extract4.py
+
+#87 11-10 14:12:55 Bash
+  desc: 抽取小红书会话内全部工具调用
+  cmd: cd C:/Users/xu.yan1/papers/recommendation-system-learning && cat > _extract5.py <<'PY'
+# -*- coding: utf-8 -*-
+import json, io, datetime, re
+p = r"C:/Users/xu.yan1/.workbuddy/projects/c-Users-xu.yan1-papers-recommendation-system-learning/e5a041fe-b710-4c95-b524-1670acb9fbe9.jsonl"
+rows=[json.loads(l) for l in io.open(p,encoding='utf-8') if l.strip()]
+
+def uq(o):
+    c=o.get('content') or []
+    if not isinstance(c,list): return ''
+    t=''.join(b.get('text','') for b in c if isinstance(b,dict))
+    m=re.search(r'<user_query>(.*?)</user_query>', t, re.S)
+    return m.group(1).strip() if m else ''
+
+start=None
+for i,o in enumerate(rows):
+    if o.get('type')=='message' and o.get('role')=='user':
+        q=uq(o)
+        if 'Sequence-level Adaptive Gradient Evolution' in q or 'DiffGRM' in q:
+            start=i; break
+print('start idx', start)
+
+out=[]
+seq=0
+for o in rows[start:]:
+    if o.get('type')!='function_call': continue
+    seq+=1
+    name=o.get('name')
+    args=o.get('arguments')
+    if isinstance(args,str):
+        try: args=json.loads(args)
+        except Exception: args={'RAW':args}
+    ts=datetime.datetime.fromtimestamp(o['timestamp']/1000).strftime('%m-%d %H:%M:%S')
+    out.append({'n':seq,'ts':ts,'name':name,'args':args})
+
+print('calls', len(out))
+io.open('_calls.json','w',encoding='utf-8').write(json.dumps(out,ensure_ascii=False,indent=1))
+from collections import Counter
+print(Counter(c['name'] for c in out))
+PY
+C:/Users/xu.yan1/.workbuddy/binaries/python/envs/default/Scripts/python.exe _extract5.py
