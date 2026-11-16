@@ -119,3 +119,7 @@ recommendation-system/
 | `llm-ranking` | LLM 参与预排序、排序、重排序阶段 |
 
 爬取范围默认从 2024 年开始，可通过 `.env` 中的 `START_YEAR` 调整。
+
+## 实验平台
+
+- `baseline/ada/` — ADA 实验平台（P0 门禁 C1–C5 + G-P0、split_hash 强校验、FastAPI + React 控制台），见 `baseline/ada/README.md`。

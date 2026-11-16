@@ -1,0 +1,56 @@
+# ADA P0 protocol template — copy to a run-specific YAML and fill values.
+# Any Appendix-A parameter left "unresolved" yields a human-readable `blocked`
+# protocol decision and the backend will refuse to launch a GPU process.
+run_id: ada-p0-001
+phase: p0                      # p0 | p1 | p2
+
+dataset:
+  dir: ../../LightGCNpp/data/amazon-baby-mmssl   # relative to baseline/ada
+  name: mmssl-amazon-baby
+
+features:
+  image_feat: ../../LightGCNpp/data/amazon-baby-mmssl/image_feat.npy   # CNN 4096-d (P0 step 1 must produce this)
+  text_feat:  ../../LightGCNpp/data/amazon-baby-mmssl/text_feat.npy    # sentence-transformers (shape verified at load)
+
+split:
+  files: { train: train.txt, valid: valid.txt, test: test.txt }
+  audit: strict                  # split_hash mismatch with baseline => reject (not warn)
+
+cold_buckets:
+  cold_item_freq_le: 5
+  cold_user_seq_len_le: 3
+  frequency_table: train_only    # violation => leakage (design doc §4.5)
+
+negatives:
+  pool: train_only
+  in_batch: 4
+  hard_min: 256
+  scheme: uniform
+  seed_derivation: neg_hash
+
+# Appendix-A parameters — the 12 values below must be resolved for the
+# config to leave the `blocked` state.
+appendix_a:
+  tau: { value: 0.07, status: resolved, rationale: "design doc §11#1" }
+  fuse: { value: mean, status: resolved, rationale: "design doc §11#2" }
+  q_proj: { value: "mlp2-256-256-gelu-ln-shared", status: resolved, rationale: "design doc §11#3" }
+  vclub_hidden: { value: 256, status: resolved, rationale: "design doc §11#4" }
+  vclub_clamp: { value: 6.0, status: resolved, rationale: "design doc §11#4" }
+  lambda_mi: { value: 0.05, status: resolved, rationale: "design doc §11#4" }
+  beta_vq: { value: 1.0, status: resolved, rationale: "design doc §11#5" }
+  neg_in_batch: { value: 4, status: resolved, rationale: "design doc §11#6" }
+  upstream_epochs: { value: 300, status: resolved, rationale: "design doc §11#7" }
+  patience_evals: { value: 20, status: resolved, rationale: "design doc §11#8; eval_interval=2 -> 40 epoch tolerance" }
+  eval_interval: { value: 2, status: resolved, rationale: "design doc §5.3" }
+  seeds: { value: [42, 2025, 2026], status: resolved, rationale: "design doc §5.5" }
+
+training:
+  epochs: 100
+  warmup_epochs: 20
+  batch_size: 256
+  amp_fp16: true
+  early_stop: by_eval_counter   # never an epoch-based patience (R14)
+
+seed: 42
+logging_interval: 10
+artifact_root: ./artifacts

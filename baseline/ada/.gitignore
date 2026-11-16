@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+artifacts/
+*.db
+frontend/node_modules/
+frontend/dist/
+.vite/
+.pytest_tmp/
+.tmp/
+.pytest_cache/
+frontend/vite.config.ts.timestamp-*.mjs

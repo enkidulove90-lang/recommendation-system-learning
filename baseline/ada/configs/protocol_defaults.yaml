@@ -1,0 +1,32 @@
+# Protocol defaults shared by every ADA run. Individual run configs override
+# these only via explicit, hash-tracked fields.
+protocol:
+  gates:
+    - id: C1
+      description: dataset/feature contract present and loadable
+      blocking: true
+    - id: C2
+      description: split audit passes (raw + semantic hashes, train-only cold table)
+      blocking: true
+    - id: C3
+      description: no unresolved Appendix-A parameter (config not blocked)
+      blocking: true
+    - id: C4
+      description: baseline comparison split_hash equality (reject, not warn)
+      blocking: true
+    - id: C5
+      description: feature health (finite values, declared shapes)
+      blocking: true
+  p0_gate:
+    id: G-P0
+    description: P0 must pass before any P1 transition
+  evaluation:
+    auc: full-item ranking
+    gauc: user-exposure-weighted mean of per-user AUC
+    cold: separate cold-item / cold-user buckets
+  deliverables:
+    - config_snapshot.json
+    - artifact_manifest.json
+    - metrics.json
+    - events.jsonl
+    - health_report.json
