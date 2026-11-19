@@ -7,6 +7,7 @@ import html
 import re
 from pathlib import Path
 from typing import Any, Protocol
+from xml.etree import ElementTree
 
 from .common import append_jsonl, jaccard, normalize_text, read_json, stable_hash, title_tokens, utc_now, write_json
 
@@ -136,6 +137,56 @@ def deduplicate_records(records: list[PaperRecord]) -> list[PaperRecord]:
         else:
             merged.append(record)
     return merged
+
+
+class ArxivSource:
+    """Public Atom feed candidate source; qualification remains downstream."""
+    atom_namespace = "http://www.w3.org/2005/Atom"
+    arxiv_namespace = "http://arxiv.org/schemas/atom"
+
+    def __init__(self, name: str = "arxiv", endpoint: str = "https://export.arxiv.org/api/query", max_results: int = 50) -> None:
+        self.name, self.endpoint, self.max_results = name, endpoint, max_results
+
+    def discover(self, cursor: dict[str, Any], query: dict[str, Any]) -> tuple[list[PaperRecord], dict[str, Any]]:
+        import httpx
+        term = str(query.get("search_query", "")).strip()
+        if not term:
+            raise ValueError("arXiv source requires search_query")
+        response = httpx.get(
+            self.endpoint,
+            params={"search_query": term, "start": 0, "max_results": min(int(query.get("max_results", self.max_results)), 2000), "sortBy": "submittedDate", "sortOrder": "descending"},
+            headers={"User-Agent": "redbook-paper-monitor/1.0"},
+            timeout=30,
+        )
+        response.raise_for_status()
+        seen = set(map(str, cursor.get("seen_ids", [])))
+        records: list[PaperRecord] = []
+        for entry in ElementTree.fromstring(response.content).findall(f"{{{self.atom_namespace}}}entry"):
+            arxiv_id = entry.findtext(f"{{{self.atom_namespace}}}id", "").rsplit("/", 1)[-1].split("v", 1)[0]
+            if not arxiv_id or arxiv_id in seen:
+                continue
+            text = lambda key: " ".join((entry.findtext(f"{{{self.atom_namespace}}}{key}", "") or "").split())
+            title = text("title")
+            if not title:
+                continue
+            published = text("published")
+            doi = " ".join((entry.findtext(f"{{{self.arxiv_namespace}}}doi", "") or "").split())
+            journal_ref = " ".join((entry.findtext(f"{{{self.arxiv_namespace}}}journal_ref", "") or "").split())
+            categories = [str(category.get("term", "")) for category in entry.findall(f"{{{self.atom_namespace}}}category") if category.get("term")]
+            urls = {"landing": f"https://arxiv.org/abs/{arxiv_id}", "pdf": f"https://arxiv.org/pdf/{arxiv_id}"}
+            records.append(PaperRecord.from_dict({
+                "title": title,
+                "abstract": text("summary"),
+                "identifiers": {key: value for key, value in {"arxiv": arxiv_id, "doi": doi}.items() if value},
+                "urls": urls,
+                "published_at": published or None,
+                "authors": [{"name": " ".join((a.findtext(f'{{{self.atom_namespace}}}name', '') or '').split())} for a in entry.findall(f"{{{self.atom_namespace}}}author")],
+                "venue": {"name": journal_ref, "year": published[:4], "status": "preprint" if not journal_ref else "published"},
+                "topics": categories,
+                "provenance": {"arxiv_query": term, "candidate_scope": str(query.get("scope", ""))},
+                "source_records": [{"source": self.name, "source_type": "arxiv", "source_id": arxiv_id, "url": urls["landing"], "fetched_at": utc_now(), "search_query": term}],
+            }))
+        return records, {"seen_ids": list(dict.fromkeys([*seen, *(r.identifiers["arxiv"] for r in records)]))[-1000:], "checked_at": utc_now(), "search_query": term}
 
 
 class JsonlSource:

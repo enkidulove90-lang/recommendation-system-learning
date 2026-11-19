@@ -13,7 +13,7 @@ from redbook.automation.images import build_manifest, compose_group, group_figur
 from redbook.automation.publishing import FilePublisher, render_package
 from redbook.automation.scheduling import PublishScheduler
 from redbook.automation.scoring import QualityScorerV2
-from redbook.automation.sources import JsonlSource, PaperRecord, SourceRunner, deduplicate_records
+from redbook.automation.sources import ArxivSource, JsonlSource, PaperRecord, SourceRunner, deduplicate_records
 
 
 class AutomationTests(unittest.TestCase):
@@ -72,6 +72,30 @@ class AutomationTests(unittest.TestCase):
             self.assertEqual(result["count"], 1)
             self.assertTrue(Path(result["raw_path"]).exists())
             self.assertTrue(Path(result["state_path"]).exists())
+
+    def test_arxiv_source_marks_candidate_as_preprint_and_keeps_query_evidence(self) -> None:
+        atom = b'''<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
+        <entry><id>http://arxiv.org/abs/2608.00001v2</id><title> Agentic Recommenders </title>
+        <summary> A verifiable recommender experiment. </summary><published>2026-08-02T00:00:00Z</published>
+        <author><name>Ada Lovelace</name></author><category term="cs.IR"/><arxiv:doi>10.1000/example</arxiv:doi></entry></feed>'''
+
+        class Response:
+            content = atom
+
+            def raise_for_status(self) -> None:
+                return None
+
+        from unittest.mock import patch
+        with patch("httpx.get", return_value=Response()):
+            records, cursor = ArxivSource(max_results=3).discover(
+                {}, {"search_query": 'all:"agentic recommender systems"', "scope": "domain"}
+            )
+
+        self.assertEqual(records[0].identifiers["doi"], "10.1000/example")
+        self.assertEqual(records[0].venue, {"name": "", "year": "2026", "status": "preprint"})
+        self.assertEqual(records[0].topics, ["cs.IR"])
+        self.assertEqual(records[0].provenance["candidate_scope"], "domain")
+        self.assertEqual(cursor["search_query"], 'all:"agentic recommender systems"')
 
     def test_composer_preserves_uncropped_panels(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
