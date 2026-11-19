@@ -8,7 +8,7 @@ created, changed, deleted, or publicly published during this acceptance run.
 | --- | --- | --- |
 | TC-01 | passed | `pytest_full.txt`; delivery adapter tests pass. |
 | TC-02 | simulated | `test_topic_binding_reopens_picker_after_each_selected_chip`; no separately approved canary was run. |
-| TC-03 | failed | `tc03_verify.json`: body mismatch; topics and PDF pass. |
+| TC-03 | failed | `tc03_verify.json` and `t3_reverify_2026-11-19.json`: body mismatch; topics and PDF pass. `t3_body_diff_2026-11-19.diff` confirms the platform draft lost the entire 局限段. |
 | TC-04 | passed | `test_incomplete_saved_draft_is_removed_after_readback` and orphan registry test. |
 | TC-05 | passed | `test_verified_staged_id_is_idempotent_without_platform_write`. |
 | TC-06 | passed | `test_note_help_exposes_draft_only_save_alias`. |

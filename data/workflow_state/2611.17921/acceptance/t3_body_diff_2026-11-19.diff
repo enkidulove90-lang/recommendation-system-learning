@@ -1,0 +1,16 @@
+--- current-note-spec
++++ saved-draft
+@@
+ 💻 代码状态：论文 arXiv 页面暂未列出官方 GitHub 仓库。
+-
+-⚠️ 局限
+-结论来自 MerRec 的离线实验和 HSTU 系列骨干；跨数据集、线上服务开销与其他骨干的迁移效果仍待验证。
+-
+-📎 论文：https://arxiv.org/abs/2611.17921
++[TAB]
++[TAB]
++📎 论文：https://arxiv.org/abs/2611.17921#论文分享[话题]# #推荐系统[话题]# #人工智能[话题]#
+
+Normalization check: NORM_EXPECTED_IN_ACTUAL=False
+Expected chars: 756
+Actual chars: 734

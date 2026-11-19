@@ -1,0 +1,15 @@
+{
+  "command": "python -m redbook.cli note 2611.17921 --verify --draft-id s:93a910ec-4bf2-4011-8a7a-e410146bdbbe",
+  "exit_code": 2,
+  "read_only": true,
+  "result": {
+    "ok": false,
+    "paper_id": "2611.17921",
+    "draft_id": "s:93a910ec-4bf2-4011-8a7a-e410146bdbbe",
+    "status": "failed",
+    "body_ok": false,
+    "topics_ok": true,
+    "pdf_ok": true,
+    "error": "saved body does not match expected text"
+  }
+}
