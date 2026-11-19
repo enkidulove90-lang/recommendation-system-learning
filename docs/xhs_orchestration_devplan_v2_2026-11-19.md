@@ -290,6 +290,9 @@ CREATE TABLE notify_outbox (
 - scheduler/strategy 死代码默认**删除**（M4 时执行），不留 deprecated 长尾。
 - exit code：人工类维持 2（兼容现状），可重试类新增 3。
 - 错误码表版本从 1 起，映射漂移靠契约测试拦截。
+- 注册表路线裁定已由 `9fec8b8` 落档并在 `eaf0e11`、`4daf1e9`、`06b80ca` 执行：在线
+  事实源已从 per-slug JSON 切换为 SQLite，JSON 仅保留为一次性迁移输入和只读审计。M3
+  余项是平台/账号维度的对账策略扩展与 WeChat 校验增强；不得恢复双写。
 
 ---
 

@@ -69,6 +69,26 @@ def test_failed_delivery_with_known_draft_is_registered_as_orphan(tmp_path, monk
     assert stored["draft_id"] == "s:deleted"
 
 
+def test_failed_delivery_without_draft_releases_saving_intent(tmp_path, monkeypatch):
+    staged_id, slug = "e" * 64, "paper-5"
+    package = tmp_path / "publish_queue" / staged_id
+    package.mkdir(parents=True)
+    (package / "xhs.json").write_text(json.dumps({"paper_id": slug}), encoding="utf-8")
+    publisher = XhsPublisher(tmp_path)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.is_available", lambda: True)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.OpenCliClient", lambda: type("Ready", (), {"preflight": lambda self: {}})())
+    monkeypatch.setattr(publisher, "_publish_opencli", lambda _: {"ok": False, "error_code": "E_TOPIC_UNAVAILABLE"})
+
+    result = publisher.publish(staged_id)
+
+    assert result["ok"] is False
+    stored = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite").find_delivery(
+        platform="xhs", account="default", staged_id=staged_id,
+    )
+    assert stored["state"] == "MANUAL"
+    assert stored["last_code"] == "E_TOPIC_UNAVAILABLE"
+
+
 def test_preflight_failure_never_calls_platform_write(tmp_path, monkeypatch):
     staged_id, slug = "c" * 64, "paper-3"
     package = tmp_path / "publish_queue" / staged_id[:32]

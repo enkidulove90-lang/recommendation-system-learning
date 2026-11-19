@@ -134,11 +134,23 @@ class SqliteDeliveryRegistry:
                 existing = connection.execute("""
                     SELECT * FROM deliveries
                     WHERE platform = ? AND account = ? AND staged_id = ?
-                      AND state IN (?, ?, ?)
-                """, (platform, account, staged_id, *_REUSABLE_STATES)).fetchone()
-                if existing:
+                """, (platform, account, staged_id)).fetchone()
+                if existing and str(existing["state"]) in _REUSABLE_STATES:
                     connection.execute("COMMIT")
                     return self._row(existing)
+                if existing:
+                    # A reconciled MANUAL/MISSING/ROLLED_BACK row retains the
+                    # uniqueness boundary. Reuse it for the new attempt rather
+                    # than inserting a duplicate staged delivery.
+                    connection.execute("""
+                        UPDATE deliveries
+                        SET run_id = ?, content_hash = ?, draft_id = NULL,
+                            state = 'SAVING', attempt = attempt + 1,
+                            last_code = NULL, evidence = NULL, updated_at = ?
+                        WHERE platform = ? AND account = ? AND staged_id = ?
+                    """, (run_id, content_hash, timestamp, platform, account, staged_id))
+                    connection.execute("COMMIT")
+                    return None
                 connection.execute("""
                     INSERT INTO deliveries (
                       run_id, staged_id, content_hash, platform, account, draft_id,
@@ -226,6 +238,12 @@ class SqliteDeliveryRegistry:
     def deliveries_with_code(self, code: str) -> list[dict[str, Any]]:
         with self._connection() as connection:
             rows = connection.execute("SELECT * FROM deliveries WHERE last_code = ?", (code,)).fetchall()
+        return [self._row(row) for row in rows]
+
+    def deliveries(self) -> list[dict[str, Any]]:
+        """Return registry records for read-only reconciliation and reporting."""
+        with self._connection() as connection:
+            rows = connection.execute("SELECT * FROM deliveries ORDER BY id").fetchall()
         return [self._row(row) for row in rows]
 
     def _set_state(self, *, platform: str, account: str, staged_id: str, state: str,

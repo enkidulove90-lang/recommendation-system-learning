@@ -347,49 +347,43 @@ class OpenCliXiaohongshuDelivery:
         self._browser("wait", "time", "1")
 
     def _bind_topics(self, topics: tuple[str, ...]) -> int:
-        """Bind each topic by clicking Creator Center's real topic chip.
+        """Bind each topic as a Creator Center entity, never as plain text.
 
-        Do not type ``#topic`` into the body: Creator Center offers the
-        approved topic entities directly via ``button#topicBtn`` and its
-        recommendation chips, while native keyboard delivery can target a
-        non-visible browser surface.  A marker readback after every click
-        proves that the selected chip became a platform entity.
+        Recommendations are convenient when available.  When the rotating
+        recommendation component is empty, query the creator's own entity
+        picker in the live ProseMirror editor, then click its exact ``.item``
+        result.  The temporary query text is replaced by a ``tiptap-topic``
+        node, so it is not a body-hashtag fallback.
         """
         bound = 0
         for topic in topics:
             present: list[str] = []
-            # The initial editor sometimes shows recommendations already;
-            # clicking its toggle in that state closes the panel.  Read first
-            # and only toggle when it is genuinely absent.  After a chip is
-            # selected the panel closes, so the later iterations reopen it.
             for _ in range(2):
                 self._browser("wait", "time", "0.5")
                 present = self._list_present_tags()
-                if present:
+                if topic in present:
                     break
-            if not present:
-                opened = self._eval(
-                    "(()=>{const b=document.querySelector('button#topicBtn');"
-                    "if(!b||b.offsetParent===null)return JSON.stringify({ok:false});"
-                    "b.click();return JSON.stringify({ok:true});})()",
-                    "open Creator Center topic picker",
-                )
-                if not isinstance(opened, dict) or not opened.get("ok"):
-                    raise TopicEntityUnavailable((topic,), detail="Creator Center topic picker is unavailable")
-                for _ in range(4):
-                    self._browser("wait", "time", "0.5")
-                    present = self._list_present_tags()
-                    if present:
-                        break
             before = self._topic_marker_count(topic)
-            if topic not in present:
-                raise TopicEntityUnavailable(
-                    (topic,), detail=f"Creator Center did not offer exact topic chip; available={present}"
+            if topic in present:
+                clicked = self._eval(self._click_chip_js(topic), f"click recommended topic chip for '{topic}'")
+                if not isinstance(clicked, dict) or not clicked.get("ok"):
+                    raise TopicEntityUnavailable((topic,), detail=f"topic chip click failed: {clicked}")
+            else:
+                queried = self._eval(self._insert_topic_query_js(topic), f"query real topic entity for '{topic}'")
+                if not isinstance(queried, dict) or not queried.get("ok"):
+                    raise TopicEntityUnavailable((topic,), detail=f"topic entity query failed: {queried}")
+
+            selected: dict | list = {}
+            for _ in range(8):
+                selected = self._eval(
+                    self._select_topic_entity_js(topic), f"select real topic entity for '{topic}'"
                 )
-            clicked = self._eval(self._click_chip_js(topic), f"click real topic chip for '{topic}'")
-            if not isinstance(clicked, dict) or not clicked.get("ok"):
-                raise TopicEntityUnavailable((topic,), detail=f"topic chip click failed: {clicked}")
-            self._browser("wait", "time", "0.8")
+                if isinstance(selected, dict) and selected.get("ok"):
+                    break
+                self._browser("wait", "time", "0.5")
+            if not isinstance(selected, dict) or not selected.get("ok"):
+                raise TopicEntityUnavailable((topic,), detail=f"topic entity selection failed: {selected}")
+            self._browser("wait", "time", "0.5")
             if self._topic_marker_count(topic) <= before:
                 raise TopicEntityUnavailable((topic,), detail="topic chip did not become a real '#topic[话题]' entity")
             bound += 1
@@ -448,7 +442,61 @@ class OpenCliXiaohongshuDelivery:
             "return JSON.stringify({ok:false});})(" + json.dumps(text) + ")"
         )
 
+    def _select_topic_entity_js(self, text: str) -> str:
+        """Click the entity row emitted after a recommendation chip enters ``#`` mode.
+
+        The current creator center uses a two-step interaction: its recommended
+        ``.tag`` first opens the topic suggestion state, then ``.item .name``
+        contains the real entity.  Clicking only the tag leaves a bare ``#`` in
+        the editor and does not populate the draft's structured ``hashTag``.
+        """
+        return (
+            "(function(want){"
+            "const norm=v=>(v||'').replace(/^#/,'').replace(/\\s+/g,' ').trim();"
+            "for(const name of document.querySelectorAll('.item .name')){"
+            "if(norm(name.innerText||name.textContent)===want){"
+            "const item=name.closest('.item')||name;item.click();"
+            "return JSON.stringify({ok:true,text:(name.innerText||name.textContent||'').trim()});}}"
+            "return JSON.stringify({ok:false,available:Array.from(document.querySelectorAll('.item .name'))"
+            ".map(n=>(n.innerText||n.textContent||'').trim()).slice(0,10)});})(" + json.dumps(text) + ")"
+        )
+
+    def _insert_topic_query_js(self, text: str) -> str:
+        """Append a picker query; a later entity click replaces it structurally."""
+        return (
+            "(function(topic){"
+            "const editor=Array.from(document.querySelectorAll('div.tiptap'))"
+            ".find(el=>el.isContentEditable&&el.offsetParent!==null);"
+            "if(!editor)return JSON.stringify({ok:false,reason:'no contentEditable body'});"
+            "editor.focus();const sel=window.getSelection();const range=document.createRange();"
+            "range.selectNodeContents(editor);range.collapse(false);sel.removeAllRanges();sel.addRange(range);"
+            "const ok=document.execCommand('insertText',false,'#'+topic);"
+            "editor.dispatchEvent(new Event('input',{bubbles:true}));"
+            "editor.dispatchEvent(new KeyboardEvent('keyup',{bubbles:true,key:topic.slice(-1)}));"
+            "return JSON.stringify({ok:ok,text:editor.innerText||''});})(" + json.dumps(text) + ")"
+        )
+
     def _attach_pdf(self, pdf_path: Path) -> None:
+        # Creator Center keeps the attachment input hidden just like the image
+        # input.  OpenCLI deliberately refuses hidden controls, so temporarily
+        # expose only the PDF input in this still-open editor session.
+        expose_js = (
+            "(()=>{const e=Array.from(document.querySelectorAll('input[type=file]'))"
+            ".find(n=>(n.accept||'').toLowerCase().includes('.pdf'));"
+            "if(!e)return JSON.stringify({ok:false,reason:'pdf input not hydrated'});"
+            "e.style.cssText='display:block!important;visibility:visible!important;"
+            "opacity:.01!important;position:fixed!important;left:0!important;top:0!important;"
+            "width:2px!important;height:2px!important;z-index:9999!important';"
+            "return JSON.stringify({ok:true,accept:e.accept||''});})()"
+        )
+        ready = {}
+        for _ in range(8):
+            ready = self._eval(expose_js, "expose PDF attachment input")
+            if ready.get("ok"):
+                break
+            self._browser("wait", "time", "2")
+        if not ready.get("ok"):
+            raise DeliveryError(f"PDF attachment input did not hydrate: {ready}")
         self._must("upload pdf", self._browser("upload", PDF_INPUT_SELECTOR, str(pdf_path)))
         # The file card only appears once the upload has been acknowledged.
         self._must("wait pdf visible",

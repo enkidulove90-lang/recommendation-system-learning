@@ -8,6 +8,34 @@ from .registry import SqliteDeliveryRegistry
 
 
 DraftFinder = Callable[[dict[str, Any]], str | None]
+DraftsClient = Callable[[], list[dict[str, Any]]]
+
+
+def list_orphan_candidates(registry: SqliteDeliveryRegistry, *,
+                           drafts_client: DraftsClient) -> list[dict[str, str]]:
+    """List platform drafts not backed by a verified registry record.
+
+    This inspection is deliberately read-only: it gives an operator the exact
+    candidates to reconcile without changing either the platform or registry.
+    """
+    by_draft_id = {
+        str(delivery["draft_id"]): delivery
+        for delivery in registry.deliveries()
+        if delivery.get("draft_id")
+    }
+    candidates: list[dict[str, str]] = []
+    for draft in drafts_client():
+        draft_id = str(draft.get("id") or "")
+        if not draft_id:
+            continue
+        delivery = by_draft_id.get(draft_id)
+        if delivery and delivery["state"] == "VERIFIED":
+            continue
+        candidates.append({
+            "draft_id": draft_id,
+            "reason": str(delivery["state"]) if delivery else "unregistered",
+        })
+    return candidates
 
 
 def reconcile_stale_saves(registry: SqliteDeliveryRegistry, *, stale_after_seconds: float,

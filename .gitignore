@@ -117,3 +117,6 @@ data/parsed/**/*.otf
 /xhs_drafts_dump.txt
 /e15_numbers_audit.txt
 /data/logs/*.jsonl
+
+.pytest_tmp/
+.pytest_cache/

@@ -407,9 +407,10 @@ class PDFParser(BaseSkill):
         try:
             file_content = file_path.read_bytes()
             with httpx.Client(timeout=httpx.Timeout(300.0, connect=30.0)) as client:
-                # 官方文档要求：上传时不要设置 Content-Type 请求头
-                # httpx 默认不会为 content= 设置 Content-Type，但显式移除以防万一
-                resp = client.put(upload_url, content=file_content, headers={"Content-Type": None})
+                # 官方文档要求：上传时不要设置 Content-Type 请求头。
+                # httpx 仅在请求头字典中不存在该键时才会省略它；传入 None
+                # 会在新版 httpx 的请求构造阶段触发类型错误。
+                resp = client.put(upload_url, content=file_content)
                 if resp.status_code not in (200, 201, 204):
                     logger.error("[MinerU] Upload PUT failed: HTTP %d %s", resp.status_code, resp.text[:300])
                     return None

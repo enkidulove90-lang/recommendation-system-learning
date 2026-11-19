@@ -36,6 +36,22 @@ python -m redbook.cli note <slug> --verify --draft-id <draft-id>
 
 `--save-draft` 强制 `draft_only`，并在话题绑定、图片计数或 CDP PDF 上传失败时删除本轮不完整草稿；`--verify` 仅回读校验，不会公开发布。`<draft-id>` 必须取自成功保存的回执。禁止在定时任务中改用旧的低层适配器命令或 `--publish`。
 
+## 金丝雀操作顺序
+
+金丝雀只可使用已通过 venue、公开 PDF、官方 GitHub、高清图片、真实话题实体和 PDF
+附件全部门槛的 note，并且必须先取得人工明确授权。全程保持 `draft_only`：先运行
+`opencli doctor`，再依次执行 `note <slug> --validate`、`--stage`、`--save-draft` 和
+`--verify --draft-id <draft-id>`；最后保存草稿箱截图及 verify 原始 JSON 到
+`data/workflow_state/<slug>/acceptance/`。任何一步失败都停止，不得改用 `--publish`。
+
+## 孤儿草稿处置
+
+`python -m redbook.cli note --reconcile` 只读读取平台草稿箱和 SQLite registry，输出
+未登记或未验证的 `orphans` 候选，以及 SAVING、VERIFIED、UNCERTAIN 的对账结果；该命令
+不会删除平台草稿。操作人须逐条检查候选并取得对应 draft ID 的二次人工批准，才可执行
+平台删除；删除后再把 registry 记为 `ROLLED_BACK` 并归档回读和批准证据。不得批量删除，
+也不得以 UNKNOWN/UNCERTAIN 结果推断为 mismatch。
+
 ## 旧脚本状态
 
 `redbook/scripts/publish*.py`、`cdp_*.py`、`upload_pdf_test.py` 和 `rebuild_july_2026_drafts.py` 是一次性或旧 `xhs-cli` 试验脚本。它们不再是生产入口。新增功能只写入 application / infrastructure / config，并由上述自动任务调用。

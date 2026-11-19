@@ -78,6 +78,7 @@ def main() -> None:
     )
     note.add_argument("--save-draft", action="store_true", help="save draft only; never publishes publicly")
     note.add_argument("--verify", action="store_true", help="read-only verify one saved draft")
+    note.add_argument("--reconcile", action="store_true", help="read-only reconcile saved-draft registry records")
     note.add_argument("--draft-id", help="ASCII draft ID required by --verify")
     note.add_argument("--data-root", type=Path, default=Path("data"))
     note.add_argument("--notes-dir", type=Path, help="override redbook/notes for tests")
@@ -143,25 +144,67 @@ def main() -> None:
         if args.list:
             _emit_json(list_notes(args.notes_dir))
             return
-        if not args.paper_id:
+        if not args.paper_id and not args.reconcile:
             parser.error("note requires <paper_id> (or --list)")
-        workflow = PaperCreationWorkflow(args.data_root)
-        selected = sum(bool(value) for value in (args.validate, args.stage, args.publish, args.save_draft, args.verify))
+        selected = sum(bool(value) for value in (
+            args.validate, args.stage, args.publish, args.save_draft, args.verify, args.reconcile,
+        ))
         if selected > 1:
             parser.error("note accepts exactly one action flag")
-        action = "verify" if args.verify else "save_draft" if args.save_draft else "publish" if args.publish else "stage" if args.stage else "validate"
+        action = (
+            "reconcile" if args.reconcile else "verify" if args.verify else
+            "save_draft" if args.save_draft else "publish" if args.publish else
+            "stage" if args.stage else "validate"
+        )
         if args.draft_id and not args.verify:
             parser.error("--draft-id is only valid with --verify")
         if args.verify and not args.draft_id:
             parser.error("--verify requires --draft-id")
-        if args.verify:
-            result = workflow.verify_note(args.paper_id, args.draft_id, notes_dir=args.notes_dir)
-        elif args.publish or args.save_draft:
-            result = workflow.publish_note(args.paper_id, notes_dir=args.notes_dir)
-        elif args.stage:
-            result = workflow.stage_note(args.paper_id, notes_dir=args.notes_dir)
+        if args.reconcile:
+            from redbook.orchestration.reconcile import (
+                list_orphan_candidates,
+                reconcile_stale_saves,
+                reconcile_uncertain_deliveries,
+                reconcile_verified_deliveries,
+            )
+            from redbook.orchestration.registry import SqliteDeliveryRegistry
+
+            registry = SqliteDeliveryRegistry(args.data_root / "state" / "orchestration.sqlite")
+            delivery = OpenCliXiaohongshuDelivery()
+            try:
+                delivery.opencli.preflight()
+                drafts = delivery._drafts()
+            except DeliveryError as error:
+                _emit_json(receipt_envelope(error, state="failed"))
+                raise SystemExit(exit_code_for(error.code)) from error
+            draft_ids = {str(item.get("id")) for item in drafts if item.get("id")}
+            result = {
+                "ok": True,
+                "results": [
+                    {"stale_saves": reconcile_stale_saves(
+                        registry, stale_after_seconds=300,
+                        find_draft=lambda entry: str(entry["draft_id"])
+                        if entry.get("draft_id") in draft_ids else None,
+                    )},
+                    {"verified_deliveries": reconcile_verified_deliveries(
+                        registry, draft_exists=lambda entry: str(entry.get("draft_id")) in draft_ids,
+                    )},
+                    {"uncertain_deliveries": reconcile_uncertain_deliveries(
+                        registry, verify=lambda _entry: "uncertain", rollback=lambda _entry: False,
+                    )},
+                ],
+                "orphans": list_orphan_candidates(registry, drafts_client=lambda: drafts),
+            }
         else:
-            result = workflow.validate_note(args.paper_id, notes_dir=args.notes_dir)
+            workflow = PaperCreationWorkflow(args.data_root)
+            if args.verify:
+                result = workflow.verify_note(args.paper_id, args.draft_id, notes_dir=args.notes_dir)
+            elif args.publish or args.save_draft:
+                result = workflow.publish_note(args.paper_id, notes_dir=args.notes_dir)
+            elif args.stage:
+                result = workflow.stage_note(args.paper_id, notes_dir=args.notes_dir)
+            else:
+                result = workflow.validate_note(args.paper_id, notes_dir=args.notes_dir)
         run_log.log_event(
             "note",
             action=action,

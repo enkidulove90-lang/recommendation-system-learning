@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from redbook.automation.publishing import WeChatPublisher, XhsPublisher
 from redbook.orchestration.reconcile import (
+    list_orphan_candidates,
     reconcile_stale_saves,
     reconcile_uncertain_deliveries,
     reconcile_verified_deliveries,
@@ -58,6 +59,24 @@ def test_reconcile_recovers_crashed_saving_without_repeating_platform_save(tmp_p
     )["draft_id"] == "s:recovered"
 
 
+def test_begin_save_reuses_manual_row_as_a_new_attempt(tmp_path) -> None:
+    registry = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite")
+    staged_id = "m" * 64
+    assert registry.begin_save(
+        run_id="run-1", content_hash=staged_id, platform="xhs", account="default", staged_id=staged_id,
+    ) is None
+    registry.mark_manual(platform="xhs", account="default", staged_id=staged_id)
+
+    assert registry.begin_save(
+        run_id="run-2", content_hash=staged_id, platform="xhs", account="default", staged_id=staged_id,
+    ) is None
+
+    retried = registry.find_delivery(platform="xhs", account="default", staged_id=staged_id)
+    assert retried["state"] == "SAVING"
+    assert retried["attempt"] == 2
+    assert retried["last_code"] is None
+
+
 def test_reconcile_marks_missing_when_verified_platform_draft_disappears(tmp_path) -> None:
     registry = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite")
     registry.begin_save(
@@ -92,6 +111,35 @@ def test_uncertain_verification_rolls_back_only_after_confirmed_mismatch(tmp_pat
     assert result == {"verified": 0, "rolled_back": 1, "uncertain": 0, "rollback_failed": 0}
     assert rollback_calls == ["s:uncertain"]
     assert registry.find_delivery(platform="xhs", account="default", staged_id="d" * 64)["state"] == "ROLLED_BACK"
+
+
+def test_list_orphan_candidates_is_read_only_and_excludes_verified_drafts(tmp_path) -> None:
+    registry = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite")
+    registry.begin_save(
+        run_id="run-1", content_hash="h" * 64, platform="xhs", account="default", staged_id="h" * 64,
+    )
+    registry.mark_saved_unverified(
+        platform="xhs", account="default", staged_id="h" * 64, draft_id="s:unverified",
+    )
+    registry.begin_save(
+        run_id="run-2", content_hash="i" * 64, platform="xhs", account="default", staged_id="i" * 64,
+    )
+    registry.mark_saved_unverified(
+        platform="xhs", account="default", staged_id="i" * 64, draft_id="s:verified",
+    )
+    registry.mark_verified(platform="xhs", account="default", staged_id="i" * 64)
+
+    candidates = list_orphan_candidates(registry, drafts_client=lambda: [
+        {"id": "s:unregistered"}, {"id": "s:unverified"}, {"id": "s:verified"},
+    ])
+
+    assert candidates == [
+        {"draft_id": "s:unregistered", "reason": "unregistered"},
+        {"draft_id": "s:unverified", "reason": "SAVED_UNVERIFIED"},
+    ]
+    assert registry.find_delivery(
+        platform="xhs", account="default", staged_id="h" * 64,
+    )["state"] == "SAVED_UNVERIFIED"
 
 
 def test_concurrent_saves_share_one_wal_delivery_row(tmp_path) -> None:

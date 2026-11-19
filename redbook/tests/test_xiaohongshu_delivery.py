@@ -169,7 +169,35 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
                           and "document.querySelectorAll('.tag')" in "\\n".join(call))
         self.assertIn("replace(/^#/,''", "\\n".join(click_eval))
 
-    def test_topic_binding_reopens_picker_after_each_selected_chip(self) -> None:
+    def test_topic_binding_selects_entity_row_after_recommendation_chip(self) -> None:
+        runner = FakeRunner(eval_rules={
+            "for(var t of document.querySelectorAll('.tag-group": '["AI论文"]',
+            "if((t.innerText||'').replace(/\\s+/g,' ').trim()===want)": '{"ok": true}',
+            "for(const name of document.querySelectorAll('.item .name'))": '{"ok": true}',
+        })
+        delivery = OpenCliXiaohongshuDelivery(runner=runner)
+        self.assertEqual(delivery._bind_topics(("AI论文",)), 1)
+        entity_eval = next(
+            call for call in runner.calls
+            if "browser" in call and "eval" in call and ".item .name" in "\n".join(call)
+        )
+        self.assertIn("closest('.item')", "\n".join(entity_eval))
+
+    def test_attach_pdf_exposes_hidden_pdf_input_before_upload(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            pdf = Path(folder) / "paper.pdf"
+            pdf.write_bytes(b"%PDF-1.7")
+            runner = FakeRunner()
+            OpenCliXiaohongshuDelivery(runner=runner)._attach_pdf(pdf)
+        expose = next(
+            call for call in runner.calls
+            if "browser" in call and "eval" in call and "pdf input not hydrated" in "\n".join(call)
+        )
+        self.assertIn("includes('.pdf')", "\n".join(expose))
+        upload = next(call for call in runner.calls if any("paper.pdf" in part for part in call))
+        self.assertIn('input[type="file"][accept*=".pdf"]', upload)
+
+    def test_topic_binding_queries_entity_when_recommendations_are_empty(self) -> None:
         runner = FakeRunner()
         delivery = OpenCliXiaohongshuDelivery(runner=runner)
         with patch.object(delivery, "_list_present_tags", side_effect=[
@@ -177,7 +205,7 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         ]), patch.object(delivery, "_topic_marker_count", side_effect=[0, 1, 0, 1]):
             self.assertEqual(delivery._bind_topics(("AI论文", "推荐系统")), 2)
         self.assertTrue(any(
-            "button#topicBtn" in "\n".join(call)
+            "insertText',false,'#'+topic" in "\n".join(call)
             for call in runner.calls if "eval" in call
         ))
         self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in runner.calls))
@@ -191,13 +219,17 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             runner = FakeRunner(eval_rules={
                 "for(var t of document.querySelectorAll('.tag-group": '[]',
+                "for(const name of document.querySelectorAll('.item .name'))": '{"ok":true,"data":"{\\"ok\\":false,\\"available\\":[]}"}',
             })
             with self.assertRaises(TopicEntityUnavailable):
                 OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(self._payload(Path(folder)))
         self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in runner.calls))
 
     def test_missing_creator_chip_has_stable_error_code(self) -> None:
-        runner = FakeRunner(eval_rules={"for(var t of document.querySelectorAll('.tag-group": '[]'})
+        runner = FakeRunner(eval_rules={
+            "for(var t of document.querySelectorAll('.tag-group": '[]',
+            "for(const name of document.querySelectorAll('.item .name'))": '{"ok":true,"data":"{\\"ok\\":false,\\"available\\":[]}"}',
+        })
         with self.assertRaises(TopicEntityUnavailable) as error:
             OpenCliXiaohongshuDelivery(runner=runner)._bind_topics(("AI论文",))
         self.assertEqual(error.exception.code, "E_TOPIC_UNAVAILABLE")

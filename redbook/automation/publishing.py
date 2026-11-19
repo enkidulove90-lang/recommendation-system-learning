@@ -393,6 +393,15 @@ class XhsPublisher(FilePublisher):
                     platform="xhs", account="default", staged_id=staged_id,
                     code=str(result.get("error_code", "E_SAVE_UNVERIFIED")),
                 )
+        else:
+            # A pre-save platform rejection (for example no exact topic
+            # entity) owns no draft ID, but its SAVING intent must still be
+            # terminal. Leaving it SAVING makes later corrected attempts look
+            # in-flight and silently reuse a null draft ID forever.
+            registry.mark_manual(
+                platform="xhs", account="default", staged_id=staged_id,
+                code=str(result.get("error_code", "E_SAVE_UNVERIFIED")),
+            )
         return result
 
     def _publish_opencli(self, data: dict[str, Any]) -> dict[str, Any]:
