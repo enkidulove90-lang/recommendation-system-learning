@@ -23,6 +23,7 @@ from .common import utc_now, write_json
 from ..infrastructure import opencli_runtime
 from ..services.xhs_content_gate import validate_visual_review, validate_xhs_content
 import subprocess
+from uuid import uuid4
 
 
 @dataclass
@@ -316,13 +317,26 @@ class XhsPublisher(FilePublisher):
         if not path.exists():
             return {"ok": False, "error": f"staged package not found: {path}"}
         data = json.loads(path.read_text(encoding="utf-8"))
+        from ..infrastructure.delivery_registry import DeliveryRegistry
+        slug = str(data.get("paper_id", ""))
+        existing = DeliveryRegistry(self.root, slug).find_verified(staged_id)
+        if existing:
+            return {"ok": True, "method": "registry", "draft_id": existing["draft_id"], "reused": True}
 
         if not opencli_runtime.is_available():
             return {
                 "ok": False, "method": "none",
                 "error": "OpenCLI not found; set OPENCLI_NODE and OPENCLI_MAIN",
             }
-        return self._publish_opencli(data)
+        result = self._publish_opencli(data)
+        draft_id = str(result.get("draft_id", ""))
+        if result.get("ok") and draft_id:
+            DeliveryRegistry(self.root, slug).record_verified(
+                uuid4().hex, staged_id, draft_id, {"ok": True, "method": result.get("method", "")}
+            )
+        elif draft_id:
+            DeliveryRegistry(self.root, slug).record_orphan(uuid4().hex, staged_id, draft_id, result)
+        return result
 
     def _publish_opencli(self, data: dict[str, Any]) -> dict[str, Any]:
         """通过 OpenCLI 创作者后台自动化创建草稿。
