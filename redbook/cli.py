@@ -73,6 +73,8 @@ def main() -> None:
     note.add_argument("--stage", action="store_true", help="write an immutable local review package")
     note.add_argument("--publish", action="store_true", help="legacy alias: save to the XHS draft box after human review")
     note.add_argument("--save-draft", action="store_true", help="save draft only; never publishes publicly")
+    note.add_argument("--verify", action="store_true", help="read-only verify one saved draft")
+    note.add_argument("--draft-id", help="ASCII draft ID required by --verify")
     note.add_argument("--data-root", type=Path, default=Path("data"))
     note.add_argument("--notes-dir", type=Path, help="override redbook/notes for tests")
     args = parser.parse_args()
@@ -132,11 +134,17 @@ def main() -> None:
         if not args.paper_id:
             parser.error("note requires <paper_id> (or --list)")
         workflow = PaperCreationWorkflow(args.data_root)
-        selected = sum(bool(value) for value in (args.validate, args.stage, args.publish, args.save_draft))
+        selected = sum(bool(value) for value in (args.validate, args.stage, args.publish, args.save_draft, args.verify))
         if selected > 1:
             parser.error("note accepts exactly one action flag")
-        action = "save_draft" if args.save_draft else "publish" if args.publish else "stage" if args.stage else "validate"
-        if args.publish or args.save_draft:
+        action = "verify" if args.verify else "save_draft" if args.save_draft else "publish" if args.publish else "stage" if args.stage else "validate"
+        if args.draft_id and not args.verify:
+            parser.error("--draft-id is only valid with --verify")
+        if args.verify and not args.draft_id:
+            parser.error("--verify requires --draft-id")
+        if args.verify:
+            result = workflow.verify_note(args.paper_id, args.draft_id, notes_dir=args.notes_dir)
+        elif args.publish or args.save_draft:
             result = workflow.publish_note(args.paper_id, notes_dir=args.notes_dir)
         elif args.stage:
             result = workflow.stage_note(args.paper_id, notes_dir=args.notes_dir)

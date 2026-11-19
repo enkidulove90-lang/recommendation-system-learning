@@ -233,3 +233,15 @@ def test_validate_does_not_require_image_files(tmp_path):
     blocked = workflow.stage_note(SAGE_ID, notes_dir=notes, repo_root=tmp_path)
     assert blocked["ok"] is False
     assert any("missing asset" in error for error in blocked["errors"])
+
+
+def test_verify_note_updates_checkpoint_only_after_pass(monkeypatch, tmp_path):
+    workflow = PaperCreationWorkflow(tmp_path / "queue_root")
+    monkeypatch.setattr(
+        "redbook.infrastructure.xiaohongshu_delivery.OpenCliXiaohongshuDelivery._verify_saved_draft",
+        lambda *_: {"ok": True, "body_ok": True, "topics_ok": True, "pdf_ok": True},
+    )
+    result = workflow.verify_note(SAGE_ID, "s:verified")
+    assert result["status"] == "passed"
+    checkpoint = workflow.load(SAGE_ID)
+    assert checkpoint.artifacts["verified_draft_id"] == "s:verified"

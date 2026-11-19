@@ -12,3 +12,10 @@ def test_note_help_exposes_draft_only_save_alias() -> None:
     assert result.returncode == 0
     assert "--save-draft" in result.stdout
     assert "draft" in result.stdout.lower()
+
+
+def test_note_help_exposes_read_only_verify() -> None:
+    result = subprocess.run([sys.executable, "-m", "redbook.cli", "note", "--help"], text=True, capture_output=True)
+    assert result.returncode == 0
+    assert "--verify" in result.stdout
+    assert "--draft-id" in result.stdout

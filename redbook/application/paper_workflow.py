@@ -175,3 +175,22 @@ class PaperCreationWorkflow:
             self._advance(self.load(paper_id), WorkflowStage.DRAFT_SAVED,
                           draft_id=str(receipt.get("draft_id", "")))
         return receipt
+
+    def verify_note(self, paper_id: str, draft_id: str, *, notes_dir: Path | None = None,
+                    repo_root: Path | None = None) -> dict[str, Any]:
+        """Read one saved draft without creating or changing a platform draft."""
+        from redbook.infrastructure.xiaohongshu_delivery import DraftPayload, OpenCliXiaohongshuDelivery
+        spec, package = self.build_note_package(paper_id, notes_dir=notes_dir, repo_root=repo_root)
+        payload = DraftPayload(
+            title=package.title, body=package.body_markdown,
+            image_paths=tuple(Path(path) for path in package.image_paths),
+            topics=tuple(package.metadata.get("topics", ())),
+            pdf_path=Path(package.metadata["pdf_path"]),
+        )
+        verification = OpenCliXiaohongshuDelivery()._verify_saved_draft(draft_id, payload)
+        passed = bool(verification.get("ok"))
+        if passed:
+            self._advance(self.load(paper_id), WorkflowStage.DRAFT_SAVED,
+                          verified_draft_id=draft_id, verification=verification)
+        return {"ok": passed, "paper_id": paper_id, "draft_id": draft_id,
+                "status": "passed" if passed else "failed", **verification}
