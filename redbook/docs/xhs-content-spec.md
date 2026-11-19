@@ -14,7 +14,7 @@
 redbook/notes/<slug>.yaml        ← 每篇唯一新增物：标题 / 定稿正文 / 图序 / 话题 / 链接 / 目检
         │
         ▼
-python -m redbook.cli note <slug> --list | --validate | --stage | --publish
+python -m redbook.cli note <slug> --list | --validate | --stage | --save-draft
         │
         ▼
 PaperCreationWorkflow.build_note_package()   ← 复用已有 checkpoint 状态机
@@ -95,13 +95,14 @@ MCP 侧（`redbook/mcp/server.py`）另暴露 `list_note_specs` / `validate_note
 python -m redbook.cli note --list                  # 列出全部 spec 与状态
 python -m redbook.cli note <slug> --validate      # 只跑内容闸门，不检查图片文件
 python -m redbook.cli note <slug> --stage         # 落盘不可变 review 包 + 推进 checkpoint
-python -m redbook.cli note <slug> --publish       # 人工目检后才投递草稿箱
+python -m redbook.cli note <slug> --save-draft    # 人工目检后才保存草稿箱，绝不公开发布
 ```
 
 `--validate` 刻意不检查图片文件是否存在：`data/parsed/**/*.png` 被 `.gitignore`
 挡掉，另一台机器 clone 后天然没有图；`--stage` 才检查图片与 PDF 并调用
 `XhsPublisher.validate()` 复核全部铁律。
 
+`--publish` 是 `--save-draft` 的废弃兼容别名，二者都只保存草稿，绝不公开发布。
 向后兼容仍保留 `compose-post` / `save-xhs-draft`（生成稿走 persona 模板），
 但新发一篇论文帖**只需新增一个 YAML**，不再新增 `.py`。
 
@@ -163,5 +164,5 @@ python -m pytest \
 - 同一个未保存的编辑器会话内完成：图 → 标题 → 正文 → 话题 → PDF → **最后**才存草稿。
 - 严禁「先存草稿再回草稿箱补附件」，CDP 上下文会丢失。
 - 话题必须绑定成平台真实实体，不靠正文里的 `#文本`。
-- 发布不幂等：同一 `staged_id` 重复 `publish` 会多建一条草稿；改内容要重新 stage（新 hash）。
+- 已核验的同一 `(slug, staged_id)` 会由 registry 返回原 `draft_id`，不得再次创建平台草稿；改内容须重新 stage（新 hash）。
 - 核验用 ASCII `draft_id` 子串匹配，不要用返回里的中文标题（PowerShell 5.1 按 GBK 解码会不可逆乱码）。

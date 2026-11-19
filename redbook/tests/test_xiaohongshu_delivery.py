@@ -121,10 +121,11 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
             delivery = ScriptedVerificationDelivery(
                 runner, {"ok": False, "error": "saved body does not match expected text"}
             )
-            with self.assertRaisesRegex(DeliveryError, "saved body does not match"):
+            with self.assertRaisesRegex(DeliveryError, "saved body does not match") as error:
                 delivery.deliver(self._payload(Path(folder)))
         self.assertEqual(delivery.checks, [("draft-1", "正文", ("AI论文",), "paper.pdf")])
         self.assertTrue(any("draft-delete" in call for call in runner.calls))
+        self.assertEqual(error.exception.code, "E_VERIFY_MISMATCH")
 
     def test_open_editor_releases_stale_session_before_navigating(self) -> None:
         runner = FakeRunner()
@@ -167,6 +168,19 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
                           and "browser" in call and "eval" in call
                           and "document.querySelectorAll('.tag')" in "\\n".join(call))
         self.assertIn("replace(/^#/,''", "\\n".join(click_eval))
+
+    def test_topic_binding_reopens_picker_after_each_selected_chip(self) -> None:
+        runner = FakeRunner()
+        delivery = OpenCliXiaohongshuDelivery(runner=runner)
+        with patch.object(delivery, "_list_present_tags", side_effect=[
+            ["AI论文"], [], [], ["推荐系统"],
+        ]), patch.object(delivery, "_topic_marker_count", side_effect=[0, 1, 0, 1]):
+            self.assertEqual(delivery._bind_topics(("AI论文", "推荐系统")), 2)
+        self.assertTrue(any(
+            "button#topicBtn" in "\n".join(call)
+            for call in runner.calls if "eval" in call
+        ))
+        self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in runner.calls))
 
     def test_missing_creator_chip_raises_unavailable_without_native_typing(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

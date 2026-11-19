@@ -41,6 +41,25 @@ def test_successful_platform_delivery_is_registered(tmp_path, monkeypatch):
     assert DeliveryRegistry(tmp_path, slug).find_verified(staged_id)["draft_id"] == "s:new"
 
 
+def test_failed_delivery_with_known_draft_is_registered_as_orphan(tmp_path, monkeypatch):
+    staged_id, slug = "d" * 64, "paper-4"
+    package = tmp_path / "publish_queue" / staged_id
+    package.mkdir(parents=True)
+    (package / "xhs.json").write_text(json.dumps({"paper_id": slug}), encoding="utf-8")
+    publisher = XhsPublisher(tmp_path)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.is_available", lambda: True)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.OpenCliClient", lambda: type("Ready", (), {"preflight": lambda self: {}})())
+    monkeypatch.setattr(publisher, "_publish_opencli", lambda _: {"ok": False, "draft_id": "s:deleted", "error_code": "E_VERIFY_MISMATCH"})
+
+    result = publisher.publish(staged_id)
+
+    assert result["ok"] is False
+    registry = DeliveryRegistry(tmp_path, slug)
+    assert registry.find_verified(staged_id) is None
+    assert registry._read()["runs"][-1]["status"] == "orphan"
+    assert registry._read()["runs"][-1]["draft_id"] == "s:deleted"
+
+
 def test_preflight_failure_never_calls_platform_write(tmp_path, monkeypatch):
     staged_id, slug = "c" * 64, "paper-3"
     package = tmp_path / "publish_queue" / staged_id[:32]

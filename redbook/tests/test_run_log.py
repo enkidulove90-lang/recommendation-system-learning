@@ -76,7 +76,9 @@ def test_logging_handler_filters_third_party_noise(tmp_path: Path) -> None:
         noisy = logging.LogRecord("httpx", logging.INFO, __file__, 1, "external", (), None)
         project = logging.LogRecord("redbook.cli", logging.INFO, __file__, 1, "local", (), None)
         assert handler.filter(noisy) is False
-        assert handler.filter(project) is True
+        # Python 3.12+ may return the original LogRecord from Filterer.filter;
+        # both that and True mean the handler accepts the record.
+        assert bool(handler.filter(project)) is True
         assert run_log.read_events(path) == []
     finally:
         logger.handlers.clear()

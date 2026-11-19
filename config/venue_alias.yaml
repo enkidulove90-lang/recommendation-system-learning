@@ -1,0 +1,17 @@
+# Title prefixes accepted by the frozen seven-section content contract.
+# Keep this as YAML: the repository-wide .gitignore excludes new *.json files.
+aliases:
+  sigir: SIGIR
+  kdd: KDD
+  www: WWW
+  recsys: RecSys
+  neurips: NeurIPS
+  icml: ICML
+  iclr: ICLR
+  acl: ACL
+  emnlp: EMNLP
+  cvpr: CVPR
+  iccv: ICCV
+  eccv: ECCV
+  jmlr: JMLR
+  tmlr: TMLR

@@ -71,7 +71,10 @@ def main() -> None:
     note.add_argument("--list", action="store_true", help="list all note specs")
     note.add_argument("--validate", action="store_true", help="content gate only (the safe default)")
     note.add_argument("--stage", action="store_true", help="write an immutable local review package")
-    note.add_argument("--publish", action="store_true", help="legacy alias: save to the XHS draft box after human review")
+    note.add_argument(
+        "--publish", action="store_true",
+        help="deprecated alias of --save-draft; saves a draft only and never publishes publicly",
+    )
     note.add_argument("--save-draft", action="store_true", help="save draft only; never publishes publicly")
     note.add_argument("--verify", action="store_true", help="read-only verify one saved draft")
     note.add_argument("--draft-id", help="ASCII draft ID required by --verify")

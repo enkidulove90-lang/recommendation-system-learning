@@ -2,6 +2,13 @@
 Smoke test for Xiaohongshu bot - verifies login and basic operations.
 """
 
+# This module opens a real browser and may prompt for QR login.  It is a
+# manual operational smoke check, not a deterministic pytest test; importing
+# it during collection must never require a browser bridge or account session.
+if __name__ != "__main__":
+    import pytest
+    pytest.skip("manual Xiaohongshu browser smoke test; run python smoke_test.py explicitly", allow_module_level=True)
+
 import os
 import sys
 import logging

@@ -35,7 +35,8 @@ description: >
 ## 1. 铁律：一篇一个 spec，一条命令
 
 **发新帖只新增一个 `redbook/notes/<slug>.yaml`，不新增 .py。**
-唯一运行入口是 `python -m redbook.cli note <slug> --validate | --stage | --publish`。
+唯一运行入口是 `python -m redbook.cli note <slug> --validate | --stage | --save-draft`。
+`--publish` 仅是兼容别名，仍然只保存草稿，绝不公开发布。
 
 禁止：
 - 新建 `build_xhs_draft_<name>.py` 手写 `BODY`（14 个历史脚本已归档到 `archive/xhs_drafts/`，只作溯源）；
@@ -94,7 +95,7 @@ cp redbook/notes/2601.21452.yaml redbook/notes/<slug>.yaml
 python -m redbook.cli note --list
 python -m redbook.cli note <slug> --validate
 python -m redbook.cli note <slug> --stage
-python -m redbook.cli note <slug> --publish
+python -m redbook.cli note <slug> --save-draft
 ```
 
 `--validate` 不检查图片文件是否存在（另一台机器 clone 后没有 `data/parsed/*.png`），

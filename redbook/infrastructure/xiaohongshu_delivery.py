@@ -37,7 +37,7 @@ import time
 from typing import Callable
 
 from . import opencli_runtime
-from .delivery_errors import DeliveryError, E_TOPIC_UNAVAILABLE
+from .delivery_errors import DeliveryError, E_TOPIC_UNAVAILABLE, E_VERIFY_MISMATCH
 from .opencli_runtime import OpenCliClient
 
 
@@ -629,7 +629,11 @@ class OpenCliXiaohongshuDelivery:
             verification = self._verify_saved_draft(str(draft["id"]), payload)
             if not verification.get("ok"):
                 self._delete(str(draft["id"]))
-                raise DeliveryError(f"saved draft verification failed: {verification.get('error') or verification}")
+                raise DeliveryError(
+                    f"saved draft verification failed: {verification.get('error') or verification}",
+                    E_VERIFY_MISMATCH,
+                    {**verification, "draft_id": str(draft["id"])},
+                )
         return draft
 
     def deliver(self, payload: DraftPayload) -> DeliveryReceipt:

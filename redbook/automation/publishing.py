@@ -424,7 +424,16 @@ class XhsPublisher(FilePublisher):
         try:
             receipt = OpenCliXiaohongshuDelivery().deliver(payload)
         except DeliveryError as exc:
-            return {"ok": False, "method": "opencli-cdp", "error": str(exc)}
+            return {
+                "ok": False,
+                "method": "opencli-cdp",
+                "error": str(exc),
+                "error_code": exc.code,
+                "error_details": exc.details,
+                # Verification failures delete only this just-created draft,
+                # but retain its ID in the registry as an auditable orphan.
+                "draft_id": str(exc.details.get("draft_id", "")),
+            }
         return {
             "ok": True, "method": "opencli-cdp", "draft_id": receipt.draft_id,
             "topics": list(receipt.topics), "image_count": receipt.image_count,

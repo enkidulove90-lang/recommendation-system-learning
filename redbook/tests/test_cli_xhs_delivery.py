@@ -11,7 +11,9 @@ def test_note_help_exposes_draft_only_save_alias() -> None:
     )
     assert result.returncode == 0
     assert "--save-draft" in result.stdout
-    assert "draft" in result.stdout.lower()
+    assert "--publish" in result.stdout
+    assert "deprecated alias of --save-draft" in result.stdout
+    assert "never publishes publicly" in result.stdout
 
 
 def test_note_help_exposes_read_only_verify() -> None:

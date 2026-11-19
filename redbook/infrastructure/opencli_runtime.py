@@ -22,14 +22,18 @@ from functools import lru_cache
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 from typing import Any, Protocol
+
+import yaml
 
 from .delivery_errors import DeliveryError, E_OPENCLI_UNAVAILABLE, E_PREFLIGHT_BLOCKED, E_RESPONSE_SHAPE
 
 #: Relative path of the OpenCLI entry point inside a Node installation.
 _MAIN_REL = Path("node_modules/@jackwener/opencli/dist/src/main.js")
+_TOOLCHAIN_CONFIG = Path(__file__).resolve().parents[2] / "config" / "xhs_content_rules.yaml"
 
 #: Directories that may contain a Node distribution shipping OpenCLI.
 _NODE_HINTS: tuple[Path, ...] = (
@@ -97,9 +101,30 @@ class OpenCliClient:
     def preflight(self) -> dict[str, object]:
         """Fail closed before any browser-backed draft write."""
         status = self.doctor()
-        if not status["daemon_running"] or not status["extension_connected"] or status["extension_outdated"]:
-            raise DeliveryError("OpenCLI bridge preflight failed", E_PREFLIGHT_BLOCKED, status)
+        minimum = _minimum_extension_version()
+        version = str(status["extension_version"])
+        version_too_old = bool(minimum and version and _version_parts(version) < _version_parts(minimum))
+        if (not status["daemon_running"] or not status["extension_connected"]
+                or status["extension_outdated"] or version_too_old):
+            raise DeliveryError(
+                "OpenCLI bridge preflight failed",
+                E_PREFLIGHT_BLOCKED,
+                {**status, "minimum_extension_version": minimum, "version_too_old": version_too_old},
+            )
         return status
+
+
+def _version_parts(value: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in re.findall(r"\d+", value))
+
+
+def _minimum_extension_version() -> str:
+    """Read the repository policy instead of duplicating version thresholds."""
+    try:
+        data = yaml.safe_load(_TOOLCHAIN_CONFIG.read_text(encoding="utf-8")) or {}
+    except OSError:
+        return ""
+    return str(dict(data.get("toolchain", {})).get("opencli_extension_min_version", "")).strip()
 
 
 @dataclass(frozen=True)

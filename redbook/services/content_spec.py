@@ -6,7 +6,7 @@
 - **平台 20 字上限为硬预算，前缀计入**：合成标题超过 20 个显示字符抛 ``TitleHookLengthError``。
 - Hook：无 venue 时 15-20（只计汉字/字母/数字，标点、空白、emoji 不计）；有 venue 时前缀
   消耗预算，Hook 只要求非空，总长不超过 20 显示字符。
-- VenueAlias 必须在 ``config/venue_alias.json`` 登记，未登记抛 ``VenueAliasUnregistered``。
+- VenueAlias 必须在 ``config/venue_alias.yaml`` 登记，未登记抛 ``VenueAliasUnregistered``。
 
 正文规则：
 - 固定 7 段，顺序固定，每段非空；缺失写 ``原文未披露``，禁止虚构。
@@ -19,9 +19,10 @@
 """
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
+
+import yaml
 
 #: 固定 7 段题头（顺序即正文段序，题头行必须与常量整行相等）。
 SECTION_HEADERS: tuple[str, ...] = (
@@ -43,15 +44,15 @@ HOOK_MIN, HOOK_MAX = 15, 20
 #: 平台标题硬限制（显示字符数），前缀计入预算。
 PLATFORM_TITLE_LIMIT = 20
 
-#: venue 别名表默认路径（仓库根 config/venue_alias.json）。
-_VENUE_ALIAS_PATH = Path(__file__).resolve().parents[2] / "config" / "venue_alias.json"
+#: venue 别名表默认路径（仓库根 config/venue_alias.yaml）。
+_VENUE_ALIAS_PATH = Path(__file__).resolve().parents[2] / "config" / "venue_alias.yaml"
 
 #: 视为 Markdown 的最小特征集（正文出现即失败）。
 _MARKDOWN_MARKERS: tuple[str, ...] = ("**", "__", "~~", "`", "](")
 
 
 class VenueAliasUnregistered(ValueError):
-    """venue 未在 venue_alias.json 登记。"""
+    """venue 未在 venue_alias.yaml 登记。"""
 
 
 class TitleHookLengthError(ValueError):
@@ -73,8 +74,8 @@ class MarkdownInBodyError(ValueError):
 def load_venue_alias(path: Path | None = None) -> dict[str, str]:
     """加载 venue 别名表（键已 casefold）。"""
     source = path or _VENUE_ALIAS_PATH
-    data = json.loads(source.read_text(encoding="utf-8"))
-    return {str(key).strip().casefold(): str(value).strip() for key, value in data["aliases"].items()}
+    data = yaml.safe_load(source.read_text(encoding="utf-8")) or {}
+    return {str(key).strip().casefold(): str(value).strip() for key, value in dict(data.get("aliases", {})).items()}
 
 
 def hook_weight(text: str) -> int:
@@ -105,7 +106,7 @@ def validate_title(venue: str | None, year: int | str | None, hook: str) -> str:
         alias = load_venue_alias().get(venue.strip().casefold())
         if alias is None:
             raise VenueAliasUnregistered(
-                f"venue {venue!r} is not registered in config/venue_alias.json; register it first"
+                f"venue {venue!r} is not registered in config/venue_alias.yaml; register it first"
             )
         year_text = str(year).strip() if year is not None else ""
         if year_text:

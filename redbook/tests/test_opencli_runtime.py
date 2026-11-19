@@ -45,3 +45,13 @@ def test_preflight_blocks_outdated_extension() -> None:
     with pytest.raises(Exception) as error:
         client.preflight()
     assert getattr(error.value, "code", None) == "E_PREFLIGHT_BLOCKED"
+
+
+def test_preflight_blocks_extension_below_configured_minimum() -> None:
+    client = OpenCliClient(FakeRuntime(
+        '{"ok":true,"data":{"daemonRunning":true,"extensionConnected":true,'
+        '"extensionVersion":"1.0.26","extensionOutdated":false}}'
+    ))
+    with pytest.raises(Exception) as error:
+        client.preflight()
+    assert getattr(error.value, "code", None) == "E_PREFLIGHT_BLOCKED"
