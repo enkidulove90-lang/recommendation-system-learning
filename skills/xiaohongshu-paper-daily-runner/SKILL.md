@@ -15,8 +15,10 @@ repository, URL-only PDF, or public publish action.
    exact sequence, commands, acceptance checks, and recovery matrix.
 2. Use `academic-search` and `arxiv` for discovery and verification. Use
    `xiaohongshu-paper-brief` for evidence-bound post text.
-3. Use `python -m redbook.cli save-xhs-draft` as the only platform delivery
-   entry point. Its only allowed terminal state is `saved_draft_only`.
+3. Use the note-spec delivery sequence as the only platform entry point:
+   `python -m redbook.cli note <slug> --save-draft`, then
+   `python -m redbook.cli note <slug> --verify --draft-id <draft-id>`.
+   It only saves a draft; it never publicly publishes a note.
 4. Start or change the discovery cadence with:
 
    ```powershell

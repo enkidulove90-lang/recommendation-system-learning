@@ -3,8 +3,9 @@
 This runner deliberately stops at a local qualification queue.  The current
 project has no unattended verifier for official GitHub, MinerU, or source
 figures, so creating a Xiaohongshu draft here would weaken the configured hard
-gates.  A qualified workflow may consume this queue and invoke the one
-supported ``save-xhs-draft`` entry point later.
+gates.  A qualified workflow may consume this queue and invoke the supported
+``note <slug> --save-draft`` entry point, followed by ``note <slug> --verify``,
+only after the required human review.
 """
 from __future__ import annotations
 

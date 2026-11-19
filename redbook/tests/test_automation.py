@@ -17,6 +17,23 @@ from redbook.automation.sources import ArxivSource, JsonlSource, PaperRecord, So
 
 
 class AutomationTests(unittest.TestCase):
+    def test_daily_delivery_contract_uses_note_save_and_verify(self) -> None:
+        repository = Path(__file__).resolve().parents[2]
+        pipeline = (repository / "redbook" / "docs" / "daily-draft-pipeline.md").read_text(encoding="utf-8")
+        runner = (repository / "redbook" / "automation" / "daily_runner.py").read_text(encoding="utf-8")
+        daily_skill = (repository / "skills" / "xiaohongshu-paper-daily-runner" / "SKILL.md").read_text(encoding="utf-8")
+        workflow = (repository / "skills" / "xiaohongshu-paper-daily-runner" / "references" / "workflow.md").read_text(encoding="utf-8")
+
+        self.assertIn("python -m redbook.cli note <slug> --save-draft", pipeline)
+        self.assertIn("python -m redbook.cli note <slug> --verify --draft-id <draft-id>", pipeline)
+        self.assertNotIn("python -m redbook.cli save-xhs-draft", pipeline)
+        self.assertIn("``note <slug> --save-draft``", runner)
+        self.assertIn("``note <slug> --verify``", runner)
+        self.assertIn("python -m redbook.cli note <slug> --save-draft", daily_skill)
+        self.assertIn("python -m redbook.cli note <slug> --verify --draft-id <draft-id>", workflow)
+        self.assertNotIn("python -m redbook.cli save-xhs-draft", daily_skill)
+        self.assertNotIn("python -m redbook.cli save-xhs-draft", workflow)
+
     def test_deduplicate_merges_identifier_records(self) -> None:
         left = PaperRecord.from_dict({"title": "A Paper", "identifiers": {"arxiv": "2607.00001"}, "source_records": [{"source_type": "arxiv"}]})
         right = PaperRecord.from_dict({"title": "A Paper Final", "identifiers": {"doi": "10.1/example", "arxiv": "2607.00001"}, "urls": {"pdf": "https://example/pdf"}, "source_records": [{"source_type": "proceedings"}]})

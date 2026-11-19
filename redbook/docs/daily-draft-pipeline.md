@@ -25,17 +25,16 @@
 5. Browser Bridge CDP 成功将本地 PDF 作为文件组件添加到草稿；
 6. 仅保存草稿，禁止自动公开发布。
 
-交付命令仅有一个：
+内容声明、附件和平台投递均收束到同一篇 note 的单一入口。定时任务只生成并审查本地候选；人工确认后，按顺序执行：
 
 ```powershell
-python -m redbook.cli save-xhs-draft `
-  --draft data/workflow_state/<paper>/research_translator_draft.json `
-  --image <高清图1> --image <高清图2> --image <高清图3> --image <详情页> `
-  --pdf data/papers/<paper>.pdf `
-  --output data/workflow_state/<paper>/delivery_receipt.json
+python -m redbook.cli note <slug> --validate
+python -m redbook.cli note <slug> --stage
+python -m redbook.cli note <slug> --save-draft
+python -m redbook.cli note <slug> --verify --draft-id <draft-id>
 ```
 
-命令强制 `draft_only`，并在话题绑定、图片计数或 CDP PDF 上传失败时删除不完整草稿。
+`--save-draft` 强制 `draft_only`，并在话题绑定、图片计数或 CDP PDF 上传失败时删除本轮不完整草稿；`--verify` 仅回读校验，不会公开发布。`<draft-id>` 必须取自成功保存的回执。禁止在定时任务中改用旧的低层适配器命令或 `--publish`。
 
 ## 旧脚本状态
 

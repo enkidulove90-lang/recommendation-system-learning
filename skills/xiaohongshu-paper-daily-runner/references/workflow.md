@@ -49,20 +49,24 @@ fallbacks. Never pad with a cover, unreadable crop, or duplicate figure.
 ## 4. Compose
 
 Use `xiaohongshu-paper-brief` or an explicitly chosen persona. Include arXiv,
-PDF, and official GitHub links; only write evidence-supported claims. Save JSON
-with title/body/topics/comment prompt. Use real concrete topics, no hashtag
+PDF, and official GitHub links; only write evidence-supported claims. Create a
+single `redbook/notes/<slug>.yaml` spec with title/body/topics/comment prompt,
+assets, and visual-review evidence. Use real concrete topics, no hashtag
 fallback. Give a readiness test a unique title of at most 20 characters.
 
 ## 5. Deliver the draft
 
 ```powershell
-python -m redbook.cli save-xhs-draft --draft <draft.json> --title <unique-title> --image <figure-1> --image <figure-2> --image <figure-3> --image <figure-4> [--image <figure-5> ... --image <figure-9>] --pdf data/papers/<id>.pdf --output data/workflow_state/<id>/delivery_receipt.json
+python -m redbook.cli note <slug> --validate
+python -m redbook.cli note <slug> --stage
+python -m redbook.cli note <slug> --save-draft
+python -m redbook.cli note <slug> --verify --draft-id <draft-id>
 ```
 
 Required ordering in one persistent editor: images/text → native topic query →
 click exact suggestion → native Enter → verify `a.tiptap-topic[data-topic]`
 by JSON `name` → PDF upload and visible filename → save draft → draft-list
-receipt.
+receipt → read-only verify with the returned `<draft-id>`.
 
 If a topic is unresolved, skip; do not use a hashtag. If PDF is not visible,
 stop before save. If auto-save occurs, resume only with

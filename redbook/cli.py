@@ -16,6 +16,7 @@ from redbook.services.xhs_content_gate import ContentSpecError
 from redbook.infrastructure.xiaohongshu_delivery import (
     DraftPayload, OpenCliXiaohongshuDelivery, build_deliver_payload,
 )
+from redbook.infrastructure.delivery_errors import DeliveryError, exit_code_for, receipt_envelope
 from redbook.infrastructure import run_log
 
 
@@ -119,7 +120,15 @@ def main() -> None:
         except ValueError as error:
             _emit_json({"error": str(error)})
             raise SystemExit(2) from error
-        receipt = OpenCliXiaohongshuDelivery().deliver(payload)
+        try:
+            receipt = OpenCliXiaohongshuDelivery().deliver(payload)
+        except DeliveryError as error:
+            value = receipt_envelope(error, state="failed")
+            if args.output:
+                args.output.parent.mkdir(parents=True, exist_ok=True)
+                args.output.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+            _emit_json(value)
+            raise SystemExit(exit_code_for(error.code)) from error
         value = {
             "draft_id": receipt.draft_id, "title": receipt.title, "image_count": receipt.image_count,
             "topics": list(receipt.topics), "pdf_attachment": receipt.pdf_name, "state": "saved_draft_only",
@@ -160,9 +169,20 @@ def main() -> None:
             ok=bool(result.get("ok")),
             status="ok" if result.get("ok") else "failed",
         )
-        _emit_json(result)
         if not result.get("ok"):
+            error_code = result.get("error_code")
+            if error_code:
+                details = result.get("error_details")
+                error = DeliveryError(
+                    str(result.get("error", "note action failed")),
+                    str(error_code),
+                    details if isinstance(details, dict) else None,
+                )
+                _emit_json(receipt_envelope(error, state="failed"))
+                raise SystemExit(exit_code_for(error.code))
+            _emit_json(result)
             raise SystemExit(2)
+        _emit_json(result)
 
 
 if __name__ == "__main__":
