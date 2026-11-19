@@ -114,7 +114,7 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         self.assertEqual(error.exception.code, "E_PREFLIGHT_BLOCKED")
         self.assertFalse(any("browser" in call for call in runner.calls))
 
-    def test_incomplete_saved_draft_is_removed_after_readback(self) -> None:
+    def test_unreadable_saved_draft_is_retained_for_reconciliation(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             drafts = ('[]', '[{"id":"draft-1", "title":"论文快报", "images":1}]')
             runner = FakeRunner(drafts=drafts)
@@ -124,8 +124,8 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
             with self.assertRaisesRegex(DeliveryError, "saved body does not match") as error:
                 delivery.deliver(self._payload(Path(folder)))
         self.assertEqual(delivery.checks, [("draft-1", "正文", ("AI论文",), "paper.pdf")])
-        self.assertTrue(any("draft-delete" in call for call in runner.calls))
-        self.assertEqual(error.exception.code, "E_VERIFY_MISMATCH")
+        self.assertFalse(any("draft-delete" in call for call in runner.calls))
+        self.assertEqual(error.exception.code, "E_VERIFY_UNCERTAIN")
 
     def test_open_editor_releases_stale_session_before_navigating(self) -> None:
         runner = FakeRunner()
