@@ -148,6 +148,15 @@ python -m pytest \
 
 当前基线：`63 passed, 11 subtests passed`。
 
+## 7.1 Platform Facts（PF，适配层不可绕过）
+
+- **PF-1**：Creator Center 推荐话题芯片展示文本可带 `#` 前缀；比较和点击前必须归一化，但正文不得写入字面量话题。
+- **PF-2**：原生 `browser type` 不能作为话题绑定路径；点击真实 `.tag` 芯片后推荐面板会收起，下一实体必须重新读取并按需展开。
+- **PF-3**：OpenCLI 2.x JSON 可能包装为 `{ "ok": true, "data": ... }`；所有 list/eval/doctor 消费方必须经统一客户端解包。
+- **PF-4**：草稿成功必须按同一 `draft_id` 回读正文、真实话题和 `fileRelate` PDF 元数据；任一不符只删除本次新建草稿。
+
+结构化错误码由 `redbook.infrastructure.delivery_errors` 定义；兼容版本、残稿策略和暂存目录格式由 `config/xhs_content_rules.yaml:toolchain` 定义。
+
 ## 8. 发布侧铁律（沿用既有实现）
 
 - 只存草稿，不公开发布；`state = saved_draft_only`。

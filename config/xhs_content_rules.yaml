@@ -72,3 +72,10 @@ visual_review_pending_values:
   - none
   - "false"
   - no
+
+# 平台事实与运维门禁：投递适配层必须读此处，而不是把版本/残稿策略散落在脚本中。
+toolchain:
+  opencli_extension_min_version: "1.0.27"
+  require_connected_extension: true
+  orphan_policy: delete_current_unverified_only
+  staged_directory_format: full_content_hash_64hex

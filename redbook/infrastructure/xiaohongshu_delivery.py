@@ -37,10 +37,7 @@ import time
 from typing import Callable
 
 from . import opencli_runtime
-
-
-class DeliveryError(RuntimeError):
-    """A platform-side prerequisite was not completed; never silently downgrade."""
+from .delivery_errors import DeliveryError, E_TOPIC_UNAVAILABLE
 
 
 def build_deliver_payload(args) -> "DraftPayload":
@@ -79,7 +76,9 @@ class TopicEntityUnavailable(DeliveryError):
         super().__init__(
             f"real Xiaohongshu topic entity unavailable for {rendered}"
             + (f"; {detail}" if detail else "")
-            + "; skip the current paper (no body-hashtag fallback)"
+            + "; skip the current paper (no body-hashtag fallback)",
+            code=E_TOPIC_UNAVAILABLE,
+            details={"topics": list(topics), "detail": detail},
         )
 
 

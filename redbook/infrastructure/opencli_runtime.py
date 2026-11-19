@@ -24,6 +24,9 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+from typing import Any, Protocol
+
+from .delivery_errors import DeliveryError, E_OPENCLI_UNAVAILABLE, E_RESPONSE_SHAPE
 
 #: Relative path of the OpenCLI entry point inside a Node installation.
 _MAIN_REL = Path("node_modules/@jackwener/opencli/dist/src/main.js")
@@ -38,6 +41,48 @@ _NODE_HINTS: tuple[Path, ...] = (
 
 class OpenCliUnavailable(RuntimeError):
     """OpenCLI could not be located, or its daemon/extension is not connected."""
+
+
+class _Runtime(Protocol):
+    def run(self, *parts: str, **kwargs: Any) -> subprocess.CompletedProcess[str]: ...
+
+
+class OpenCliClient:
+    """Single normalization boundary for OpenCLI 1.x and 2.x JSON replies."""
+
+    def __init__(self, runtime: _Runtime | None = None) -> None:
+        self.runtime = runtime or resolve_runtime()
+
+    def run_json(self, *parts: str, timeout: int = 300) -> dict | list:
+        result = self.runtime.run(*parts, "-f", "json", timeout=timeout)
+        raw = (result.stdout or "").strip()
+        if result.returncode:
+            raise DeliveryError(raw or (result.stderr or "OpenCLI failed"), E_OPENCLI_UNAVAILABLE)
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError as error:
+            raise DeliveryError("OpenCLI returned invalid JSON", E_RESPONSE_SHAPE, {"raw": raw[:400]}) from error
+        if isinstance(value, dict) and "ok" in value:
+            if value.get("ok") is not True:
+                detail = value.get("error")
+                message = detail.get("message") if isinstance(detail, dict) else str(detail or "OpenCLI command failed")
+                raise DeliveryError(message, E_RESPONSE_SHAPE, {"response": value})
+            return value.get("data")
+        if isinstance(value, (dict, list)):
+            return value
+        raise DeliveryError("OpenCLI returned an unsupported JSON shape", E_RESPONSE_SHAPE, {"response": value})
+
+    def doctor(self) -> dict[str, object]:
+        data = self.run_json("doctor")
+        if not isinstance(data, dict):
+            raise DeliveryError("OpenCLI doctor returned a non-object response", E_RESPONSE_SHAPE)
+        return {
+            "daemon_running": bool(data.get("daemonRunning")),
+            "extension_connected": bool(data.get("extensionConnected")),
+            "extension_version": str(data.get("extensionVersion") or ""),
+            "extension_outdated": bool(data.get("extensionOutdated")),
+            "raw": data,
+        }
 
 
 @dataclass(frozen=True)

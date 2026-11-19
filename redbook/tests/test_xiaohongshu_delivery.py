@@ -152,6 +152,12 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
                 OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(self._payload(Path(folder)))
         self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in runner.calls))
 
+    def test_missing_creator_chip_has_stable_error_code(self) -> None:
+        runner = FakeRunner(eval_rules={"for(var t of document.querySelectorAll('.tag-group": '[]'})
+        with self.assertRaises(TopicEntityUnavailable) as error:
+            OpenCliXiaohongshuDelivery(runner=runner)._bind_topics(("AI论文",))
+        self.assertEqual(error.exception.code, "E_TOPIC_UNAVAILABLE")
+
     def test_missing_topics_fails_before_platform_write(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             payload = self._payload(Path(folder), topics=())
