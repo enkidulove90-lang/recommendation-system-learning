@@ -31,11 +31,13 @@ def test_client_maps_failed_envelope_to_structured_error() -> None:
 
 
 def test_client_parses_doctor_version_and_outdated_flag() -> None:
-    client = OpenCliClient(FakeRuntime(
+    runtime = FakeRuntime(
         '{"ok":true,"data":{"daemonRunning":true,"extensionConnected":true,'
         '"extensionVersion":"1.0.25","extensionOutdated":true}}'
-    ))
+    )
+    client = OpenCliClient(runtime)
     assert client.doctor()["extension_outdated"] is True
+    assert runtime.calls == [("doctor",)]
 
 
 def test_preflight_blocks_outdated_extension() -> None:

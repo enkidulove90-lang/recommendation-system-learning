@@ -76,8 +76,9 @@ class OpenCliClient:
                 return value["data"]
         return value
 
-    def run_json(self, *parts: str, timeout: int = 300) -> dict | list:
-        result = self.runtime.run(*parts, "-f", "json", timeout=timeout)
+    def run_json(self, *parts: str, timeout: int = 300, formatter: bool = True) -> dict | list:
+        command = (*parts, "-f", "json") if formatter else parts
+        result = self.runtime.run(*command, timeout=timeout)
         raw = (result.stdout or "").strip()
         if result.returncode:
             raise DeliveryError(raw or (result.stderr or "OpenCLI failed"), E_OPENCLI_UNAVAILABLE)
@@ -87,7 +88,9 @@ class OpenCliClient:
         raise DeliveryError("OpenCLI returned an unsupported JSON shape", E_RESPONSE_SHAPE, {"response": value})
 
     def doctor(self) -> dict[str, object]:
-        data = self.run_json("doctor")
+        # OpenCLI 2.x emits a JSON envelope for `doctor` natively, while the
+        # subcommand intentionally rejects the generic formatter flag.
+        data = self.run_json("doctor", formatter=False)
         if not isinstance(data, dict):
             raise DeliveryError("OpenCLI doctor returned a non-object response", E_RESPONSE_SHAPE)
         return {

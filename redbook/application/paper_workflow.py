@@ -160,7 +160,11 @@ class PaperCreationWorkflow:
             return {"ok": False, "paper_id": paper_id, "errors": errors}
         receipt = publisher.stage(package)
         if receipt.get("ok"):
-            self._advance(self.load(paper_id), WorkflowStage.PACKAGED,
+            checkpoint = self.load(paper_id)
+            # Rebuilding an immutable package for a draft-only retry is an
+            # artifact refresh, not a lifecycle rollback from DRAFT_SAVED.
+            stage = WorkflowStage.DRAFT_SAVED if checkpoint.stage is WorkflowStage.DRAFT_SAVED else WorkflowStage.PACKAGED
+            self._advance(checkpoint, stage,
                           note_spec=str(spec.path), staged_id=str(receipt["staged_id"]))
         return receipt
 

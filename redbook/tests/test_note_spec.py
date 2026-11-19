@@ -15,6 +15,7 @@ import yaml
 
 from redbook.application.paper_workflow import PaperCreationWorkflow
 from redbook.automation.publishing import PublicationPackage
+from redbook.domain.media import WorkflowStage
 from redbook.services.note_spec import NoteSpecError, list_notes, load_note
 from redbook.services.render_post import render_post
 from redbook.services.xhs_content_gate import ContentSpecError
@@ -223,6 +224,28 @@ def test_validate_and_stage_note_with_tmp_assets(tmp_path):
     payload = json.loads(staged_file.read_text(encoding="utf-8"))
     assert payload["body_markdown"] == load_note(SAGE_ID).body
     assert payload["content_hash"] == staged_file.parent.name
+
+
+def test_stage_note_after_draft_saved_keeps_saved_stage(tmp_path):
+    """重新生成同一内容的不可变包不得把已保存草稿状态倒退。"""
+    notes = _write_spec(tmp_path)
+    assets = tmp_path / "data" / "parsed" / SAGE_ID / "images"
+    assets.mkdir(parents=True)
+    for figure in load_note(SAGE_ID, notes).figures:
+        (assets / Path(figure.file).name).write_bytes(b"fake-png")
+    pdf = tmp_path / "data" / "parsed" / SAGE_ID / "2601.21452_origin.pdf"
+    pdf.write_bytes(b"fake-pdf")
+
+    workflow = PaperCreationWorkflow(tmp_path / "queue_root")
+    first = workflow.stage_note(SAGE_ID, notes_dir=notes, repo_root=tmp_path)
+    assert first["ok"] is True
+    workflow._advance(workflow.load(SAGE_ID), WorkflowStage.DRAFT_SAVED, draft_id="s:old")
+
+    repeated = workflow.stage_note(SAGE_ID, notes_dir=notes, repo_root=tmp_path)
+
+    assert repeated["ok"] is True
+    assert repeated["staged_id"] == first["staged_id"]
+    assert workflow.load(SAGE_ID).stage is WorkflowStage.DRAFT_SAVED
 
 
 def test_validate_does_not_require_image_files(tmp_path):
