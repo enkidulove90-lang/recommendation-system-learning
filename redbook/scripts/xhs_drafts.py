@@ -27,6 +27,8 @@ from pathlib import Path
 import sys
 from typing import Any, Sequence
 
+from redbook.infrastructure.opencli_runtime import OpenCliClient
+
 ROOT = Path(__file__).resolve().parents[2]
 DUMP_JSON = ROOT / "xhs_drafts_dump.json"
 DUMP_TXT = ROOT / "xhs_drafts_dump.txt"
@@ -49,12 +51,10 @@ def fetch_drafts(runtime=None) -> list[dict[str, Any]]:
         )
         raw = (result.stdout or "").strip()
         if raw.startswith(("[", "{")):
-            parsed = json.loads(raw)
+            parsed = OpenCliClient.decode_json(raw)
             # OpenCLI 2.x wraps formatter output in ``{ok, data}``; older
             # versions returned the list directly.  Normalise both before
             # sorting so inventory remains a read-only verification tool.
-            if isinstance(parsed, dict) and isinstance(parsed.get("data"), list):
-                parsed = parsed["data"]
             if isinstance(parsed, list):
                 return sorted(parsed, key=lambda item: item.get("rank", 0))
             last_error = f"attempt {attempt + 1}: unexpected JSON shape={type(parsed).__name__}"

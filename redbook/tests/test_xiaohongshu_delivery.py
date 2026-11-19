@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from redbook.infrastructure.xiaohongshu_delivery import (
     DeliveryError,
@@ -120,6 +121,12 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         runner = FakeRunner(drafts=['{"ok":true,"data":[{"id":"s:new","title":"draft"}]}'])
         drafts = OpenCliXiaohongshuDelivery(runner=runner)._drafts()
         self.assertEqual(drafts, [{"id": "s:new", "title": "draft"}])
+
+    def test_drafts_uses_shared_opencli_json_decoder(self) -> None:
+        runner = FakeRunner(drafts=['{"ok":true,"data":[]}'])
+        with patch("redbook.infrastructure.xiaohongshu_delivery.OpenCliClient.decode_json", return_value=[]) as decode:
+            self.assertEqual(OpenCliXiaohongshuDelivery(runner=runner)._drafts(), [])
+        decode.assert_called_once()
 
     def test_topic_without_exact_match_raises_and_skips(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

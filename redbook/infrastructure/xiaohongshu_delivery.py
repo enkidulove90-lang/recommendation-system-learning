@@ -38,6 +38,7 @@ from typing import Callable
 
 from . import opencli_runtime
 from .delivery_errors import DeliveryError, E_TOPIC_UNAVAILABLE
+from .opencli_runtime import OpenCliClient
 
 
 def build_deliver_payload(args) -> "DraftPayload":
@@ -191,13 +192,13 @@ class OpenCliXiaohongshuDelivery:
         if result.returncode:
             raise DeliveryError(f"{label} failed: {(result.stderr or result.stdout or '').strip()}")
         try:
-            payload = json.loads(result.stdout)
+            payload = OpenCliClient.decode_json(result.stdout)
             # OpenCLI 2.x wraps page-eval results as
             # ``{ok: true, data: '<page JSON>'}``; unwrap the page value so
             # callers can reliably distinguish a not-yet-hydrated control.
-            if isinstance(payload, dict) and isinstance(payload.get("data"), str):
+            if isinstance(payload, str):
                 try:
-                    inner = json.loads(payload["data"])
+                    inner = json.loads(payload)
                 except json.JSONDecodeError:
                     pass
                 else:
@@ -219,13 +220,11 @@ class OpenCliXiaohongshuDelivery:
         if result.returncode:
             raise DeliveryError(result.stderr or result.stdout or "cannot read Xiaohongshu drafts")
         try:
-            payload = json.loads(result.stdout)
+            payload = OpenCliClient.decode_json(result.stdout)
             # OpenCLI 2.x wraps every formatter response, including the draft
             # list, in ``{ok: true, data: [...]}``.  Treating that mapping as
             # an iterable returns the strings ``ok`` and ``data`` and fails
             # only *after* the platform has already saved the draft.
-            if isinstance(payload, dict) and isinstance(payload.get("data"), list):
-                return list(payload["data"])
             if isinstance(payload, list):
                 return list(payload)
             raise DeliveryError("Xiaohongshu drafts returned an unexpected JSON shape")

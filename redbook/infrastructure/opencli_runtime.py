@@ -53,13 +53,11 @@ class OpenCliClient:
     def __init__(self, runtime: _Runtime | None = None) -> None:
         self.runtime = runtime or resolve_runtime()
 
-    def run_json(self, *parts: str, timeout: int = 300) -> dict | list:
-        result = self.runtime.run(*parts, "-f", "json", timeout=timeout)
-        raw = (result.stdout or "").strip()
-        if result.returncode:
-            raise DeliveryError(raw or (result.stderr or "OpenCLI failed"), E_OPENCLI_UNAVAILABLE)
+    @staticmethod
+    def decode_json(raw: str) -> dict | list | str | int | float | bool | None:
+        """Decode legacy JSON or unwrap one OpenCLI 2.x ``{ok,data}`` envelope."""
         try:
-            value = json.loads(raw)
+            value = json.loads((raw or "").strip())
         except json.JSONDecodeError as error:
             raise DeliveryError("OpenCLI returned invalid JSON", E_RESPONSE_SHAPE, {"raw": raw[:400]}) from error
         if isinstance(value, dict) and "ok" in value:
@@ -67,7 +65,19 @@ class OpenCliClient:
                 detail = value.get("error")
                 message = detail.get("message") if isinstance(detail, dict) else str(detail or "OpenCLI command failed")
                 raise DeliveryError(message, E_RESPONSE_SHAPE, {"response": value})
-            return value.get("data")
+            # Plain page-eval scripts often return ``{"ok": true}`` as
+            # their domain payload.  Only an explicit data key identifies the
+            # OpenCLI 2.x transport envelope.
+            if "data" in value:
+                return value["data"]
+        return value
+
+    def run_json(self, *parts: str, timeout: int = 300) -> dict | list:
+        result = self.runtime.run(*parts, "-f", "json", timeout=timeout)
+        raw = (result.stdout or "").strip()
+        if result.returncode:
+            raise DeliveryError(raw or (result.stderr or "OpenCLI failed"), E_OPENCLI_UNAVAILABLE)
+        value = self.decode_json(raw)
         if isinstance(value, (dict, list)):
             return value
         raise DeliveryError("OpenCLI returned an unsupported JSON shape", E_RESPONSE_SHAPE, {"response": value})
