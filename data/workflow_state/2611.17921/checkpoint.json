@@ -235,6 +235,14 @@
         "note_spec",
         "staged_id"
       ]
+    },
+    {
+      "stage": "draft_saved",
+      "at": "2026-11-19T10:16:34.626671+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
     }
   ]
 }

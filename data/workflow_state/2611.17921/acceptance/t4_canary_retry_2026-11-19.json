@@ -1,0 +1,23 @@
+{
+  "command": "python -m redbook.cli note 2611.17921 --save-draft",
+  "preflight": {
+    "daemon_running": true,
+    "extension_connected": true,
+    "extension_version": "1.0.27",
+    "extension_outdated": false,
+    "logged_in": true
+  },
+  "result": {
+    "ok": false,
+    "error_code": "E_TOPIC_UNAVAILABLE",
+    "topic": "论文分享",
+    "detail": "Creator Center did not offer exact topic chip; available=[]",
+    "draft_id": ""
+  },
+  "safety": {
+    "published": false,
+    "save_reached": false,
+    "retry_policy": "Stop after the second explicitly approved attempt; do not blindly retry."
+  },
+  "note": "The transient Windows console output was discarded because it decoded Chinese as replacement characters; this UTF-8 structured record preserves the verified result."
+}
