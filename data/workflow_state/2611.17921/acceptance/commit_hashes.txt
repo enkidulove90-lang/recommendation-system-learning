@@ -1,0 +1,11 @@
+c1c4db86652a1c9098edd9c2a96dc0c5365505b3 S0 harden draft delivery and verification
+84fc7d6656616d1dbf55ad6d2ca07af39b5ed244 S1 safe phase1 documentation
+9bbeb69d499b457e1b03cbf85f42bfd4ba1ed8d3 Task 2 platform facts/errors
+b1b79beffac2f3624a9120a6bb041d51a838f67f Task 2 shared decoder follow-up
+281550fd7821339a23806b0261046227c7a6a05e Task 3 save-draft verification
+84d14b00cfaef2ae3ea4119641aed25e6f55ef9d Task 4 registry/idempotency
+1e57bc4b6006997b907c655e993c4b159bb9fb65 Task 5 preflight/migration
+7498c6c8c1ba992c15e0dad2a5869c1d0504aa8f S3 safe automation adapters
+0487f4cc3b2c01d859b9321d9178aadf1ce6374f direct draft-save preflight
+0a348d8ebf08ab88fe86d1ae7e24e577c43516f8 S4 verification/acceptance gaps
+6431629ccfb9a1ac96418c394d584f8f90e54edc S4 native-input regression oracle

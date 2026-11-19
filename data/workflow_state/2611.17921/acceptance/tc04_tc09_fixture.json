@@ -1,0 +1,16 @@
+{
+  "command": "python -m pytest redbook/tests/test_xiaohongshu_delivery.py redbook/tests/test_delivery_registry.py redbook/tests/test_opencli_runtime.py redbook/tests/test_cli_xhs_delivery.py redbook/tests/test_migrate_staged_packages.py -q",
+  "exit_code": 0,
+  "pytest_tail": "31 passed in 4.98s",
+  "topic_unavailable": {
+    "code": "E_TOPIC_UNAVAILABLE",
+    "message": "real Xiaohongshu topic entity unavailable for 'AI论文'; fixture: no exact creator chip; skip the current paper (no body-hashtag fallback)",
+    "details": {"topics": ["AI论文"], "detail": "fixture: no exact creator chip"}
+  },
+  "verify_mismatch": {
+    "code": "E_VERIFY_MISMATCH",
+    "message": "saved draft verification failed: fixture mismatch",
+    "details": {"draft_id": "s:fixture-deleted", "body_ok": false, "topics_ok": true, "pdf_ok": true}
+  },
+  "orphan_policy": "the mismatch path deletes only the just-created draft and records its ID as an orphan"
+}

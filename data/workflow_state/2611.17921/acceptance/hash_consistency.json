@@ -1,0 +1,8 @@
+{
+  "staged_id": "0174757fe0efd78a1db40a8b4309eec3df7ec86cfaaa8ec4ed4b84296f2a0757",
+  "checkpoint_artifacts.staged_id": "0174757fe0efd78a1db40a8b4309eec3df7ec86cfaaa8ec4ed4b84296f2a0757",
+  "publish_queue_xhs.content_hash": "0174757fe0efd78a1db40a8b4309eec3df7ec86cfaaa8ec4ed4b84296f2a0757",
+  "acceptance_manifest.staged_id": "0174757fe0efd78a1db40a8b4309eec3df7ec86cfaaa8ec4ed4b84296f2a0757",
+  "consistent": true,
+  "note": "XHS delivery uses staged_id/content_hash; config_hash and split_hash are not fields in this workflow."
+}

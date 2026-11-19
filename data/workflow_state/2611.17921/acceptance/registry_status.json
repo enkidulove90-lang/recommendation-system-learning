@@ -1,0 +1,7 @@
+{
+  "registry_path": "data/workflow_state/2611.17921/delivery_registry.json",
+  "exists": false,
+  "status": "not created",
+  "reason": "the existing draft was saved before the registry implementation and this acceptance run performed read-only verification only",
+  "safety": "no synthetic verified or orphan registry record was fabricated for an existing platform draft"
+}

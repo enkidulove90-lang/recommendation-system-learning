@@ -1,0 +1,224 @@
+{
+  "paper_id": "2611.17921",
+  "stage": "draft_saved",
+  "artifacts": {
+    "note_spec": "D:\\recommendation-system-learning\\.worktrees\\sab-anc-design\\redbook\\notes\\2611.17921.yaml",
+    "staged_id": "0174757fe0efd78a1db40a8b4309eec3df7ec86cfaaa8ec4ed4b84296f2a0757",
+    "delivery": "saved_draft_only",
+    "draft_id": "s:93a910ec-4bf2-4011-8a7a-e410146bdbbe",
+    "topics": [
+      "论文分享",
+      "推荐系统",
+      "人工智能"
+    ],
+    "image_count": 5,
+    "pdf_name": "2611.17921_RecMem.pdf",
+    "pdf_attachment_verified": true
+  },
+  "history": [
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:41:59.465330+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:42:12.719540+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:45:05.373183+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:45:46.022297+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:49:26.752002+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:50:09.989730+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:51:10.587990+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:54:58.081491+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T11:55:12.323410+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "blocked",
+      "at": "2026-11-18T12:00:31.121988+00:00",
+      "artifacts": [
+        "delivery",
+        "failure_reason"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T12:35:36.337094+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T12:35:49.489125+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T12:46:32.846662+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T12:56:58.244019+00:00",
+      "artifacts": [
+        "delivery",
+        "failure_reason"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:16:59.452359+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:37:07.863264+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:37:19.265988+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:40:47.156632+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:44:23.682521+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:46:41.076027+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:46:52.802029+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:48:34.710909+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:50:02.873813+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "packaged",
+      "at": "2026-11-18T16:51:22.597691+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "draft_saved",
+      "at": "2026-11-18T16:52:31.058182+00:00",
+      "artifacts": [
+        "delivery",
+        "draft_id",
+        "image_count",
+        "pdf_attachment_verified",
+        "pdf_name",
+        "topics"
+      ]
+    }
+  ]
+}
