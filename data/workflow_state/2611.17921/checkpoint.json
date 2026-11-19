@@ -219,6 +219,22 @@
         "pdf_name",
         "topics"
       ]
+    },
+    {
+      "stage": "draft_saved",
+      "at": "2026-11-19T10:06:12.937764+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
+    },
+    {
+      "stage": "draft_saved",
+      "at": "2026-11-19T10:06:35.476337+00:00",
+      "artifacts": [
+        "note_spec",
+        "staged_id"
+      ]
     }
   ]
 }

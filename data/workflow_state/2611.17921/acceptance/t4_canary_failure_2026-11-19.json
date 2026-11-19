@@ -1,0 +1,17 @@
+{
+  "command": "python -m redbook.cli note 2611.17921 --save-draft",
+  "result": {
+    "ok": false,
+    "method": "opencli-cdp",
+    "error_code": "E_TOPIC_UNAVAILABLE",
+    "topic": "论文分享",
+    "detail": "Creator Center did not offer exact topic chip; available=[]",
+    "draft_id": ""
+  },
+  "safety": {
+    "published": false,
+    "save_reached": false,
+    "reason": "_bind_topics raises before _attach_pdf and _save_draft"
+  },
+  "follow_up": "Do not retry automatically. Restore a real selectable Creator Center topic entity or update the approved topic set after manual confirmation."
+}

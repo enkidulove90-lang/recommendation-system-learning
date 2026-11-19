@@ -7,7 +7,7 @@ created, changed, deleted, or publicly published during this acceptance run.
 | TC | Status | Evidence |
 | --- | --- | --- |
 | TC-01 | passed | `pytest_full.txt`; delivery adapter tests pass. |
-| TC-02 | simulated | `test_topic_binding_reopens_picker_after_each_selected_chip`; no separately approved canary was run. |
+| TC-02 | failed | `t4_canary_failure_2026-11-19.json`: separately approved canary reached real topic binding but Creator Center offered no exact 论文分享 chip (`E_TOPIC_UNAVAILABLE`); no save occurred. |
 | TC-03 | failed | `tc03_verify.json` and `t3_reverify_2026-11-19.json`: body mismatch; topics and PDF pass. `t3_body_diff_2026-11-19.diff` confirms the platform draft lost the entire 局限段. |
 | TC-04 | passed | `test_incomplete_saved_draft_is_removed_after_readback` and orphan registry test. |
 | TC-05 | passed | `test_verified_staged_id_is_idempotent_without_platform_write`. |
