@@ -222,7 +222,7 @@ def test_validate_and_stage_note_with_tmp_assets(tmp_path):
     staged_file = Path(staged["path"])
     payload = json.loads(staged_file.read_text(encoding="utf-8"))
     assert payload["body_markdown"] == load_note(SAGE_ID).body
-    assert payload["content_hash"][:32] == staged_file.parent.name
+    assert payload["content_hash"] == staged_file.parent.name
 
 
 def test_validate_does_not_require_image_files(tmp_path):

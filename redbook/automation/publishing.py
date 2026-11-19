@@ -81,7 +81,7 @@ class FilePublisher:
         # NOTE: the staged file lives under content_hash[:32] so that
         # ``publish(staged_id)`` (which reads publish_queue/<staged_id[:32]>/...)
         # finds it.  Keep this in lock-step with the publisher read paths.
-        path = self.root / "publish_queue" / package.content_hash[:32] / f"{self.platform}.json"
+        path = self.root / "publish_queue" / package.content_hash / f"{self.platform}.json"
         existing = path.exists() and json.loads(path.read_text(encoding="utf-8"))
         if existing and existing.get("content_hash") == package.content_hash:
             return {"ok": True, "status": "already_staged", "path": str(path), "staged_id": package.content_hash}
@@ -313,7 +313,9 @@ class XhsPublisher(FilePublisher):
 
     def publish(self, staged_id: str) -> dict[str, Any]:
         """通过 OpenCLI 创建小红书草稿（可选附加 PDF）。"""
-        path = self.root / "publish_queue" / staged_id[:32] / "xhs.json"
+        path = self.root / "publish_queue" / staged_id / "xhs.json"
+        if not path.exists():
+            path = self.root / "publish_queue" / staged_id[:32] / "xhs.json"
         if not path.exists():
             return {"ok": False, "error": f"staged package not found: {path}"}
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -328,6 +330,11 @@ class XhsPublisher(FilePublisher):
                 "ok": False, "method": "none",
                 "error": "OpenCLI not found; set OPENCLI_NODE and OPENCLI_MAIN",
             }
+        try:
+            opencli_runtime.OpenCliClient().preflight()
+        except Exception as exc:
+            code = getattr(exc, "code", "E_PREFLIGHT_BLOCKED")
+            return {"ok": False, "method": "preflight", "error": str(exc), "error_code": code}
         result = self._publish_opencli(data)
         draft_id = str(result.get("draft_id", ""))
         if result.get("ok") and draft_id:

@@ -36,3 +36,12 @@ def test_client_parses_doctor_version_and_outdated_flag() -> None:
         '"extensionVersion":"1.0.25","extensionOutdated":true}}'
     ))
     assert client.doctor()["extension_outdated"] is True
+
+
+def test_preflight_blocks_outdated_extension() -> None:
+    client = OpenCliClient(FakeRuntime(
+        '{"ok":true,"data":{"daemonRunning":true,"extensionConnected":true,"extensionOutdated":true}}'
+    ))
+    with pytest.raises(Exception) as error:
+        client.preflight()
+    assert getattr(error.value, "code", None) == "E_PREFLIGHT_BLOCKED"

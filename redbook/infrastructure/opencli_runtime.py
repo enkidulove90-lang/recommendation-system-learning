@@ -26,7 +26,7 @@ import shutil
 import subprocess
 from typing import Any, Protocol
 
-from .delivery_errors import DeliveryError, E_OPENCLI_UNAVAILABLE, E_RESPONSE_SHAPE
+from .delivery_errors import DeliveryError, E_OPENCLI_UNAVAILABLE, E_PREFLIGHT_BLOCKED, E_RESPONSE_SHAPE
 
 #: Relative path of the OpenCLI entry point inside a Node installation.
 _MAIN_REL = Path("node_modules/@jackwener/opencli/dist/src/main.js")
@@ -93,6 +93,13 @@ class OpenCliClient:
             "extension_outdated": bool(data.get("extensionOutdated")),
             "raw": data,
         }
+
+    def preflight(self) -> dict[str, object]:
+        """Fail closed before any browser-backed draft write."""
+        status = self.doctor()
+        if not status["daemon_running"] or not status["extension_connected"] or status["extension_outdated"]:
+            raise DeliveryError("OpenCLI bridge preflight failed", E_PREFLIGHT_BLOCKED, status)
+        return status
 
 
 @dataclass(frozen=True)

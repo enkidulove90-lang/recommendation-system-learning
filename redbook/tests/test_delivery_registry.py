@@ -34,6 +34,24 @@ def test_successful_platform_delivery_is_registered(tmp_path, monkeypatch):
     package.mkdir(parents=True)
     (package / "xhs.json").write_text(json.dumps({"paper_id": slug}), encoding="utf-8")
     publisher = XhsPublisher(tmp_path)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.is_available", lambda: True)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.OpenCliClient", lambda: type("Ready", (), {"preflight": lambda self: {}})())
     monkeypatch.setattr(publisher, "_publish_opencli", lambda _: {"ok": True, "draft_id": "s:new"})
     assert publisher.publish(staged_id)["draft_id"] == "s:new"
     assert DeliveryRegistry(tmp_path, slug).find_verified(staged_id)["draft_id"] == "s:new"
+
+
+def test_preflight_failure_never_calls_platform_write(tmp_path, monkeypatch):
+    staged_id, slug = "c" * 64, "paper-3"
+    package = tmp_path / "publish_queue" / staged_id[:32]
+    package.mkdir(parents=True)
+    (package / "xhs.json").write_text(json.dumps({"paper_id": slug}), encoding="utf-8")
+    publisher = XhsPublisher(tmp_path)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.is_available", lambda: True)
+    class Blocked:
+        def preflight(self):
+            from redbook.infrastructure.delivery_errors import DeliveryError
+            raise DeliveryError("stale", "E_PREFLIGHT_BLOCKED")
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.OpenCliClient", Blocked)
+    monkeypatch.setattr(publisher, "_publish_opencli", lambda _: (_ for _ in ()).throw(AssertionError("must not write")))
+    assert publisher.publish(staged_id)["error_code"] == "E_PREFLIGHT_BLOCKED"
