@@ -40,6 +40,12 @@ class FakeRunner:
         joined = "\x1f".join(command)
         if any(rule in joined for rule in self.fail_rules):
             return subprocess.CompletedProcess(command, 1, "", "simulated failure")
+        if "doctor" in command:
+            return subprocess.CompletedProcess(
+                command, 0,
+                getattr(self, "doctor_stdout", '{"ok":true,"data":{"daemonRunning":true,"extensionConnected":true,"extensionOutdated":false}}'),
+                "",
+            )
         if "xiaohongshu\x1fdrafts" in joined:
             return subprocess.CompletedProcess(command, 0, self.drafts.pop(0) if self.drafts else "[]", "")
         if "browser" in command:
@@ -95,6 +101,18 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         self.assertEqual(receipt.pdf_name, "paper.pdf")
         upload = next(call for call in runner.calls if any("paper.pdf" in part for part in call))
         self.assertTrue(any("paper.pdf" in part for part in upload))
+
+    def test_preflight_blocks_before_any_browser_command(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            runner = FakeRunner()
+            runner.doctor_stdout = (
+                '{"ok":true,"data":{"daemonRunning":true,"extensionConnected":true,'
+                '"extensionOutdated":true}}'
+            )
+            with self.assertRaises(DeliveryError) as error:
+                OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(self._payload(Path(folder)))
+        self.assertEqual(error.exception.code, "E_PREFLIGHT_BLOCKED")
+        self.assertFalse(any("browser" in call for call in runner.calls))
 
     def test_incomplete_saved_draft_is_removed_after_readback(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

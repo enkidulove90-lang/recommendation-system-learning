@@ -89,6 +89,16 @@ Runner = Callable[[list[str]], subprocess.CompletedProcess[str]]
 #: exceed OpenCLI's default 60s browser-command ceiling.
 _BROWSER_TIMEOUT_SECONDS = 300
 
+
+class _DeliveryRuntime:
+    """Adapt the delivery runner to the shared OpenCLI client contract."""
+
+    def __init__(self, command: Callable[..., list[str]], runner: Runner) -> None:
+        self._command, self._runner = command, runner
+
+    def run(self, *parts: str, **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        return self._runner(self._command(*parts))
+
 #: Selectors reused from OpenCLI's adapter (clis/xiaohongshu/publish.js) plus
 #: the ones confirmed live against this account's creator-center DOM.
 #:
@@ -167,6 +177,7 @@ class OpenCliXiaohongshuDelivery:
 
     def __init__(self, runner: Runner = _run, session: str = "redbook-daily-pdf") -> None:
         self.runner, self.session = runner, session
+        self.opencli = OpenCliClient(_DeliveryRuntime(self._command, runner))
 
     # ------------------------------------------------------------------ #
     # Command plumbing
@@ -593,6 +604,10 @@ class OpenCliXiaohongshuDelivery:
     # ------------------------------------------------------------------ #
     def _compose_and_save(self, payload: DraftPayload, *, attach_pdf: bool) -> dict:
         payload.validate()
+        # Both the direct ``save-xhs-draft`` CLI and the automation publisher
+        # land here.  Refuse stale/disconnected bridges before opening a CDP
+        # browser session so a failed run cannot leave a partial editor state.
+        self.opencli.preflight()
         before = self._drafts()
         try:
             self._open_editor()
