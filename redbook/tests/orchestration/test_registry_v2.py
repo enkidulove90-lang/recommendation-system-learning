@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from redbook.automation.publishing import XhsPublisher
+from redbook.automation.publishing import WeChatPublisher, XhsPublisher
 from redbook.orchestration.reconcile import (
     reconcile_stale_saves,
     reconcile_uncertain_deliveries,
@@ -128,3 +128,30 @@ def test_xhs_publish_records_verified_delivery_in_sqlite_registry(tmp_path, monk
     )
     assert stored["state"] == "VERIFIED"
     assert stored["draft_id"] == "s:new"
+
+
+def test_wechat_publish_records_saved_unverified_delivery_in_sqlite_registry(tmp_path, monkeypatch) -> None:
+    staged_id = "g" * 64
+    package = tmp_path / "publish_queue" / staged_id[:32]
+    package.mkdir(parents=True)
+    (package / "wechat.json").write_text(json.dumps({
+        "title": "A staged WeChat draft", "body_markdown": "content" * 60,
+        "metadata": {}, "image_paths": [],
+    }), encoding="utf-8")
+    publisher = WeChatPublisher(tmp_path)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.is_available", lambda: True)
+
+    class SavedDelivery:
+        def deliver(self, _payload):
+            return type("Receipt", (), {
+                "saved": True, "title": "A staged WeChat draft", "cover_applied": False, "body_chars": 420,
+            })()
+
+    monkeypatch.setattr("redbook.infrastructure.wechat_delivery.WeChatDraftDelivery", SavedDelivery)
+
+    assert publisher.publish(staged_id)["ok"] is True
+    stored = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite").find_delivery(
+        platform="wechat", account="default", staged_id=staged_id,
+    )
+    assert stored["state"] == "SAVED_UNVERIFIED"
+    assert stored["draft_id"] is None

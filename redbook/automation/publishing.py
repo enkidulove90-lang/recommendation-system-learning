@@ -143,6 +143,16 @@ class WeChatPublisher(FilePublisher):
         if not opencli_runtime.is_available():
             return self._publish_html_preview(package_data)
 
+        from ..orchestration.registry import SqliteDeliveryRegistry
+        registry = SqliteDeliveryRegistry(self.root / "state" / "orchestration.sqlite")
+        registry.migrate_json_once(self.root / "workflow_state")
+        existing = registry.find_reusable(platform="wechat", account="default", staged_id=staged_id)
+        if existing:
+            return {
+                "ok": True, "method": "registry", "draft_id": existing["draft_id"],
+                "state": existing["state"], "reused": True,
+            }
+
         # Lazy import: keeps the module usable in environments without the
         # browser bridge installed (e.g. plain unit tests).
         from ..infrastructure.wechat_delivery import (
@@ -166,6 +176,15 @@ class WeChatPublisher(FilePublisher):
             author=str(metadata.get("author", "")) or "推荐系统研读",
         )
 
+        existing = registry.begin_save(
+            run_id=uuid4().hex, content_hash=staged_id, platform="wechat", account="default", staged_id=staged_id,
+        )
+        if existing:
+            return {
+                "ok": True, "method": "registry", "draft_id": existing["draft_id"],
+                "state": existing["state"], "reused": True,
+            }
+
         try:
             receipt = WeChatDraftDelivery().deliver(payload)
         except WeChatDeliveryError as exc:
@@ -187,6 +206,12 @@ class WeChatPublisher(FilePublisher):
                 (preview.get("note") or "")
                 + " 编辑器接受了输入但「已保存」标记未出现，已生成 HTML 预览。")
             return preview
+
+        # WeChat exposes a save marker but no stable draft ID.  Keep the
+        # record in SAVED_UNVERIFIED rather than inventing an identifier.
+        registry.mark_saved_unverified(
+            platform="wechat", account="default", staged_id=staged_id, draft_id=None,
+        )
 
         return {
             "ok": True,

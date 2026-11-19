@@ -181,7 +181,7 @@ class SqliteDeliveryRegistry:
         ]
 
     def mark_saved_unverified(self, *, platform: str, account: str, staged_id: str,
-                              draft_id: str) -> None:
+                              draft_id: str | None) -> None:
         self._set_state(
             platform=platform, account=account, staged_id=staged_id,
             state="SAVED_UNVERIFIED", draft_id=draft_id, last_code=None,
