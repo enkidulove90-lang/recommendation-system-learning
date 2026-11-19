@@ -319,11 +319,16 @@ class XhsPublisher(FilePublisher):
         if not path.exists():
             return {"ok": False, "error": f"staged package not found: {path}"}
         data = json.loads(path.read_text(encoding="utf-8"))
-        from ..infrastructure.delivery_registry import DeliveryRegistry
+        from ..orchestration.registry import SqliteDeliveryRegistry
         slug = str(data.get("paper_id", ""))
-        existing = DeliveryRegistry(self.root, slug).find_verified(staged_id)
+        registry = SqliteDeliveryRegistry(self.root / "state" / "orchestration.sqlite")
+        registry.migrate_json_once(self.root / "workflow_state")
+        existing = registry.find_reusable(platform="xhs", account="default", staged_id=staged_id)
         if existing:
-            return {"ok": True, "method": "registry", "draft_id": existing["draft_id"], "reused": True}
+            return {
+                "ok": True, "method": "registry", "draft_id": existing["draft_id"],
+                "state": existing["state"], "reused": True,
+            }
 
         if not opencli_runtime.is_available():
             return {
@@ -335,14 +340,34 @@ class XhsPublisher(FilePublisher):
         except Exception as exc:
             code = getattr(exc, "code", "E_PREFLIGHT_BLOCKED")
             return {"ok": False, "method": "preflight", "error": str(exc), "error_code": code}
+        existing = registry.begin_save(
+            run_id=uuid4().hex, content_hash=staged_id, platform="xhs", account="default", staged_id=staged_id,
+        )
+        if existing:
+            return {
+                "ok": True, "method": "registry", "draft_id": existing["draft_id"],
+                "state": existing["state"], "reused": True,
+            }
         result = self._publish_opencli(data)
         draft_id = str(result.get("draft_id", ""))
         if result.get("ok") and draft_id:
-            DeliveryRegistry(self.root, slug).record_verified(
-                uuid4().hex, staged_id, draft_id, {"ok": True, "method": result.get("method", "")}
+            registry.mark_saved_unverified(
+                platform="xhs", account="default", staged_id=staged_id, draft_id=draft_id,
             )
+            registry.mark_verified(platform="xhs", account="default", staged_id=staged_id)
         elif draft_id:
-            DeliveryRegistry(self.root, slug).record_orphan(uuid4().hex, staged_id, draft_id, result)
+            registry.mark_saved_unverified(
+                platform="xhs", account="default", staged_id=staged_id, draft_id=draft_id,
+            )
+            if result.get("error_code") == "E_VERIFY_UNCERTAIN":
+                registry.mark_verify_uncertain(platform="xhs", account="default", staged_id=staged_id)
+            elif result.get("error_code") == "E_VERIFY_MISMATCH":
+                registry.mark_rolled_back(platform="xhs", account="default", staged_id=staged_id)
+            else:
+                registry.mark_manual(
+                    platform="xhs", account="default", staged_id=staged_id,
+                    code=str(result.get("error_code", "E_SAVE_UNVERIFIED")),
+                )
         return result
 
     def _publish_opencli(self, data: dict[str, Any]) -> dict[str, Any]:

@@ -162,6 +162,15 @@ class SqliteDeliveryRegistry:
             """, (platform, account, staged_id)).fetchone()
         return self._row(row) if row else None
 
+    def find_reusable(self, *, platform: str, account: str, staged_id: str) -> dict[str, Any] | None:
+        with self._connection() as connection:
+            row = connection.execute("""
+                SELECT * FROM deliveries
+                WHERE platform = ? AND account = ? AND staged_id = ?
+                  AND state IN (?, ?, ?)
+            """, (platform, account, staged_id, *_REUSABLE_STATES)).fetchone()
+        return self._row(row) if row else None
+
     def stale_saving(self, stale_after_seconds: float) -> list[dict[str, Any]]:
         threshold = datetime.now(timezone.utc).timestamp() - stale_after_seconds
         with self._connection() as connection:

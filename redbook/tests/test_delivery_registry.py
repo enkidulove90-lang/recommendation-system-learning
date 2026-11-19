@@ -1,4 +1,5 @@
 from redbook.infrastructure.delivery_registry import DeliveryRegistry
+from redbook.orchestration.registry import SqliteDeliveryRegistry
 from redbook.automation.publishing import XhsPublisher
 import json
 
@@ -25,7 +26,10 @@ def test_verified_staged_id_is_idempotent_without_platform_write(tmp_path, monke
     publisher = XhsPublisher(tmp_path)
     monkeypatch.setattr(publisher, "_publish_opencli", lambda _: (_ for _ in ()).throw(AssertionError("must not write")))
     result = publisher.publish(staged_id)
-    assert result == {"ok": True, "method": "registry", "draft_id": "s:draft-1", "reused": True}
+    assert result == {
+        "ok": True, "method": "registry", "draft_id": "s:draft-1",
+        "state": "VERIFIED", "reused": True,
+    }
 
 
 def test_successful_platform_delivery_is_registered(tmp_path, monkeypatch):
@@ -38,7 +42,11 @@ def test_successful_platform_delivery_is_registered(tmp_path, monkeypatch):
     monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.OpenCliClient", lambda: type("Ready", (), {"preflight": lambda self: {}})())
     monkeypatch.setattr(publisher, "_publish_opencli", lambda _: {"ok": True, "draft_id": "s:new"})
     assert publisher.publish(staged_id)["draft_id"] == "s:new"
-    assert DeliveryRegistry(tmp_path, slug).find_verified(staged_id)["draft_id"] == "s:new"
+    stored = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite").find_delivery(
+        platform="xhs", account="default", staged_id=staged_id,
+    )
+    assert stored["draft_id"] == "s:new"
+    assert stored["state"] == "VERIFIED"
 
 
 def test_failed_delivery_with_known_draft_is_registered_as_orphan(tmp_path, monkeypatch):
@@ -54,10 +62,11 @@ def test_failed_delivery_with_known_draft_is_registered_as_orphan(tmp_path, monk
     result = publisher.publish(staged_id)
 
     assert result["ok"] is False
-    registry = DeliveryRegistry(tmp_path, slug)
-    assert registry.find_verified(staged_id) is None
-    assert registry._read()["runs"][-1]["status"] == "orphan"
-    assert registry._read()["runs"][-1]["draft_id"] == "s:deleted"
+    stored = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite").find_delivery(
+        platform="xhs", account="default", staged_id=staged_id,
+    )
+    assert stored["state"] == "ROLLED_BACK"
+    assert stored["draft_id"] == "s:deleted"
 
 
 def test_preflight_failure_never_calls_platform_write(tmp_path, monkeypatch):

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+from redbook.automation.publishing import XhsPublisher
 from redbook.orchestration.reconcile import (
     reconcile_stale_saves,
     reconcile_uncertain_deliveries,
@@ -106,3 +107,24 @@ def test_concurrent_saves_share_one_wal_delivery_row(tmp_path) -> None:
 
     assert (first is None) != (second is None)
     assert SqliteDeliveryRegistry(database).delivery_count() == 1
+
+
+def test_xhs_publish_records_verified_delivery_in_sqlite_registry(tmp_path, monkeypatch) -> None:
+    staged_id, slug = "f" * 64, "paper-6"
+    package = tmp_path / "publish_queue" / staged_id
+    package.mkdir(parents=True)
+    (package / "xhs.json").write_text(json.dumps({"paper_id": slug}), encoding="utf-8")
+    publisher = XhsPublisher(tmp_path)
+    monkeypatch.setattr("redbook.automation.publishing.opencli_runtime.is_available", lambda: True)
+    monkeypatch.setattr(
+        "redbook.automation.publishing.opencli_runtime.OpenCliClient",
+        lambda: type("Ready", (), {"preflight": lambda self: {}})(),
+    )
+    monkeypatch.setattr(publisher, "_publish_opencli", lambda _: {"ok": True, "draft_id": "s:new"})
+
+    assert publisher.publish(staged_id)["draft_id"] == "s:new"
+    stored = SqliteDeliveryRegistry(tmp_path / "state" / "orchestration.sqlite").find_delivery(
+        platform="xhs", account="default", staged_id=staged_id,
+    )
+    assert stored["state"] == "VERIFIED"
+    assert stored["draft_id"] == "s:new"
