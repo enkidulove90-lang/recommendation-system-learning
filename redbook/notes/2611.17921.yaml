@@ -1,0 +1,104 @@
+paper_id: '2611.17921'
+slug: '2611.17921'
+title: 16格记忆扛住长序列推荐
+status: draft
+source: handwritten
+parsed_dir: data/parsed/2611.17921_recmem
+pdf_path: data/papers/2611.17921_RecMem.pdf
+body: |-
+  🎓 用户有几千次历史，生成式推荐还要每次从头读吗？RecMem 想解决的正是这笔会随历史长度线性膨胀的推理账单。
+
+  ✨ 它不靠简单截断，也不是先检索再拼上下文：把较早的交互逐段压进固定数量的记忆槽，让记忆状态和解码上下文都不随历史变长。最近行为保留在上下文里，远期行为变成可更新的“长期记忆”。
+
+  🧠 关键做法是 16 个有状态记忆槽。每个历史片段进来时，槽位用遗忘门决定保留多少旧信息、写入多少新信息；解码器读取“16 个槽位 + 最近 200 个行为”，总共 216 token。图 1 把这条更新、训练和预测链路画得很清楚。
+
+  📊 MerRec 标准协议下，RecMem-Stream 的 Recall@10 / Recall@200 是 42.36 / 72.20；HSTU-1200 是 48.18 / 74.44。换成摘要里的相对说法：16 槽、216 token 仍保留约 87.9% 的 Recall@10 与 97.0% 的 Recall@200。
+
+  🧪 更有意思的是它不只报“压得小”：论文把空间不变性、语义保真、终身可演化写成约束，并给出与历史长度无关的状态差异界，来保证顺序更新和把片段打包更新的一致性。固定 16 槽跑到 1 万次交互，Recall@200 曲线没有明显塌陷。
+
+  💡 如果你的瓶颈是“用户历史长度主导推理成本”，这是一条值得关注的路线：把算力从不断拉长上下文，转为维护一个受控、可演化的状态。
+
+  💻 代码状态：论文 arXiv 页面暂未列出官方 GitHub 仓库。
+
+  ⚠️ 局限
+  结论来自 MerRec 的离线实验和 HSTU 系列骨干；跨数据集、线上服务开销与其他骨干的迁移效果仍待验证。
+
+  📎 论文：https://arxiv.org/abs/2611.17921
+figures:
+  - file: images/fig_arch_source.png
+    type: architecture
+    description: "arXiv 源包 figures/framework_v2.pdf 的 600 DPI 矢量渲染：归档历史逐段进入固定 M×d 记忆状态；左下为槽位遗忘门更新，中间为顺序与打包两支的一致性训练，右侧为记忆槽加最近行为的预测。目检：结构、连线和图例清晰可读。"
+  - file: images/fig_benchmark_card.png
+    type: result
+    description: "依据 arXiv 源包 sections/experiments.tex 中 Table 1 生成的手机可读数字卡：比较 HSTU-1200、Recent-200、Ret-HSTU-16 与 RecMem-Stream 的解码上下文、Recall@10、Recall@200。目检：数字、表头和注释无截断。"
+  - file: images/fig_10k_source.png
+    type: result
+    description: "arXiv 源包 figures/trajectory_recall200_10k.pdf 的 600 DPI 矢量渲染：固定 16 槽的 RecMem-Stream 在 6,442 位用户固定队列上，1,200 至 10,000 预测位置的 Recall@200 轨迹及 50 位置滑动均值。目检：坐标轴、图例和曲线清晰。"
+  - file: images/fig_long_history_card.png
+    type: result
+    description: "依据 arXiv 源包 sections/appendix.tex 中 Table 8 生成的高分辨率数字卡：同一个 RecMem-Stream checkpoint 在 1,200 至 9,999 交互位置的分段 Recall 指标。目检：分段区间、四列数值和来源说明清晰。"
+  - file: images/fig_capacity_card.png
+    type: ablation
+    description: "依据 arXiv 源包 sections/appendix.tex 中 Table 14 生成的高分辨率数字卡：8、16、32 个记忆槽的消融；16 槽在列出的四项指标中最佳。目检：表头、数值和结论说明清晰。"
+topics: [论文分享, 推荐系统, 人工智能]
+links:
+  paper: https://arxiv.org/abs/2611.17921
+  pdf: https://arxiv.org/pdf/2611.17921
+  code: ''
+visual_review: "2026-11-18 本地逐张目检 5 张：fig_arch_source 由 arXiv 源包 framework_v2.pdf 以 600 DPI 矢量渲染，模块名、连线和公式清晰；fig_benchmark_card 逐项核对源包 Table 1，表头、数值与脚注无溢出；fig_10k_source 由源包 trajectory_recall200_10k.pdf 以 600 DPI 矢量渲染，R@200 坐标轴、图例与 1,200–10,000 曲线清晰；fig_long_history_card 逐项核对源包 Table 8，分段区间和数值清晰；fig_capacity_card 逐项核对源包 Table 14，表头、数值与结论说明清晰。"
+review_status: reviewed
+metadata:
+  author: "Haoyi Hu, Gaoyang Guo, Yunjia Xi, Wen Chen, Weiwen Liu, Jian Wu, Yuning Jiang, Weinan Zhang"
+  venue: "NeurIPS 2026；arXiv v1 2026-11-13"
+  source_attribution: "图表摘自论文 PDF；基准数字卡依据 Table 1 自制，仅作学术解读。"
+  benchmark_card:
+    title: "16 个记忆槽，能省多少上下文？"
+    subtitle: "MerRec 标准协议 · 数据来源：论文 Table 1 · Recall 越高越好"
+    columns: [解码上下文, Recall@10, Recall@200]
+    rows:
+      - label: HSTU-1200
+        hint: 参考长上下文骨干
+        cells: [[1200 token, 基线], ['48.18', 基线], ['74.44', 基线]]
+      - label: Recent-200
+        hint: 只保留最近行为
+        cells: [[200 token, 最短], ['40.93', '-7.25'], ['67.74', '-6.70']]
+      - label: Ret-HSTU-16
+        hint: 16 条检索历史
+        cells: [[216 token, '-984'], ['41.03', '-7.15'], ['68.84', '-5.60']]
+      - label: RecMem-Stream
+        hint: 16 槽 + 最近 200 行为
+        cells: [[216 token, '-984'], ['42.36', '保留 87.9%'], ['72.20', '保留 97.0%']]
+    footnotes: ["相对 HSTU-1200：解码上下文减少 82%", "原始表格与完整协议见论文链接"]
+  long_history_card:
+    title: "同一 checkpoint 跑到 1 万次交互"
+    subtitle: "MerRec 固定队列 6,442 用户 · 数据来源：源包 Table 8"
+    columns: [Recall@10, Recall@50, Recall@200]
+    rows:
+      - label: 1,200–1,999
+        hint: 起始评测区间
+        cells: [['40.519', ''], ['57.736', ''], ['69.867', '']]
+      - label: 2,000–4,999
+        hint: 不重训，继续读历史
+        cells: [['40.644', '+0.125'], ['57.911', '+0.175'], ['70.032', '+0.165']]
+      - label: 5,000–7,499
+        hint: 16 个槽保持固定
+        cells: [['40.684', '+0.165'], ['57.999', '+0.263'], ['70.154', '+0.287']]
+      - label: 7,500–9,999
+        hint: 最长已报告区间
+        cells: [['40.689', '+0.170'], ['58.151', '+0.415'], ['70.379', '+0.512']]
+    footnotes: ["同一 RecMem-Stream checkpoint，未重新训练", "分段绝对分数只在该固定队列内比较"]
+  capacity_card:
+    title: "槽位不是越多越好：16 是甜点位"
+    subtitle: "MerRec 消融 · 数据来源：源包 Table 14 · 指标越高越好"
+    columns: [Recall@10, Recall@50, NDCG@10]
+    rows:
+      - label: 8 个槽
+        hint: 更强压缩
+        cells: [['33.65', ''], ['45.22', ''], ['22.27', '']]
+      - label: 16 个槽
+        hint: 论文默认配置
+        cells: [['35.51', '最佳'], ['46.38', '最佳'], ['23.41', '最佳']]
+      - label: 32 个槽
+        hint: 容量翻倍
+        cells: [['35.18', '-0.33'], ['46.14', '-0.24'], ['23.13', '-0.28']]
+    footnotes: ["16 槽在 Table 14 报告的四项指标均最佳", "该消融设置使用 Ls = Lr = 50"]

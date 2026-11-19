@@ -175,7 +175,10 @@ class OpenCliXiaohongshuDelivery:
         return opencli_runtime.resolve_runtime().command(*parts)
 
     def _browser(self, *parts: str) -> subprocess.CompletedProcess[str]:
-        return self.runner(self._command("browser", self.session, *parts))
+        # OpenCLI 2.x accepts the lease name only as ``--session <name>``;
+        # passing it immediately after ``browser`` makes Commander interpret
+        # it as a subcommand (and prevents the creator editor from opening).
+        return self.runner(self._command("browser", *parts, "--session", self.session))
 
     def _must(self, label: str, result: subprocess.CompletedProcess[str]) -> subprocess.CompletedProcess[str]:
         if result.returncode:
@@ -183,13 +186,27 @@ class OpenCliXiaohongshuDelivery:
             raise DeliveryError(f"{label} failed: {detail}")
         return result
 
-    def _eval(self, js: str, label: str) -> dict:
+    def _eval(self, js: str, label: str) -> dict | list:
         """Run a page-eval script that returns JSON and parse it."""
         result = self._browser("eval", js)
         if result.returncode:
             raise DeliveryError(f"{label} failed: {(result.stderr or result.stdout or '').strip()}")
         try:
-            return json.loads(result.stdout)
+            payload = json.loads(result.stdout)
+            # OpenCLI 2.x wraps page-eval results as
+            # ``{ok: true, data: '<page JSON>'}``; unwrap the page value so
+            # callers can reliably distinguish a not-yet-hydrated control.
+            if isinstance(payload, dict) and isinstance(payload.get("data"), str):
+                try:
+                    inner = json.loads(payload["data"])
+                except json.JSONDecodeError:
+                    pass
+                else:
+                    # Browser eval may legitimately return a list (the
+                    # creator's topic chips).  Do not discard that wrapped
+                    # payload just because it is not an object.
+                    return inner
+            return payload
         except json.JSONDecodeError:
             # Some eval output is wrapped; return raw stdout for the caller.
             return {"raw": result.stdout}
@@ -203,7 +220,16 @@ class OpenCliXiaohongshuDelivery:
         if result.returncode:
             raise DeliveryError(result.stderr or result.stdout or "cannot read Xiaohongshu drafts")
         try:
-            return list(json.loads(result.stdout))
+            payload = json.loads(result.stdout)
+            # OpenCLI 2.x wraps every formatter response, including the draft
+            # list, in ``{ok: true, data: [...]}``.  Treating that mapping as
+            # an iterable returns the strings ``ok`` and ``data`` and fails
+            # only *after* the platform has already saved the draft.
+            if isinstance(payload, dict) and isinstance(payload.get("data"), list):
+                return list(payload["data"])
+            if isinstance(payload, list):
+                return list(payload)
+            raise DeliveryError("Xiaohongshu drafts returned an unexpected JSON shape")
         except json.JSONDecodeError as error:
             raise DeliveryError("Xiaohongshu drafts returned invalid JSON") from error
 
@@ -229,10 +255,38 @@ class OpenCliXiaohongshuDelivery:
         # away (the input is present from first paint) and gate on the body
         # editor *after* the upload, since the title/body fields only render
         # once an image is attached.
+        # A previous interrupted run can leave this named session attached to
+        # an unrelated tab (including ``about:blank``).  Release that lease
+        # before opening the composer so native typing targets the new,
+        # foreground creator page.
+        self._browser("close")
         self._must("open creator editor", self._browser("open", self.creator_url, "--window", "foreground"))
+        # The current creator center hydrates its hidden file input several
+        # seconds after navigation.  Wait before exposing it for CDP upload.
+        self._browser("wait", "time", "9")
 
     def _upload_images(self, image_paths: tuple[Path, ...]) -> None:
         files = [str(p) for p in image_paths]
+        # OpenCLI 2.x filters hidden form controls from uploads.  The creator
+        # center intentionally hides this native input behind its upload card;
+        # exposing it briefly lets CDP's setFileInputFiles target the same
+        # element without changing the page's application state.
+        expose_js = (
+            "(()=>{const e=document.querySelector('input.upload-input');"
+            "if(!e)return JSON.stringify({ok:false,reason:'image input not hydrated'});"
+            "e.style.cssText='display:block!important;visibility:visible!important;"
+            "opacity:.01!important;position:fixed!important;left:0!important;top:0!important;"
+            "width:2px!important;height:2px!important;z-index:9999!important';"
+            "return JSON.stringify({ok:true});})()"
+        )
+        ready = {}
+        for _ in range(8):
+            ready = self._eval(expose_js, "expose image upload input")
+            if ready.get("ok"):
+                break
+            self._browser("wait", "time", "2")
+        if not ready.get("ok"):
+            raise DeliveryError(f"image upload input did not hydrate: {ready}")
         self._must("upload images", self._browser("upload", IMAGE_INPUT_SELECTOR, *files))
         self._browser("wait", "time", "4")
         # The title and body editors only appear once the first image is
@@ -284,50 +338,68 @@ class OpenCliXiaohongshuDelivery:
         self._browser("wait", "time", "1")
 
     def _bind_topics(self, topics: tuple[str, ...]) -> int:
-        """Bind real, clickable (highlighted) topic entities by typing ``#topic``
-        into the body and clicking the matching item from XHS's suggestion dropdown.
+        """Bind each topic by clicking Creator Center's real topic chip.
 
-        The dropdown (``div.items div.item``) appears **only** when ``#text`` is
-        present in the ProseMirror body editor. Typing is done via ``execCommand``
-        (not ``browser type``, which intermittently fails against ProseMirror).
-        Returns the number of topic entities successfully created.
+        Do not type ``#topic`` into the body: Creator Center offers the
+        approved topic entities directly via ``button#topicBtn`` and its
+        recommendation chips, while native keyboard delivery can target a
+        non-visible browser surface.  A marker readback after every click
+        proves that the selected chip became a platform entity.
         """
         bound = 0
         for topic in topics:
-            # 1. Focus body at end (cursor after existing content + any prior
-            #    topic entities).
-            self._eval(self._focus_body_end_js(), f"focus body for '#{topic}'")
-            self._browser("wait", "time", "0.5")
-            # 2. Type "#topicname" into the body. XHS detects the leading '#'
-            #    and opens the suggestion dropdown.
-            js = (
-                "(function(topicName){"
-                "const text='#'+topicName;"
-                "document.execCommand('insertText',false,text);"
-                "const a=document.activeElement;"
-                "if(a){a.dispatchEvent(new Event('input',{bubbles:true}));"
-                "a.dispatchEvent(new KeyboardEvent('keyup',{bubbles:true,key:text.slice(-1)}));}"
-                "})(" + json.dumps(topic) + ")"
-            )
-            self._eval(js, f"type '#{topic}' into body")
-            # 3. Wait for ``div.items div.item`` suggestions to render. No
-            # dropdown means the platform offers no entity for this topic:
-            # terminal ineligibility, never a silent skip.
-            try:
-                self._must(
-                    f"wait topic dropdown for '{topic}'",
-                    self._browser("wait", "selector", "div.items div.item", "--timeout", "15000"),
+            present: list[str] = []
+            # The initial editor sometimes shows recommendations already;
+            # clicking its toggle in that state closes the panel.  Read first
+            # and only toggle when it is genuinely absent.  After a chip is
+            # selected the panel closes, so the later iterations reopen it.
+            for _ in range(2):
+                self._browser("wait", "time", "0.5")
+                present = self._list_present_tags()
+                if present:
+                    break
+            if not present:
+                opened = self._eval(
+                    "(()=>{const b=document.querySelector('button#topicBtn');"
+                    "if(!b||b.offsetParent===null)return JSON.stringify({ok:false});"
+                    "b.click();return JSON.stringify({ok:true});})()",
+                    "open Creator Center topic picker",
                 )
-            except DeliveryError as error:
-                raise TopicEntityUnavailable((topic,), detail=str(error)) from error
-            # 4. Click the exactly-matching dropdown item. Exact match only:
-            # no ``items[0]`` fallback, wrong-entity binding is a failure.
-            res = self._eval(self._click_suggestion_js(topic), f"click suggestion for '{topic}'")
-            if not res.get("ok"):
-                raise TopicEntityUnavailable((topic,), detail=f"no exact suggestion match: {res}")
+                if not isinstance(opened, dict) or not opened.get("ok"):
+                    raise TopicEntityUnavailable((topic,), detail="Creator Center topic picker is unavailable")
+                for _ in range(4):
+                    self._browser("wait", "time", "0.5")
+                    present = self._list_present_tags()
+                    if present:
+                        break
+            before = self._topic_marker_count(topic)
+            if topic not in present:
+                raise TopicEntityUnavailable(
+                    (topic,), detail=f"Creator Center did not offer exact topic chip; available={present}"
+                )
+            clicked = self._eval(self._click_chip_js(topic), f"click real topic chip for '{topic}'")
+            if not isinstance(clicked, dict) or not clicked.get("ok"):
+                raise TopicEntityUnavailable((topic,), detail=f"topic chip click failed: {clicked}")
+            self._browser("wait", "time", "0.8")
+            if self._topic_marker_count(topic) <= before:
+                raise TopicEntityUnavailable((topic,), detail="topic chip did not become a real '#topic[话题]' entity")
             bound += 1
-            self._browser("wait", "time", "0.5")
         return bound
+
+    def _topic_marker_count(self, topic: str) -> int:
+        js = (
+            "(function(topicName){"
+            "const marker='#'+topicName+'[话题]';"
+            "const editor=Array.from(document.querySelectorAll('div.tiptap'))"
+            ".find(el=>el.isContentEditable&&el.offsetParent!==null);"
+            "const text=editor?(editor.innerText||editor.textContent||''):'';"
+            "let count=0,index=text.indexOf(marker);"
+            "while(index!==-1){count+=1;index=text.indexOf(marker,index+marker.length);}"
+            "return JSON.stringify({ok:true,count:count});"
+            "})(" + json.dumps(topic) + ")"
+        )
+        result = self._eval(js, f"verify topic entity for '{topic}'")
+        return int(result.get("count", 0))
 
     @staticmethod
     def _norm(text: str) -> str:
@@ -344,10 +416,10 @@ class OpenCliXiaohongshuDelivery:
     def _list_present_tags(self) -> list[str]:
         js = (
             "(function(){var out=[];"
-            "for(var t of document.querySelectorAll('.tag-group .tag, .tag-group-popover-container .tag')){"
+            "for(var t of document.querySelectorAll('.tag-group .tag, .tag-group-popover-container .tag, .tag')){"
             "  if(t.offsetParent===null) continue;"
             "  var tx=(t.innerText||'').replace(/\\s+/g,' ').trim();"
-            "  if(tx && tx!=='更多') out.push(tx);"
+            "  if(tx && tx!=='更多') out.push(tx.replace(/^#/,''));"
             "}"
             "return JSON.stringify(out);})()"
         )
@@ -362,7 +434,7 @@ class OpenCliXiaohongshuDelivery:
     def _click_chip_js(self, text: str) -> str:
         return (
             "(function(want){for(var t of document.querySelectorAll('.tag')){"
-            "if((t.innerText||'').replace(/\\s+/g,' ').trim()===want){t.click();"
+            "if((t.innerText||'').replace(/^#/,'').replace(/\\s+/g,' ').trim()===want){t.click();"
             "return JSON.stringify({ok:true});}}"
             "return JSON.stringify({ok:false});})(" + json.dumps(text) + ")"
         )
@@ -372,6 +444,40 @@ class OpenCliXiaohongshuDelivery:
         # The file card only appears once the upload has been acknowledged.
         self._must("wait pdf visible",
                    self._browser("wait", "text", pdf_path.name, "--timeout", "40000"))
+
+    def _verify_saved_draft(self, draft_id: str, payload: DraftPayload) -> dict:
+        """Read back the one saved IndexedDB record; fields may not be split across drafts."""
+        verifier = OpenCliXiaohongshuDelivery(runner=self.runner, session=f"{self.session}-verify")
+        verifier._must(
+            "open creator for saved-draft verification",
+            verifier._browser("open", self.creator_url, "--window", "background"),
+        )
+        key = draft_id[2:] if draft_id.startswith("s:") else draft_id
+        js = (
+            "(async()=>{const key=" + json.dumps(key) + ";"
+            "const expectedBody=" + json.dumps(payload.body) + ";"
+            "const expectedTopics=" + json.dumps(list(payload.topics)) + ";"
+            "const expectedName=" + json.dumps(payload.pdf_path.name) + ";"
+            "const expectedSize=" + str(payload.pdf_path.stat().st_size) + ";"
+            "const norm=v=>String(v||'').replace(/\\s+/g,'').trim();"
+            "try{const db=await new Promise((ok,bad)=>{const r=indexedDB.open('draft-database-v1');"
+            "r.onsuccess=()=>ok(r.result);r.onerror=()=>bad(r.error);});"
+            "const store=db.transaction('image-draft','readonly').objectStore('image-draft');"
+            "const row=await new Promise((ok,bad)=>{const r=store.get(key);r.onsuccess=()=>ok(r.result);r.onerror=()=>bad(r.error);});db.close();"
+            "const draft=row&&row.content&&row.content.draftStore||{};"
+            "const relation=row&&row.content&&row.content.settingStore&&row.content.settingStore.fileRelate||{};"
+            "const bodyOk=norm(draft.desc).includes(norm(expectedBody));"
+            "const names=(Array.isArray(draft.hashTag)?draft.hashTag:[]).map(t=>String(t&&t.name||''));"
+            "const topicsOk=expectedTopics.every(t=>names.includes(t));"
+            "const fileOk=!!String(relation.docId||relation.fileId||'')&&String(relation.docName||relation.docShowName||'')===expectedName&&Number(relation.docSize||0)===expectedSize;"
+            "const ok=bodyOk&&topicsOk&&fileOk;return JSON.stringify({ok,body_ok:bodyOk,topics_ok:topicsOk,pdf_ok:fileOk,"
+            "error:ok?'':(!bodyOk?'saved body does not match expected text':!topicsOk?'saved topic entities do not match expected topics':'saved PDF attachment metadata does not match')});"
+            "}catch(error){return JSON.stringify({ok:false,error:String(error&&error.message||error)});}})()"
+        )
+        try:
+            return verifier._eval(js, "read saved draft record")
+        finally:
+            verifier._browser("close")
 
     def _save_draft(self) -> dict:
         """Invoke the composer's save-draft action. Mirrors publish.js Step 7.
@@ -506,6 +612,11 @@ class OpenCliXiaohongshuDelivery:
         if int(draft.get("images", 0)) != len(payload.image_paths):
             self._delete(str(draft["id"]))
             raise DeliveryError("saved draft image count differs from the verified manifest")
+        if attach_pdf:
+            verification = self._verify_saved_draft(str(draft["id"]), payload)
+            if not verification.get("ok"):
+                self._delete(str(draft["id"]))
+                raise DeliveryError(f"saved draft verification failed: {verification.get('error') or verification}")
         return draft
 
     def deliver(self, payload: DraftPayload) -> DeliveryReceipt:

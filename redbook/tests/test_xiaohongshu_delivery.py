@@ -32,6 +32,7 @@ class FakeRunner:
                  fail_rules: tuple[str, ...] = ()) -> None:
         self.drafts, self.eval_rules, self.fail_rules = list(drafts), dict(eval_rules or {}), fail_rules
         self.calls: list[list[str]] = []
+        self.marker_calls = 0
 
     def __call__(self, command: list[str]) -> subprocess.CompletedProcess[str]:
         self.calls.append(command)
@@ -41,14 +42,37 @@ class FakeRunner:
         if "xiaohongshu\x1fdrafts" in joined:
             return subprocess.CompletedProcess(command, 0, self.drafts.pop(0) if self.drafts else "[]", "")
         if "browser" in command:
-            sub = command[command.index("browser") + 2]
+            sub = command[command.index("browser") + 1]
             if sub == "eval":
-                js = command[-1]
+                js = command[command.index("eval") + 1]
                 for needle, response in self.eval_rules.items():
                     if needle in js:
                         return subprocess.CompletedProcess(command, 0, response, "")
+                if "const marker='#'+topicName+'[话题]'" in js:
+                    self.marker_calls += 1
+                    return subprocess.CompletedProcess(
+                        command, 0,
+                        '{"ok":true,"count":' + ("0" if self.marker_calls == 1 else "1") + "}", "",
+                    )
+                if "for(var t of document.querySelectorAll('.tag-group" in js:
+                    return subprocess.CompletedProcess(command, 0, '["AI论文"]', "")
+                if "if((t.innerText||'').replace(/\\s+/g,' ').trim()===want)" in js:
+                    return subprocess.CompletedProcess(command, 0, '{"ok": true}', "")
                 return subprocess.CompletedProcess(command, 0, '{"ok": true}', "")
         return subprocess.CompletedProcess(command, 0, "{}", "")
+
+
+class ScriptedVerificationDelivery(OpenCliXiaohongshuDelivery):
+    """Exercise the real save flow while supplying the post-save platform readback."""
+
+    def __init__(self, runner: FakeRunner, verification: dict) -> None:
+        super().__init__(runner=runner)
+        self.verification = verification
+        self.checks: list[tuple[str, str, tuple[str, ...], str]] = []
+
+    def _verify_saved_draft(self, draft_id: str, payload: DraftPayload) -> dict:
+        self.checks.append((draft_id, payload.body, payload.topics, payload.pdf_path.name))
+        return self.verification
 
 
 class XiaohongshuDeliveryTests(unittest.TestCase):
@@ -71,20 +95,62 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         upload = next(call for call in runner.calls if any("paper.pdf" in part for part in call))
         self.assertTrue(any("paper.pdf" in part for part in upload))
 
+    def test_incomplete_saved_draft_is_removed_after_readback(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            drafts = ('[]', '[{"id":"draft-1", "title":"论文快报", "images":1}]')
+            runner = FakeRunner(drafts=drafts)
+            delivery = ScriptedVerificationDelivery(
+                runner, {"ok": False, "error": "saved body does not match expected text"}
+            )
+            with self.assertRaisesRegex(DeliveryError, "saved body does not match"):
+                delivery.deliver(self._payload(Path(folder)))
+        self.assertEqual(delivery.checks, [("draft-1", "正文", ("AI论文",), "paper.pdf")])
+        self.assertTrue(any("draft-delete" in call for call in runner.calls))
+
+    def test_open_editor_releases_stale_session_before_navigating(self) -> None:
+        runner = FakeRunner()
+        OpenCliXiaohongshuDelivery(runner=runner)._open_editor()
+        browser_calls = [call for call in runner.calls if "browser" in call]
+        first = browser_calls[0]
+        second = browser_calls[1]
+        self.assertEqual(first[first.index("browser") + 1], "close")
+        self.assertEqual(second[second.index("browser") + 1], "open")
+
+    def test_drafts_accepts_opencli_v2_data_envelope(self) -> None:
+        runner = FakeRunner(drafts=['{"ok":true,"data":[{"id":"s:new","title":"draft"}]}'])
+        drafts = OpenCliXiaohongshuDelivery(runner=runner)._drafts()
+        self.assertEqual(drafts, [{"id": "s:new", "title": "draft"}])
+
     def test_topic_without_exact_match_raises_and_skips(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             runner = FakeRunner(
-                eval_rules={"no exact match": '{"ok": false, "count": 3, "reason": "no exact match"}'})
+                eval_rules={"const marker='#'+topicName+'[话题]'": '{"ok": true, "count": 0}'})
             with self.assertRaises(TopicEntityUnavailable):
                 OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(self._payload(Path(folder)))
         deletes = [call for call in runner.calls if "draft-delete" in call]
         self.assertEqual(deletes, [], "nothing was saved, so nothing may be deleted")
 
-    def test_missing_topic_dropdown_raises_unavailable(self) -> None:
+    def test_topic_binding_clicks_real_creator_chip_without_native_typing(self) -> None:
+        runner = FakeRunner(eval_rules={
+            "for(var t of document.querySelectorAll('.tag-group": '["AI论文"]',
+            "if((t.innerText||'').replace(/\\s+/g,' ').trim()===want)": '{"ok": true}',
+        })
+        delivery = OpenCliXiaohongshuDelivery(runner=runner)
+        self.assertEqual(delivery._bind_topics(("AI论文",)), 1)
+        self.assertFalse(any("browser\\x1ftype" in "\\x1f".join(call) for call in runner.calls))
+        click_eval = next(call for call in runner.calls if "click real topic chip" not in call
+                          and "browser" in call and "eval" in call
+                          and "document.querySelectorAll('.tag')" in "\\n".join(call))
+        self.assertIn("replace(/^#/,''", "\\n".join(click_eval))
+
+    def test_missing_creator_chip_raises_unavailable_without_native_typing(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
-            runner = FakeRunner(fail_rules=("div.items div.item",))
+            runner = FakeRunner(eval_rules={
+                "for(var t of document.querySelectorAll('.tag-group": '[]',
+            })
             with self.assertRaises(TopicEntityUnavailable):
                 OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(self._payload(Path(folder)))
+        self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in runner.calls))
 
     def test_missing_topics_fails_before_platform_write(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

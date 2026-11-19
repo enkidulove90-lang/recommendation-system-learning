@@ -50,7 +50,15 @@ def fetch_drafts(runtime=None) -> list[dict[str, Any]]:
         raw = (result.stdout or "").strip()
         if raw.startswith(("[", "{")):
             parsed = json.loads(raw)
-            return sorted(parsed, key=lambda item: item.get("rank", 0))
+            # OpenCLI 2.x wraps formatter output in ``{ok, data}``; older
+            # versions returned the list directly.  Normalise both before
+            # sorting so inventory remains a read-only verification tool.
+            if isinstance(parsed, dict) and isinstance(parsed.get("data"), list):
+                parsed = parsed["data"]
+            if isinstance(parsed, list):
+                return sorted(parsed, key=lambda item: item.get("rank", 0))
+            last_error = f"attempt {attempt + 1}: unexpected JSON shape={type(parsed).__name__}"
+            continue
         last_error = f"attempt {attempt + 1}: rc={result.returncode} stdout={raw[:120]!r}"
     raise RuntimeError("drafts 探针连续失败（可能瞬时窗口状态）：" + last_error)
 
