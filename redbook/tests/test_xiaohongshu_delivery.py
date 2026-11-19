@@ -182,6 +182,11 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
         ))
         self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in runner.calls))
 
+    def test_native_type_regression_oracle_rejects_obsolete_command(self) -> None:
+        obsolete_calls = [["opencli", "browser", "type", "div.tiptap", "#旧话题"]]
+        with self.assertRaises(AssertionError):
+            self.assertFalse(any("browser\x1ftype" in "\x1f".join(call) for call in obsolete_calls))
+
     def test_missing_creator_chip_raises_unavailable_without_native_typing(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             runner = FakeRunner(eval_rules={
