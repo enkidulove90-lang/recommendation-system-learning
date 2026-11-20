@@ -82,6 +82,16 @@ def main() -> None:
     note.add_argument("--draft-id", help="ASCII draft ID required by --verify")
     note.add_argument("--data-root", type=Path, default=Path("data"))
     note.add_argument("--notes-dir", type=Path, help="override redbook/notes for tests")
+    orchestrate = commands.add_parser(
+        "orchestrate", help="queue/worker operations: enqueue, status, cancel, drain"
+    )
+    orchestrate.add_argument("action", choices=["enqueue", "status", "cancel", "drain"])
+    orchestrate.add_argument("--queue", default="intake")
+    orchestrate.add_argument("--payload-ref", help="addressing reference, e.g. note:<paper_id>")
+    orchestrate.add_argument("--job-id")
+    orchestrate.add_argument("--handler", default="noop", help="noop | save_draft")
+    orchestrate.add_argument("--data-root", type=Path, default=Path("data"))
+    orchestrate.add_argument("--notes-dir", type=Path, help="override redbook/notes for tests")
     args = parser.parse_args()
     if args.command == "prepare-figures":
         reviewer = ModelScopeVisionReviewer() if args.vision else None
@@ -226,6 +236,34 @@ def main() -> None:
             _emit_json(result)
             raise SystemExit(2)
         _emit_json(result)
+    elif args.command == "orchestrate":
+        from redbook.orchestration.queue import QueueFullError, SqliteQueueBackend
+        from redbook.orchestration.worker import HANDLERS, Worker
+
+        backend = SqliteQueueBackend(args.data_root / "state" / "orchestration.sqlite")
+        if args.action == "enqueue":
+            if not args.payload_ref:
+                parser.error("orchestrate enqueue requires --payload-ref")
+            try:
+                job = backend.enqueue(args.queue, args.payload_ref)
+            except QueueFullError as error:
+                _emit_json(receipt_envelope(error, state="rejected"))
+                raise SystemExit(exit_code_for(error.code)) from error
+            _emit_json(job.to_dict() | {"ok": True})
+        elif args.action == "status":
+            job = backend.get_job(args.job_id or "")
+            if job is None:
+                _emit_json({"ok": False, "error": "job not found"})
+                raise SystemExit(2)
+            _emit_json(job.to_dict() | {"ok": True, "events": backend.events(job.job_id)})
+        elif args.action == "cancel":
+            _emit_json({"ok": backend.cancel(args.job_id or ""), "job_id": args.job_id})
+        else:  # drain
+            if args.handler not in HANDLERS:
+                parser.error(f"unknown handler {args.handler!r}")
+            worker = Worker(backend)
+            receipts = worker.drain(HANDLERS[args.handler])
+            _emit_json({"ok": True, "processed": [receipt.to_dict() for receipt in receipts]})
 
 
 if __name__ == "__main__":

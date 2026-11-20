@@ -17,6 +17,8 @@ E_REGISTRY_CONFLICT = "E_REGISTRY_CONFLICT"
 E_AUTH = "E_AUTH"
 E_VERIFY_UNCERTAIN = "E_VERIFY_UNCERTAIN"
 E_ROLLBACK_FAILED = "E_ROLLBACK_FAILED"
+E_QUEUE_FULL = "E_QUEUE_FULL"
+E_UNKNOWN_MANUAL = "E_UNKNOWN_MANUAL"
 
 
 _POLICIES: dict[str, dict[str, object]] = {
@@ -30,6 +32,8 @@ _POLICIES: dict[str, dict[str, object]] = {
     E_AUTH: {"retryable": True, "next_step": "运行 scripts/login_qr.py 扫码后重试", "owner": "human"},
     E_VERIFY_UNCERTAIN: {"retryable": True, "next_step": "进对账 job，不删除", "owner": "system"},
     E_ROLLBACK_FAILED: {"retryable": True, "next_step": "进人工收件箱，附 draft_id", "owner": "human"},
+    E_QUEUE_FULL: {"retryable": True, "next_step": "队列已满，稍后重新入队", "owner": "system"},
+    E_UNKNOWN_MANUAL: {"retryable": False, "next_step": "人工排查未知异常后重跑", "owner": "human"},
 }
 
 

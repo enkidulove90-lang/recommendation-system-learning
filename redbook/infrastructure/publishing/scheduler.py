@@ -1,4 +1,5 @@
 """Publishing scheduler — ties strategy to actual timing decisions."""
+DEPRECATED: 未接线死代码，任务三哨兵上线后评估删除。
 
 from __future__ import annotations
 

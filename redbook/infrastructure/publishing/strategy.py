@@ -1,4 +1,5 @@
 """Publishing time optimization — fixed → data-driven → event-triggered.
+DEPRECATED: 未接线死代码，任务三哨兵上线后评估删除。
 
 Phase 0 (Fixed Time):  Publish at predefined optimal slots. Accumulate data.
 Phase 1 (Data-Driven): After ≥30 posts, switch to per-account best time.

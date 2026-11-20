@@ -1,0 +1,37 @@
+# 编排层配置（任务一：队列/worker/API 语义验收用）。
+# 铁律：先在 SQLite 上跑通全部语义；接入 Redis 时仅替换 queue 后端实现。
+
+queue:
+  backend: sqlite            # sqlite | redis（预留）
+  sqlite_path: data/state/orchestration.sqlite
+  max_depths:
+    intake: 100
+    parse: 100
+    summarize: 100
+    compose: 100
+    deliver: 100             # 投递段是硬瓶颈，队列有界 + 429 背压
+  default_max_depth: 100
+  backoff_seconds: 30        # FAILED_RETRYABLE 重新可领取的退避窗口
+
+worker:
+  lease_ttl_seconds: 60      # 心跳超时即视为僵尸，其他 worker 可接管
+  heartbeat_interval_seconds: 10
+  poll_interval_seconds: 2
+  # 账号级串行保存：同一账号同时只允许一个 deliver 阶段任务（M4 落地，此处先登记）
+  accounts:
+    xhs: default
+    wechat: default
+
+stages:
+  crawl:
+    timeout_seconds: 600
+  parse:
+    timeout_seconds: 900     # MinerU 30-120s + 余量
+  summarize:
+    timeout_seconds: 600     # DeepSeek
+  compose:
+    timeout_seconds: 120
+
+api:
+  host: 127.0.0.1
+  port: 8788

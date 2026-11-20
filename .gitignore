@@ -120,3 +120,4 @@ data/parsed/**/*.otf
 
 .pytest_tmp/
 .pytest_cache/
+.pytest_tmp2/

@@ -394,6 +394,135 @@ def cmd_summarize(arxiv_id: str, md_path: str = "", title: str = "", abstract: s
         print(f"\nAgent Relevance:\n{summary.get('agent_relevance', 'N/A')[:300]}...")
 
 
+def cmd_stage(
+    stage: str,
+    arxiv_id: str = "",
+    topic: str = "",
+    max_results: int = 20,
+    pdf_path: str = "",
+    md_path: str = "",
+    title: str = "",
+    abstract: str = "",
+    force: bool = False,
+) -> None:
+    """Run one pipeline stage with content-hash artifact reuse (任务一 M2).
+
+    The stage only registers ``input digest -> product paths``; re-running on
+    the same input hits the registry instead of calling MinerU/DeepSeek again.
+    The existing one-shot commands keep their behavior untouched.
+    """
+    from redbook.orchestration.artifacts import ArtifactStore, digest_file
+
+    store = ArtifactStore(settings.DATA_DIR / "workflow_state" / "artifacts.jsonl")
+
+    if stage == "crawl":
+        if not topic:
+            print("ERROR: stage crawl requires --topic")
+            sys.exit(1)
+        from redbook.orchestration.artifacts import digest_bytes
+
+        input_hash = digest_bytes(f"crawl|{topic}|{max_results}".encode("utf-8"))
+        cached = None if force else store.find("crawl", input_hash)
+        if cached:
+            print(f"Artifact hit for crawl stage ({input_hash[:12]}); skipping crawler.")
+            print(json.dumps(cached["outputs"], ensure_ascii=False, indent=2))
+            return
+        crawler = ArxivCrawler()
+        result = crawler.run_topic(topic_name=topic, max_results=max_results, parse_pdf=False)
+        outputs = {"topic": topic, "total": str(result.get("total", 0))}
+        store.register("crawl", input_hash, outputs=outputs, source=topic)
+        print(f"Crawl stage complete; artifact registered: {input_hash[:12]}")
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+        return
+
+    if not arxiv_id:
+        print(f"ERROR: stage {stage} requires --arxiv-id")
+        sys.exit(1)
+
+    if stage == "parse":
+        pdf = Path(pdf_path) if pdf_path else settings.DATA_DIR / "papers" / f"{arxiv_id}.pdf"
+        if not pdf.exists():
+            print(f"ERROR: local PDF not found for {arxiv_id}: {pdf}")
+            sys.exit(1)
+        input_hash = digest_file(pdf)
+        cached = None if force else store.find("parse", input_hash)
+        if cached:
+            print(f"Artifact hit for parse stage ({input_hash[:12]}); skipping MinerU.")
+            print(json.dumps(cached["outputs"], ensure_ascii=False, indent=2))
+            return
+        parser = get_skill("pdf-parse")
+        if parser.is_ready:
+            kwargs = {"pdf_path": str(pdf), "arxiv_id": arxiv_id}
+            result = parser.execute(**kwargs)
+        else:
+            print("WARN: MinerU not configured; using local PDF text fallback.")
+            result = get_skill("pdf-parse-local").execute(
+                arxiv_id=arxiv_id, pdf_path=str(pdf),
+            )
+        if result["error"]:
+            print(f"ERROR: {result['error']}")
+            sys.exit(1)
+        outputs = {
+            key: str(result[key]) for key in ("markdown_path", "json_path") if result.get(key)
+        }
+        store.register("parse", input_hash, outputs=outputs, source=arxiv_id)
+        print(f"Parse stage complete; artifact registered: {input_hash[:12]}")
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+    elif stage == "summarize":
+        md = Path(md_path) if md_path else find_parsed_markdown(arxiv_id)
+        if md is None or not Path(md).exists():
+            print(f"ERROR: no parsed markdown for {arxiv_id}; run stage parse first.")
+            sys.exit(1)
+        input_hash = digest_file(md)
+        cached = None if force else store.find("summarize", input_hash)
+        if cached:
+            print(f"Artifact hit for summarize stage ({input_hash[:12]}); skipping DeepSeek.")
+            print(json.dumps(cached["outputs"], ensure_ascii=False, indent=2))
+            return
+        summarizer = DeepSeekSummarizer()
+        if not summarizer.is_ready:
+            print("ERROR: DeepSeek API key not configured. Set DEEPSEEK_API_KEY in .env")
+            sys.exit(1)
+        result = summarizer.execute(
+            arxiv_id=arxiv_id,
+            title=title,
+            abstract=abstract,
+            full_text=Path(md).read_text(encoding="utf-8", errors="replace"),
+        )
+        if result["error"]:
+            print(f"ERROR: {result['error']}")
+            sys.exit(1)
+        outputs = {"summary_path": str(result["summary_path"])}
+        store.register("summarize", input_hash, outputs=outputs, source=arxiv_id)
+        print(f"Summarize stage complete; artifact registered: {input_hash[:12]}")
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+    elif stage == "compose":
+        md = Path(md_path) if md_path else find_parsed_markdown(arxiv_id)
+        if md is None or not Path(md).exists():
+            print(f"ERROR: no parsed markdown for {arxiv_id}.")
+            sys.exit(1)
+        input_hash = digest_file(md)
+        cached = None if force else store.find("compose", input_hash)
+        if cached:
+            print(f"Artifact hit for compose stage ({input_hash[:12]}); skipping composer.")
+            print(json.dumps(cached["outputs"], ensure_ascii=False, indent=2))
+            return
+        from redbook.services.render_post import render_post
+
+        result = render_post("xhs", Path(md).read_text(encoding="utf-8", errors="replace"),
+                             None, arxiv_id=arxiv_id, persona_id="research_translator")
+        output = settings.DATA_DIR / "workflow_state" / arxiv_id / "compose_stage.json"
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+        outputs = {"compose_path": str(output)}
+        store.register("compose", input_hash, outputs=outputs, source=arxiv_id)
+        print(f"Compose stage complete; artifact registered: {input_hash[:12]}")
+        print(json.dumps(outputs, ensure_ascii=False, indent=2))
+    else:
+        print(f"ERROR: unknown stage {stage!r}")
+        sys.exit(1)
+
+
 def cmd_merge(
     target: int = 200_000,
     strategy: str = "all",
@@ -969,6 +1098,21 @@ Examples:
     sum_parser.add_argument("--title", default="", help="Paper title (optional)")
     sum_parser.add_argument("--abstract", default="", help="Paper abstract (optional)")
 
+    # ---- stage ----
+    stage_parser = subparsers.add_parser(
+        "stage",
+        help="Run one pipeline stage (crawl/parse/summarize/compose) with artifact reuse",
+    )
+    stage_parser.add_argument("name", choices=["crawl", "parse", "summarize", "compose"])
+    stage_parser.add_argument("--arxiv-id", default="", help="arXiv ID (parse/summarize/compose)")
+    stage_parser.add_argument("--topic", default="", help="Topic name (crawl only)")
+    stage_parser.add_argument("--max", dest="max_results", type=int, default=20)
+    stage_parser.add_argument("--pdf-path", default="", help="Local PDF path (parse only)")
+    stage_parser.add_argument("--md-path", default="", help="Parsed markdown path (optional)")
+    stage_parser.add_argument("--title", default="", help="Paper title (summarize only)")
+    stage_parser.add_argument("--abstract", default="", help="Paper abstract (summarize only)")
+    stage_parser.add_argument("--force", action="store_true", help="Ignore artifact registry")
+
     # ---- profile ----
     profile_parser = subparsers.add_parser(
         "profile",
@@ -1087,6 +1231,18 @@ Examples:
         cmd_parse(args.arxiv_id, args.pdf_path)
     elif args.command == "summarize":
         cmd_summarize(args.arxiv_id, args.md_path, args.title, args.abstract)
+    elif args.command == "stage":
+        cmd_stage(
+            args.name,
+            arxiv_id=args.arxiv_id,
+            topic=args.topic,
+            max_results=args.max_results,
+            pdf_path=args.pdf_path,
+            md_path=args.md_path,
+            title=args.title,
+            abstract=args.abstract,
+            force=args.force,
+        )
     elif args.command == "profile":
         cmd_profile(args.arxiv_id or "", args.all, args.force)
     elif args.command == "validate-profile":
