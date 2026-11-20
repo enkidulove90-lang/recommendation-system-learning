@@ -1,0 +1,29 @@
+# Candidate organizations for affiliation verification (task 2, goal 2).
+# Structured version of the daily_draft.yaml candidate list; matched with a
+# containment check against Author.affiliation values extracted from the
+# arXiv source. Three-state output: verified / unverified / mismatch.
+companies:
+  - Alibaba
+  - ByteDance
+  - Tencent
+  - Meituan
+  - Huawei
+  - Baidu
+  - Kuaishou
+  - Microsoft
+  - Google
+  - Meta
+
+universities:
+  - Tsinghua University
+  - Peking University
+  - Zhejiang University
+  - Shanghai Jiao Tong University
+  - Fudan University
+  - University of Science and Technology of China
+  - Nanjing University
+  - Renmin University of China
+  - Stanford University
+  - Carnegie Mellon University
+  - Massachusetts Institute of Technology
+  - University of California, Berkeley

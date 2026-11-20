@@ -121,6 +121,38 @@ class WeChatDraftPayload:
             raise DeliveryError("WeChat author must be at most 8 characters")
 
 
+def reconcile_draft_box(before_ids: list[str], after_ids: list[str], *,
+                        expected: int = 1) -> dict:
+    """WeChat draft-box reconciliation (task 2: pattern mirrored from XHS).
+
+    Exactly ``expected`` new draft id(s) -> ``{"ok": True, "draft_id": ...}``.
+    Zero new ids -> ``E_VERIFY_UNCERTAIN`` (save marker alone is not proof; the
+    draft is NEVER deleted here -- same uncertain-not-delete iron rule as XHS).
+    More than ``expected`` -> ``E_VERIFY_MISMATCH`` (repeated save attempt).
+    Unlike the Xiaohongshu adapter there is no DOM reopen check: the platform
+    editor structure differs, so save-marker + box reconciliation is the
+    verification ceiling for WeChat (documented platform-fact difference).
+    """
+    from redbook.infrastructure.delivery_errors import (
+        E_VERIFY_MISMATCH, E_VERIFY_UNCERTAIN, OrchestrationError,
+    )
+
+    known = set(before_ids)
+    added = sorted({str(item) for item in after_ids} - known)
+    if len(added) == expected:
+        return {"ok": True, "draft_id": added[0],
+                "new_ids": added, "verified": True}
+    if not added:
+        raise OrchestrationError(
+            "no new draft appeared in the draft box after save",
+            E_VERIFY_UNCERTAIN,
+            {"before_count": len(before_ids), "after_count": len(after_ids)})
+    raise OrchestrationError(
+        f"expected {expected} new draft(s) but found {len(added)}",
+        E_VERIFY_MISMATCH,
+        {"new_ids": added, "expected": expected})
+
+
 @dataclass(frozen=True)
 class DeliveryReceipt:
     """Confirmation that the draft saved (or the failure that prevented it)."""

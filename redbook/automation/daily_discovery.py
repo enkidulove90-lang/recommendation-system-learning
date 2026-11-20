@@ -141,3 +141,80 @@ class DailyDiscoveryRunner:
         }
         write_json(manifest_path, manifest)
         return {**manifest, "manifest_path": str(manifest_path)}
+
+
+# ---- verification gates (task 2: affiliation + official code link) ----------
+
+def extract_affiliations(record: PaperRecord) -> list[str]:
+    """Collect affiliation strings from arxiv-source author metadata."""
+    affiliations: list[str] = []
+    for author in record.authors:
+        value = author.get("affiliation") if isinstance(author, dict) else None
+        if isinstance(value, str) and value.strip():
+            affiliations.append(value.strip())
+        elif isinstance(value, list):
+            affiliations.extend(str(item).strip() for item in value if str(item).strip())
+    return list(dict.fromkeys(affiliations))
+
+
+def verify_affiliation(record: PaperRecord,
+                       candidate_orgs: tuple[str, ...]) -> dict[str, Any]:
+    """Three-state affiliation verdict: verified / unverified / mismatch."""
+    affiliations = extract_affiliations(record)
+    matched = [org for org in candidate_orgs
+               if any(_contains(aff, org) or _contains(org, aff)
+                      for aff in affiliations)]
+    if matched:
+        return {"state": "verified", "matched": matched,
+                "affiliations": affiliations}
+    if not affiliations:
+        return {"state": "unverified", "matched": [], "affiliations": [],
+                "detail": "no affiliation metadata in source"}
+    return {"state": "mismatch", "matched": [],
+            "affiliations": affiliations,
+            "detail": "affiliations present but none in candidate list"}
+
+
+def apply_verification_gates(
+        records: list[PaperRecord], *,
+        candidate_orgs: tuple[str, ...] = (),
+        require_affiliation: bool = True,
+        require_code: bool = True,
+        code_verifier: Callable[[str], dict[str, Any]] | None = None,
+) -> tuple[list[PaperRecord], list[dict[str, Any]]]:
+    """Hard-gate kept candidates on verified affiliation and code link.
+
+    Rejected candidates are returned with reasons (parked for human review,
+    never silently dropped); a ``blocked`` code link parks the candidate, an
+    ``unverified`` one simply fails this run and may pass on a retry.
+    """
+    if code_verifier is None:
+        from .code_link_verifier import verify_code_link
+        code_verifier = verify_code_link
+    kept: list[PaperRecord] = []
+    rejected: list[dict[str, Any]] = []
+
+    def reject(record: PaperRecord, gate: str, state: str, detail: str) -> None:
+        rejected.append({"record_id": record.record_id, "title": record.title,
+                         "gate": gate, "state": state, "detail": detail})
+
+    for record in records:
+        if require_affiliation:
+            verdict = verify_affiliation(record, candidate_orgs)
+            record.provenance["affiliation_verification"] = verdict
+            if verdict["state"] != "verified":
+                reject(record, "affiliation", verdict["state"],
+                       verdict.get("detail", ""))
+                continue
+        if require_code:
+            code_url = str(record.urls.get("code") or record.urls.get("github") or "")
+            verdict = code_verifier(code_url)
+            record.provenance["code_verification"] = verdict
+            if verdict["state"] == "blocked":
+                reject(record, "code", "blocked", verdict["detail"])
+                continue
+            if verdict["state"] != "verified":
+                reject(record, "code", "unverified", verdict["detail"])
+                continue
+        kept.append(record)
+    return kept, rejected
