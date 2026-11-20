@@ -92,6 +92,15 @@ def main() -> None:
     orchestrate.add_argument("--handler", default="noop", help="noop | save_draft")
     orchestrate.add_argument("--data-root", type=Path, default=Path("data"))
     orchestrate.add_argument("--notes-dir", type=Path, help="override redbook/notes for tests")
+
+    sentinel = commands.add_parser(
+        "sentinel", help="dependency probe sweep, 11:00 retrieval, pool dispatch"
+    )
+    sentinel.add_argument("action", choices=["run-once", "probe", "pool"])
+    sentinel.add_argument("--data-root", type=Path, default=Path("data"))
+    sentinel.add_argument("--no-dispatch", action="store_true",
+                          help="pool-only mode: skip queue dispatch")
+
     args = parser.parse_args()
     if args.command == "prepare-figures":
         reviewer = ModelScopeVisionReviewer() if args.vision else None
@@ -264,6 +273,35 @@ def main() -> None:
             worker = Worker(backend)
             receipts = worker.drain(HANDLERS[args.handler])
             _emit_json({"ok": True, "processed": [receipt.to_dict() for receipt in receipts]})
+    elif args.command == "sentinel":
+        import yaml as _yaml
+
+        from redbook.orchestration.queue import SqliteQueueBackend
+        from redbook.sentinel.paper_pool import PaperPool
+        from redbook.sentinel.probes import build_default_probes
+        from redbook.sentinel.runner import SentinelRunner
+
+        config_path = Path("redbook/config/sentinel.yaml")
+        config = _yaml.safe_load(config_path.read_text(encoding="utf-8")) \
+            if config_path.exists() else {}
+        pool = PaperPool(args.data_root / "state" / "orchestration.sqlite")
+        runner = SentinelRunner(pool, config=config,
+                                probes=build_default_probes(config),
+                                log_dir=args.data_root / "logs")
+        if args.action == "probe":
+            results = runner.probe_all()
+            _emit_json({"ok": True, "probes": [r.to_dict() for r in results]})
+        elif args.action == "pool":
+            with pool._connection() as connection:
+                rows = [dict(row) for row in connection.execute(
+                    "SELECT canonical_id, arxiv_id, title, status, "
+                    "pending_delivery, platforms, discovered_at FROM paper_pool "
+                    "ORDER BY discovered_at").fetchall()]
+            _emit_json({"ok": True, "count": len(rows), "entries": rows})
+        else:  # run-once: Task Scheduler entry point
+            queue = None if args.no_dispatch else \
+                SqliteQueueBackend(args.data_root / "state" / "orchestration.sqlite")
+            _emit_json(runner.run_once(queue, dispatch=queue is not None))
 
 
 if __name__ == "__main__":

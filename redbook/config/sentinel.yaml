@@ -1,0 +1,32 @@
+# Sentinel service configuration (task 3).
+# Low-ops: invoked via Windows Task Scheduler as
+#   python -m redbook.cli sentinel run-once
+# No resident service; every entry point is idempotent or rate-limited.
+
+probe_min_interval_seconds: 900   # 15 min floor between sweeps (anti rate-limit)
+retrieval_schedule: "11:00"       # daily paper retrieval trigger
+
+# HTTP dependency probes (arxiv / s2 / dblp / openreview / crossref / github /
+# cloudflare).slow_ms: latency above this is reported degraded, not down.
+http_endpoints:
+  - { name: arxiv,           url: "https://export.arxiv.org/api/query?search_query=all:test&max_results=1", timeout: 10, slow_ms: 4000 }
+  - { name: semantic_scholar, url: "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=1", timeout: 10, slow_ms: 4000 }
+  - { name: dblp,            url: "https://dblp.org/search/publ/api?q=test&h=1&format=json", timeout: 10, slow_ms: 4000 }
+  - { name: openreview,      url: "https://api2.openreview.net/notes?limit=1", timeout: 10, slow_ms: 4000 }
+  - { name: crossref,        url: "https://api.crossref.org/works?rows=1", timeout: 10, slow_ms: 4000 }
+  - { name: github_api,      url: "https://api.github.com/rate_limit", timeout: 10, slow_ms: 4000 }
+  - { name: cloudflare_worker, url: "https://enkidulove90-lang.github.io/", timeout: 10, slow_ms: 4000 }
+
+# Credential probes: key presence + cheapest injectable live call.
+api_key_probes:
+  - { name: mineru,   env_var: MINERU_API_KEY }
+  - { name: deepseek, env_var: DEEPSEEK_API_KEY }
+
+# OpenCLI daemon + Chrome login state (read-only probe_login).
+opencli_probe: true
+login_probe: { name: chrome_login, site: xiaohongshu }
+
+# Delivery decoupling: pool is the only shared artifact; each platform
+# consumes independently. homepage may publish (own site); xhs/wechat stop
+# at VERIFIED (draft-only iron rule).
+platform: homepage
