@@ -102,15 +102,13 @@ class _DeliveryRuntime:
 #: Selectors reused from OpenCLI's adapter (clis/xiaohongshu/publish.js) plus
 #: the ones confirmed live against this account's creator-center DOM.
 #:
-#: IMPORTANT (2026-08 verified): the current creator center has **no**
-#: searchable topic dropdown. The old ``div.items div.item`` list is gone,
-#: typing ``#topic`` into the body no longer forms a chip, and clicking
-#: ``button#topicBtn`` does NOT open a search box — it only reveals a set of
-#: *recommended* ``.tag`` chips (which rotate randomly every session). The only
-#: way to get a real, highlighted, clickable topic entity is to click a
-#: recommended ``.tag`` chip whose text matches the desired topic or an academic
-#: allowlist. ``TOPIC_SUGGESTION_SELECTORS`` is retained only as dead legacy and
-#: is no longer used by ``_bind_topics``.
+#: IMPORTANT (2026-11 live verified): Creator Center can expose rotating
+#: recommended ``.tag`` chips, but that list may legitimately be empty.  A
+#: reliable entity path is therefore: append a temporary ``#<topic>`` query to
+#: the contentEditable end using CDP, click the exact ``.item .name`` result,
+#: then assert that Creator Center replaced the query with a ``tiptap-topic``
+#: node.  The temporary query is never a plain-text body hashtag.  Do not use
+#: native ``browser type``: it can target a non-visible editor surface.
 TITLE_SELECTOR = 'input[placeholder="填写标题会有更多赞哦"]'
 BODY_SELECTOR = 'div.tiptap'
 IMAGE_INPUT_SELECTOR = 'input.upload-input'
@@ -392,12 +390,13 @@ class OpenCliXiaohongshuDelivery:
     def _topic_marker_count(self, topic: str) -> int:
         js = (
             "(function(topicName){"
-            "const marker='#'+topicName+'[话题]';"
             "const editor=Array.from(document.querySelectorAll('div.tiptap'))"
             ".find(el=>el.isContentEditable&&el.offsetParent!==null);"
-            "const text=editor?(editor.innerText||editor.textContent||''):'';"
-            "let count=0,index=text.indexOf(marker);"
-            "while(index!==-1){count+=1;index=text.indexOf(marker,index+marker.length);}"
+            "if(!editor)return JSON.stringify({ok:true,count:0});"
+            "const marker='#'+topicName+'[话题]';"
+            "const nodes=Array.from(editor.querySelectorAll('a.tiptap-topic[data-topic]'));"
+            "const count=nodes.filter(node=>((node.innerText||node.textContent||'')"
+            ".replace(/\\s+/g,'').startsWith(marker))).length;"
             "return JSON.stringify({ok:true,count:count});"
             "})(" + json.dumps(topic) + ")"
         )

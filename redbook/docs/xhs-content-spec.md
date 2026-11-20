@@ -152,9 +152,11 @@ python -m pytest \
 ## 7.1 Platform Facts（PF，适配层不可绕过）
 
 - **PF-1**：Creator Center 推荐话题芯片展示文本可带 `#` 前缀；比较和点击前必须归一化，但正文不得写入字面量话题。
-- **PF-2**：原生 `browser type` 不能作为话题绑定路径；点击真实 `.tag` 芯片后推荐面板会收起，下一实体必须重新读取并按需展开。
-- **PF-3**：OpenCLI 2.x JSON 可能包装为 `{ "ok": true, "data": ... }`；所有 list/eval/doctor 消费方必须经统一客户端解包。
-- **PF-4**：草稿成功必须按同一 `draft_id` 回读正文、真实话题和 `fileRelate` PDF 元数据；任一不符只删除本次新建草稿。
+- **PF-2**：原生 `browser type` 不能作为话题绑定路径。推荐 `.tag` 芯片存在时，可先点芯片、再点精确的 `.item .name` 实体行；推荐区为空是正常平台状态，**不代表话题不存在**。
+- **PF-3**：推荐区为空时，唯一回退是由适配器在 `div.tiptap` 末尾用 CDP `execCommand` 写入临时 `#<topic>` 查询，等待并点击精确 `.item .name` 实体行。点击后必须读到 `a.tiptap-topic[data-topic]` / `#<topic>[话题]`；临时查询被实体节点替换，绝不是正文纯文本话题。
+- **PF-4**：PDF 输入框会在图片上传后创建但保持隐藏。适配器必须仅暴露 `input[type=file][accept*=".pdf"]` 供 CDP 上传，并在**同一个未保存编辑会话**内等到文件卡片出现；不能先存草稿再补附件。
+- **PF-5**：OpenCLI 2.x JSON 可能包装为 `{ "ok": true, "data": ... }`；所有 list/eval/doctor 消费方必须经统一客户端解包。
+- **PF-6**：草稿成功必须按同一 `draft_id` 回读正文、真实话题和 `fileRelate` PDF 元数据；任一不符不算成功，保留回执并停止盲重试。
 
 结构化错误码由 `redbook.infrastructure.delivery_errors` 定义；兼容版本、残稿策略和暂存目录格式由 `config/xhs_content_rules.yaml:toolchain` 定义。
 
@@ -164,5 +166,7 @@ python -m pytest \
 - 同一个未保存的编辑器会话内完成：图 → 标题 → 正文 → 话题 → PDF → **最后**才存草稿。
 - 严禁「先存草稿再回草稿箱补附件」，CDP 上下文会丢失。
 - 话题必须绑定成平台真实实体，不靠正文里的 `#文本`。
+- 推荐话题区为空时，仍须让 `OpenCliXiaohongshuDelivery._bind_topics()` 走“CDP 查询 → 精确实体行 → 结构化节点”路径；禁止把空推荐区当作 `E_TOPIC_UNAVAILABLE` 的充分条件。
+- PDF 必须由同一投递器在保存前暴露隐藏 `.pdf` input 后上传，并由 `fileRelate` 的 `docId/fileId + 文件名 + 文件大小` 回读核验。
 - 已核验的同一 `(slug, staged_id)` 会由 registry 返回原 `draft_id`，不得再次创建平台草稿；改内容须重新 stage（新 hash）。
 - 核验用 ASCII `draft_id` 子串匹配，不要用返回里的中文标题（PowerShell 5.1 按 GBK 解码会不可逆乱码）。

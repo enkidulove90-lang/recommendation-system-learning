@@ -55,7 +55,7 @@ class FakeRunner:
                 for needle, response in self.eval_rules.items():
                     if needle in js:
                         return subprocess.CompletedProcess(command, 0, response, "")
-                if "const marker='#'+topicName+'[话题]'" in js:
+                if "a.tiptap-topic[data-topic]" in js:
                     self.marker_calls += 1
                     return subprocess.CompletedProcess(
                         command, 0,
@@ -150,7 +150,7 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
     def test_topic_without_exact_match_raises_and_skips(self) -> None:
         with tempfile.TemporaryDirectory() as folder:
             runner = FakeRunner(
-                eval_rules={"const marker='#'+topicName+'[话题]'": '{"ok": true, "count": 0}'})
+                eval_rules={"a.tiptap-topic[data-topic]": '{"ok": true, "count": 0}'})
             with self.assertRaises(TopicEntityUnavailable):
                 OpenCliXiaohongshuDelivery(runner=runner).save_image_draft(self._payload(Path(folder)))
         deletes = [call for call in runner.calls if "draft-delete" in call]
@@ -168,6 +168,11 @@ class XiaohongshuDeliveryTests(unittest.TestCase):
                           and "browser" in call and "eval" in call
                           and "document.querySelectorAll('.tag')" in "\\n".join(call))
         self.assertIn("replace(/^#/,''", "\\n".join(click_eval))
+        marker_eval = next(
+            call for call in runner.calls
+            if "browser" in call and "eval" in call and "a.tiptap-topic[data-topic]" in "\\n".join(call)
+        )
+        self.assertIn("editor.querySelectorAll('a.tiptap-topic[data-topic]')", "\\n".join(marker_eval))
 
     def test_topic_binding_selects_entity_row_after_recommendation_chip(self) -> None:
         runner = FakeRunner(eval_rules={

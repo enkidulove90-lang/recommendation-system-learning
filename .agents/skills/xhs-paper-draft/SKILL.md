@@ -112,6 +112,36 @@ python -m pytest redbook/tests/test_xhs_content_gate.py \
 
 ## 6. 工程坑（跨机器已验证）
 
+### 6.1 真实话题实体与 PDF 附件：强制投递契约（2026-11-20）
+
+凡是涉及小红书论文草稿的真实话题或 PDF 附件，**只能**走
+`python -m redbook.cli note <slug> --save-draft` →
+`OpenCliXiaohongshuDelivery.deliver()`；不要绕过该链路在编辑器里手工拼
+`#话题`、先存草稿再补 PDF，或另写浏览器脚本。
+
+适配器在同一未保存编辑器会话中固定执行以下顺序，并在保存后按同一
+`draft_id` 回读核验：
+
+1. 图 → 标题 → 正文；
+2. 对每个 topic，优先点击推荐 `.tag`，再点击精确 `.item .name` 实体行；
+   **推荐区为空不是“话题不存在”**。此时适配器必须在 `div.tiptap` 末尾以
+   CDP `execCommand` 插入临时 `#<topic>` 查询，等待并点击精确 `.item .name`。
+   查询文本必须被 `a.tiptap-topic[data-topic]` / `#<topic>[话题]` 结构化节点
+   替换；未出现该节点即为 `E_TOPIC_UNAVAILABLE`，不得退化成正文普通文本。
+3. 仅在图片已上传、编辑器已水合后暴露隐藏的
+   `input[type=file][accept*=".pdf"]`，CDP 上传**同一份本地 PDF**，并等待
+   文件卡片确认；PDF 只能在保存前、同一会话内上传。
+4. 最后保存草稿；`--verify --draft-id <ASCII_ID>` 必须同时返回
+   `body_ok=true`、`topics_ok=true`、`pdf_ok=true`。草稿列表不展示 PDF 不是
+   成功证据，附件证据只认 `fileRelate` 的 id、文件名和字节数。
+
+`E_TOPIC_UNAVAILABLE` 的处置：保留 stdout/stderr 和 workflow-state 回执，先读取
+编辑器中 `.item .name` 的精确候选与 `a.tiptap-topic[data-topic]`，再诊断；**禁止**
+仅因推荐 `.tag` 为空而修改话题、写正文 `#`、或盲重试。若宿主前台命令有时限，
+可用隐藏后台进程运行**完全相同的 CLI 命令**并把 stdout/stderr 落到
+`data/workflow_state/<slug>/`；先只读查草稿箱和 `--verify`，确认没有新草稿后才可
+发起一次基于明确修复的重试。
+
 - **Windows PowerShell 5.1** 捕获原生命令 stdout 按 GBK 解码，中文标题乱码不可逆：让 Python 直接写 UTF-8 文件再读，控制台只打印 ASCII 的 id / 计数。
 - 发布动作耗时长且中文多，用 PowerShell `Out-File -Encoding utf8` 落日志并查 `$LASTEXITCODE`。
 - 草稿核验**只用 ASCII `draft_id` 子串**，不要依赖返回里的中文标题。
