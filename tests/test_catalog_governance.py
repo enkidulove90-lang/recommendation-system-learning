@@ -124,3 +124,53 @@ def test_old_recsys_snapshot_without_authors_stays_unresolved(tmp_path):
     assert store.get("recsys_program:2026:bonsai")["identity_state"] == "unresolved"
     assert store.import_records([BONSAI]) == 0
     assert json.loads(store.get("recsys_program:2026:bonsai")["source_authors_json"]) == ["Jingzhe Liu"]
+
+
+def test_revised_catalog_interfaces_are_auditable_and_restricted(tmp_path):
+    store = CatalogGovernance(tmp_path / "catalog.sqlite")
+    store.import_records([BONSAI])
+    paper_id = "recsys_program:2026:bonsai"
+    assert store.get_by_identity("arxiv:missing") is None
+    store.update_enrichment(paper_id, {"title_zh": "BONSAI 论文"})
+    assert json.loads(store.get(paper_id)["enrichment_json"])["title_zh"] == "BONSAI 论文"
+    with pytest.raises(ValueError, match="allowed fields"):
+        store.update_enrichment(paper_id, {"canonical_id": "forged"})
+    store.verify_identity(paper_id, IdentityEvidence(title="BONSAI Paper", authors=("Jingzhe Liu",),
+        paper_url="https://arxiv.org/abs/2607.16633", arxiv_id="2607.16633",
+        published_at="2026-07-01", authority="arxiv",
+        evidence_url="https://export.arxiv.org/api/query?id_list=2607.16633"))
+    assert store.admit(paper_id, "wechat", topic_terms=("not-a-topic",)) == "deferred"
+    store.block(paper_id, "wechat", "manual review", {"reviewer": "test"})
+    assert store.governance_report()["deferred"] == []
+    assert any(row["kind"] == "enrichment" for row in store.evidence_history(paper_id))
+    unresolved_id = "recsys_program:2026:other"
+    store.import_records([{**BONSAI, "source_id": "other", "title": "Other paper"}])
+    unresolved_id = "recsys_program:other"
+    store.mark_conflict(unresolved_id, "arxiv:2607.16633", {"reason": "collision"})
+    assert len(store.governance_report()["conflicts"]) == 1
+    assert store.get(unresolved_id)["identity_state"] == "conflict"
+
+
+def test_missing_or_invalid_rules_fail_closed(tmp_path):
+    missing = tmp_path / "missing.yaml"
+    with pytest.raises(FileNotFoundError):
+        CatalogGovernance(tmp_path / "x.sqlite", config_path=missing)
+    invalid = tmp_path / "invalid.yaml"
+    invalid.write_text("platforms: {}\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid catalog governance"):
+        CatalogGovernance(tmp_path / "y.sqlite", config_path=invalid)
+
+
+def test_evidence_log_appends_identity_and_admission_decisions(tmp_path):
+    store = CatalogGovernance(tmp_path / "catalog.sqlite")
+    store.import_records([BONSAI])
+    pid = "recsys_program:2026:bonsai"
+    evidence = IdentityEvidence(title="BONSAI Paper", authors=("Jingzhe Liu",),
+        paper_url="https://arxiv.org/abs/2607.16633", arxiv_id="2607.16633",
+        published_at="2026-07-01", authority="arxiv",
+        evidence_url="https://export.arxiv.org/api/query?id_list=2607.16633")
+    store.verify_identity(pid, evidence)
+    store.verify_identity(pid, evidence)
+    store.admit(pid, "homepage", topic_terms=("Semantic IDs",))
+    history = store.evidence_history(pid)
+    assert [row["kind"] for row in history] == ["identity", "identity", "admission"]

@@ -30,6 +30,8 @@
 
 ## 通用注意
 
+- **论文目录依赖方向**：`paper_intake` 是身份与准入事实源，禁止 import `redbook.*`；跨域交接只能经 catalog outbox，哨兵池只接收目录快照，不反向写目录身份字段。
+
 - **规则优先级**：仓库内 `AGENTS.md` / `.agents/skills/` / `config/` 覆盖任何用户级 skill 的同名规则；用户级 `multi-platform-publishing` 与 `.claude/skills/redbook-publish` 只作路由或历史参考。
 - **不要再往仓库根写日志**：`logs_*.txt` / `_*.txt` / `_*.py` 已被 `.gitignore` 拦下；正式入口的运行记录写 `data/logs/runs.jsonl`（`redbook.infrastructure.run_log`），会话转储用 `python -m redbook.scripts.session_inspect <session.jsonl>`。
 - Windows 环境下 native 命令请显式传仓库绝对路径；Git Bash 里 `git -C /c/...` 会失败，用 `git -C "C:/..."`。

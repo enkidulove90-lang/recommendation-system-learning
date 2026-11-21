@@ -39,3 +39,22 @@ def test_pool_add_candidate_accepts_unified_snapshot(tmp_path):
         row = db.execute("SELECT title_zh,venue_name,paper_url,github_url,published_at,identity_status,admission FROM paper_pool").fetchone()
     assert tuple(row[:6]) == ("论文", "RecSys", "https://arxiv.org/abs/2601.00001",
                               "https://github.com/example/p", "2026-01-01", "identity_verified")
+
+
+def test_catalog_sync_updates_only_metadata_columns(tmp_path):
+    pool = PaperPool(tmp_path / "sync.sqlite")
+    pool.add_candidate(canonical_id="arxiv:2601.00001", title="Paper")
+    pool.set_status("arxiv:2601.00001", "queued")
+    with pool._connection() as db:
+        before = db.execute("SELECT status FROM paper_pool WHERE canonical_id='arxiv:2601.00001'").fetchone()[0]
+    changed = pool.sync_catalog_snapshots([{
+        "catalog_id": "arxiv:2601.00001", "canonical_id": "arxiv:2601.00001",
+        "title_zh": "论文", "venue_name": "RecSys",
+        "paper_url": "https://arxiv.org/abs/2601.00001", "identity_state": "identity_verified",
+        "admission": {"homepage": {"state": "eligible"}}, "updated_at": "2026-11-21T00:00:00+00:00",
+    }])
+    assert changed == 1
+    with pool._connection() as db:
+        entry = db.execute("SELECT status,title_zh FROM paper_pool WHERE canonical_id='arxiv:2601.00001'").fetchone()
+    assert entry[0] == before == "queued"
+    assert entry[1] == "论文"

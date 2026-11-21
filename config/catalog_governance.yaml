@@ -1,0 +1,25 @@
+authorities:
+  arxiv:
+    evidence_host: export.arxiv.org
+    paper_url_pattern: "https://arxiv.org/abs/{arxiv_id}"
+  crossref:
+    evidence_host: api.crossref.org
+    paper_url_pattern: "https://doi.org/{doi}"
+  acl_anthology:
+    evidence_host: aclanthology.org
+    same_source_only: true
+author_crosscheck:
+  require_source_authors: true
+per_platform_code_requirement:
+  xiaohongshu:
+    - paper_names_repository
+    - repository_reachable
+    - repository_matches_title
+    - repository_mentions_author
+platforms:
+  homepage:
+    action: publish
+  xiaohongshu:
+    action: save_draft
+  wechat:
+    action: save_draft

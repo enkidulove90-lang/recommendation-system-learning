@@ -36,7 +36,7 @@ class CatalogOutboxRelay:
         self.max_attempts = max_attempts
         self.retry_delay_seconds = retry_delay_seconds
         self.after_job_insert = after_job_insert
-        CatalogGovernance(self.path)
+        self.catalog = CatalogGovernance(self.path)
         PaperPool(self.path)
         self.queue = SqliteQueueBackend(self.path)
         with self.queue._connection() as db:
@@ -72,8 +72,7 @@ class CatalogOutboxRelay:
                 duplicate = db.execute("SELECT job_id FROM catalog_event_deliveries WHERE operation_id=?",
                                        (event["operation_id"],)).fetchone()
                 if duplicate:
-                    db.execute("UPDATE catalog_outbox SET consumed_at=? WHERE id=?",
-                               (_now().isoformat(), event["id"]))
+                    self.catalog.mark_consumed(event["id"], connection=db)
                     db.execute("COMMIT")
                     return "duplicates"
                 payload = self._payload(event)
@@ -118,7 +117,7 @@ class CatalogOutboxRelay:
                 db.execute("""INSERT INTO catalog_event_deliveries
                     (operation_id, job_id, delivered_at) VALUES (?, ?, ?)""",
                     (event["operation_id"], job_id, stamp))
-                db.execute("UPDATE catalog_outbox SET consumed_at=? WHERE id=?", (stamp, event["id"]))
+                self.catalog.mark_consumed(event["id"], connection=db)
                 db.execute("COMMIT")
                 return "sent"
             except Exception:

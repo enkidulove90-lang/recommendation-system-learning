@@ -170,6 +170,34 @@ class PaperPool:
                 "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
                 (key, value))
 
+    def sync_catalog_snapshots(self, rows: list[dict[str, Any]]) -> int:
+        """Copy catalog-owned metadata into existing pool rows, never statuses."""
+        changed = 0
+        watermark = max((str(row.get("updated_at", "")) for row in rows), default="")
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                for row in rows:
+                    canonical_id = row.get("canonical_id")
+                    if not canonical_id:
+                        continue
+                    admission = json.dumps(row.get("admission", {}), ensure_ascii=False, sort_keys=True)
+                    result = connection.execute("""UPDATE paper_pool SET title_zh=?,venue_name=?,
+                        paper_url=?,github_url=?,published_at=?,identity_status=?,admission=?,updated_at=?
+                        WHERE canonical_id=?""",
+                        (row.get("title_zh", ""), row.get("venue_name", ""), row.get("paper_url") or "",
+                         row.get("github_url", ""), row.get("published_at") or "",
+                         row.get("identity_state", "unresolved"), admission,
+                         row.get("updated_at") or _now(), canonical_id))
+                    changed += result.rowcount
+                connection.execute("""INSERT INTO sentinel_meta(key,value) VALUES('catalog_sync_watermark',?)
+                    ON CONFLICT(key) DO UPDATE SET value=excluded.value""", (watermark or _now(),))
+                connection.execute("COMMIT")
+            except Exception:
+                connection.execute("ROLLBACK")
+                raise
+        return changed
+
     # -- candidates ----------------------------------------------------------
     def add_candidate(self, *, canonical_id: str, arxiv_id: str = "",
                       doi: str = "", title: str = "",
