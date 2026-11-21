@@ -90,4 +90,63 @@ def test_take_pending_is_atomic_across_consumers(pool):  # TC16
     assert len(all_ids) == len(set(all_ids))  # no paper taken twice
 
 
+def test_platform_claims_are_independent_for_the_same_paper(pool):
+    _add(pool, "arxiv:2601.00003", arxiv_id="2601.00003")
+
+    homepage = pool.take_pending_for_platform("homepage")
+    xiaohongshu = pool.take_pending_for_platform("xiaohongshu")
+
+    assert [entry.canonical_id for entry in homepage] == ["arxiv:2601.00003"]
+    assert [entry.canonical_id for entry in xiaohongshu] == ["arxiv:2601.00003"]
+    assert pool.take_pending_for_platform("homepage") == []
+    assert pool.platform_delivery_status("arxiv:2601.00003", "homepage") == "queued"
+    assert pool.platform_delivery_status("arxiv:2601.00003", "xiaohongshu") == "queued"
+    with pool._connection() as connection:
+        global_status = connection.execute(
+            "SELECT status FROM paper_pool WHERE canonical_id = 'arxiv:2601.00003'"
+        ).fetchone()["status"]
+    assert global_status == "discovered"
+
+
+def test_export_pending_candidates_is_read_only_and_excludes_claimed_rows(pool):
+    _add(pool, "arxiv:2601.00001", arxiv_id="2601.00001", doi="10.1/one")
+    _add(pool, "arxiv:2601.00002", arxiv_id="2601.00002", doi="10.1/two")
+    with pool._connection() as connection:
+        connection.execute(
+            "UPDATE paper_pool SET discovered_at = ? WHERE canonical_id = ?",
+            ("2026-11-21T10:00:00+00:00", "arxiv:2601.00001"),
+        )
+        connection.execute(
+            "UPDATE paper_pool SET discovered_at = ? WHERE canonical_id = ?",
+            ("2026-11-21T10:01:00+00:00", "arxiv:2601.00002"),
+        )
+    pool.take_pending(limit=1)
+
+    exported = pool.export_pending_candidates()
+
+    assert exported == [{
+        "canonical_id": "arxiv:2601.00002",
+        "arxiv_id": "2601.00002",
+        "doi": "10.1/two",
+        "title": "paper arxiv:2601.00002",
+    }]
+    with pool._connection() as connection:
+        states = [tuple(row) for row in connection.execute(
+            "SELECT canonical_id, status FROM paper_pool ORDER BY canonical_id"
+        ).fetchall()]
+    assert states == [
+        ("arxiv:2601.00001", "queued"),
+        ("arxiv:2601.00002", "discovered"),
+    ]
+
+
+def test_homepage_export_excludes_candidates_with_completed_homepage_leg(pool):
+    _add(pool, "arxiv:2601.00004", arxiv_id="2601.00004")
+    pool.take_pending_for_platform("homepage")
+    for state in ("parsed", "summarized", "composed", "staged", "SAVED_UNVERIFIED", "VERIFIED", "published"):
+        pool.set_platform_status("arxiv:2601.00004", "homepage", state)
+
+    assert pool.export_pending_candidates() == []
+
+
 import json  # noqa: E402  (used by exclusion test above)

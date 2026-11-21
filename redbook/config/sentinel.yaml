@@ -1,10 +1,12 @@
 # Sentinel service configuration (task 3).
 # Low-ops: invoked via Windows Task Scheduler as
-#   python -m redbook.cli sentinel run-once
+#   python -m redbook.sentinel run-once
 # No resident service; every entry point is idempotent or rate-limited.
 
 probe_min_interval_seconds: 900   # 15 min floor between sweeps (anti rate-limit)
 retrieval_schedule: "11:00"       # daily paper retrieval trigger
+daily_discovery_config: "daily_draft.yaml"
+exclusions_path: "D:/enkidulove90-lang.github.io/tools/paper_exclusions.json"
 
 # HTTP dependency probes (arxiv / s2 / dblp / openreview / crossref / github /
 # cloudflare).slow_ms: latency above this is reported degraded, not down.
@@ -20,7 +22,7 @@ http_endpoints:
 # Credential probes: key presence + cheapest injectable live call.
 api_key_probes:
   - { name: mineru,   env_var: MINERU_API_KEY }
-  - { name: deepseek, env_var: DEEPSEEK_API_KEY }
+  - { name: deepseek, env_var: DEEPSEEK_API_KEY, health_url: "https://api.deepseek.com/models" }
 
 # OpenCLI daemon + Chrome login state (read-only probe_login).
 opencli_probe: true

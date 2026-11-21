@@ -32,6 +32,8 @@ class SentinelRunner:
         self.log_dir = Path(log_dir or (config.get("log_dir") or "data/logs"))
         self.probe_min_interval_seconds = float(config.get("probe_min_interval_seconds", 900))
         self.retrieval_time = str(config.get("retrieval_schedule", "11:00"))
+        configured_exclusions = str(config.get("exclusions_path", "")).strip()
+        self.exclusions_path = Path(configured_exclusions) if configured_exclusions else None
         self.discovery = discovery  # injectable: returns filtered candidate dicts
         self.platform = platform  # this runner's own delivery leg
 
@@ -60,10 +62,7 @@ class SentinelRunner:
                     "schedule": self.retrieval_time}
         if self.pool.get_meta("last_retrieval_date") == day:
             return {"ran": False, "reason": "already ran today", "date": day}
-        exclusions = set()
-        excl_path = self.pool.path.parent.parent / "workflow_state" / "sentinel" \
-            / "exclusions.json"
-        exclusions = load_exclusions(excl_path)
+        exclusions = load_exclusions(self.exclusions_path) if self.exclusions_path else set()
         candidates = self.discovery(now) if self.discovery else []
         added, skipped = [], []
         for candidate in candidates:
@@ -86,21 +85,22 @@ class SentinelRunner:
     # -- dispatch -------------------------------------------------------------
     def dispatch_pending(self, queue: QueueBackend, *, limit: int = 3) -> list[dict[str, Any]]:
         dispatched = []
-        while True:
-            entries = self.pool.take_pending(limit=1)
+        while len(dispatched) < max(0, limit):
+            entries = self.pool.take_pending_for_platform(self.platform, limit=1)
             if not entries:
                 break
             entry = entries[0]
             try:
                 job = queue.enqueue(
-                    "intake", f"note:{entry.canonical_id}",
-                    run_id=f"sentinel:{entry.canonical_id}",
+                    "intake", f"sentinel:{self.platform}:{entry.canonical_id}",
+                    run_id=f"sentinel:{self.platform}:{entry.canonical_id}",
                     enqueue_step="sentinel_dispatch")
             except QueueFullError as error:
                 # degrade to pool-only: re-enter FIFO, pending stays set (TC17)
-                self.pool.reset_to_discovered(entry.canonical_id)
+                self.pool.reset_platform_to_discovered(entry.canonical_id, self.platform)
                 self.pool.set_meta("last_dispatch_degrade",
                                    json.dumps({"canonical_id": entry.canonical_id,
+                                               "platform": self.platform,
                                                "code": error.code}))
                 break
             dispatched.append({"canonical_id": entry.canonical_id,
@@ -118,3 +118,42 @@ class SentinelRunner:
         if dispatch and queue is not None:
             report["dispatched"] = self.dispatch_pending(queue)
         return report
+
+
+class DailyDiscoveryAdapter:
+    """Translate the existing replayable discovery JSONL into pool input rows.
+
+    The adapter deliberately does not write the pool itself: ``SentinelRunner``
+    remains its sole writer, preserving one idempotency boundary and allowing
+    tests to substitute the discovery runner without network access.
+    """
+
+    def __init__(self, data_root: Path, config_path: Path, *,
+                 runner_factory: Callable[..., Any] | None = None) -> None:
+        self.data_root, self.config_path = Path(data_root), Path(config_path)
+        self.runner_factory = runner_factory
+
+    def __call__(self, now: datetime) -> list[dict[str, Any]]:
+        if self.runner_factory is None:
+            from redbook.automation.daily_discovery import DailyDiscoveryRunner
+            runner_factory = DailyDiscoveryRunner
+        else:
+            runner_factory = self.runner_factory
+        report = runner_factory(self.data_root, self.config_path).run()
+        candidate_path = Path(str(report["candidate_path"]))
+        rows: list[dict[str, Any]] = []
+        for line in candidate_path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            identifiers = dict(record.get("identifiers", {}))
+            canonical_id = str(record.get("record_id", "")).strip()
+            if not canonical_id:
+                continue
+            rows.append({
+                "canonical_id": canonical_id,
+                "arxiv_id": str(identifiers.get("arxiv", "")),
+                "doi": str(identifiers.get("doi", "")),
+                "title": str(record.get("title", "")),
+            })
+        return rows

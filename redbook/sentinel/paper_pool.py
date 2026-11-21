@@ -54,6 +54,17 @@ CREATE TABLE IF NOT EXISTS sentinel_meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS paper_pool_platform_delivery (
+  canonical_id TEXT NOT NULL,
+  platform TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'discovered',
+  pending_delivery INTEGER NOT NULL DEFAULT 1,
+  updated_at TEXT NOT NULL,
+  reason TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (canonical_id, platform)
+);
+CREATE INDEX IF NOT EXISTS ix_pool_platform_delivery_claim
+  ON paper_pool_platform_delivery(platform, status, updated_at);
 """
 
 
@@ -104,23 +115,6 @@ class PaperPool:
         with self._connection() as connection:
             connection.executescript(_DDL)
 
-    # contextmanager import kept local to avoid module-level noise
-    def _connection(self) -> Iterator[sqlite3.Connection]:
-        from contextlib import contextmanager
-
-        @contextmanager
-        def manager():
-            connection = sqlite3.connect(self.path, timeout=5,
-                                         isolation_level=None)
-            connection.row_factory = sqlite3.Row
-            connection.execute("PRAGMA busy_timeout=5000")
-            try:
-                yield connection
-            finally:
-                connection.close()
-        return manager()
-
-    # -- meta (idempotent retrieval bookkeeping) -----------------------------
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
         connection = sqlite3.connect(self.path, timeout=5, isolation_level=None)
@@ -230,6 +224,125 @@ class PaperPool:
                     tuple(r["canonical_id"] for r in rows)).fetchall()
                 claimed = [self._entry(r) for r in fetched]
         return claimed
+
+    def take_pending_for_platform(self, platform: str, limit: int = 1) -> list[PoolEntry]:
+        """Atomically claim this platform's independent delivery leg.
+
+        A paper's global pool row remains a candidate/source-of-record.  The
+        `(canonical_id, platform)` row is the mutable delivery state so one
+        platform reaching VERIFIED cannot starve another platform's draft or
+        homepage leg.
+        """
+        if platform not in _PLATFORMS:
+            raise ValueError(f"unknown platform {platform}")
+        claimed: list[PoolEntry] = []
+        moment = _now()
+        with self._connection() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            try:
+                connection.execute("""
+                    INSERT OR IGNORE INTO paper_pool_platform_delivery (
+                      canonical_id, platform, status, pending_delivery, updated_at, reason
+                    )
+                    SELECT canonical_id, ?, 'discovered', 1, ?, ''
+                    FROM paper_pool
+                    WHERE pending_delivery = 1 AND status = 'discovered'
+                """, (platform, moment))
+                rows = connection.execute("""
+                    SELECT canonical_id FROM paper_pool_platform_delivery
+                    WHERE platform = ? AND pending_delivery = 1 AND status = 'discovered'
+                    ORDER BY updated_at, canonical_id LIMIT ?
+                """, (platform, limit)).fetchall()
+                for row in rows:
+                    connection.execute("""
+                        UPDATE paper_pool_platform_delivery
+                        SET status = 'queued', updated_at = ?
+                        WHERE canonical_id = ? AND platform = ?
+                    """, (_now(), row["canonical_id"], platform))
+                connection.execute("COMMIT")
+            except Exception:
+                connection.execute("ROLLBACK")
+                raise
+            if rows:
+                marks = ",".join("?" * len(rows))
+                fetched = connection.execute(
+                    f"SELECT * FROM paper_pool WHERE canonical_id IN ({marks})",
+                    tuple(row["canonical_id"] for row in rows),
+                ).fetchall()
+                claimed = [self._entry(row) for row in fetched]
+        return claimed
+
+    def platform_delivery_status(self, canonical_id: str, platform: str) -> str | None:
+        with self._connection() as connection:
+            row = connection.execute("""
+                SELECT status FROM paper_pool_platform_delivery
+                WHERE canonical_id = ? AND platform = ?
+            """, (canonical_id, platform)).fetchone()
+        return str(row["status"]) if row else None
+
+    def set_platform_status(self, canonical_id: str, platform: str, target: str) -> None:
+        if platform not in _PLATFORMS:
+            raise ValueError(f"unknown platform {platform}")
+        if target not in STATUSES:
+            raise InvalidPoolTransition("unknown", target)
+        with self._connection() as connection:
+            current = connection.execute("""
+                SELECT status FROM paper_pool_platform_delivery
+                WHERE canonical_id = ? AND platform = ?
+            """, (canonical_id, platform)).fetchone()
+            if current is None:
+                raise KeyError(f"platform delivery not found for {canonical_id}/{platform}")
+            if target not in TRANSITIONS[str(current["status"])]:
+                raise InvalidPoolTransition(str(current["status"]), target)
+            pending = 0 if target in {"VERIFIED", "published"} else 1
+            connection.execute("""
+                UPDATE paper_pool_platform_delivery
+                SET status = ?, pending_delivery = ?, updated_at = ?
+                WHERE canonical_id = ? AND platform = ?
+            """, (target, pending, _now(), canonical_id, platform))
+
+    def reset_platform_to_discovered(self, canonical_id: str, platform: str) -> None:
+        """Return a queued platform claim after queue backpressure."""
+        with self._connection() as connection:
+            connection.execute("""
+                UPDATE paper_pool_platform_delivery
+                SET status = 'discovered', pending_delivery = 1, updated_at = ?
+                WHERE canonical_id = ? AND platform = ? AND status = 'queued'
+            """, (_now(), canonical_id, platform))
+
+    def reset_platform_blocked(self, canonical_id: str, platform: str) -> None:
+        """Human reset path for one platform without reopening other legs."""
+        with self._connection() as connection:
+            connection.execute("""
+                UPDATE paper_pool_platform_delivery
+                SET status = 'queued', pending_delivery = 1, updated_at = ?
+                WHERE canonical_id = ? AND platform = ? AND status = 'blocked'
+            """, (_now(), canonical_id, platform))
+
+    def export_pending_candidates(self) -> list[dict[str, str]]:
+        """Read the stable, unclaimed candidate contract for external consumers.
+
+        Export does not claim work or update metadata.  A consumer must run its
+        own dry-run/materialization gate before it can request a later state
+        transition through the main repository.
+        """
+        with self._connection() as connection:
+            rows = connection.execute("""
+                SELECT pool.canonical_id, pool.arxiv_id, pool.doi, pool.title
+                FROM paper_pool AS pool
+                LEFT JOIN paper_pool_platform_delivery AS homepage
+                  ON homepage.canonical_id = pool.canonical_id
+                 AND homepage.platform = 'homepage'
+                WHERE pool.pending_delivery = 1 AND pool.status = 'discovered'
+                  AND (homepage.status IS NULL OR homepage.status = 'discovered')
+                ORDER BY pool.discovered_at, pool.canonical_id
+            """).fetchall()
+        return [{
+            "canonical_id": str(row["canonical_id"]),
+            "arxiv_id": str(row["arxiv_id"]),
+            "doi": str(row["doi"]),
+            "title": str(row["title"]),
+        } for row in rows]
 
     def reset_blocked(self, canonical_id: str) -> None:
         with self._connection() as connection:

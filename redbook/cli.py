@@ -100,6 +100,12 @@ def main() -> None:
     sentinel.add_argument("--data-root", type=Path, default=Path("data"))
     sentinel.add_argument("--no-dispatch", action="store_true",
                           help="pool-only mode: skip queue dispatch")
+    sentinel.add_argument("--export-pending", action="store_true",
+                          help="with sentinel pool, emit the read-only external-consumer contract")
+    sentinel.add_argument("--reconcile", action="store_true",
+                          help="with sentinel pool, show the read-only pool/registry progress view")
+    sentinel.add_argument("--platform", choices=("homepage", "xiaohongshu", "wechat"),
+                          help="independent platform consumer; defaults to sentinel.yaml")
 
     args = parser.parse_args()
     if args.command == "prepare-figures":
@@ -279,19 +285,37 @@ def main() -> None:
         from redbook.orchestration.queue import SqliteQueueBackend
         from redbook.sentinel.paper_pool import PaperPool
         from redbook.sentinel.probes import build_default_probes
-        from redbook.sentinel.runner import SentinelRunner
+        from redbook.sentinel.runner import DailyDiscoveryAdapter, SentinelRunner
 
-        config_path = Path("redbook/config/sentinel.yaml")
+        config_path = Path(__file__).resolve().parent / "config" / "sentinel.yaml"
         config = _yaml.safe_load(config_path.read_text(encoding="utf-8")) \
             if config_path.exists() else {}
+        daily_config = Path(str(config.get("daily_discovery_config", "daily_draft.yaml")))
+        if not daily_config.is_absolute():
+            daily_config = config_path.parent / daily_config
         pool = PaperPool(args.data_root / "state" / "orchestration.sqlite")
         runner = SentinelRunner(pool, config=config,
                                 probes=build_default_probes(config),
-                                log_dir=args.data_root / "logs")
+                                log_dir=args.data_root / "logs",
+                                discovery=DailyDiscoveryAdapter(args.data_root, daily_config),
+                                platform=args.platform or str(config.get("platform", "homepage")))
         if args.action == "probe":
             results = runner.probe_all()
             _emit_json({"ok": True, "probes": [r.to_dict() for r in results]})
         elif args.action == "pool":
+            if args.reconcile:
+                from redbook.orchestration.registry import SqliteDeliveryRegistry
+                registry = SqliteDeliveryRegistry(args.data_root / "state" / "orchestration.sqlite")
+                entries = registry.pool_delivery_view()
+                _emit_json({"ok": True, "count": len(entries), "entries": entries})
+                return
+            if args.export_pending:
+                _emit_json({
+                    "ok": True,
+                    "schema_version": "paper-pool-export/v1",
+                    "entries": pool.export_pending_candidates(),
+                })
+                return
             with pool._connection() as connection:
                 rows = [dict(row) for row in connection.execute(
                     "SELECT canonical_id, arxiv_id, title, status, "

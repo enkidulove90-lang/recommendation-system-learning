@@ -1,28 +1,40 @@
 """GitHub API code-link verification for the daily hard gate.
 
-Three-state output mirrors the affiliation verifier: ``verified`` (repo
-exists), ``blocked`` (repo confirmed absent -- candidate parked, NOT dropped,
-human review path stays open), ``unverified`` (network/timeout -- retryable,
-candidate not qualified this run). Uses unauthenticated ``repos/{owner}/{repo}``
-which fits the 60 req/h budget of a once-per-day gate.
+Three-state output mirrors the affiliation verifier: ``verified`` means only
+that the repository is reachable, not that it belongs to the paper. The
+paper-declared identity check lives in ``github_verification``. ``blocked``
+means confirmed absent; ``unverified`` means missing credentials or a transient
+failure. All API requests use GH_TOKEN or GITHUB_TOKEN, never anonymous access.
 """
 from __future__ import annotations
 
-import re
+import os
 from typing import Any, Callable
+from urllib.parse import urlparse
+
+from .github_verification import normalize_github_repository
 
 Fetch = Callable[[str, float], int]
 """fetcher(url, timeout) -> HTTP status; injectable for sandbox tests."""
 
-_GITHUB_REPO = re.compile(
-    r"^https?://github\.com/(?P<owner>[\w.-]+)/(?P<repo>[\w.-]+)/?(?:\.git)?$")
-
-
 def parse_github_repo(url: str) -> tuple[str, str] | None:
-    match = _GITHUB_REPO.match(url.strip())
-    if match is None:
+    canonical = normalize_github_repository(url)
+    if not canonical:
         return None
-    return match.group("owner"), match.group("repo")
+    owner, repo = urlparse(canonical).path.strip("/").split("/")
+    return owner, repo
+
+
+class MissingGitHubTokenError(RuntimeError):
+    """GitHub verification cannot make an anonymous API request."""
+
+
+def resolve_github_token() -> str:
+    for name in ("GH_TOKEN", "GITHUB_TOKEN"):
+        token = os.environ.get(name, "").strip()
+        if token:
+            return token
+    raise MissingGitHubTokenError("GitHub token is not configured")
 
 
 def verify_code_link(url: str, *, timeout: float = 8.0,
@@ -30,31 +42,41 @@ def verify_code_link(url: str, *, timeout: float = 8.0,
     """Return ``{"state", "detail", "url"}``; never raises."""
     parsed = parse_github_repo(url)
     if parsed is None:
-        return {"state": "unverified", "url": url,
+        return {"state": "unverified", "url": "",
                 "detail": "not a GitHub repository URL; manual check required"}
     owner, repo = parsed
+    canonical_url = f"https://github.com/{owner}/{repo}"
     api = f"https://api.github.com/repos/{owner}/{repo}"
     if fetch is None:
         fetch = _default_fetch
     try:
         status = fetch(api, timeout)
     except Exception as error:  # timeout / network: retryable, not blocking
-        return {"state": "unverified", "url": url,
-                "detail": f"{type(error).__name__}: {error}; retry next run"}
+        return {"state": "unverified", "url": canonical_url,
+                "detail": f"{type(error).__name__}; retry next run"}
     if status == 200:
-        return {"state": "verified", "url": url, "detail": f"repos/{owner}/{repo} exists"}
+        return {"state": "verified", "url": canonical_url, "detail": f"repos/{owner}/{repo} exists"}
     if status == 404:
-        return {"state": "blocked", "url": url,
+        return {"state": "blocked", "url": canonical_url,
                 "detail": f"repos/{owner}/{repo} not found; human review"}
-    return {"state": "unverified", "url": url,
+    if status == 401:
+        return {"state": "unverified", "url": canonical_url,
+                "detail": "GitHub credential rejected; repair token before retry"}
+    return {"state": "unverified", "url": canonical_url,
             "detail": f"HTTP {status}; retry next run"}
 
 
 def _default_fetch(url: str, timeout: float) -> int:
     import urllib.request
+    from urllib.error import HTTPError
 
+    token = resolve_github_token()
     request = urllib.request.Request(url, method="GET",
                                      headers={"User-Agent": "redbook-sentinel/1",
-                                              "Accept": "application/vnd.github+json"})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return int(response.status)
+                                              "Accept": "application/vnd.github+json",
+                                              "Authorization": f"Bearer {token}"})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return int(response.status)
+    except HTTPError as error:
+        return int(error.code)

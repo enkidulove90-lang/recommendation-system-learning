@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -105,13 +106,103 @@ def filter_candidates(records: list[PaperRecord], config: DailyDiscoveryConfig) 
     return filtered
 
 
+def apply_daily_hard_gates(
+    records: list[PaperRecord], config: DailyDiscoveryConfig, *,
+    code_verifier: Callable[[str], dict[str, Any]] | None = None,
+    text_fetcher: Callable[[str], str] | None = None,
+    pdf_path_resolver: Callable[[PaperRecord], Path | None] | None = None,
+) -> tuple[list[PaperRecord], list[dict[str, Any]]]:
+    """Apply task-two affiliation/code evidence before a candidate enters a pool.
+
+    Domain candidates do not claim an organization and therefore cannot be
+    rejected for missing affiliation metadata.  Organization-hint candidates
+    must have a verified match; every candidate needs a verified official-code
+    URL.  The underlying gate records each verdict in ``provenance``.
+    """
+    qualified: list[PaperRecord] = []
+    rejected: list[dict[str, Any]] = []
+    organizations = (*config.companies, *config.universities)
+    for record in records:
+        daily_filter = dict(record.provenance.get("daily_filter", {}))
+        require_affiliation = bool(daily_filter.get("requires_affiliation_verification"))
+        kept, rejected_rows = apply_verification_gates(
+            [record], candidate_orgs=organizations,
+            require_affiliation=require_affiliation,
+            require_code=True, code_verifier=code_verifier,
+            text_fetcher=text_fetcher,
+            pdf_path_resolver=pdf_path_resolver,
+        )
+        qualified.extend(kept)
+        rejected.extend(rejected_rows)
+    return qualified, rejected
+
+
+def write_candidates_to_pool(
+    records: list[PaperRecord], paper_pool: Any, *, exclusions: set[str] | None = None,
+) -> dict[str, Any]:
+    """Persist already-qualified records through the pool's single write API."""
+    added: list[str] = []
+    skipped: list[dict[str, Any]] = []
+    for record in records:
+        result = paper_pool.add_candidate(
+            canonical_id=record.record_id,
+            arxiv_id=str(record.identifiers.get("arxiv", "")),
+            doi=str(record.identifiers.get("doi", "")),
+            title=record.title,
+            source="daily_discovery",
+            exclusions=exclusions,
+        )
+        if result["added"]:
+            added.append(str(result["canonical_id"]))
+        else:
+            skipped.append(dict(result))
+    return {"added": len(added), "added_ids": added, "skipped": skipped}
+
+
 class DailyDiscoveryRunner:
     """Run the daily arXiv routes and write a reviewable local candidate pool."""
 
-    def __init__(self, data_root: Path, config_path: Path, source_factory: Callable[..., ArxivSource] = ArxivSource) -> None:
-        self.data_root, self.config_path, self.source_factory = data_root, config_path, source_factory
+    def __init__(self, data_root: Path, config_path: Path,
+                 source_factory: Callable[..., ArxivSource] = ArxivSource,
+                 code_verifier: Callable[[str], dict[str, Any]] | None = None,
+                 text_fetcher: Callable[[str], str] | None = None,
+                 pdf_path_resolver: Callable[[PaperRecord], Path | None] | None = None) -> None:
+        self.data_root, self.config_path = data_root, config_path
+        self.source_factory, self.code_verifier = source_factory, code_verifier
+        self.text_fetcher = text_fetcher
+        self.pdf_path_resolver = pdf_path_resolver or self._cached_pdf_path
 
-    def run(self) -> dict[str, Any]:
+    def _cached_pdf_path(self, record: PaperRecord) -> Path | None:
+        paper_id = str(record.identifiers.get("arxiv", ""))
+        if not re.fullmatch(r"\d{4}\.\d{4,5}(?:v\d+)?", paper_id):
+            return None
+        path = self.data_root / "papers" / f"{paper_id}.pdf"
+        manifest_path = self.data_root / "papers" / f"{paper_id}.manifest.json"
+        if not path.is_file() or not manifest_path.is_file():
+            return None
+        try:
+            if manifest_path.stat().st_size > 16_384:
+                return None
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if manifest.get("arxiv_id") != paper_id:
+                return None
+            if manifest.get("byte_size") != path.stat().st_size:
+                return None
+            digest = hashlib.sha256()
+            with path.open("rb") as handle:
+                if handle.read(5) != b"%PDF-":
+                    return None
+                handle.seek(0)
+                for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                    digest.update(chunk)
+            if digest.hexdigest() != manifest.get("sha256"):
+                return None
+        except (OSError, UnicodeError, ValueError, TypeError, AttributeError):
+            return None
+        return path
+
+    def run(self, *, paper_pool: Any | None = None,
+            exclusions: set[str] | None = None) -> dict[str, Any]:
         config = DailyDiscoveryConfig.load(self.config_path)
         runner = SourceRunner(self.data_root)
         reports: list[dict[str, Any]] = []
@@ -128,17 +219,27 @@ class DailyDiscoveryRunner:
             for line in path.read_text(encoding="utf-8").splitlines():
                 if line.strip():
                     all_records.append(PaperRecord.from_dict(json.loads(line)))
-        candidates = filter_candidates(deduplicate_records(all_records), config)
+        filtered = filter_candidates(deduplicate_records(all_records), config)
+        candidates, rejected = apply_daily_hard_gates(
+            filtered, config, code_verifier=self.code_verifier,
+            text_fetcher=self.text_fetcher,
+            pdf_path_resolver=self.pdf_path_resolver,
+        )
         output_dir = self.data_root / "discovery" / date.today().isoformat()
         candidate_path = output_dir / "candidates.jsonl"
         candidate_path.unlink(missing_ok=True)
         append_jsonl(candidate_path, [record.as_dict() for record in candidates])
         manifest_path = output_dir / "manifest.json"
         manifest = {
-            "mode": "discovery_only", "config": str(self.config_path), "query_reports": reports,
+            "mode": "qualified_discovery", "config": str(self.config_path), "query_reports": reports,
             "candidate_count": len(candidates), "candidate_path": str(candidate_path),
-            "next_step": "verify venue, author affiliation, official GitHub, PDF, MinerU, and figures before draft creation",
+            "rejected_candidates": rejected,
+            "next_step": "verify public PDF, MinerU, and figures before draft creation",
         }
+        if paper_pool is not None:
+            manifest["paper_pool"] = write_candidates_to_pool(
+                candidates, paper_pool, exclusions=exclusions,
+            )
         write_json(manifest_path, manifest)
         return {**manifest, "manifest_path": str(manifest_path)}
 
@@ -162,8 +263,11 @@ def verify_affiliation(record: PaperRecord,
     """Three-state affiliation verdict: verified / unverified / mismatch."""
     affiliations = extract_affiliations(record)
     matched = [org for org in candidate_orgs
-               if any(_contains(aff, org) or _contains(org, aff)
-                      for aff in affiliations)]
+               if org.strip() and any(
+                   re.search(r"(?<![A-Za-z0-9])" + re.escape(org.strip())
+                             + r"(?![A-Za-z0-9])", aff, re.IGNORECASE)
+                   for aff in affiliations
+               )]
     if matched:
         return {"state": "verified", "matched": matched,
                 "affiliations": affiliations}
@@ -181,6 +285,8 @@ def apply_verification_gates(
         require_affiliation: bool = True,
         require_code: bool = True,
         code_verifier: Callable[[str], dict[str, Any]] | None = None,
+        text_fetcher: Callable[[str], str] | None = None,
+        pdf_path_resolver: Callable[[PaperRecord], Path | None] | None = None,
 ) -> tuple[list[PaperRecord], list[dict[str, Any]]]:
     """Hard-gate kept candidates on verified affiliation and code link.
 
@@ -191,6 +297,11 @@ def apply_verification_gates(
     if code_verifier is None:
         from .code_link_verifier import verify_code_link
         code_verifier = verify_code_link
+    from .github_verification import (
+        discover_and_verify_official_github, fetch_public_text,
+        verify_official_github,
+    )
+    fetcher = text_fetcher or fetch_public_text
     kept: list[PaperRecord] = []
     rejected: list[dict[str, Any]] = []
 
@@ -201,6 +312,15 @@ def apply_verification_gates(
     for record in records:
         if require_affiliation:
             verdict = verify_affiliation(record, candidate_orgs)
+            if verdict["state"] == "unverified" and pdf_path_resolver is not None:
+                from .affiliation_evidence import inspect_first_page
+
+                pdf_path = pdf_path_resolver(record)
+                if pdf_path is not None:
+                    verdict = inspect_first_page(
+                        pdf_path, title=record.title, authors=record.authors,
+                        candidate_orgs=candidate_orgs,
+                    )
             record.provenance["affiliation_verification"] = verdict
             if verdict["state"] != "verified":
                 reject(record, "affiliation", verdict["state"],
@@ -208,6 +328,15 @@ def apply_verification_gates(
                 continue
         if require_code:
             code_url = str(record.urls.get("code") or record.urls.get("github") or "")
+            official = (
+                verify_official_github(record, code_url, fetcher)
+                if code_url else discover_and_verify_official_github(record, fetcher)
+            )
+            if not official.verified:
+                reject(record, "official_github", "unverified", official.reason)
+                continue
+            code_url = official.repository_url
+            record.urls["github"] = code_url
             verdict = code_verifier(code_url)
             record.provenance["code_verification"] = verdict
             if verdict["state"] == "blocked":

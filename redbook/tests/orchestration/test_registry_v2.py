@@ -11,6 +11,7 @@ from redbook.orchestration.reconcile import (
     reconcile_verified_deliveries,
 )
 from redbook.orchestration.registry import SqliteDeliveryRegistry
+from redbook.sentinel.paper_pool import PaperPool
 
 
 def test_json_migration_is_single_source_then_reuses_existing_delivery(tmp_path) -> None:
@@ -157,8 +158,39 @@ def test_concurrent_saves_share_one_wal_delivery_row(tmp_path) -> None:
     assert SqliteDeliveryRegistry(database).delivery_count() == 1
 
 
+def test_registry_pool_view_joins_new_delivery_by_canonical_id(tmp_path) -> None:
+    database = tmp_path / "state" / "orchestration.sqlite"
+    pool = PaperPool(database)
+    pool.add_candidate(
+        canonical_id="arxiv:2601.12345", arxiv_id="2601.12345",
+        title="A verified candidate",
+    )
+    pool.take_pending_for_platform("xiaohongshu")
+    registry = SqliteDeliveryRegistry(database)
+    assert registry.begin_save(
+        run_id="run-pool", content_hash="p" * 64, platform="xhs",
+        account="default", staged_id="p" * 64,
+        canonical_id="arxiv:2601.12345",
+    ) is None
+    registry.mark_saved_unverified(
+        platform="xhs", account="default", staged_id="p" * 64, draft_id="s:pool",
+    )
+    registry.mark_verified(platform="xhs", account="default", staged_id="p" * 64)
+
+    assert registry.pool_delivery_view() == [{
+        "canonical_id": "arxiv:2601.12345",
+        "arxiv_id": "2601.12345",
+        "pool_status": "discovered",
+        "pending_delivery": True,
+        "platform": "xhs",
+        "platform_pool_status": "queued",
+        "delivery_state": "VERIFIED",
+        "staged_id": "p" * 64,
+    }]
+
+
 def test_xhs_publish_records_verified_delivery_in_sqlite_registry(tmp_path, monkeypatch) -> None:
-    staged_id, slug = "f" * 64, "paper-6"
+    staged_id, slug = "f" * 64, "2601.12345"
     package = tmp_path / "publish_queue" / staged_id
     package.mkdir(parents=True)
     (package / "xhs.json").write_text(json.dumps({"paper_id": slug}), encoding="utf-8")
@@ -176,6 +208,7 @@ def test_xhs_publish_records_verified_delivery_in_sqlite_registry(tmp_path, monk
     )
     assert stored["state"] == "VERIFIED"
     assert stored["draft_id"] == "s:new"
+    assert stored["canonical_id"] == "arxiv:2601.12345"
 
 
 def test_wechat_publish_records_saved_unverified_delivery_in_sqlite_registry(tmp_path, monkeypatch) -> None:

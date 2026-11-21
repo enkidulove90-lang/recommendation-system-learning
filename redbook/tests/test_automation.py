@@ -8,12 +8,19 @@ import unittest
 from PIL import Image
 
 from redbook.automation.feedback import FeedbackStore
+from redbook.automation.github_verification import (
+    discover_and_verify_official_github,
+    normalize_github_repository,
+    verify_official_github,
+)
 from redbook.automation.common import append_jsonl
 from redbook.automation.images import build_manifest, compose_group, group_figures, metadata_from_mineru_markdown
 from redbook.automation.publishing import FilePublisher, render_package
 from redbook.automation.scheduling import PublishScheduler
 from redbook.automation.scoring import QualityScorerV2
 from redbook.automation.sources import ArxivSource, JsonlSource, PaperRecord, SourceRunner, deduplicate_records
+from redbook.automation.daily_discovery import DailyDiscoveryRunner
+from redbook.sentinel.paper_pool import PaperPool
 
 
 class AutomationTests(unittest.TestCase):
@@ -90,6 +97,56 @@ class AutomationTests(unittest.TestCase):
             self.assertTrue(Path(result["raw_path"]).exists())
             self.assertTrue(Path(result["state_path"]).exists())
 
+    def test_daily_discovery_keeps_jsonl_and_writes_qualified_candidates_to_pool(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / "daily.yaml"
+            config.write_text(
+                "candidate_domains: [recommender]\n"
+                "candidate_organizations: {companies: [], universities: []}\n"
+                "venue_gate: {allowed: [SIGIR], allow_verified_preprint: false}\n"
+                "discovery: {arxiv_max_results_per_query: 1, max_candidate_age_days: 90}\n",
+                encoding="utf-8",
+            )
+            record = PaperRecord.from_dict({
+                "record_id": "arxiv:2601.00001", "title": "A Recommender Paper",
+                "identifiers": {"arxiv": "2601.00001"},
+                "published_at": datetime.now(timezone.utc).isoformat(),
+                "venue": {"name": "SIGIR", "status": "published"},
+                "authors": [{"name": "Ada Lovelace"}],
+                "urls": {"landing": "https://arxiv.org/abs/2601.00001",
+                         "code": "https://github.com/example/recommender"},
+                "source_records": [{"source_type": "arxiv"}],
+            })
+
+            class Source:
+                def __init__(self, name: str, max_results: int) -> None:
+                    self.name = name
+
+                def discover(self, cursor, query):
+                    return [record], {"seen_ids": ["2601.00001"]}
+
+            pool = PaperPool(root / "state" / "orchestration.sqlite")
+            result = DailyDiscoveryRunner(
+                root / "data", config, source_factory=Source,
+                code_verifier=lambda url: {"state": "verified", "url": url, "detail": "fixture"},
+                text_fetcher=lambda url: (
+                    "https://github.com/example/recommender"
+                    if url.startswith("https://arxiv.org/")
+                    else "A Recommender Paper Lovelace"
+                ),
+            ).run(paper_pool=pool)
+
+            self.assertTrue(Path(result["candidate_path"]).is_file())
+            self.assertEqual(result["mode"], "qualified_discovery")
+            self.assertEqual(result["candidate_count"], 1)
+            self.assertEqual(result["paper_pool"]["added"], 1)
+            with pool._connection() as connection:
+                row = connection.execute(
+                    "SELECT canonical_id, arxiv_id, pending_delivery FROM paper_pool"
+                ).fetchone()
+            self.assertEqual(tuple(row), ("arxiv:2601.00001", "2601.00001", 1))
+
     def test_arxiv_source_marks_candidate_as_preprint_and_keeps_query_evidence(self) -> None:
         atom = b'''<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom" xmlns:arxiv="http://arxiv.org/schemas/atom">
         <entry><id>http://arxiv.org/abs/2608.00001v2</id><title> Agentic Recommenders </title>
@@ -113,6 +170,68 @@ class AutomationTests(unittest.TestCase):
         self.assertEqual(records[0].topics, ["cs.IR"])
         self.assertEqual(records[0].provenance["candidate_scope"], "domain")
         self.assertEqual(cursor["search_query"], 'all:"agentic recommender systems"')
+
+    def test_official_github_verifier_requires_the_paper_to_name_same_repository(self) -> None:
+        record = PaperRecord.from_dict({
+            "title": "Thought-Augmented Planning for LLM-Powered Interactive Recommender Agent",
+            "authors": [{"name": "Haocheng Yu"}],
+            "urls": {"landing": "https://arxiv.org/abs/2506.23485"},
+            "source_records": [{"source_type": "arxiv"}],
+        })
+        pages = {
+            "https://arxiv.org/abs/2506.23485": (
+                'Code is available at <a href="https://github.com/Alcein/TAIRA" '
+                'rel="external noopener">this https URL</a>.'
+            ),
+            "https://github.com/Alcein/TAIRA": (
+                "Thought-Augmented Planning for LLM-Powered Interactive Recommender Agent\n"
+                "Haocheng Yu and collaborators"
+            ),
+        }
+
+        verification = verify_official_github(record, "https://github.com/Alcein/TAIRA/", pages.__getitem__)
+
+        self.assertTrue(verification.verified)
+        self.assertEqual(verification.repository_url, "https://github.com/Alcein/TAIRA")
+        self.assertTrue(verification.paper_names_repository)
+        self.assertTrue(verification.repository_matches_title)
+        self.assertTrue(verification.repository_mentions_author)
+        self.assertEqual(normalize_github_repository("https://github.com/Alcein/TAIRA/issues/1"), "")
+
+    def test_official_github_verifier_rejects_repository_not_named_by_paper(self) -> None:
+        record = PaperRecord.from_dict({
+            "title": "A Verifiable Recommendation Paper",
+            "authors": [{"name": "Ada Lovelace"}],
+            "urls": {"landing": "https://arxiv.org/abs/2601.00001"},
+            "source_records": [{"source_type": "arxiv"}],
+        })
+        pages = {
+            "https://arxiv.org/abs/2601.00001": "No implementation link is listed.",
+            "https://github.com/example/repo": "A Verifiable Recommendation Paper by Ada Lovelace",
+        }
+
+        verification = verify_official_github(record, "https://github.com/example/repo", pages.__getitem__)
+
+        self.assertFalse(verification.verified)
+        self.assertFalse(verification.paper_names_repository)
+
+    def test_resource_record_can_discover_and_verify_its_paper_declared_repository(self) -> None:
+        record = PaperRecord.from_dict({
+            "title": "TAIRA: A Verifiable Recommender",
+            "authors": [{"name": "Ada Lovelace"}],
+            "urls": {"landing": "https://arxiv.org/abs/2601.00002"},
+            "source_records": [{"source_type": "arxiv"}],
+        })
+        pages = {
+            "https://arxiv.org/abs/2601.00002": '<a href="https://github.com/example/taira">code</a>',
+            "https://github.com/example/taira": "TAIRA A Verifiable Recommender — Ada Lovelace",
+        }
+
+        verification = discover_and_verify_official_github(record, pages.__getitem__)
+
+        self.assertTrue(verification.verified)
+        self.assertEqual(record.urls["github"], "https://github.com/example/taira")
+        self.assertTrue(record.provenance["official_github_verification"]["verified"])
 
     def test_composer_preserves_uncropped_panels(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

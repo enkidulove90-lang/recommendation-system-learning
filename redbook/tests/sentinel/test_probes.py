@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from redbook.sentinel.paper_pool import PaperPool
 from redbook.sentinel.probes import (
-    ApiKeyProbe, HttpProbe, LoginProbe, OpenCliProbe, write_probe_log,
+    ApiKeyProbe, HttpProbe, LoginProbe, OpenCliProbe, build_default_probes, write_probe_log,
 )
 
 
@@ -67,6 +67,28 @@ def test_opencli_probe_down_does_not_block_sweep():  # TC5
     assert results[1].state == "ok"  # sweep survived the dead probe
 
 
+def test_opencli_probe_default_path_uses_runtime_client(monkeypatch):
+    class Client:
+        def doctor(self):
+            return {"daemon_running": True, "extension_connected": True}
+
+    monkeypatch.setattr("redbook.infrastructure.opencli_runtime.OpenCliClient", Client)
+
+    assert OpenCliProbe().check(NOW).state == "ok"
+
+
+def test_opencli_probe_runtime_initialization_failure_is_down(monkeypatch):
+    class UnavailableClient:
+        def __init__(self):
+            raise RuntimeError("runtime unavailable")
+
+    monkeypatch.setattr("redbook.infrastructure.opencli_runtime.OpenCliClient", UnavailableClient)
+
+    result = OpenCliProbe().check(NOW)
+
+    assert result.state == "down" and "runtime unavailable" in result.detail
+
+
 def test_login_probe_maps_e_auth_semantics():  # TC6
     lost = LoginProbe("chrome_login", "xiaohongshu",
                       probe=lambda site: {"ok": False, "error": "expired"})
@@ -77,6 +99,57 @@ def test_login_probe_maps_e_auth_semantics():  # TC6
     assert alive.check(NOW).state == "ok"
 
 
+def test_login_probe_default_path_accepts_probe_login_contract(monkeypatch):
+    monkeypatch.setattr(
+        "redbook.infrastructure.opencli_runtime.probe_login",
+        lambda site: {"logged_in": True, "site": site},
+    )
+
+    assert LoginProbe("chrome_login", "xiaohongshu").check(NOW).state == "ok"
+
+
 def test_api_key_probe_missing_config_is_down():  # covers MinerU/DeepSeek branch
     probe = ApiKeyProbe("deepseek", "DEEPSEEK_API_KEY_TEST_MISSING")
     assert probe.check(NOW).state == "down"
+
+
+def test_default_probes_respect_disabled_opencli_probe():
+    probes = build_default_probes({"opencli_probe": False})
+
+    assert not any(probe.name == "opencli" for probe in probes)
+
+
+def test_default_deepseek_probe_uses_configured_authenticated_health_endpoint(monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_TEST_KEY", "test-key")
+    captured = {}
+
+    def fake_authenticated_get(url, key):
+        captured.update(url=url, key=key)
+        return 200, "HTTP 200"
+
+    monkeypatch.setattr("redbook.sentinel.probes._authenticated_get_status", fake_authenticated_get)
+    probe = build_default_probes({"api_key_probes": [{
+        "name": "deepseek", "env_var": "DEEPSEEK_TEST_KEY",
+        "health_url": "https://api.deepseek.com/models",
+    }]})[0]
+
+    result = probe.check(NOW)
+
+    assert result.state == "ok" and result.detail == "HTTP 200"
+    assert captured == {"url": "https://api.deepseek.com/models", "key": "test-key"}
+
+
+def test_default_probe_rejects_untrusted_authenticated_health_url(monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_TEST_KEY", "test-key")
+    monkeypatch.setattr(
+        "redbook.sentinel.probes._authenticated_get_status",
+        lambda *_: (_ for _ in ()).throw(AssertionError("untrusted URL must not be called")),
+    )
+    probe = build_default_probes({"api_key_probes": [{
+        "name": "deepseek", "env_var": "DEEPSEEK_TEST_KEY",
+        "health_url": "https://example.invalid/models",
+    }]})[0]
+
+    result = probe.check(NOW)
+
+    assert result.state == "down" and result.detail.startswith("E_CONFIG")

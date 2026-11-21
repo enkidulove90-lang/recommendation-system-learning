@@ -30,6 +30,37 @@ def _http_fetch(url: str, timeout: float) -> tuple[int, float]:
     return int(response.status), (time.perf_counter() - started) * 1000.0
 
 
+def _authenticated_get_status(url: str, key: str) -> tuple[int, str]:
+    """Perform a bounded bearer-authenticated read without exposing the key."""
+    request = urllib.request.Request(
+        url, method="GET",
+        headers={"Authorization": f"Bearer {key}", "User-Agent": "redbook-sentinel/1"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=8.0) as response:
+            response.read(256)
+        return int(response.status), f"HTTP {response.status}"
+    except urllib.error.HTTPError as error:
+        return int(error.code), f"HTTP {error.code}"
+
+
+def _authenticated_health_call(url: str, env_var: str) -> Callable[[], tuple[bool, str]]:
+    def check() -> tuple[bool, str]:
+        import os
+        status, detail = _authenticated_get_status(url, os.environ[env_var])
+        return 200 <= status < 400, detail
+    return check
+
+
+def _configured_authenticated_health_call(
+    name: str, url: str, env_var: str,
+) -> Callable[[], tuple[bool, str]]:
+    """Allow bearer-key probes only against the provider's pinned endpoint."""
+    if name == "deepseek" and url == "https://api.deepseek.com/models":
+        return _authenticated_health_call(url, env_var)
+    return lambda: (False, f"E_CONFIG: unsupported authenticated health endpoint for {name}")
+
+
 @dataclass
 class ProbeResult:
     name: str
@@ -117,18 +148,21 @@ class OpenCliProbe:
 
     def check(self, now: datetime) -> ProbeResult:
         started = time.perf_counter()
-        doctor = self._doctor
-        if doctor is None:
-            from redbook.infrastructure.opencli_runtime import doctor as real
-            doctor = real
         try:
+            doctor = self._doctor
+            if doctor is None:
+                from redbook.infrastructure.opencli_runtime import OpenCliClient
+                doctor = OpenCliClient().doctor
             report = doctor()
         except Exception as error:
             return ProbeResult(self.name, "down", 0.0,
                                f"{type(error).__name__}: {error}")
         latency = (time.perf_counter() - started) * 1000.0
-        connected = bool(report.get("extensionConnected")
-                         or report.get("connected"))
+        connected = bool(
+            report.get("extension_connected")
+            or report.get("extensionConnected")
+            or report.get("connected")
+        )
         if not connected:
             return ProbeResult(self.name, "down", latency,
                                json.dumps(report, ensure_ascii=False)[:200])
@@ -157,7 +191,7 @@ class LoginProbe:
             return ProbeResult(self.name, "down", 0.0,
                                f"{type(error).__name__}: {error}")
         latency = (time.perf_counter() - started) * 1000.0
-        ok = bool(report.get("ok"))
+        ok = bool(report.get("logged_in") or report.get("ok"))
         if ok:
             return ProbeResult(self.name, "ok", latency, "logged_in")
         # auth failure is E_AUTH semantics: retryable, human-owned
@@ -175,8 +209,14 @@ def build_default_probes(config: dict[str, Any] | None = None) -> list[Probe]:
                                 timeout=float(entry.get("timeout", 8.0)),
                                 slow_ms=float(entry.get("slow_ms", 3000.0))))
     for entry in config.get("api_key_probes", []):
-        probes.append(ApiKeyProbe(entry["name"], entry["env_var"]))
-    probes.append(OpenCliProbe())
+        health_url = str(entry.get("health_url", "")).strip()
+        live_call = _configured_authenticated_health_call(
+            entry["name"], health_url, entry["env_var"],
+        ) \
+            if health_url else None
+        probes.append(ApiKeyProbe(entry["name"], entry["env_var"], live_call=live_call))
+    if bool(config.get("opencli_probe", True)):
+        probes.append(OpenCliProbe())
     login = config.get("login_probe")
     if login:
         probes.append(LoginProbe(login.get("name", "chrome_login"),

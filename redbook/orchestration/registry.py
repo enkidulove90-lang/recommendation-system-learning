@@ -49,6 +49,7 @@ class SqliteDeliveryRegistry:
                   run_id TEXT NOT NULL,
                   staged_id TEXT NOT NULL,
                   content_hash TEXT NOT NULL,
+                  canonical_id TEXT,
                   platform TEXT NOT NULL,
                   account TEXT NOT NULL,
                   draft_id TEXT,
@@ -64,6 +65,12 @@ class SqliteDeliveryRegistry:
                 "CREATE UNIQUE INDEX IF NOT EXISTS uq_delivery "
                 "ON deliveries(platform, account, staged_id)"
             )
+            columns = {
+                str(row["name"])
+                for row in connection.execute("PRAGMA table_info(deliveries)").fetchall()
+            }
+            if "canonical_id" not in columns:
+                connection.execute("ALTER TABLE deliveries ADD COLUMN canonical_id TEXT")
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS registry_meta (
                   key TEXT PRIMARY KEY,
@@ -79,6 +86,7 @@ class SqliteDeliveryRegistry:
         return {
             "run_id": value["run_id"], "staged_id": value["staged_id"],
             "content_hash": value["content_hash"], "platform": value["platform"],
+            "canonical_id": value["canonical_id"],
             "account": value["account"], "draft_id": value["draft_id"],
             "state": value["state"], "attempt": value["attempt"],
             "last_code": value["last_code"],
@@ -125,7 +133,7 @@ class SqliteDeliveryRegistry:
         return imported
 
     def begin_save(self, *, run_id: str, content_hash: str, platform: str, account: str,
-                   staged_id: str) -> dict[str, Any] | None:
+                   staged_id: str, canonical_id: str | None = None) -> dict[str, Any] | None:
         """Return an existing reusable delivery or atomically create a SAVING intent."""
         timestamp = _now()
         with self._connection() as connection:
@@ -135,6 +143,19 @@ class SqliteDeliveryRegistry:
                     SELECT * FROM deliveries
                     WHERE platform = ? AND account = ? AND staged_id = ?
                 """, (platform, account, staged_id)).fetchone()
+                if existing and canonical_id and existing["canonical_id"]:
+                    if str(existing["canonical_id"]) != canonical_id:
+                        raise ValueError(
+                            "delivery canonical_id cannot change for an existing staged_id"
+                        )
+                if existing and canonical_id and not existing["canonical_id"]:
+                    connection.execute(
+                        "UPDATE deliveries SET canonical_id = ? WHERE id = ?",
+                        (canonical_id, existing["id"]),
+                    )
+                    existing = connection.execute(
+                        "SELECT * FROM deliveries WHERE id = ?", (existing["id"],)
+                    ).fetchone()
                 if existing and str(existing["state"]) in _REUSABLE_STATES:
                     connection.execute("COMMIT")
                     return self._row(existing)
@@ -144,19 +165,19 @@ class SqliteDeliveryRegistry:
                     # than inserting a duplicate staged delivery.
                     connection.execute("""
                         UPDATE deliveries
-                        SET run_id = ?, content_hash = ?, draft_id = NULL,
+                        SET run_id = ?, content_hash = ?, canonical_id = COALESCE(?, canonical_id), draft_id = NULL,
                             state = 'SAVING', attempt = attempt + 1,
                             last_code = NULL, evidence = NULL, updated_at = ?
                         WHERE platform = ? AND account = ? AND staged_id = ?
-                    """, (run_id, content_hash, timestamp, platform, account, staged_id))
+                    """, (run_id, content_hash, canonical_id, timestamp, platform, account, staged_id))
                     connection.execute("COMMIT")
                     return None
                 connection.execute("""
                     INSERT INTO deliveries (
-                      run_id, staged_id, content_hash, platform, account, draft_id,
+                      run_id, staged_id, content_hash, canonical_id, platform, account, draft_id,
                       state, attempt, last_code, evidence, created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, NULL, 'SAVING', 1, NULL, NULL, ?, ?)
-                """, (run_id, staged_id, content_hash, platform, account, timestamp, timestamp))
+                    ) VALUES (?, ?, ?, ?, ?, ?, NULL, 'SAVING', 1, NULL, NULL, ?, ?)
+                """, (run_id, staged_id, content_hash, canonical_id, platform, account, timestamp, timestamp))
                 connection.execute("COMMIT")
             except Exception:
                 connection.execute("ROLLBACK")
@@ -245,6 +266,56 @@ class SqliteDeliveryRegistry:
         with self._connection() as connection:
             rows = connection.execute("SELECT * FROM deliveries ORDER BY id").fetchall()
         return [self._row(row) for row in rows]
+
+    def pool_delivery_view(self) -> list[dict[str, Any]]:
+        """Read-only platform progress joined to the shared paper pool.
+
+        Rows without a canonical paper identifier are legacy records and are
+        deliberately omitted: a guessed association would corrupt reconcile.
+        """
+        with self._connection() as connection:
+            has_pool = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'paper_pool'"
+            ).fetchone()
+            if has_pool is None:
+                return []
+            has_platform_pool = connection.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+                "AND name = 'paper_pool_platform_delivery'"
+            ).fetchone() is not None
+            platform_select = (
+                "platform_pool.status AS platform_pool_status,"
+                if has_platform_pool else "NULL AS platform_pool_status,"
+            )
+            platform_join = """
+                LEFT JOIN paper_pool_platform_delivery AS platform_pool
+                  ON platform_pool.canonical_id = p.canonical_id
+                 AND platform_pool.platform = CASE d.platform
+                   WHEN 'xhs' THEN 'xiaohongshu' ELSE d.platform END
+            """ if has_platform_pool else ""
+            rows = connection.execute(f"""
+                SELECT p.canonical_id, p.arxiv_id, p.status AS pool_status,
+                       p.pending_delivery, d.platform, {platform_select} d.state AS delivery_state,
+                       d.staged_id
+                FROM paper_pool AS p
+                JOIN deliveries AS d ON d.canonical_id = p.canonical_id
+                {platform_join}
+                WHERE d.canonical_id IS NOT NULL AND d.canonical_id != ''
+                ORDER BY p.discovered_at, d.id
+            """).fetchall()
+        return [{
+            "canonical_id": str(row["canonical_id"]),
+            "arxiv_id": str(row["arxiv_id"]),
+            "pool_status": str(row["pool_status"]),
+            "pending_delivery": bool(row["pending_delivery"]),
+            "platform": str(row["platform"]),
+            "platform_pool_status": (
+                str(row["platform_pool_status"])
+                if row["platform_pool_status"] is not None else None
+            ),
+            "delivery_state": str(row["delivery_state"]),
+            "staged_id": str(row["staged_id"]),
+        } for row in rows]
 
     def _set_state(self, *, platform: str, account: str, staged_id: str, state: str,
                    draft_id: str | None, last_code: str | None) -> None:
