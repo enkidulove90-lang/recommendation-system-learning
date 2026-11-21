@@ -28,6 +28,11 @@ if ($InstallRoot) {
     if (-not $DataRoot -or -not $ConfigPath -or -not $ExclusionsPath) {
         throw 'Stable registration requires DataRoot, ConfigPath, and ExclusionsPath.'
     }
+    foreach ($target in @($DataRoot, $ConfigPath, $ExclusionsPath, $EnvFilePath)) {
+        if ($target -and $target -match '(?i)([\\/])(?:\.worktrees|worktrees)([\\/])') {
+            throw 'Stable registration inputs must be outside a worktree.'
+        }
+    }
     if ($EnvFilePath) {
         $EnvFilePath = (Resolve-Path -LiteralPath $EnvFilePath).Path
         if ($EnvFilePath -match '(?i)([\\/])(?:\.worktrees|worktrees)([\\/])') {

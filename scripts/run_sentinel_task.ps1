@@ -19,6 +19,14 @@ if ($explicitAppRoot) {
     if ($projectRoot -match '(?i)([\\/])(?:\.worktrees|worktrees)([\\/])') {
         throw 'AppRoot must be an installed release, not a worktree.'
     }
+    if (-not $DataRoot -or -not $ConfigPath -or -not $ExclusionsPath) {
+        throw 'Installed runner requires DataRoot, ConfigPath, and ExclusionsPath.'
+    }
+    foreach ($target in @($DataRoot, $ConfigPath, $ExclusionsPath, $EnvFilePath)) {
+        if ($target -and $target -match '(?i)([\\/])(?:\.worktrees|worktrees)([\\/])') {
+            throw 'Installed runner inputs must be outside a worktree.'
+        }
+    }
 }
 $pythonArgs = @('-m', 'redbook.sentinel', 'run-once', '--platform', $Platform)
 if ($NoDispatch) {

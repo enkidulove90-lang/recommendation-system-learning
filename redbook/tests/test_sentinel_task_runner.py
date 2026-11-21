@@ -89,9 +89,15 @@ def test_installed_runner_loads_external_env_file_without_echoing_value():
             "import os\nprint(os.environ.get('SENTINEL_TEST_SECRET', 'missing'))\n", encoding="utf-8")
         env_file = root / "runtime.env"
         env_file.write_text('SENTINEL_TEST_SECRET="loaded-from-external-file"\n', encoding="utf-8")
+        config = root / "sentinel.yaml"
+        config.write_text("platform: homepage\n", encoding="utf-8")
+        exclusions = root / "exclusions.json"
+        exclusions.write_text('{"excluded_ids": []}', encoding="utf-8")
         result = subprocess.run([
             "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
-            "-AppRoot", str(app), "-EnvFilePath", str(env_file), "-PythonPath", sys.executable,
+            "-AppRoot", str(app), "-DataRoot", str(root), "-ConfigPath", str(config),
+            "-ExclusionsPath", str(exclusions), "-EnvFilePath", str(env_file),
+            "-PythonPath", sys.executable,
         ], text=True, capture_output=True, check=False)
         assert result.returncode == 0, result.stderr
         assert result.stdout.strip() == "loaded-from-external-file"
@@ -100,10 +106,38 @@ def test_installed_runner_loads_external_env_file_without_echoing_value():
 def test_installed_runner_rejects_missing_env_file():
     script = Path(__file__).resolve().parents[2] / "scripts" / "run_sentinel_task.ps1"
     with tempfile.TemporaryDirectory(prefix="sentinel-env-") as temporary:
+        root = Path(temporary)
+        config = root / "sentinel.yaml"
+        config.write_text("platform: homepage\n", encoding="utf-8")
+        exclusions = root / "exclusions.json"
+        exclusions.write_text('{"excluded_ids": []}', encoding="utf-8")
         result = subprocess.run([
             "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
-            "-AppRoot", temporary, "-EnvFilePath", str(Path(temporary) / "missing.env"),
+            "-AppRoot", temporary, "-DataRoot", temporary, "-ConfigPath", str(config),
+            "-ExclusionsPath", str(exclusions), "-EnvFilePath", str(root / "missing.env"),
             "-WhatIf",
         ], text=True, capture_output=True, check=False)
         assert result.returncode != 0
         assert "EnvFilePath does not exist" in result.stderr
+
+
+def test_stable_registration_rejects_worktree_state():
+    script = Path(__file__).resolve().parents[2] / "scripts" / "register_sentinel_task.ps1"
+    with tempfile.TemporaryDirectory(prefix="sentinel-state-") as temporary:
+        root = Path(temporary)
+        app = root / "release"
+        (app / "scripts").mkdir(parents=True)
+        shutil.copy2(script.parent / "run_sentinel_task.ps1", app / "scripts" / "run_sentinel_task.ps1")
+        worktree_state = root / ".worktrees" / "state"
+        worktree_state.mkdir(parents=True)
+        config = app / "sentinel.yaml"
+        config.write_text("platform: homepage\n", encoding="utf-8")
+        exclusions = app / "exclusions.json"
+        exclusions.write_text('{"excluded_ids": []}', encoding="utf-8")
+        result = subprocess.run([
+            "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
+            "-InstallRoot", str(app), "-DataRoot", str(worktree_state),
+            "-ConfigPath", str(config), "-ExclusionsPath", str(exclusions), "-WhatIf",
+        ], text=True, capture_output=True, check=False)
+        assert result.returncode != 0
+        assert "outside a worktree" in result.stderr
