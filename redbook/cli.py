@@ -110,6 +110,11 @@ def main() -> None:
                           help="with sentinel pool, show the read-only pool/registry progress view")
     sentinel.add_argument("--platform", choices=("homepage", "xiaohongshu", "wechat"),
                           help="independent platform consumer; defaults to sentinel.yaml")
+    catalog_relay = commands.add_parser(
+        "catalog-relay", help="transfer eligible catalog outbox events to platform jobs")
+    catalog_relay.add_argument("--database", type=Path, required=True,
+                               help="persistent SQLite database shared by catalog and delivery")
+    catalog_relay.add_argument("--limit", type=int, default=50)
 
     args = parser.parse_args()
     if args.command == "prepare-figures":
@@ -283,6 +288,12 @@ def main() -> None:
             worker = Worker(backend)
             receipts = worker.drain(HANDLERS[args.handler])
             _emit_json({"ok": True, "processed": [receipt.to_dict() for receipt in receipts]})
+    elif args.command == "catalog-relay":
+        from redbook.orchestration.catalog_relay import CatalogOutboxRelay
+
+        if args.limit < 1:
+            parser.error("--limit must be positive")
+        _emit_json(CatalogOutboxRelay(args.database).run_once(limit=args.limit))
     elif args.command == "sentinel":
         import yaml as _yaml
 

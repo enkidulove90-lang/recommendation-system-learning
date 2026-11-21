@@ -1,8 +1,10 @@
 """Outbox handoff is atomic, idempotent, and platform specific."""
 import json
+import sys
 
 from paper_intake.catalog_governance import CatalogGovernance, IdentityEvidence
 from redbook.orchestration.catalog_relay import CatalogOutboxRelay
+from redbook.cli import main as redbook_main
 
 
 def _ready_store(path):
@@ -42,6 +44,17 @@ def test_relay_creates_only_admitted_platform_jobs_and_is_idempotent(tmp_path):
         assert db.execute("SELECT COUNT(*) FROM catalog_event_deliveries").fetchone()[0] == 2
         assert db.execute("SELECT COUNT(*) FROM paper_pool_platform_delivery").fetchone()[0] == 2
         assert db.execute("SELECT COUNT(*) FROM catalog_outbox WHERE consumed_at IS NULL").fetchone()[0] == 0
+
+
+def test_relay_cli_uses_explicit_persistent_database(tmp_path, monkeypatch, capsys):
+    path = tmp_path / "state.sqlite"
+    _ready_store(path)
+    monkeypatch.setattr(sys, "argv", ["redbook.cli", "catalog-relay", "--database", str(path)])
+    redbook_main()
+    assert json.loads(capsys.readouterr().out)["sent"] == 2
+    monkeypatch.setattr(sys, "argv", ["redbook.cli", "catalog-relay", "--database", str(path)])
+    redbook_main()
+    assert json.loads(capsys.readouterr().out)["sent"] == 0
 
 
 def test_relay_rolls_back_crash_then_retries_without_duplicate(tmp_path):

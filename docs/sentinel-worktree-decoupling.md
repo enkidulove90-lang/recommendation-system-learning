@@ -41,6 +41,12 @@ value, and topic source stored in `catalog_admissions.evidence_json`.
 Xiaohongshu additionally requires the result of the official GitHub verifier:
 paper names repository, repository is reachable, and its text matches title
 and author. An unverified document identity cannot be admitted.
+`redbook.orchestration.catalog_admission.admit_candidate` is the adapter from
+the normalized `PaperRecord`: it checks title and canonical landing URL against
+the verified catalog row, fetches the paper and repository through the existing
+official GitHub verifier, and stores the result, evidence URLs, source label,
+and check time in `catalog_admissions.evidence_json`. A missing fetcher,
+missing record, unreachable repository, or mismatch leaves XHS deferred.
 
 The catalog writes only `PaperEligible` events. `CatalogOutboxRelay` consumes
 those events in outbox-ID order and creates a single platform job, idempotency
@@ -54,6 +60,11 @@ not grant another platform admission.
 The legacy daily discovery/pool dispatch path remains available while this
 new path is validated. Do not run both dispatchers for the same canonical
 paper: a legacy pool conflict fails closed and requires reconciliation.
+The new relay has an explicit opt-in command:
+`python -m redbook.cli catalog-relay --database <DataRoot>/state/orchestration.sqlite`.
+It does not run automatically with the legacy Sentinel command; enable its
+schedule only after a catalog admission producer uses the same persistent DB
+and the platform consumers' draft-only behavior has been verified.
 
 ## Regression gates
 
