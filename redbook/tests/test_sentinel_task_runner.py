@@ -59,10 +59,13 @@ def test_stable_install_preview_uses_external_code_state_and_exclusions():
         config.write_text("platform: homepage\n", encoding="utf-8")
         exclusions = state / "exclusions.json"
         exclusions.write_text('{"excluded_ids": []}', encoding="utf-8")
+        env_file = state / "runtime.env"
+        env_file.write_text("SENTINEL_TEST=value\n", encoding="utf-8")
         result = subprocess.run([
             "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
             "-InstallRoot", str(app), "-DataRoot", str(state), "-ConfigPath", str(config),
-            "-ExclusionsPath", str(exclusions), "-PythonPath", sys.executable,
+            "-ExclusionsPath", str(exclusions), "-EnvFilePath", str(env_file),
+            "-PythonPath", sys.executable,
             "-NoDispatch", "-WhatIf"], text=True, capture_output=True, check=False)
         assert result.returncode == 0, result.stderr
         preview = json.loads(result.stdout)
@@ -70,3 +73,37 @@ def test_stable_install_preview_uses_external_code_state_and_exclusions():
         assert str(app / "scripts" / "run_sentinel_task.ps1") in preview["ActionArguments"]
         assert "-DataRoot" in preview["ActionArguments"]
         assert "-ExclusionsPath" in preview["ActionArguments"]
+        assert str(env_file) in preview["ActionArguments"]
+
+
+def test_installed_runner_loads_external_env_file_without_echoing_value():
+    script = Path(__file__).resolve().parents[2] / "scripts" / "run_sentinel_task.ps1"
+    with tempfile.TemporaryDirectory(prefix="sentinel-env-") as temporary:
+        root = Path(temporary)
+        app = root / "release"
+        module = app / "redbook" / "sentinel"
+        module.mkdir(parents=True)
+        (app / "redbook" / "__init__.py").write_text("", encoding="utf-8")
+        (module / "__init__.py").write_text("", encoding="utf-8")
+        (module / "__main__.py").write_text(
+            "import os\nprint(os.environ.get('SENTINEL_TEST_SECRET', 'missing'))\n", encoding="utf-8")
+        env_file = root / "runtime.env"
+        env_file.write_text('SENTINEL_TEST_SECRET="loaded-from-external-file"\n', encoding="utf-8")
+        result = subprocess.run([
+            "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
+            "-AppRoot", str(app), "-EnvFilePath", str(env_file), "-PythonPath", sys.executable,
+        ], text=True, capture_output=True, check=False)
+        assert result.returncode == 0, result.stderr
+        assert result.stdout.strip() == "loaded-from-external-file"
+
+
+def test_installed_runner_rejects_missing_env_file():
+    script = Path(__file__).resolve().parents[2] / "scripts" / "run_sentinel_task.ps1"
+    with tempfile.TemporaryDirectory(prefix="sentinel-env-") as temporary:
+        result = subprocess.run([
+            "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
+            "-AppRoot", temporary, "-EnvFilePath", str(Path(temporary) / "missing.env"),
+            "-WhatIf",
+        ], text=True, capture_output=True, check=False)
+        assert result.returncode != 0
+        assert "EnvFilePath does not exist" in result.stderr

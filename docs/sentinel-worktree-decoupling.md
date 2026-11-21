@@ -20,6 +20,10 @@ SHA to an immutable `InstallBase/releases/<sha>` directory and copies the
 exclusion snapshot to `DataRoot/exclusions.json`. The installed code contains
 the same Python modules and YAML configuration as the tested commit. Keep
 SQLite, discovery JSONL, logs, and credential environment outside the release.
+For credentials stored in a `.env` file, pass the absolute `EnvFilePath` to
+registration. The runner reads simple `KEY=VALUE` assignments into its own
+process without printing values; it rejects a missing file or one inside a
+worktree. Existing process environment still works when no file is passed.
 The installer rejects paths inside worktrees. It does not register or enable a
 task.
 
@@ -27,6 +31,8 @@ task.
 `ConfigPath`, and `ExclusionsPath` for a real registration. The task action
 points to the installed release's runner and passes the state/config/exclusion
 paths explicitly. Preview mode remains available in the source checkout.
+The older `redbook/scripts/run_sentinel_task.ps1` remains a source-checkout
+compatibility entrypoint; it is not used by the stable scheduled action.
 Do not re-enable the disabled legacy task until the installed release has
 passed `run_sentinel_task.ps1 -NoDispatch -WhatIf` and one real discovery-only
 run with read-back of the SQLite and log paths. A new release requires a new

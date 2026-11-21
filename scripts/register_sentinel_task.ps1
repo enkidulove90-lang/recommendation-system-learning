@@ -8,6 +8,7 @@ param(
     [string]$DataRoot = '',
     [string]$ConfigPath = '',
     [string]$ExclusionsPath = '',
+    [string]$EnvFilePath = '',
     [ValidatePattern('^([01][0-9]|2[0-3]):[0-5][0-9]$')]
     [string]$At = '11:00',
     [switch]$WhatIf
@@ -27,6 +28,12 @@ if ($InstallRoot) {
     if (-not $DataRoot -or -not $ConfigPath -or -not $ExclusionsPath) {
         throw 'Stable registration requires DataRoot, ConfigPath, and ExclusionsPath.'
     }
+    if ($EnvFilePath) {
+        $EnvFilePath = (Resolve-Path -LiteralPath $EnvFilePath).Path
+        if ($EnvFilePath -match '(?i)([\\/])(?:\.worktrees|worktrees)([\\/])') {
+            throw 'EnvFilePath must not be inside a worktree.'
+        }
+    }
     $runner = Join-Path $projectRoot 'scripts/run_sentinel_task.ps1'
 }
 if (-not (Test-Path -LiteralPath $runner -PathType Leaf)) {
@@ -40,6 +47,7 @@ if ($InstallRoot) {
     $actionArgs += ' -DataRoot "' + $DataRoot + '"'
     $actionArgs += ' -ConfigPath "' + $ConfigPath + '"'
     $actionArgs += ' -ExclusionsPath "' + $ExclusionsPath + '"'
+    if ($EnvFilePath) { $actionArgs += ' -EnvFilePath "' + $EnvFilePath + '"' }
 }
 if ($NoDispatch) {
     $actionArgs += ' -NoDispatch'
