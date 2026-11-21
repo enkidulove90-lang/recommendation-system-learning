@@ -285,7 +285,10 @@ def parse_recsys_program_page(
             continue
         track_code = prefix.group(1).upper()
         title = _TRACK_PREFIX.sub("", raw_title).strip()
-        title = re.split(r"\s+by\s+(?=[A-ZÀ-ÖØ-Þ])", title, maxsplit=1)[0].strip()
+        title_and_authors = re.split(r"\s+by\s+(?=[A-ZÀ-ÖØ-Þ])", title, maxsplit=1)
+        title = title_and_authors[0].strip()
+        authors = ([part.strip() for part in re.split(r",\s*|\s+and\s+", title_and_authors[1]) if part.strip()]
+                   if len(title_and_authors) == 2 else [])
         if not title:
             continue
         link = node.find("a", href=True)
@@ -310,6 +313,7 @@ def parse_recsys_program_page(
                 topics=[current_topic] if current_topic else [],
                 topic_source="conference_session" if current_topic else "unavailable",
                 track=_TRACK_NAMES.get(track_code, track_code.casefold()),
+                authors=authors,
                 doi=doi,
                 retrieved_at=retrieved_at,
             )

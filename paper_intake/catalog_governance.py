@@ -53,6 +53,7 @@ class CatalogGovernance:
                     source_url TEXT NOT NULL, venue_name TEXT NOT NULL,
                     venue_type TEXT NOT NULL, publication_year INTEGER NOT NULL,
                     track TEXT NOT NULL, topic_signals_json TEXT NOT NULL,
+                    source_authors_json TEXT NOT NULL DEFAULT '[]',
                     identity_state TEXT NOT NULL DEFAULT 'unresolved',
                     canonical_id TEXT, paper_url TEXT, authors_json TEXT,
                     published_at TEXT, authority TEXT, evidence_url TEXT,
@@ -73,6 +74,9 @@ class CatalogGovernance:
                     created_at TEXT NOT NULL, consumed_at TEXT
                 );
             """)
+            columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_papers)")}
+            if "source_authors_json" not in columns:
+                db.execute("ALTER TABLE catalog_papers ADD COLUMN source_authors_json TEXT NOT NULL DEFAULT '[]'")
 
     def _connect(self) -> sqlite3.Connection:
         db = sqlite3.connect(self.path, timeout=5)
@@ -97,16 +101,21 @@ class CatalogGovernance:
                 result = db.execute("""
                     INSERT INTO catalog_papers
                     (catalog_id, source, source_id, title, source_url, venue_name,
-                     venue_type, publication_year, track, topic_signals_json,
+                     venue_type, publication_year, track, topic_signals_json, source_authors_json,
                      first_seen_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(source, source_id) DO NOTHING
                 """, (f"{source}:{source_id}", source, source_id, title,
                       str(row.get("paper_url", "")), str(row.get("venue_name", "")),
                       str(row.get("venue_type", "")), int(row.get("publication_year") or 0),
                       str(row.get("track", "")), json.dumps(signals, ensure_ascii=False),
+                      json.dumps(row.get("authors", []), ensure_ascii=False),
                       _now(), _now()))
                 added += result.rowcount
+                if result.rowcount == 0 and row.get("authors"):
+                    db.execute("""UPDATE catalog_papers SET source_authors_json=?, updated_at=?
+                        WHERE source=? AND source_id=? AND source_authors_json='[]'""",
+                        (json.dumps(row["authors"], ensure_ascii=False), _now(), source, source_id))
         return added
 
     def get(self, catalog_id: str) -> dict[str, Any]:
@@ -122,6 +131,13 @@ class CatalogGovernance:
             raise ValueError("title mismatch")
         if not evidence.authors or not evidence.published_at or not evidence.evidence_url:
             raise ValueError("incomplete authority evidence")
+        if paper["source"] != "arxiv":
+            source_authors = json.loads(paper["source_authors_json"])
+            if not source_authors:
+                raise ValueError("source author evidence required")
+            official_authors = {_title(name) for name in evidence.authors}
+            if not any(_title(name) in official_authors for name in source_authors):
+                raise ValueError("author mismatch")
         evidence_host = urlparse(evidence.evidence_url)
         expected_host = {"arxiv": "export.arxiv.org", "crossref": "api.crossref.org",
                          "acl_anthology": "aclanthology.org"}.get(evidence.authority)
@@ -176,6 +192,14 @@ class CatalogGovernance:
         if len(matches) != 1:
             raise ValueError("arxiv identity unresolved")
         record = matches[0]
+        source = self.get(catalog_id)
+        source_authors = json.loads(source["source_authors_json"])
+        if source["source"] != "arxiv":
+            if not source_authors:
+                raise ValueError("source author evidence required")
+            official = {_title(name) for name in record.authors}
+            if not any(_title(name) in official for name in source_authors):
+                raise ValueError("author mismatch")
         self.verify_identity(catalog_id, IdentityEvidence(
             title=record.title, authors=tuple(record.authors),
             paper_url=record.paper_url, published_at=record.published_at,

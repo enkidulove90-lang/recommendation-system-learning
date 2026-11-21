@@ -93,6 +93,7 @@ class PaperCatalogParsingTests(unittest.TestCase):
         self.assertEqual(len(records), 2)
         self.assertEqual(records[0].title, "Beyond Fixed Depths and Widths")
         self.assertEqual(records[0].track, "research")
+        self.assertEqual(records[0].authors, ["Jingzhe Liu", "Hanbing Wang"])
         self.assertEqual(records[0].topics, ["Semantic IDs & Generative Interfaces"])
         self.assertEqual(records[0].paper_url, "https://recsys.acm.org/recsys26/session-1/")
         self.assertEqual(records[1].track, "industry")

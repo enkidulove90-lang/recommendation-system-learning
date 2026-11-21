@@ -13,7 +13,7 @@ BONSAI = {
     "venue_name": "ACM RecSys 2026", "venue_type": "conference-paper",
     "publication_year": 2026, "topics": ["Semantic IDs"],
     "topic_source": "conference_session", "track": "research",
-    "arxiv_id": "", "doi": "", "authors": [], "published_at": "",
+    "arxiv_id": "", "doi": "", "authors": ["Jingzhe Liu"], "published_at": "",
 }
 
 
@@ -105,3 +105,17 @@ def test_official_arxiv_response_resolves_suggested_id_only_on_title_match(tmp_p
         other.verify_arxiv_id("recsys_program:2026:bonsai", "2607.16633",
                                transport=type("Wrong", (), {"get_text": lambda self, url: wrong_feed})())
     assert other.pending_events() == []
+
+
+def test_old_recsys_snapshot_without_authors_stays_unresolved(tmp_path):
+    store = CatalogGovernance(tmp_path / "catalog.sqlite")
+    store.import_records([{**BONSAI, "authors": []}])
+    with pytest.raises(ValueError, match="source author evidence required"):
+        store.verify_identity("recsys_program:2026:bonsai", IdentityEvidence(
+            title="BONSAI Paper", authors=("Jingzhe Liu",),
+            paper_url="https://arxiv.org/abs/2607.16633", arxiv_id="2607.16633",
+            published_at="2026-07-20", authority="arxiv",
+            evidence_url="https://export.arxiv.org/api/query?id_list=2607.16633"))
+    assert store.get("recsys_program:2026:bonsai")["identity_state"] == "unresolved"
+    assert store.import_records([BONSAI]) == 0
+    assert json.loads(store.get("recsys_program:2026:bonsai")["source_authors_json"]) == ["Jingzhe Liu"]
