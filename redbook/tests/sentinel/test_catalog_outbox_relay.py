@@ -46,6 +46,26 @@ def test_relay_creates_only_admitted_platform_jobs_and_is_idempotent(tmp_path):
         assert db.execute("SELECT COUNT(*) FROM catalog_outbox WHERE consumed_at IS NULL").fetchone()[0] == 0
 
 
+def test_three_platform_handoff_keeps_draft_actions_separate(tmp_path):
+    path = tmp_path / "state.sqlite"
+    store = _ready_store(path)
+    code = {"verified": True, "paper_url": "https://arxiv.org/abs/2607.16633",
+            "repository_url": "https://github.com/example/bonsai",
+            "paper_names_repository": True, "repository_reachable": True,
+            "repository_matches_title": True, "repository_mentions_author": True}
+    assert store.admit("recsys_program:2026:bonsai", "xiaohongshu",
+                       topic_terms=("Semantic IDs",), code_evidence=code) == "eligible"
+    assert CatalogOutboxRelay(path).run_once(limit=10)["sent"] == 3
+    with store._connect() as db:
+        events = [json.loads(row[0]) for row in db.execute(
+            "SELECT payload_json FROM catalog_outbox ORDER BY id")]
+        jobs = db.execute("SELECT payload_ref FROM jobs ORDER BY payload_ref").fetchall()
+    assert {event["platform"]: event["action"] for event in events} == {
+        "homepage": "publish", "wechat": "save_draft", "xiaohongshu": "save_draft"}
+    assert len(jobs) == 3
+    assert {row[0].split(":")[1] for row in jobs} == {"homepage", "wechat", "xiaohongshu"}
+
+
 def test_relay_cli_uses_explicit_persistent_database(tmp_path, monkeypatch, capsys):
     path = tmp_path / "state.sqlite"
     _ready_store(path)

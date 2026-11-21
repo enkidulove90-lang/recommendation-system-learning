@@ -113,3 +113,13 @@ subsequent timezone fix: `sentinel.yaml` explicitly names `Asia/Shanghai`,
 and `SentinelRunner.run_retrieval` converts the instant to that zone before
 the schedule and daily-idempotency checks. A deterministic test covers 10:59
 and 11:00 local time. The task action must be moved to the corrected release.
+
+The corrected release `76e834a87bff7801687ebfe0dae582a2564f5a55` then
+completed an isolated live discovery-only run with `retrieval.ran=true` and
+`added=9`; the isolated external state contains SQLite, two discovery files,
+and a probe log. The production task action was moved to this release and
+read back as `Ready`, `NoDispatch=true`, with no worktree path. The existing
+5,112-record snapshot was imported into persistent governance SQLite twice:
+first import added 5,112, second added 0, and both left pending outbox events
+at 0. Admission and relay remain explicit opt-in operations until verified
+identities and topic/code evidence are supplied.
