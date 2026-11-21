@@ -43,6 +43,16 @@ def test_exclusion_list_rejected_with_reason(pool, tmp_path):  # TC9
                       "canonical_id": "2601.00001"}
 
 
+def test_site_exclusion_schema_and_missing_file_fail_closed(tmp_path):
+    exclusion_file = tmp_path / "exclusions.json"
+    exclusion_file.write_text(json.dumps({"excluded_ids": ["2504.00678"]}), encoding="utf-8")
+    assert load_exclusions(exclusion_file) == {"2504.00678"}
+    exclusion_file.unlink()
+    import pytest
+    with pytest.raises(FileNotFoundError):
+        load_exclusions(exclusion_file)
+
+
 def test_duplicate_id_or_doi_is_idempotent(pool):  # TC10
     _add(pool, "aaa", arxiv_id="2601.11111", doi="10.1000/x")
     again_by_doi = pool.add_candidate(canonical_id="bbb", doi="10.1000/x")

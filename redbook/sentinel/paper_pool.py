@@ -372,11 +372,13 @@ class PaperPool:
 
 def load_exclusions(path: Path) -> set[str]:
     """Hexo-side exclusion list (``tools/paper_exclusions.json`` shape)."""
-    if not Path(path).exists():
-        return set()
+    if not Path(path).is_file():
+        raise FileNotFoundError(path)
     data = json.loads(Path(path).read_text(encoding="utf-8"))
     if isinstance(data, dict):
-        items = data.get("excluded", data)
+        items = data.get("excluded_ids", data.get("excluded"))
     else:
         items = data
-    return {str(item) for item in items} if isinstance(items, list) else set()
+    if not isinstance(items, list) or not all(isinstance(item, str) for item in items):
+        raise ValueError("invalid exclusion list")
+    return set(items)

@@ -4,20 +4,43 @@ param(
     [string]$Platform = 'homepage',
     [switch]$NoDispatch,
     [string]$PythonPath = 'python',
+    [string]$InstallRoot = '',
+    [string]$DataRoot = '',
+    [string]$ConfigPath = '',
+    [string]$ExclusionsPath = '',
     [ValidatePattern('^([01][0-9]|2[0-3]):[0-5][0-9]$')]
     [string]$At = '11:00',
     [switch]$WhatIf
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $InstallRoot -and -not $WhatIf) {
+    throw 'Actual task registration requires an independent InstallRoot.'
+}
 $projectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $runner = Join-Path $PSScriptRoot 'run_sentinel_task.ps1'
+if ($InstallRoot) {
+    $projectRoot = (Resolve-Path -LiteralPath $InstallRoot).Path
+    if ($projectRoot -match '(?i)([\\/])(?:\.worktrees|worktrees)([\\/])') {
+        throw 'InstallRoot must not be a worktree.'
+    }
+    if (-not $DataRoot -or -not $ConfigPath -or -not $ExclusionsPath) {
+        throw 'Stable registration requires DataRoot, ConfigPath, and ExclusionsPath.'
+    }
+    $runner = Join-Path $projectRoot 'scripts/run_sentinel_task.ps1'
+}
 if (-not (Test-Path -LiteralPath $runner -PathType Leaf)) {
     throw 'Sentinel task runner is missing.'
 }
 
 $actionArgs = '-NoProfile -ExecutionPolicy Bypass -File "' + $runner + '" -Platform ' + $Platform
 $actionArgs += ' -PythonPath "' + $PythonPath + '"'
+if ($InstallRoot) {
+    $actionArgs += ' -AppRoot "' + $projectRoot + '"'
+    $actionArgs += ' -DataRoot "' + $DataRoot + '"'
+    $actionArgs += ' -ConfigPath "' + $ConfigPath + '"'
+    $actionArgs += ' -ExclusionsPath "' + $ExclusionsPath + '"'
+}
 if ($NoDispatch) {
     $actionArgs += ' -NoDispatch'
 }

@@ -63,6 +63,7 @@ class CatalogGovernance:
                 CREATE TABLE IF NOT EXISTS catalog_admissions (
                     catalog_id TEXT NOT NULL, platform TEXT NOT NULL,
                     state TEXT NOT NULL, reason TEXT NOT NULL,
+                    evidence_json TEXT NOT NULL DEFAULT '{}',
                     decided_at TEXT NOT NULL,
                     PRIMARY KEY(catalog_id, platform)
                 );
@@ -71,12 +72,24 @@ class CatalogGovernance:
                     operation_id TEXT NOT NULL UNIQUE,
                     event_type TEXT NOT NULL, catalog_id TEXT NOT NULL,
                     platform TEXT NOT NULL, payload_json TEXT NOT NULL,
-                    created_at TEXT NOT NULL, consumed_at TEXT
+                    created_at TEXT NOT NULL, consumed_at TEXT,
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    next_visible_at TEXT NOT NULL DEFAULT '',
+                    dead_letter_reason TEXT NOT NULL DEFAULT ''
                 );
             """)
             columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_papers)")}
             if "source_authors_json" not in columns:
                 db.execute("ALTER TABLE catalog_papers ADD COLUMN source_authors_json TEXT NOT NULL DEFAULT '[]'")
+            admission_columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_admissions)")}
+            if "evidence_json" not in admission_columns:
+                db.execute("ALTER TABLE catalog_admissions ADD COLUMN evidence_json TEXT NOT NULL DEFAULT '{}'")
+            outbox_columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_outbox)")}
+            for name, ddl in (("attempts", "INTEGER NOT NULL DEFAULT 0"),
+                              ("next_visible_at", "TEXT NOT NULL DEFAULT ''"),
+                              ("dead_letter_reason", "TEXT NOT NULL DEFAULT ''")):
+                if name not in outbox_columns:
+                    db.execute(f"ALTER TABLE catalog_outbox ADD COLUMN {name} {ddl}")
 
     def _connect(self) -> sqlite3.Connection:
         db = sqlite3.connect(self.path, timeout=5)
@@ -205,28 +218,45 @@ class CatalogGovernance:
             paper_url=record.paper_url, published_at=record.published_at,
             authority="arxiv", evidence_url=response_url, arxiv_id=arxiv_id))
 
-    def admit(self, catalog_id: str, platform: str, *, topic_match: bool,
-              code_verified: bool = False) -> str:
+    def admit(self, catalog_id: str, platform: str, *, topic_terms: tuple[str, ...],
+              code_evidence: dict[str, Any] | None = None) -> str:
         if platform not in _PLATFORMS:
             raise ValueError("unknown platform")
         paper = self.get(catalog_id)
         if paper["identity_state"] != "identity_verified":
             raise ValueError("identity_verified required before admission")
-        reason = ("topic_out_of_scope" if not topic_match else
-                  "official_code_unverified" if platform == "xiaohongshu" and not code_verified
+        signals = json.loads(paper["topic_signals_json"])
+        fields = [("title", paper["title"])]
+        fields.extend(("topic:" + str(signals.get("source", "unavailable")), str(value))
+                      for value in signals.get("values", []))
+        matches = [{"term": term, "field": field, "value": value}
+                   for term in topic_terms if term.strip()
+                   for field, value in fields if term.casefold() in value.casefold()]
+        code = dict(code_evidence or {})
+        code_valid = (code.get("verified") is True
+                      and code.get("paper_url") == paper["paper_url"]
+                      and all(code.get(key) is True for key in (
+                          "paper_names_repository", "repository_reachable",
+                          "repository_matches_title", "repository_mentions_author"))
+                      and urlparse(str(code.get("repository_url", ""))).netloc == "github.com")
+        reason = ("topic_out_of_scope" if not matches else
+                  "official_code_unverified" if platform == "xiaohongshu" and not code_valid
                   else "verified")
         state = "eligible" if reason == "verified" else "deferred"
+        evidence = {"topic_matches": matches, "topic_signal_source": signals.get("source", "unavailable"),
+                    "code": code if platform == "xiaohongshu" else None}
         with self._connect() as db:
             db.execute("""INSERT INTO catalog_admissions
-                (catalog_id, platform, state, reason, decided_at) VALUES (?, ?, ?, ?, ?)
+                (catalog_id, platform, state, reason, evidence_json, decided_at) VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT(catalog_id, platform) DO UPDATE SET
-                state=excluded.state, reason=excluded.reason, decided_at=excluded.decided_at""",
-                (catalog_id, platform, state, reason, _now()))
+                state=excluded.state, reason=excluded.reason,
+                evidence_json=excluded.evidence_json, decided_at=excluded.decided_at""",
+                (catalog_id, platform, state, reason, json.dumps(evidence, ensure_ascii=False), _now()))
             if state == "eligible":
                 operation_id = f"catalog-admission-v1:{catalog_id}:{platform}"
                 payload = {"event_version": 1, "catalog_id": catalog_id,
                            "canonical_id": paper["canonical_id"], "platform": platform,
-                           "paper_url": paper["paper_url"],
+                           "paper_url": paper["paper_url"], "title": paper["title"],
                            "action": "publish" if platform == "homepage" else "save_draft"}
                 db.execute("""INSERT INTO catalog_outbox
                     (operation_id, event_type, catalog_id, platform, payload_json, created_at)

@@ -98,6 +98,10 @@ def main() -> None:
     )
     sentinel.add_argument("action", choices=["run-once", "probe", "pool"])
     sentinel.add_argument("--data-root", type=Path, default=Path("data"))
+    sentinel.add_argument("--config", type=Path, default=None,
+                          help="sentinel config path (stable installation may override)")
+    sentinel.add_argument("--exclusions", type=Path, default=None,
+                          help="explicit exclusion snapshot in persistent state")
     sentinel.add_argument("--no-dispatch", action="store_true",
                           help="pool-only mode: skip queue dispatch")
     sentinel.add_argument("--export-pending", action="store_true",
@@ -287,9 +291,13 @@ def main() -> None:
         from redbook.sentinel.probes import build_default_probes
         from redbook.sentinel.runner import DailyDiscoveryAdapter, SentinelRunner
 
-        config_path = Path(__file__).resolve().parent / "config" / "sentinel.yaml"
+        config_path = args.config or Path(__file__).resolve().parent / "config" / "sentinel.yaml"
         config = _yaml.safe_load(config_path.read_text(encoding="utf-8")) \
             if config_path.exists() else {}
+        if args.exclusions is not None:
+            if not args.exclusions.is_file():
+                parser.error("--exclusions must name an existing file")
+            config["exclusions_path"] = str(args.exclusions.resolve())
         daily_config = Path(str(config.get("daily_discovery_config", "daily_draft.yaml")))
         if not daily_config.is_absolute():
             daily_config = config_path.parent / daily_config

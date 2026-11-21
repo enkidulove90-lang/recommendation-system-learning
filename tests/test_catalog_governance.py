@@ -35,7 +35,7 @@ def test_bonsai_requires_verified_document_then_platform_admission(tmp_path):
     store.import_records([BONSAI])
     paper_id = "recsys_program:2026:bonsai"
     with pytest.raises(ValueError, match="identity_verified"):
-        store.admit(paper_id, "homepage", topic_match=True)
+        store.admit(paper_id, "homepage", topic_terms=("Semantic IDs",))
     with pytest.raises(ValueError, match="title mismatch"):
         store.verify_identity(paper_id, IdentityEvidence(
             title="Wrong Paper", authors=("Jingzhe Liu",),
@@ -45,13 +45,18 @@ def test_bonsai_requires_verified_document_then_platform_admission(tmp_path):
         title="BONSAI Paper", authors=("Jingzhe Liu",),
         paper_url="https://arxiv.org/abs/2607.16633", arxiv_id="2607.16633",
         published_at="2026-07-01", authority="arxiv", evidence_url="https://export.arxiv.org/api/query?id_list=2607.16633"))
-    assert store.admit(paper_id, "homepage", topic_match=False) == "deferred"
+    assert store.admit(paper_id, "homepage", topic_terms=("Unrelated Topic",)) == "deferred"
     assert store.pending_events() == []
-    assert store.admit(paper_id, "homepage", topic_match=True) == "eligible"
-    assert store.admit(paper_id, "wechat", topic_match=True) == "eligible"
-    assert store.admit(paper_id, "xiaohongshu", topic_match=True) == "deferred"
-    assert store.admit(paper_id, "xiaohongshu", topic_match=True, code_verified=True) == "eligible"
-    assert store.admit(paper_id, "homepage", topic_match=True) == "eligible"
+    assert store.admit(paper_id, "homepage", topic_terms=("Semantic IDs",)) == "eligible"
+    assert store.admit(paper_id, "wechat", topic_terms=("Semantic IDs",)) == "eligible"
+    assert store.admit(paper_id, "xiaohongshu", topic_terms=("Semantic IDs",)) == "deferred"
+    code_evidence = {"verified": True, "repository_url": "https://github.com/example/bonsai",
+                     "paper_url": "https://arxiv.org/abs/2607.16633",
+                     "paper_names_repository": True, "repository_reachable": True,
+                     "repository_matches_title": True, "repository_mentions_author": True}
+    assert store.admit(paper_id, "xiaohongshu", topic_terms=("Semantic IDs",),
+                       code_evidence=code_evidence) == "eligible"
+    assert store.admit(paper_id, "homepage", topic_terms=("Semantic IDs",)) == "eligible"
     events = store.pending_events()
     assert len(events) == 3
     assert {event["platform"] for event in events} == {"homepage", "wechat", "xiaohongshu"}
