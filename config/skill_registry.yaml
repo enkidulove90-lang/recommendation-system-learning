@@ -1,0 +1,60 @@
+# Repository-local skill routing. AGENTS.md remains the human-readable route table.
+# Canonical skill bodies live under .agents/skills/; IDE-local directories
+# (.claude/skills/ 等) may only hold pointer stubs. Historical skill bodies are
+# kept under archive/skill_history and are not executable.
+# User-level locations (~/.claude, ~/.workbuddy, ~/.codex) must never define a
+# skill whose id duplicates a repo-local active id (no double routing).
+schema_version: 2
+
+# Patterns that must never appear in a deprecated/pointer SKILL.md on disk.
+forbidden_executable_patterns:
+  - "opencli xiaohongshu publish"
+  - "curl -L -o"
+  - "Invoke-WebRequest -OutFile"
+
+skills:
+  - id: xhs-paper-draft
+    status: active
+    scope: paper-to-xiaohongshu-draft
+    owner: redbook
+    canonical_path: .agents/skills/xhs-paper-draft/SKILL.md
+    entrypoint: python -m redbook.cli note <slug> --validate|--stage|--publish
+    verification_command: python -m redbook.cli note --help
+
+  - id: multi-platform-publishing
+    status: active
+    scope: paper-to-multiple-platforms
+    owner: redbook
+    canonical_path: .agents/skills/multi-platform-publishing/SKILL.md
+    entrypoint: see platform-specific sections in canonical skill
+    verification_command: python -m pytest redbook/tests/test_wechat_verify_gates.py -q
+
+  - id: paper-summarize
+    status: active
+    scope: paper-download-and-normalized-summary
+    owner: redbook
+    canonical_path: .agents/skills/paper-summarize/SKILL.md
+    entrypoint: python main.py <crawl|parse|summarize ...> (8-block summary contract in canonical skill)
+    verification_command: python main.py --help
+
+  - id: redbook-publish-legacy
+    status: deprecated
+    scope: historical-xiaohongshu-route
+    owner: redbook
+    canonical_path: .claude/skills/redbook-publish/SKILL.md
+    history_path: archive/skill_history/redbook-publish-legacy.md
+    superseded_by: xhs-paper-draft
+
+  - id: paper-summarize-claude-pointer
+    status: deprecated
+    scope: ide-local-pointer-for-paper-summarize
+    owner: redbook
+    canonical_path: .claude/skills/paper-summarize/SKILL.md
+    superseded_by: paper-summarize
+
+  - id: evil-read-arxiv
+    status: removed
+    scope: empty-placeholder-no-skill-body
+    owner: redbook
+    canonical_path: .claude/skills/evil-read-arxiv
+    note: tracked empty placeholder file deleted 2026-11-21; never contained a SKILL.md

@@ -2,6 +2,17 @@
 
 本仓库用于推荐系统论文解析、摘要、分类与多平台发布。跨 IDE（WorkBuddy / Codex / Claude Code / Cursor）共用同一套仓库内约束；**规则不要写进任何一台机器的用户目录**。
 
+技能状态、所有者和规范路径登记在 `config/skill_registry.yaml`；下面的路由表仍是任务选择入口。废弃技能只可作历史检索，不可执行。
+
+## Skill 管理与路由（统一约定）
+
+- **唯一登记表**：`config/skill_registry.yaml`（schema_version 2）。每个 skill 的 `id` 全局唯一；`active` 必须带 `entrypoint` 与 `verification_command`；`deprecated` 必须带 `superseded_by`（指向 active id）；`removed` 表示已从磁盘删除、只留决议记录。
+- **规范位置**：可执行技能正文一律放 `.agents/skills/<id>/SKILL.md`。IDE 本地目录（`.claude/skills/` 等）**只允许放指针 stub**（front matter 带 `status: deprecated` + 指向规范路径 + 路由说明，不含任何可执行命令）。`archive/skill_history/` 存废弃原文，**勿执行**。
+- **用户级防重**：`~/.claude/skills`、`~/.workbuddy/skills`、`~/.codex/skills` 中**禁止定义与仓库 active id 同名的技能**（会造成双路由）；用户级同主题技能只保留指针。本仓库的规则（AGENTS.md / `.agents/skills/` / `config/`）永远覆盖用户级同名规则。
+- **AI 路由顺序**：任务进来 → 先查本文件路由表 → 再查 `config/skill_registry.yaml` 确认状态与入口 → 最后读规范 SKILL.md。命中 `deprecated`/`removed` 条目时按 `superseded_by` 改道，不读历史归档。
+- **治理入口**：`redbook/services/skill_manager.py` —— `SkillManager(root).validate()` 输出路由问题清单（ROUTE_MISSING / DUPLICATE_ID / EXECUTABLE_DEPRECATED / ORPHAN_SKILL / USER_LEVEL_DUPLICATE 等）；`deprecate(skill_id, superseded_by)` 一步完成"归档原文 → 改写指针 → 更新登记表"。
+- **回归与 CI**：`redbook/tests/test_skill_routing.py`（16 用例：真实仓库全绿 + 8 个反例 + deprecate 端到端）随全量测试运行；`.github/workflows/skill-routing.yml` 在 push/PR 上单独校验路由、失效链接与废弃命令。
+
 ## 路由表
 
 | 任务 | 必读 | 入口 |
