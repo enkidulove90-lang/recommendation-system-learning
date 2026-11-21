@@ -1,6 +1,7 @@
 """Catalog governance acceptance tests: discovery never implies delivery."""
 
 import json
+import sqlite3
 
 import pytest
 
@@ -174,3 +175,8 @@ def test_evidence_log_appends_identity_and_admission_decisions(tmp_path):
     store.admit(pid, "homepage", topic_terms=("Semantic IDs",))
     history = store.evidence_history(pid)
     assert [row["kind"] for row in history] == ["identity", "identity", "admission"]
+    with store._connect() as db:
+        with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+            db.execute("UPDATE catalog_evidence_log SET verdict='rewritten' WHERE catalog_id=?", (pid,))
+        with pytest.raises(sqlite3.IntegrityError, match="append-only"):
+            db.execute("DELETE FROM catalog_evidence_log WHERE catalog_id=?", (pid,))

@@ -87,6 +87,12 @@ class CatalogGovernance:
                     verdict TEXT NOT NULL, evidence_json TEXT NOT NULL,
                     decided_at TEXT NOT NULL
                 );
+                CREATE TRIGGER IF NOT EXISTS catalog_evidence_log_no_update
+                BEFORE UPDATE ON catalog_evidence_log
+                BEGIN SELECT RAISE(ABORT, 'catalog evidence log is append-only'); END;
+                CREATE TRIGGER IF NOT EXISTS catalog_evidence_log_no_delete
+                BEFORE DELETE ON catalog_evidence_log
+                BEGIN SELECT RAISE(ABORT, 'catalog evidence log is append-only'); END;
             """)
             columns = {row[1] for row in db.execute("PRAGMA table_info(catalog_papers)")}
             if "source_authors_json" not in columns:
