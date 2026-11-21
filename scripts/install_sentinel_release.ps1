@@ -38,15 +38,23 @@ if ($WhatIf) {
 if (Test-Path -LiteralPath $release) {
     throw 'Immutable release already exists; choose a new commit.'
 }
-New-Item -ItemType Directory -Path $release -Force | Out-Null
+New-Item -ItemType Directory -Path $installBasePath -Force | Out-Null
 New-Item -ItemType Directory -Path $dataRootPath -Force | Out-Null
-$archive = Join-Path ([IO.Path]::GetTempPath()) ("paper-sentinel-$commit.zip")
+$stage = Join-Path $installBasePath ("staging-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $stage | Out-Null
+$archive = Join-Path ([IO.Path]::GetTempPath()) ("paper-sentinel-$commit.tar")
 try {
-    & git -C $sourceRoot archive --format=zip --output=$archive $commit
+    & git -C $sourceRoot archive --format=tar --output=$archive $commit
     if ($LASTEXITCODE -ne 0) { throw 'git archive failed.' }
-    Expand-Archive -LiteralPath $archive -DestinationPath $release
+    & tar -xf $archive -C $stage
+    if ($LASTEXITCODE -ne 0) { throw 'tar extraction failed.' }
+    if (-not (Test-Path -LiteralPath (Join-Path $stage 'redbook/sentinel/__main__.py') -PathType Leaf)) {
+        throw 'Release entrypoint is missing after extraction.'
+    }
+    Set-Content -LiteralPath (Join-Path $stage 'RELEASE_COMMIT') -Value $commit -Encoding ascii
     Copy-Item -LiteralPath $ExclusionsSource -Destination $exclusionsTarget -Force
-    Set-Content -LiteralPath (Join-Path $release 'RELEASE_COMMIT') -Value $commit -Encoding ascii
+    New-Item -ItemType Directory -Path (Split-Path -Parent $release) -Force | Out-Null
+    Move-Item -LiteralPath $stage -Destination $release
 } finally {
     if (Test-Path -LiteralPath $archive) { Remove-Item -LiteralPath $archive -Force }
 }
