@@ -10,12 +10,17 @@ daily_discovery_config: "daily_draft.yaml"
 exclusions_path: "D:/enkidulove90-lang.github.io/tools/paper_exclusions.json"
 
 # HTTP dependency probes (arxiv / s2 / dblp / openreview / crossref / github /
-# cloudflare).slow_ms: latency above this is reported degraded, not down.
+# cloudflare). slow_ms: latency above this is reported degraded, not down.
+# degraded_on: statuses meaning *restricted access* (bot challenge / auth gate)
+# rather than an outage -> degraded, not down.
+# kind: semantic_scholar -> dedicated probe: x-api-key header when S2_API_KEY
+# is set (never Bearer); 429 is always degraded (shared anonymous pool or 1 rps
+# entry tier), never down.
 http_endpoints:
   - { name: arxiv,           url: "https://export.arxiv.org/api/query?search_query=all:test&max_results=1", timeout: 10, slow_ms: 4000 }
-  - { name: semantic_scholar, url: "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=1", timeout: 10, slow_ms: 4000 }
+  - { name: semantic_scholar, kind: semantic_scholar, env_var: S2_API_KEY, url: "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=1", timeout: 10, slow_ms: 4000 }
   - { name: dblp,            url: "https://dblp.org/search/publ/api?q=test&h=1&format=json", timeout: 10, slow_ms: 4000 }
-  - { name: openreview,      url: "https://api2.openreview.net/notes?limit=1", timeout: 10, slow_ms: 4000 }
+  - { name: openreview,      url: "https://api2.openreview.net/notes/search?term=recommendation&limit=1", timeout: 10, slow_ms: 4000, degraded_on: [403] }
   - { name: crossref,        url: "https://api.crossref.org/works?rows=1", timeout: 10, slow_ms: 4000 }
   - { name: github_api,      url: "https://api.github.com/rate_limit", timeout: 10, slow_ms: 4000 }
   - { name: cloudflare_worker, url: "https://enkidulove90-lang.github.io/", timeout: 10, slow_ms: 4000 }

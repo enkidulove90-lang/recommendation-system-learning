@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import time
+import traceback
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -21,13 +22,23 @@ Fetch = Callable[[str, float], tuple[int, float]]
 """fetcher(url, timeout) -> (status_code, latency_ms); injectable for tests."""
 
 
-def _http_fetch(url: str, timeout: float) -> tuple[int, float]:
-    request = urllib.request.Request(url, method="GET",
-                                     headers={"User-Agent": "redbook-sentinel/1"})
+def _http_fetch(url: str, timeout: float,
+                headers: dict[str, str] | None = None) -> tuple[int, float]:
+    request = urllib.request.Request(
+        url, method="GET",
+        headers={"User-Agent": "redbook-sentinel/1", **(headers or {})},
+    )
     started = time.perf_counter()
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        response.read(256)
-    return int(response.status), (time.perf_counter() - started) * 1000.0
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            response.read(256)
+            return int(response.status), (time.perf_counter() - started) * 1000.0
+    except urllib.error.HTTPError as error:
+        # 4xx/5xx reach the caller as a status so semantic mapping
+        # (degraded_on / S2 429) can classify them; only transport-level
+        # failures (DNS, TLS, timeout) still raise -> down.
+        error.read(256)
+        return int(error.code), (time.perf_counter() - started) * 1000.0
 
 
 def _authenticated_get_status(url: str, key: str) -> tuple[int, str]:
@@ -67,10 +78,13 @@ class ProbeResult:
     state: str  # ok | degraded | down
     latency_ms: float
     detail: str = ""
+    error_type: str = ""
+    stack: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {"name": self.name, "state": self.state,
-                "latency_ms": round(self.latency_ms, 1), "detail": self.detail}
+                "latency_ms": round(self.latency_ms, 1), "detail": self.detail,
+                "error_type": self.error_type, "stack": self.stack}
 
 
 class Probe(Protocol):
@@ -80,26 +94,77 @@ class Probe(Protocol):
 
 
 class HttpProbe:
-    """Generic endpoint probe: 2xx = ok, slow-but-successful = degraded."""
+    """Generic endpoint probe: 2xx = ok, slow-but-successful = degraded.
+
+    ``degraded_on`` lists statuses that mean *restricted access* rather than
+    an outage (e.g. OpenReview's anonymous 403 bot-challenge): the endpoint
+    answered, so the verdict is degraded with a sanitized detail, not down.
+    """
 
     def __init__(self, name: str, url: str, *, timeout: float = 8.0,
-                 slow_ms: float = 3000.0, fetch: Fetch | None = None) -> None:
+                 slow_ms: float = 3000.0, fetch: Fetch | None = None,
+                 degraded_on: tuple[int, ...] = ()) -> None:
         self.name = name
         self.url = url
         self.timeout = timeout
         self.slow_ms = slow_ms
         self._fetch = fetch or _http_fetch
+        self._degraded_on = tuple(degraded_on)
+        self._headers: dict[str, str] = {}
 
     def check(self, now: datetime) -> ProbeResult:
         try:
-            status, latency = self._fetch(self.url, self.timeout)
+            if self._headers:
+                status, latency = self._fetch(self.url, self.timeout, self._headers)
+            else:
+                status, latency = self._fetch(self.url, self.timeout)
         except Exception as error:  # probes never raise
             return ProbeResult(self.name, "down", 0.0,
-                               f"{type(error).__name__}: {error}")
+                               f"{type(error).__name__}: {error}",
+                               type(error).__name__, traceback.format_exc())
         if 200 <= status < 400:
             state = "degraded" if latency > self.slow_ms else "ok"
             return ProbeResult(self.name, state, latency, f"HTTP {status}")
+        if status in self._degraded_on:
+            return ProbeResult(self.name, "degraded", latency,
+                               f"HTTP {status} (access-limited: challenge/auth gate, not outage)")
         return ProbeResult(self.name, "down", latency, f"HTTP {status}")
+
+
+class SemanticScholarProbe(HttpProbe):
+    """Semantic Scholar dedicated probe.
+
+    The official auth header is the case-sensitive ``x-api-key`` — never
+    ``Authorization: Bearer`` (that convention is DeepSeek-only). Without a
+    key the request shares the anonymous pool, so a 429 means *rate-limited*,
+    not an outage: it maps to degraded with a sanitized category detail that
+    never exposes the key. With a key, 429 means the 1 rps entry tier was
+    exceeded and is likewise degraded.
+    """
+
+    def __init__(self, name: str, url: str, *, env_var: str = "S2_API_KEY",
+                 timeout: float = 8.0, slow_ms: float = 3000.0,
+                 fetch: Fetch | None = None) -> None:
+        super().__init__(name, url, timeout=timeout, slow_ms=slow_ms, fetch=fetch)
+        self._env_var = env_var
+
+    def check(self, now: datetime) -> ProbeResult:
+        import os
+        key = os.environ.get(self._env_var)
+        if key:
+            self._headers = {"x-api-key": key}
+        result = super().check(now)
+        if result.state == "down" and result.detail.startswith("HTTP 429"):
+            result.state = "degraded"
+            result.detail = (
+                "authenticated rate-limited (x-api-key 1 rps entry tier)"
+                if key else
+                "anonymous rate-limited (shared pool; set S2_API_KEY for dedicated quota)"
+            )
+        elif result.state == "ok":
+            result.detail = f"HTTP {result.detail.split()[-1]} (x-api-key)" if key \
+                else f"HTTP {result.detail.split()[-1]} (anonymous)"
+        return result
 
 
 class ApiKeyProbe:
@@ -130,7 +195,8 @@ class ApiKeyProbe:
             ok, detail = self._live()
         except Exception as error:
             return ProbeResult(self.name, "down", 0.0,
-                               f"{type(error).__name__}: {error}")
+                               f"{type(error).__name__}: {error}",
+                               type(error).__name__, traceback.format_exc())
         latency = (time.perf_counter() - started) * 1000.0
         if not ok:
             return ProbeResult(self.name, "down", latency, detail)
@@ -156,7 +222,8 @@ class OpenCliProbe:
             report = doctor()
         except Exception as error:
             return ProbeResult(self.name, "down", 0.0,
-                               f"{type(error).__name__}: {error}")
+                               f"{type(error).__name__}: {error}",
+                               type(error).__name__, traceback.format_exc())
         latency = (time.perf_counter() - started) * 1000.0
         connected = bool(
             report.get("extension_connected")
@@ -189,7 +256,8 @@ class LoginProbe:
             report = probe(self._site)
         except Exception as error:
             return ProbeResult(self.name, "down", 0.0,
-                               f"{type(error).__name__}: {error}")
+                               f"{type(error).__name__}: {error}",
+                               type(error).__name__, traceback.format_exc())
         latency = (time.perf_counter() - started) * 1000.0
         ok = bool(report.get("logged_in") or report.get("ok"))
         if ok:
@@ -205,9 +273,19 @@ def build_default_probes(config: dict[str, Any] | None = None) -> list[Probe]:
     endpoints = config.get("http_endpoints", [])
     probes: list[Probe] = []
     for entry in endpoints:
-        probes.append(HttpProbe(entry["name"], entry["url"],
-                                timeout=float(entry.get("timeout", 8.0)),
-                                slow_ms=float(entry.get("slow_ms", 3000.0))))
+        kind = entry.get("kind", "http")
+        timeout = float(entry.get("timeout", 8.0))
+        slow_ms = float(entry.get("slow_ms", 3000.0))
+        if kind == "semantic_scholar":
+            probes.append(SemanticScholarProbe(
+                entry["name"], entry["url"],
+                env_var=str(entry.get("env_var", "S2_API_KEY")),
+                timeout=timeout, slow_ms=slow_ms,
+            ))
+        else:
+            probes.append(HttpProbe(entry["name"], entry["url"],
+                                    timeout=timeout, slow_ms=slow_ms,
+                                    degraded_on=tuple(entry.get("degraded_on", ()))))
     for entry in config.get("api_key_probes", []):
         health_url = str(entry.get("health_url", "")).strip()
         live_call = _configured_authenticated_health_call(

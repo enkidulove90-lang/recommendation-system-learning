@@ -6,7 +6,8 @@ from datetime import datetime, timezone
 
 from redbook.sentinel.paper_pool import PaperPool
 from redbook.sentinel.probes import (
-    ApiKeyProbe, HttpProbe, LoginProbe, OpenCliProbe, build_default_probes, write_probe_log,
+    ApiKeyProbe, HttpProbe, LoginProbe, OpenCliProbe, SemanticScholarProbe,
+    build_default_probes, write_probe_log,
 )
 
 
@@ -153,3 +154,111 @@ def test_default_probe_rejects_untrusted_authenticated_health_url(monkeypatch):
     result = probe.check(NOW)
 
     assert result.state == "down" and result.detail.startswith("E_CONFIG")
+
+
+# --- restricted-access semantics (OpenReview 403 challenge / S2 429) -------
+
+
+def test_http_probe_degraded_on_maps_restricted_access_to_degraded():
+    """OpenReview 403 = anonymous bot-challenge: endpoint alive, verdict degraded."""
+    probe = HttpProbe("openreview", "https://example.test/notes",
+                      degraded_on=(403,),
+                      fetch=lambda url, timeout: (403, 120.0))
+    result = probe.check(NOW)
+    assert result.state == "degraded"
+    assert result.detail.startswith("HTTP 403")
+    assert "not outage" in result.detail
+
+
+def test_http_probe_degraded_on_does_not_touch_other_statuses():
+    probe = HttpProbe("dep", "https://example.test",
+                      degraded_on=(403,),
+                      fetch=lambda url, timeout: (500, 10.0))
+    assert probe.check(NOW).state == "down"
+
+
+def test_semantic_scholar_anonymous_429_is_degraded(monkeypatch):
+    """No S2_API_KEY -> shared anonymous pool; 429 is rate-limit, not outage."""
+    monkeypatch.delenv("S2_API_KEY", raising=False)
+    probe = SemanticScholarProbe(
+        "semantic_scholar", "https://example.test/s2",
+        fetch=lambda url, timeout: (429, 80.0))
+    result = probe.check(NOW)
+    assert result.state == "degraded"
+    assert "anonymous rate-limited" in result.detail
+    assert "S2_API_KEY" in result.detail  # actionable hint, no key exposed
+
+
+def test_semantic_scholar_key_sends_x_api_key_header_not_bearer(monkeypatch):
+    """Official auth is the case-sensitive x-api-key header; Bearer is forbidden."""
+    monkeypatch.setenv("S2_API_KEY", "secret-key-value")
+    captured: dict = {}
+
+    def fetch(url, timeout, headers=None):
+        captured["headers"] = headers
+        return 200, 90.0
+
+    probe = SemanticScholarProbe("semantic_scholar", "https://example.test/s2", fetch=fetch)
+    result = probe.check(NOW)
+
+    assert result.state == "ok"
+    assert captured["headers"] == {"x-api-key": "secret-key-value"}
+    assert "x-api-key" in result.detail and "anonymous" not in result.detail
+
+
+def test_semantic_scholar_authenticated_429_is_degraded(monkeypatch):
+    """With a key, 429 means the 1 rps entry tier was exceeded -> degraded."""
+    monkeypatch.setenv("S2_API_KEY", "secret-key-value")
+    probe = SemanticScholarProbe(
+        "semantic_scholar", "https://example.test/s2",
+        fetch=lambda url, timeout, headers=None: (429, 60.0))
+    result = probe.check(NOW)
+    assert result.state == "degraded"
+    assert "authenticated rate-limited" in result.detail
+    assert "secret-key-value" not in result.detail  # key never leaks into detail
+
+
+def test_semantic_scholar_other_errors_still_down(monkeypatch):
+    monkeypatch.delenv("S2_API_KEY", raising=False)
+    probe = SemanticScholarProbe(
+        "semantic_scholar", "https://example.test/s2",
+        fetch=lambda url, timeout: (503, 10.0))
+    assert probe.check(NOW).state == "down"
+
+
+def test_default_probes_build_semantic_scholar_probe_and_degraded_on():
+    config = {"http_endpoints": [
+        {"name": "semantic_scholar", "kind": "semantic_scholar",
+         "env_var": "S2_API_KEY", "url": "https://example.test/s2"},
+        {"name": "openreview", "url": "https://example.test/notes/search",
+         "degraded_on": [403]},
+    ]}
+    probes = {p.name: p for p in build_default_probes(config)}
+
+    assert isinstance(probes["semantic_scholar"], SemanticScholarProbe)
+    assert probes["semantic_scholar"]._env_var == "S2_API_KEY"
+    assert isinstance(probes["openreview"], HttpProbe)
+    assert probes["openreview"]._degraded_on == (403,)
+
+
+def test_real_http_fetch_returns_429_status_instead_of_raising(monkeypatch):
+    """urllib raises HTTPError for 4xx/5xx; _http_fetch must convert it to a
+    status so the S2 429 -> degraded mapping actually triggers in production."""
+    import urllib.error as ue
+
+    class FakeHTTPError(ue.HTTPError):
+        def __init__(self):
+            super().__init__("https://example.test/s2", 429, "Too Many Requests", {}, None)
+        def read(self, n=-1):
+            return b""
+
+    from redbook.sentinel import probes as probes_mod
+    monkeypatch.setattr(
+        probes_mod.urllib.request, "urlopen",
+        lambda req, timeout=None: (_ for _ in ()).throw(FakeHTTPError()),
+    )
+    monkeypatch.delenv("S2_API_KEY", raising=False)
+    probe = SemanticScholarProbe("semantic_scholar", "https://example.test/s2")
+    result = probe.check(NOW)
+    assert result.state == "degraded"
+    assert "anonymous rate-limited" in result.detail
