@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Callable
 
@@ -32,6 +33,7 @@ class SentinelRunner:
         self.log_dir = Path(log_dir or (config.get("log_dir") or "data/logs"))
         self.probe_min_interval_seconds = float(config.get("probe_min_interval_seconds", 900))
         self.retrieval_time = str(config.get("retrieval_schedule", "11:00"))
+        self.retrieval_timezone = ZoneInfo(str(config.get("timezone", "UTC")))
         configured_exclusions = str(config.get("exclusions_path", "")).strip()
         self.exclusions_path = Path(configured_exclusions) if configured_exclusions else None
         self.discovery = discovery  # injectable: returns filtered candidate dicts
@@ -54,7 +56,7 @@ class SentinelRunner:
 
     # -- retrieval ------------------------------------------------------------
     def run_retrieval(self, now: datetime | None = None) -> dict[str, Any]:
-        now = now or datetime.now(timezone.utc)
+        now = (now or datetime.now(timezone.utc)).astimezone(self.retrieval_timezone)
         day = now.date().isoformat()
         scheduled = self._retrieval_moment(now)
         if now < scheduled:

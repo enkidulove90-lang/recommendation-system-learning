@@ -41,6 +41,17 @@ def test_retrieval_idempotent_per_day(env):  # TC7
     assert runner.run_retrieval(before_sched)["ran"] is False
 
 
+def test_windows_local_1100_trigger_matches_shanghai_retrieval_time(env):
+    pool, _ = env
+    runner = SentinelRunner(pool, config={"retrieval_schedule": "11:00",
+                                          "timezone": "Asia/Shanghai"},
+                            discovery=lambda now: [{"canonical_id": "arxiv:2601.00001"}])
+    assert runner.run_retrieval(datetime(2026, 11, 21, 2, 59, tzinfo=timezone.utc))["reason"] == "before schedule"
+    result = runner.run_retrieval(datetime(2026, 11, 21, 3, 0, tzinfo=timezone.utc))
+    assert result["ran"] is True and result["date"] == "2026-11-21"
+    assert result["added"] == 1
+
+
 def test_retrieval_uses_configured_hexo_exclusion_list(env, tmp_path):  # TC9
     pool, _ = env
     exclusions = tmp_path / "paper_exclusions.json"

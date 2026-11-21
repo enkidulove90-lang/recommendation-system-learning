@@ -5,6 +5,7 @@
 
 probe_min_interval_seconds: 900   # 15 min floor between sweeps (anti rate-limit)
 retrieval_schedule: "11:00"       # daily paper retrieval trigger
+timezone: "Asia/Shanghai"       # match the Windows task's local 11:00 trigger
 daily_discovery_config: "daily_draft.yaml"
 exclusions_path: "D:/enkidulove90-lang.github.io/tools/paper_exclusions.json"
 

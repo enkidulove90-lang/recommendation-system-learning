@@ -8,8 +8,8 @@ isolated worktree. That script derived its application root from `PSScriptRoot`;
 The YAML named a machine-specific Hexo exclusion path. The discovery adapter
 then read `daily_draft.yaml`, wrote JSONL under `data/discovery`, and used the
 same root for the SQLite pool, queue, and logs. Removing the worktree would
-therefore remove executable code and could strand the state. The old scheduled
-task is disabled. The alternate untracked `redbook/sentinel/schedule.py` is
+therefore remove executable code and could strand the state. The alternate
+untracked `redbook/sentinel/schedule.py` is
 not an approved registration entry point until it enforces the same boundary.
 
 ## Installed layout
@@ -33,9 +33,8 @@ points to the installed release's runner and passes the state/config/exclusion
 paths explicitly. Preview mode remains available in the source checkout.
 The older `redbook/scripts/run_sentinel_task.ps1` remains a source-checkout
 compatibility entrypoint; it is not used by the stable scheduled action.
-Do not re-enable the disabled legacy task until the installed release has
-passed `run_sentinel_task.ps1 -NoDispatch -WhatIf` and one real discovery-only
-run with read-back of the SQLite and log paths. A new release requires a new
+The installed release must pass `run_sentinel_task.ps1 -NoDispatch -WhatIf` and
+one real discovery-only run with read-back of the SQLite and log paths. A new release requires a new
 registration pointing to its immutable path; retain the previous release for
 rollback. Re-registering must not overwrite the persistent state directory.
 
@@ -88,5 +87,29 @@ and the platform consumers' draft-only behavior has been verified.
 7. Run the full redbook and catalog test suites, inspect the installed task
    action, and verify a discovery-only run before enabling any scheduler.
 
-The standalone source code is not proof of a live deployment. The scheduler
-remains disabled until the installed release and its runtime state are checked.
+## Installed acceptance record, 2026-11-21
+
+Release `8cc7c6c47954eda46ed4130127282bf3ad4ca2e6` was installed under
+`C:/Users/lkshpc/AppData/Local/PaperSentinel/releases`. Its task action and
+runtime paths were inspected with `-WhatIf`; the real installed runner then
+exited 0 and created the SQLite DB and probe log under
+`C:/Users/lkshpc/AppData/Local/PaperSentinel/state`. An external `.env` was
+loaded without echoing credentials. The installed relay command exited 0 on
+an isolated empty DB. The related regression suite reported 270 passed,
+1 skipped, and 11 subtests passed.
+
+The Windows task `Paper Sentinel Discovery` was registered for 11:00 and
+reported `Ready`. It has `NoDispatch=true`: this enables independent
+scheduled discovery without automatic publication. The manual run was before
+11:00, so it tested probes and filesystem paths, not a completed paper
+retrieval. Semantic Scholar returned 429, DBLP had a local TLS trust error,
+and OpenReview returned 403; those are external dependency probe failures.
+The catalog admission producer remains opt-in; no bulk admission of the
+5,112-record snapshot or live three-platform delivery is claimed.
+
+The post-registration audit found that this release compared a UTC clock to
+the local 11:00 trigger and could skip retrieval. It is superseded by the
+subsequent timezone fix: `sentinel.yaml` explicitly names `Asia/Shanghai`,
+and `SentinelRunner.run_retrieval` converts the instant to that zone before
+the schedule and daily-idempotency checks. A deterministic test covers 10:59
+and 11:00 local time. The task action must be moved to the corrected release.
