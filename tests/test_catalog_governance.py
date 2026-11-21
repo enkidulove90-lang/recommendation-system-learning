@@ -78,3 +78,30 @@ def test_evidence_url_cannot_be_supplied_by_an_untrusted_host(tmp_path):
             published_at="2026-07-01", authority="arxiv",
             evidence_url="https://example.com/fake-arxiv-response"))
     assert store.pending_events() == []
+
+
+def test_official_arxiv_response_resolves_suggested_id_only_on_title_match(tmp_path):
+    store = CatalogGovernance(tmp_path / "catalog.sqlite")
+    store.import_records([BONSAI])
+    feed = '''<feed xmlns="http://www.w3.org/2005/Atom"><entry>
+      <id>https://arxiv.org/abs/2607.16633v1</id>
+      <published>2026-07-20T00:00:00Z</published><updated>2026-07-20T00:00:00Z</updated>
+      <title>BONSAI Paper</title><author><name>Jingzhe Liu</name></author>
+      </entry></feed>'''
+
+    class Transport:
+        def get_text(self, url):
+            assert url == "https://export.arxiv.org/api/query?id_list=2607.16633"
+            return feed
+
+    store.verify_arxiv_id("recsys_program:2026:bonsai", "2607.16633", transport=Transport())
+    assert store.get("recsys_program:2026:bonsai")["canonical_id"] == "arxiv:2607.16633"
+    assert store.pending_events() == []
+
+    other = CatalogGovernance(tmp_path / "other.sqlite")
+    other.import_records([BONSAI])
+    wrong_feed = feed.replace("BONSAI Paper", "Different Paper")
+    with pytest.raises(ValueError, match="title mismatch"):
+        other.verify_arxiv_id("recsys_program:2026:bonsai", "2607.16633",
+                               transport=type("Wrong", (), {"get_text": lambda self, url: wrong_feed})())
+    assert other.pending_events() == []

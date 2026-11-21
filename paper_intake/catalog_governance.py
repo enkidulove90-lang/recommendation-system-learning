@@ -13,6 +13,8 @@ import sqlite3
 from typing import Any, Iterable
 from urllib.parse import urlparse
 
+from .catalog import CatalogTransport, RequestsCatalogTransport, parse_arxiv_feed
+
 
 _PLATFORMS = frozenset({"homepage", "xiaohongshu", "wechat"})
 
@@ -157,6 +159,27 @@ class CatalogGovernance:
                 (canonical_id, evidence.paper_url, json.dumps(evidence.authors),
                  evidence.published_at, evidence.authority, evidence.evidence_url,
                  _now(), catalog_id))
+
+    def verify_arxiv_id(self, catalog_id: str, arxiv_id: str, *,
+                        transport: CatalogTransport | None = None) -> None:
+        """Resolve one proposed arXiv ID against the official Atom record.
+
+        A site article or meeting agenda may suggest an ID, but neither is
+        treated as evidence until the official response matches the title.
+        """
+        if not re.fullmatch(r"\d{4}\.\d{4,5}", arxiv_id):
+            raise ValueError("invalid arxiv id")
+        client = transport or RequestsCatalogTransport()
+        response_url = f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
+        records = parse_arxiv_feed(client.get_text(response_url))
+        matches = [item for item in records if item.arxiv_id == arxiv_id]
+        if len(matches) != 1:
+            raise ValueError("arxiv identity unresolved")
+        record = matches[0]
+        self.verify_identity(catalog_id, IdentityEvidence(
+            title=record.title, authors=tuple(record.authors),
+            paper_url=record.paper_url, published_at=record.published_at,
+            authority="arxiv", evidence_url=response_url, arxiv_id=arxiv_id))
 
     def admit(self, catalog_id: str, platform: str, *, topic_match: bool,
               code_verified: bool = False) -> str:
