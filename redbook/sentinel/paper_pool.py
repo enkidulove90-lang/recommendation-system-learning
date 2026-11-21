@@ -48,7 +48,14 @@ CREATE TABLE IF NOT EXISTS paper_pool (
   platforms TEXT NOT NULL DEFAULT '',
   discovered_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
-  reason TEXT NOT NULL DEFAULT ''
+  reason TEXT NOT NULL DEFAULT '',
+  title_zh TEXT NOT NULL DEFAULT '',
+  venue_name TEXT NOT NULL DEFAULT '',
+  paper_url TEXT NOT NULL DEFAULT '',
+  github_url TEXT NOT NULL DEFAULT '',
+  published_at TEXT NOT NULL DEFAULT '',
+  identity_status TEXT NOT NULL DEFAULT 'discovered',
+  admission TEXT NOT NULL DEFAULT '{}'
 );
 CREATE TABLE IF NOT EXISTS sentinel_meta (
   key TEXT PRIMARY KEY,
@@ -91,6 +98,13 @@ class PoolEntry:
     discovered_at: str
     updated_at: str
     reason: str
+    title_zh: str = ""
+    venue_name: str = ""
+    paper_url: str = ""
+    github_url: str = ""
+    published_at: str = ""
+    identity_status: str = "discovered"
+    admission: str = "{}"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -100,6 +114,10 @@ class PoolEntry:
             "platforms": self.platforms,
             "discovered_at": self.discovered_at, "updated_at": self.updated_at,
             "reason": self.reason,
+            "title_zh": self.title_zh, "venue_name": self.venue_name,
+            "paper_url": self.paper_url, "github_url": self.github_url,
+            "published_at": self.published_at, "identity_status": self.identity_status,
+            "admission": json.loads(self.admission or "{}"),
         }
 
 
@@ -114,6 +132,19 @@ class PaperPool:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connection() as connection:
             connection.executescript(_DDL)
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(paper_pool)")}
+            migrations = (
+                ("title_zh", "TEXT NOT NULL DEFAULT ''"),
+                ("venue_name", "TEXT NOT NULL DEFAULT ''"),
+                ("paper_url", "TEXT NOT NULL DEFAULT ''"),
+                ("github_url", "TEXT NOT NULL DEFAULT ''"),
+                ("published_at", "TEXT NOT NULL DEFAULT ''"),
+                ("identity_status", "TEXT NOT NULL DEFAULT 'discovered'"),
+                ("admission", "TEXT NOT NULL DEFAULT '{}'"),
+            )
+            for name, declaration in migrations:
+                if name not in columns:
+                    connection.execute(f"ALTER TABLE paper_pool ADD COLUMN {name} {declaration}")
 
     @contextmanager
     def _connection(self) -> Iterator[sqlite3.Connection]:
@@ -143,7 +174,8 @@ class PaperPool:
     def add_candidate(self, *, canonical_id: str, arxiv_id: str = "",
                       doi: str = "", title: str = "",
                       source: str = "daily_discovery",
-                      exclusions: set[str] | None = None) -> dict[str, Any]:
+                      exclusions: set[str] | None = None,
+                      unified: Any | None = None) -> dict[str, Any]:
         """Idempotent insert (TC10): existing canonical_id returns added=False."""
         if exclusions and (arxiv_id in exclusions or canonical_id in exclusions):
             return {"added": False, "reason": "excluded",
@@ -160,9 +192,16 @@ class PaperPool:
             connection.execute(
                 "INSERT INTO paper_pool (canonical_id, arxiv_id, doi, title, "
                 "source, status, pending_delivery, platforms, discovered_at, "
-                "updated_at, reason) VALUES (?, ?, ?, ?, ?, 'discovered', 1, "
-                "'', ?, ?, 'hard-gate passed')",
-                (canonical_id, arxiv_id, doi, title, source, moment, moment))
+                "updated_at, reason, title_zh, venue_name, paper_url, github_url, "
+                "published_at, identity_status, admission) "
+                "VALUES (?, ?, ?, ?, ?, 'discovered', 1, '', ?, ?, 'hard-gate passed', ?, ?, ?, ?, ?, ?, ?)",
+                (canonical_id, arxiv_id, doi, title, source, moment, moment,
+                 getattr(unified, "title_zh", ""), getattr(unified, "venue_name", ""),
+                 getattr(unified, "paper_url", ""),
+                 getattr(unified, "urls", {}).get("github", ""),
+                 getattr(unified, "published_at", ""),
+                 getattr(unified, "identity_status", "discovered"),
+                 json.dumps(getattr(unified, "admission", {}), ensure_ascii=False)))
         return {"added": True, "reason": "", "canonical_id": canonical_id}
 
     def set_status(self, canonical_id: str, target: str) -> None:
@@ -367,7 +406,10 @@ class PaperPool:
             pending_delivery=bool(row["pending_delivery"]),
             platforms=row["platforms"],
             discovered_at=row["discovered_at"], updated_at=row["updated_at"],
-            reason=row["reason"])
+            reason=row["reason"], title_zh=row["title_zh"], venue_name=row["venue_name"],
+            paper_url=row["paper_url"], github_url=row["github_url"],
+            published_at=row["published_at"], identity_status=row["identity_status"],
+            admission=row["admission"])
 
 
 def load_exclusions(path: Path) -> set[str]:

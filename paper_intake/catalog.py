@@ -131,11 +131,43 @@ class PaperRecord:
     doi: str = ""
     arxiv_id: str = ""
     retrieved_at: str = ""
+    schema_version: int = 2
+    canonical_id: str = ""
+    title_zh: str = ""
+    venue_track: str = ""
+    identity_status: str = "discovered"
+    admission: dict[str, dict[str, Any]] = field(default_factory=dict)
+    evidence: dict[str, list[dict[str, Any]]] = field(default_factory=dict)
+    provenance: dict[str, Any] = field(default_factory=dict)
+    urls: dict[str, str] = field(default_factory=dict)
+    identifiers: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         payload = asdict(self)
         payload["topics"] = sorted({value for value in self.topics if value})
+        payload["canonical_id"] = self.canonical_id or PaperCatalog._key(self)
+        payload["identifiers"] = {**self.identifiers,
+            **({"doi": self.doi} if self.doi else {}),
+            **({"arxiv": self.arxiv_id} if self.arxiv_id else {})}
+        payload["urls"] = dict(self.urls)
+        if self.paper_url and not payload["urls"].get("paper"):
+            payload["urls"]["paper"] = self.paper_url
+        if self.doi and not payload["urls"].get("pdf"):
+            payload["urls"]["pdf"] = ""
         return payload
+
+    @classmethod
+    def from_dict(cls, value: dict[str, Any]) -> "PaperRecord":
+        """Read v1 snapshots and tolerate forward-compatible unknown fields."""
+        allowed = cls.__dataclass_fields__
+        normalized = {key: item for key, item in value.items() if key in allowed}
+        # Older snapshots used the identity fields directly and had no URL map.
+        normalized.setdefault("urls", {})
+        normalized.setdefault("schema_version", 2)
+        record = cls(**normalized)
+        record.schema_version = 2
+        record.canonical_id = record.canonical_id or PaperCatalog._key(record)
+        return record
 
 
 def _text(value: str | None) -> str:
@@ -379,14 +411,17 @@ class PaperCatalog:
 
     @staticmethod
     def _key(record: PaperRecord) -> str:
-        if record.doi:
-            return "doi:" + record.doi.casefold()
-        if record.arxiv_id:
-            return "arxiv:" + record.arxiv_id.casefold()
+        ids = {**record.identifiers,
+               **({"doi": record.doi} if record.doi else {}),
+               **({"arxiv": record.arxiv_id} if record.arxiv_id else {})}
+        for kind in ("doi", "arxiv", "openreview", "dblp"):
+            if ids.get(kind):
+                return f"{kind}:{str(ids[kind]).casefold()}"
         return "title:" + _normalized_title(record.title)
 
     def add(self, record: PaperRecord) -> None:
         key = self._key(record)
+        record.canonical_id = key
         existing = self._index.get(key)
         if existing is None:
             self._index[key] = record
@@ -403,12 +438,19 @@ class PaperCatalog:
         for paper in papers:
             self.add(paper)
 
+    def get(self, canonical_id: str) -> PaperRecord:
+        """Return one record by canonical DOI/arXiv/title key."""
+        try:
+            return self._index[canonical_id]
+        except KeyError:
+            raise KeyError(canonical_id) from None
+
     def write_json(self, path: str | Path, *, refresh_interval_seconds: int) -> None:
         destination = Path(path)
         destination.parent.mkdir(parents=True, exist_ok=True)
         generated_at = datetime.now(timezone.utc).isoformat()
         payload = {
-            "schema_version": 1,
+            "schema_version": 2,
             "generated_at": generated_at,
             "refresh_interval_seconds": refresh_interval_seconds,
             "paper_count": len(self.papers),

@@ -44,6 +44,44 @@ class PaperRecord:
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
 
+    def to_unified(self):
+        """Project discovery data into the authoritative catalog schema."""
+        from paper_intake.catalog import PaperRecord as UnifiedPaperRecord
+
+        venue = dict(self.venue)
+        identifiers = dict(self.identifiers)
+        authors = [dict(author) for author in self.authors]
+        source = str((self.source_records or [{}])[0].get("source_type", "unknown"))
+        source_id = str(identifiers.get("arxiv") or identifiers.get("doi") or self.record_id)
+        source_url = str(self.urls.get("landing", ""))
+        # Agenda URLs are provenance evidence, never canonical paper links.
+        paper_url = str(self.urls.get("paper", ""))
+        if not paper_url:
+            candidate = source_url
+            if candidate.startswith("https://arxiv.org/abs/") or candidate.startswith("https://doi.org/"):
+                paper_url = candidate
+        github = str(self.urls.get("github", self.urls.get("code", "")))
+        code_evidence = self.provenance.get("official_github_verification")
+        if not (isinstance(code_evidence, dict) and code_evidence.get("verified") is True):
+            github = ""
+        return UnifiedPaperRecord(
+            publication_year=int(venue.get("year") or 0),
+            venue_type=str(venue.get("type", "")),
+            venue_name=str(venue.get("name", "")), title=self.title,
+            paper_url=paper_url, source=source, source_id=source_id,
+            topics=list(self.topics), topic_source=str(self.provenance.get("topic_source", "unavailable")),
+            track=str(venue.get("track", "")),
+            authors=[str(author.get("name", "")) for author in authors if author.get("name")],
+            published_at=str(self.published_at or ""), doi=str(identifiers.get("doi", "")),
+            arxiv_id=str(identifiers.get("arxiv", "")), canonical_id=self.record_id,
+            venue_track=str(venue.get("track", "")), urls={"paper": paper_url, "github": github},
+            provenance={"source": source, "source_id": source_id,
+                        "source_records": list(self.source_records), **self.provenance},
+            evidence={key: [dict(value)] for key, value in (
+                ("affiliation", self.provenance.get("affiliation_verification")),
+                ("code", code_evidence)) if isinstance(value, dict)},
+        )
+
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> "PaperRecord":
         source_records = list(value.get("source_records", []))

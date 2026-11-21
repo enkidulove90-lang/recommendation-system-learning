@@ -322,6 +322,8 @@ def apply_verification_gates(
                         candidate_orgs=candidate_orgs,
                     )
             record.provenance["affiliation_verification"] = verdict
+            record.provenance.setdefault("evidence", {}).setdefault("affiliation", []).append(
+                {"checked_at": datetime.now(timezone.utc).isoformat(), "source": "author_affiliation_metadata", **verdict})
             if verdict["state"] != "verified":
                 reject(record, "affiliation", verdict["state"],
                        verdict.get("detail", ""))
@@ -339,6 +341,8 @@ def apply_verification_gates(
             record.urls["github"] = code_url
             verdict = code_verifier(code_url)
             record.provenance["code_verification"] = verdict
+            record.provenance.setdefault("evidence", {}).setdefault("code", []).append(
+                {"checked_at": datetime.now(timezone.utc).isoformat(), "source": "code_link_verifier", **verdict})
             if verdict["state"] == "blocked":
                 reject(record, "code", "blocked", verdict["detail"])
                 continue

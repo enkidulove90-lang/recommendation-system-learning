@@ -109,7 +109,7 @@ class PaperCatalogParsingTests(unittest.TestCase):
             catalog.write_json(output, refresh_interval_seconds=1800)
             payload = json.loads(output.read_text(encoding="utf-8"))
 
-        self.assertEqual(payload["schema_version"], 1)
+        self.assertEqual(payload["schema_version"], 2)
         self.assertEqual(payload["refresh_interval_seconds"], 1800)
         self.assertEqual(payload["paper_count"], 1)
         self.assertEqual(payload["papers"][0]["publication_year"], 2026)
