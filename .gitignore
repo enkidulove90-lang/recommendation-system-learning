@@ -23,11 +23,21 @@ node_modules/
 *.swp
 *.swo
 
+# pytest 仓库本地临时目录（basetemp 重定向，避免全局 Temp 权限损坏）
+.pytest_tmp/
+.pytest_cache/
+
 # Output
 output/
+# *.json 默认忽略（管线产物体积大且多为可再生成数据）
 *.json
 !package.json
 !.mcp.json
+# 测试 fixtures 必须入库：否则 git archive/新 clone 环境下 content_factory 测试必挂
+# （2026-11-22 整改 P0-2：此前 sample_summary.json/sample_11dim.json 被本规则静默吞掉）
+!content_factory/tests/fixtures/*.json
+# content_events 真实语料 fixture（P1-2：publish_queue 由真实管线生成，见其 README.md）
+!content_events/tests/fixtures/publish_queue/**/*.json
 !data/profiles/*.json
 !data/evidence/*.json
 !data/reviews/*.json
