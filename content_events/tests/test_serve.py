@@ -2,7 +2,7 @@
 
 用 fastapi TestClient 覆盖 /health、/process-queue、/status、/collect-feedback。
 安全断言：/process-queue 默认 dry_run=True（沙箱安全，只写本地包）。
-真实语料验证：把仓库现有 publish_queue/ 复制到临时根，经 REST 实跑确认 errors=0。
+固定 fixture 回归：把 Git 跟踪的 tests/fixtures/publish_queue/ 复制到临时根，经 REST 验证处理与状态查询。
 """
 from __future__ import annotations
 
@@ -23,9 +23,8 @@ from content_events import serve  # noqa: E402
 
 def _copy_real_queue() -> str:
     tmp = tempfile.mkdtemp(prefix="ce_serve_")
-    src = os.path.join(PROJ, "publish_queue")
-    if os.path.isdir(src):
-        shutil.copytree(src, os.path.join(tmp, "publish_queue"))
+    src = os.path.join(PROJ, "content_events", "tests", "fixtures", "publish_queue")
+    shutil.copytree(src, os.path.join(tmp, "publish_queue"))
     return tmp
 
 

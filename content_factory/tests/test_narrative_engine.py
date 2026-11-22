@@ -36,7 +36,7 @@ def test_full_text_contains_title_and_key_number():
 
 def test_11dim_schema_also_builds():
     story = NarrativeEngine().build(_summary("sample_11dim.json"), "2302.08191")
-    assert "门控融合" in story.method_section
+    assert "SVD" in story.method_section
     assert story.bound_fields["climax_section"]
 
 

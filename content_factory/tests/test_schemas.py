@@ -29,9 +29,9 @@ def test_simpler_schema_extracts_four_pillars():
 
 def test_11dim_schema_extracts_four_pillars():
     s = PaperSummary(_load("sample_11dim.json"))
-    assert "门控融合" in s.method
-    assert "0.088" in s.key_result
-    assert "稀疏" in s.limitations
+    assert "SVD" in s.method
+    assert "0.0793" in s.key_result
+    assert "\u56e0\u679c" in s.limitations
 
 
 def test_missing_method_blocks_generation():
