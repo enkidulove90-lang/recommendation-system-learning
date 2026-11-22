@@ -6,6 +6,20 @@ name: Content Factory Calendar
 # 仅规则层运行（无需 API key）；LLM 润色需仓库 Secrets 配置 DEEPSEEK_API_KEY。
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/content-calendar.yml
+      - AGENTS.md
+      - .gitignore
+      - pytest.ini
+      - config/venue_alias.json
+      - content_events/**
+      - content_factory/**
+      - paper_monitor/**
+      - paper_intake/**
+      - redbook/**
+      - tests/**
+      - wechat_design/dtle/**
   schedule:
     - cron: "13 * * * *"      # 每小时第 13 分钟巡检
   workflow_dispatch:
@@ -16,7 +30,27 @@ on:
         default: "3"
 
 jobs:
+  deterministic-tests:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pyyaml
+      - name: Run deterministic repository tests
+        run: python -m pytest -q
+
   content-factory:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ast
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -131,6 +133,46 @@ class PaperCatalogParsingTests(unittest.TestCase):
             )
 
         self.assertEqual(text, "cached-feed")
+
+
+class RepositoryArchitectureTests(unittest.TestCase):
+    def test_paper_intake_does_not_import_redbook(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        package = root / "paper_intake"
+        violations: list[str] = []
+        for source in sorted(package.rglob("*.py")):
+            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    names = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    names = [node.module or ""]
+                else:
+                    continue
+                if any(name == "redbook" or name.startswith("redbook.") for name in names):
+                    violations.append(f"{source.relative_to(root)}:{node.lineno}")
+        self.assertEqual(violations, [], "paper_intake must not depend on redbook")
+
+    def test_release_fixtures_are_git_tracked(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        required = [
+            "config/venue_alias.json",
+            "content_factory/tests/fixtures/sample_summary.json",
+            "content_factory/tests/fixtures/sample_11dim.json",
+            "content_events/tests/fixtures/publish_queue/8f2b75543dd92825dde3c746116c911b/state.json",
+            "content_events/tests/fixtures/publish_queue/8f2b75543dd92825dde3c746116c911b/wechat.json",
+            "content_events/tests/fixtures/publish_queue/9922d0c4da185748dd4c9f095cd603af/state.json",
+            "content_events/tests/fixtures/publish_queue/9922d0c4da185748dd4c9f095cd603af/xhs.json",
+        ]
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", *required],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":

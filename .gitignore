@@ -26,6 +26,7 @@ node_modules/
 # pytest 仓库本地临时目录（basetemp 重定向，避免全局 Temp 权限损坏）
 .pytest_tmp/
 .pytest_cache/
+.redbook_tmp/
 
 # Output
 output/
@@ -47,6 +48,8 @@ output/
 !data/metadata/papers/*.json
 !data/metadata/recommendations/*.json
 !config/paper_catalog_sources.json
+# redbook/services/content_spec.py 的固定、可审计 venue 显示名配置
+!config/venue_alias.json
 data/paper_catalog/
 .superpowers/
 

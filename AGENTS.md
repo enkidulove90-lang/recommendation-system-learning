@@ -27,6 +27,7 @@
 4. 只存草稿不公开发布；话题绑定成平台真实实体；PDF 附件在存草稿前完成。`--publish` 只能人工在 CLI 执行，MCP 不暴露该动作。
 5. `redbook/services/content_spec.py` 是 2026-10-28 冻结的 7 段结构口径（明确不限字数），与发布闸门是两层契约，**不要为加字数上限去改它**。
 6. `status: published` 的历史稿只归档，`stage_note()` 会拒绝重发；重发须改回 `validated` 并补真实逐张目检记录。
+7. `paper_intake` 是论文身份与目录层，永不导入 `redbook.*`；消费层可依赖 `paper_intake` 的公开接口，禁止反向依赖。
 
 ## 通用注意
 
