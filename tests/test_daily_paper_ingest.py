@@ -121,3 +121,38 @@ s1_timeout_seconds: 600
         s1_timeout_seconds=1,
     ) == 1
     assert stages == ["s1", "s2", "s3", "s4"]
+
+
+def test_entry_resolves_relative_working_directory_and_passes_the_unified_database(monkeypatch, tmp_path: Path) -> None:
+    config_path = tmp_path / "schedule.yaml"
+    config_path.write_text(
+        """enabled: true
+time: \"11:00\"
+timezone: \"Asia/Shanghai\"
+working_dir: \".\"
+python: \"python\"
+entrypoint: \"scripts/daily_paper_ingest.py\"
+log_file: \"data/logs/runs.jsonl\"
+s1_timeout_seconds: 600
+""",
+        encoding="utf-8",
+    )
+    calls: list[dict[str, object]] = []
+    monkeypatch.setattr(daily_paper_ingest, "_commands", lambda *_args: {"s2": ["s2"]})
+    monkeypatch.setattr(daily_paper_ingest, "append_run", lambda *_args, **_kwargs: None)
+
+    def fake_run_stage(_stage: str, _command: list[str], **kwargs):
+        calls.append(kwargs)
+        return True, {}
+
+    monkeypatch.setattr(daily_paper_ingest, "_run_stage", fake_run_stage)
+
+    assert daily_paper_ingest.run_once(
+        config_path=config_path,
+        dry_run=False,
+        selected_stage="s2",
+        fail_fast=False,
+        verbose=False,
+    ) == 0
+    assert calls[0]["cwd"] == ROOT
+    assert calls[0]["env"]["PAPER_INTAKE_DB_PATH"] == str(daily_paper_ingest.UNIFIED_CATALOG_DB)

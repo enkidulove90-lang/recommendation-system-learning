@@ -69,6 +69,15 @@ def _commands(python: str, database: Path) -> dict[str, list[str]]:
     }
 
 
+def _resolve_working_dir(value: str, entrypoint: str) -> Path:
+    configured = Path(value)
+    working_dir = (ROOT / configured).resolve() if not configured.is_absolute() else configured.resolve()
+    required_entrypoint = working_dir / entrypoint
+    if not required_entrypoint.is_file() or not (working_dir / "scripts" / "daily_paper_ingest.py").is_file():
+        raise ValueError(f"schedule working_dir must contain scripts/daily_paper_ingest.py: {working_dir}")
+    return working_dir
+
+
 def _received_pipeline(repository: JobRepository) -> PaperPipeline:
     input_store = PaperInputStore(ROOT / "data" / "paper_intake" / "inbox")
     return PaperPipeline(
@@ -172,12 +181,21 @@ def _run_stage(
     *,
     cwd: Path,
     dry_run: bool,
+    env: dict[str, str],
     timeout_seconds: int,
 ) -> tuple[bool, dict[str, Any]]:
     if dry_run:
         return True, {"dry_run": True, "command": command}
     try:
-        completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False, timeout=timeout_seconds)
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=timeout_seconds,
+        )
     except subprocess.TimeoutExpired as exc:
         return False, {"command": command, "error": "timeout", "timeout_seconds": timeout_seconds,
                        "stdout": (exc.stdout or "")[-2000:], "stderr": (exc.stderr or "")[-2000:]}
@@ -199,11 +217,11 @@ def run_once(
     if not bool(config["enabled"]):
         print(json.dumps({"status": "disabled", "reason": "enabled=false"}, ensure_ascii=False))
         return 0
-    working_dir = Path(str(config["working_dir"])).resolve()
-    if working_dir != ROOT.resolve():
-        raise ValueError(f"schedule working_dir must be {ROOT}, got {working_dir}")
+    working_dir = _resolve_working_dir(str(config["working_dir"]), str(config["entrypoint"]))
     log_path = ROOT / str(config["log_file"])
     commands = _commands(str(config["python"]), UNIFIED_CATALOG_DB)
+    child_env = os.environ.copy()
+    child_env["PAPER_INTAKE_DB_PATH"] = str(UNIFIED_CATALOG_DB)
     s1_timeout = s1_timeout_seconds or int(config["s1_timeout_seconds"])
     stages = [selected_stage] if selected_stage != "all" else ["s1", "s2", "s3", "s4"]
     failures = 0
@@ -214,6 +232,7 @@ def run_once(
             commands[stage],
             cwd=working_dir,
             dry_run=dry_run,
+            env=child_env,
             timeout_seconds=s1_timeout if stage == "s1" else 120,
         )
         duration_ms = int((time.monotonic() - started) * 1000)
