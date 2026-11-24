@@ -1,0 +1,49 @@
+# Sentinel service configuration (task 3).
+# Low-ops: invoked via Windows Task Scheduler as
+#   python -m redbook.sentinel run-once
+# No resident service; every entry point is idempotent or rate-limited.
+
+probe_min_interval_seconds: 900   # 15 min floor between sweeps (anti rate-limit)
+retrieval_schedule: "11:00"       # daily paper retrieval trigger
+timezone: "Asia/Shanghai"       # match the Windows task's local 11:00 trigger
+daily_discovery_config: "daily_draft.yaml"
+exclusions_path: "D:/enkidulove90-lang.github.io/tools/paper_exclusions.json"
+proxy_env_var: PAPER_INTAKE_PROXY_URL
+
+# HTTP dependency probes (arxiv / s2 / dblp / openreview / crossref / github /
+# cloudflare). slow_ms: latency above this is reported degraded, not down.
+# degraded_on: statuses meaning *restricted access* (bot challenge / auth gate
+# / anonymous rate limit) rather than an outage -> degraded, not down.
+# proxy_env_var resolves a proxy URL from the root .env before process env.
+# direct_fallback retries only connection refusal/timeout once without proxy;
+# TLS certificate errors remain errors and require a trusted CA bundle.
+# kind: semantic_scholar -> dedicated probe: x-api-key header when S2_API_KEY
+# is set (never Bearer); 429 is always degraded (shared anonymous pool or 1 rps
+# entry tier), never down.
+http_endpoints:
+  - { name: arxiv,           url: "https://export.arxiv.org/api/query?search_query=all:test&max_results=1", timeout: 10, slow_ms: 4000 }
+  - { name: semantic_scholar, kind: semantic_scholar, env_var: S2_API_KEY, url: "https://api.semanticscholar.org/graph/v1/paper/search?query=test&limit=1", timeout: 10, slow_ms: 4000 }
+  - { name: dblp,            url: "https://dblp.org/search/publ/api?q=test&h=1&format=json", timeout: 10, slow_ms: 4000, direct_fallback: true }
+  - { name: openreview,      url: "https://api2.openreview.net/notes/search?term=recommendation&limit=1", timeout: 10, slow_ms: 4000, degraded_on: [403] }
+  # Crossref uses CROSSREF_MAILTO from .env for its polite pool. HTTP 429 is
+  # retried with bounded exponential backoff and remains degraded on exhaustion.
+  - { name: crossref, kind: crossref, mailto_env_var: CROSSREF_MAILTO, url: "https://api.crossref.org/works?rows=1", timeout: 10, slow_ms: 4000, max_retries: 2, retry_backoff_seconds: 1, max_retry_after_seconds: 30 }
+  - { name: github_api,      url: "https://api.github.com/rate_limit", timeout: 10, slow_ms: 4000 }
+  - { name: cloudflare_worker, url: "https://enkidulove90-lang.github.io/", timeout: 10, slow_ms: 4000 }
+
+# Credential probes: key presence + cheapest injectable live call.
+# Keys resolve .env-first (cwd upward, nearest .env wins), then os.environ —
+# put actual key VALUES in the main repo .env, never here (this file only
+# declares variable NAMES).
+api_key_probes:
+  - { name: mineru,   env_var: MINERU_API_KEY }
+  - { name: deepseek, env_var: DEEPSEEK_API_KEY, health_url: "https://api.deepseek.com/models" }
+
+# OpenCLI daemon + Chrome login state (read-only probe_login).
+opencli_probe: true
+login_probe: { name: chrome_login, site: xiaohongshu }
+
+# Delivery decoupling: pool is the only shared artifact; each platform
+# consumes independently. homepage may publish (own site); xhs/wechat stop
+# at VERIFIED (draft-only iron rule).
+platform: homepage
