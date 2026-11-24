@@ -44,9 +44,11 @@ def load_config(path: Path) -> dict[str, Any]:
     payload = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(payload, dict):
         raise ValueError("paper ingest schedule must be a YAML mapping")
-    for key in ("enabled", "working_dir", "python", "entrypoint", "log_file"):
+    for key in ("enabled", "working_dir", "python", "entrypoint", "log_file", "s1_timeout_seconds"):
         if key not in payload:
             raise ValueError(f"paper ingest schedule is missing {key}")
+    if int(payload["s1_timeout_seconds"]) < 1:
+        raise ValueError("s1_timeout_seconds must be at least 1")
     return payload
 
 
@@ -164,20 +166,35 @@ def consume_received_jobs(
     return result
 
 
-def _run_stage(stage: str, command: list[str], *, cwd: Path, dry_run: bool) -> tuple[bool, dict[str, Any]]:
+def _run_stage(
+    stage: str,
+    command: list[str],
+    *,
+    cwd: Path,
+    dry_run: bool,
+    timeout_seconds: int,
+) -> tuple[bool, dict[str, Any]]:
     if dry_run:
         return True, {"dry_run": True, "command": command}
     try:
-        completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False, timeout=120)
+        completed = subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=False, timeout=timeout_seconds)
     except subprocess.TimeoutExpired as exc:
-        return False, {"command": command, "error": "timeout", "timeout_seconds": 120,
+        return False, {"command": command, "error": "timeout", "timeout_seconds": timeout_seconds,
                        "stdout": (exc.stdout or "")[-2000:], "stderr": (exc.stderr or "")[-2000:]}
     detail = {"command": command, "returncode": completed.returncode,
               "stdout": completed.stdout[-2000:], "stderr": completed.stderr[-2000:]}
     return completed.returncode == 0, detail
 
 
-def run_once(*, config_path: Path, dry_run: bool, selected_stage: str, fail_fast: bool, verbose: bool) -> int:
+def run_once(
+    *,
+    config_path: Path,
+    dry_run: bool,
+    selected_stage: str,
+    fail_fast: bool,
+    verbose: bool,
+    s1_timeout_seconds: int | None = None,
+) -> int:
     config = load_config(config_path)
     if not bool(config["enabled"]):
         print(json.dumps({"status": "disabled", "reason": "enabled=false"}, ensure_ascii=False))
@@ -187,15 +204,23 @@ def run_once(*, config_path: Path, dry_run: bool, selected_stage: str, fail_fast
         raise ValueError(f"schedule working_dir must be {ROOT}, got {working_dir}")
     log_path = ROOT / str(config["log_file"])
     commands = _commands(str(config["python"]), UNIFIED_CATALOG_DB)
+    s1_timeout = s1_timeout_seconds or int(config["s1_timeout_seconds"])
     stages = [selected_stage] if selected_stage != "all" else ["s1", "s2", "s3", "s4"]
     failures = 0
     for stage in stages:
         started = time.monotonic()
-        ok, detail = _run_stage(stage, commands[stage], cwd=working_dir, dry_run=dry_run)
+        ok, detail = _run_stage(
+            stage,
+            commands[stage],
+            cwd=working_dir,
+            dry_run=dry_run,
+            timeout_seconds=s1_timeout if stage == "s1" else 120,
+        )
         duration_ms = int((time.monotonic() - started) * 1000)
-        append_run(log_path, stage=stage, status="dry_run" if dry_run else ("ok" if ok else "failed"),
+        status = "dry_run" if dry_run else ("ok" if ok else ("timeout" if detail.get("error") == "timeout" else "failed"))
+        append_run(log_path, stage=stage, status=status,
                    detail=detail, duration_ms=duration_ms)
-        print(json.dumps({"stage": stage, "status": "dry_run" if dry_run else ("ok" if ok else "failed"),
+        print(json.dumps({"stage": stage, "status": status,
                           "detail": detail}, ensure_ascii=False))
         if not ok:
             failures += 1
@@ -211,17 +236,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--stage", choices=("all", "s1", "s2", "s3", "s4"), default="all")
-    parser.add_argument("--fail-fast", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--fail-fast", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--s1-timeout-seconds", type=int)
     parser.add_argument("--verbose", action="store_true")
     parser.add_argument("--consume-received", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--db", type=Path, default=UNIFIED_CATALOG_DB, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     try:
+        if args.s1_timeout_seconds is not None and args.s1_timeout_seconds < 1:
+            parser.error("--s1-timeout-seconds must be at least 1")
         if args.consume_received:
             result = consume_received_jobs(database=args.db)
             return 1 if result["failed"] else 0
         return run_once(config_path=args.config, dry_run=args.dry_run, selected_stage=args.stage,
-                        fail_fast=args.fail_fast, verbose=args.verbose)
+                        fail_fast=args.fail_fast, verbose=args.verbose,
+                        s1_timeout_seconds=args.s1_timeout_seconds)
     except Exception as exc:
         print(json.dumps({"status": "failed", "error": type(exc).__name__, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
         return 1

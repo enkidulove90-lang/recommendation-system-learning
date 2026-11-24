@@ -5,4 +5,6 @@ timezone: "Asia/Shanghai"
 working_dir: "D:/recommendation-system-learning"
 python: "C:/ProgramData/miniconda3/python.exe"
 entrypoint: "scripts/daily_paper_ingest.py"
-log_file: "data/logs/ingest.log"
+log_file: "data/logs/runs.jsonl"
+# 13 arXiv queries plus 12 RecSys pages need a bounded 10-minute S1 window.
+s1_timeout_seconds: 600

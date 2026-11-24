@@ -86,3 +86,38 @@ def test_outbox_consumer_processes_up_to_max_events(monkeypatch, tmp_path: Path)
     monkeypatch.setattr(consume_catalog_outbox, "consume_next", lambda _repo: next(consumed, None))
 
     assert consume_catalog_outbox.main(["--db", str(tmp_path / "catalog.sqlite3"), "--max", "2"]) == 0
+
+
+def test_s1_timeout_continues_through_remaining_stages_when_fail_fast_is_disabled(monkeypatch, tmp_path: Path) -> None:
+    config_path = tmp_path / "schedule.yaml"
+    config_path.write_text(
+        """enabled: true
+time: \"11:00\"
+timezone: \"Asia/Shanghai\"
+working_dir: \"D:/recommendation-system-learning\"
+python: \"python\"
+entrypoint: \"scripts/daily_paper_ingest.py\"
+log_file: \"data/logs/ingest.log\"
+s1_timeout_seconds: 600
+""",
+        encoding="utf-8",
+    )
+    stages: list[str] = []
+    monkeypatch.setattr(daily_paper_ingest, "_commands", lambda *_args: {stage: [stage] for stage in ("s1", "s2", "s3", "s4")})
+    monkeypatch.setattr(daily_paper_ingest, "append_run", lambda *_args, **_kwargs: None)
+
+    def fake_run_stage(stage: str, _command: list[str], **_kwargs):
+        stages.append(stage)
+        return (stage != "s1", {"error": "timeout"} if stage == "s1" else {})
+
+    monkeypatch.setattr(daily_paper_ingest, "_run_stage", fake_run_stage)
+
+    assert daily_paper_ingest.run_once(
+        config_path=config_path,
+        dry_run=False,
+        selected_stage="all",
+        fail_fast=False,
+        verbose=False,
+        s1_timeout_seconds=1,
+    ) == 1
+    assert stages == ["s1", "s2", "s3", "s4"]
