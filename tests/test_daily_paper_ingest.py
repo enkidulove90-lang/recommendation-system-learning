@@ -4,6 +4,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from paper_intake.models import JobStatus, StepName, StepStatus
 from paper_intake.repository import JobRepository
 from paper_intake.catalog import PaperRecord
@@ -195,3 +197,22 @@ def test_catalog_event_fixture_creates_a_received_url_job_through_s3(tmp_path: P
     assert received[0].source_type == "url"
     assert received[0].source_url == "https://arxiv.org/pdf/2601.00001.pdf"
     repository.close()
+
+
+def test_schedule_config_rejects_an_invalid_time(tmp_path: Path) -> None:
+    config_path = tmp_path / "schedule.yaml"
+    config_path.write_text(
+        """enabled: true
+time: \"25:00\"
+timezone: \"Asia/Shanghai\"
+working_dir: \".\"
+python: \"python\"
+entrypoint: \"scripts/daily_paper_ingest.py\"
+log_file: \"data/logs/runs.jsonl\"
+s1_timeout_seconds: 600
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="HH:MM"):
+        daily_paper_ingest.load_config(config_path)

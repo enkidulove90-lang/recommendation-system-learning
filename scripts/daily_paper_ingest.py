@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -49,6 +50,8 @@ def load_config(path: Path) -> dict[str, Any]:
             raise ValueError(f"paper ingest schedule is missing {key}")
     if int(payload["s1_timeout_seconds"]) < 1:
         raise ValueError("s1_timeout_seconds must be at least 1")
+    if not isinstance(payload["time"], str) or not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", payload["time"]):
+        raise ValueError("paper ingest schedule time must use HH:MM (00:00-23:59)")
     return payload
 
 
