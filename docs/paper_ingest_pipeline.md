@@ -20,9 +20,9 @@ official sources
 
 ## 资产与索引
 
-目录 SQLite 与 intake SQLite 必须指向同一 `data/paper_catalog/catalog.sqlite3`。此前 `data/papers/` 可由手工流程直接落盘，而 `data/paper_intake/jobs.sqlite3` 是另一份旧索引，因此两者会出现孤立资产；统一入口与回填脚本会以相同仓储记录 PDF 的 SHA-256 与 `download_pdf` 步骤。
+目录 SQLite 与 intake SQLite 必须指向同一 `data/paper_catalog/catalog.sqlite3`。日常 S4 只消费 S3 创建的 `received` job：它下载来源 URL、运行 MinerU、把 PDF 登记到 `data/papers/`，并将 `download_pdf` 与 `mineru_parse` 的产物原子登记到该统一库。S3 每轮消费 outbox 直到为空（上限 1000 条），不再只取一条。
 
-`scripts/backfill_paper_index.py` 只扫描 `data/papers/*.pdf`：从文件名提取 arXiv ID、计算 SHA-256、为缺失记录创建 intake job，并登记完成的 `download_pdf` 步骤。它不移动、删除或重写 PDF；重复运行按 canonical ID/SHA-256 跳过已有记录。无法提取 arXiv ID 的文件只输出 warning，保留给人工处理。
+`scripts/backfill_paper_index.py` 是**仅用于历史存量回填**的一次性工具，不属于日常 S1–S4 链路。执行前后必须人工确认要补录的 PDF 清单；它只扫描 `data/papers/*.pdf`、从文件名提取 arXiv ID、计算 SHA-256、为缺失记录创建 intake job，并登记完成的 `download_pdf` 步骤。它不移动、删除或重写 PDF；重复运行按 canonical ID/SHA-256 跳过已有记录。无法提取 arXiv ID 的文件只输出 warning，保留给人工处理。
 
 ## 系统任务
 

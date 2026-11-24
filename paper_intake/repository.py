@@ -392,6 +392,50 @@ class JobRepository:
             self._add_event(job_id, "step.succeeded", step_name.value, output or {})
         return self._require_step(job_id, step_name)
 
+    def complete_received_ingest(
+        self,
+        job_id: str,
+        *,
+        download_output: dict[str, Any],
+        parse_output: dict[str, Any],
+    ) -> JobRecord:
+        """Atomically register S4 assets and advance a received job for review."""
+        timestamp = _now()
+        outputs = {
+            StepName.DOWNLOAD_PDF: download_output,
+            StepName.MINERU_PARSE: parse_output,
+        }
+        with self._lock, self._connection:
+            for step_name, output in outputs.items():
+                cursor = self._connection.execute(
+                    """
+                    UPDATE job_steps
+                    SET status = ?, output_json = ?, error_code = '', error_message = '', completed_at = ?
+                    WHERE job_id = ? AND step_name = ?
+                    """,
+                    (
+                        StepStatus.SUCCEEDED.value,
+                        json.dumps(output, ensure_ascii=False),
+                        timestamp,
+                        job_id,
+                        step_name.value,
+                    ),
+                )
+                if cursor.rowcount != 1:
+                    raise KeyError(f"Step has not started: {step_name.value}")
+                self._add_event(job_id, "step.succeeded", step_name.value, output)
+            cursor = self._connection.execute(
+                """
+                UPDATE jobs
+                SET status = ?, current_step = '', error_code = '', error_message = '', updated_at = ?
+                WHERE job_id = ?
+                """,
+                (JobStatus.AWAITING_REVIEW.value, timestamp, job_id),
+            )
+            if cursor.rowcount != 1:
+                raise KeyError(f"Unknown job: {job_id}")
+        return self._require_job(job_id)
+
     def fail_step(
         self,
         job_id: str,

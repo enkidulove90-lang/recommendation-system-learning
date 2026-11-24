@@ -18,10 +18,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Consume catalog outbox into local paper-intake jobs.")
     parser.add_argument("--db", type=Path, required=True)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--max", type=int, default=1000)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
+    if args.max < 1:
+        parser.error("--max must be at least 1")
     repository = JobRepository(args.db)
     try:
+        consumed_count = 0
         while True:
             if args.dry_run:
                 row = repository._connection.execute(
@@ -32,11 +36,12 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
             job_id = consume_next(repository)
             if job_id:
+                consumed_count += 1
                 print(json.dumps({"status": "consumed", "job_id": job_id}))
-            if args.once:
+            if args.once or consumed_count >= args.max:
                 return 0
             if not job_id:
-                time.sleep(1)
+                return 0
     finally:
         repository.close()
 
