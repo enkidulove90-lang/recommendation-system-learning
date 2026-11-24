@@ -15,9 +15,21 @@ import sys
 from pathlib import Path
 from typing import Dict, List
 
+import yaml
+
 DEFAULT_TASK_NAME = "RedbookSentinelDaily"
-DEFAULT_TIME = "11:00"
 DEFAULT_PYTHON = Path(sys.executable)
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_SCHEDULE_CONFIG = ROOT / "config" / "paper_ingest_schedule.yaml"
+
+
+def configured_time(config_path: Path = DEFAULT_SCHEDULE_CONFIG) -> str:
+    """Read the single schedule authority used by all daily paper tasks."""
+    payload = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    value = str(payload.get("time") or "").strip()
+    if not value:
+        raise ValueError(f"schedule time is required in {config_path}")
+    return value
 
 
 def build_task_name(repo_hint: str = "") -> str:
@@ -33,12 +45,12 @@ def build_task_command(python: Path, repo_dir: Path) -> str:
 
 
 def build_register_args(task_name: str, python: Path, repo_dir: Path,
-                        *, time: str = DEFAULT_TIME) -> List[str]:
+                        *, time: str | None = None) -> List[str]:
     return [
         "/Create", "/F",
         "/TN", task_name,
         "/SC", "DAILY",
-        "/ST", time,
+        "/ST", time or configured_time(),
         "/TR", build_task_command(python, repo_dir),
     ]
 
@@ -55,7 +67,7 @@ def _run(args: List[str]) -> Dict[str, object]:
 
 
 def install_task(task_name: str, python: Path, repo_dir: Path,
-                 *, time: str = DEFAULT_TIME) -> Dict[str, object]:
+                 *, time: str | None = None) -> Dict[str, object]:
     return _run(build_register_args(task_name, python, repo_dir, time=time))
 
 
@@ -77,7 +89,7 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument("--python", type=Path, default=DEFAULT_PYTHON)
     parser.add_argument("--repo-dir", type=Path, default=Path.cwd())
     parser.add_argument("--name", default=DEFAULT_TASK_NAME)
-    parser.add_argument("--time", default=DEFAULT_TIME)
+    parser.add_argument("--time", default=None)
     args = parser.parse_args(argv)
 
     if args.action == "install":

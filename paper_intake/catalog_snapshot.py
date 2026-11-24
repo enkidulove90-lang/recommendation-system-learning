@@ -8,7 +8,7 @@ from pathlib import Path
 from .catalog_store import CatalogRepository
 
 
-def export_snapshot(repository: CatalogRepository, path: str | Path, *, refresh_interval_seconds: int = 1800) -> dict:
+def export_snapshot(repository: CatalogRepository, path: str | Path, *, watch_interval_seconds: int = 1800) -> dict:
     papers = []
     rows = repository._connection.execute(
         "SELECT * FROM papers ORDER BY publication_year DESC, title COLLATE NOCASE DESC"
@@ -40,7 +40,7 @@ def export_snapshot(repository: CatalogRepository, path: str | Path, *, refresh_
     payload = {
         "schema_version": 2,
         "generated_at": datetime.now(UTC).isoformat(),
-        "refresh_interval_seconds": refresh_interval_seconds,
+        "watch_interval_seconds": watch_interval_seconds,
         "paper_count": len(papers),
         "papers": papers,
     }

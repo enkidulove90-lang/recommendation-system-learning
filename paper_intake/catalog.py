@@ -431,14 +431,14 @@ class PaperCatalog:
         for paper in papers:
             self.add(paper)
 
-    def write_json(self, path: str | Path, *, refresh_interval_seconds: int) -> None:
+    def write_json(self, path: str | Path, *, watch_interval_seconds: int) -> None:
         destination = Path(path)
         destination.parent.mkdir(parents=True, exist_ok=True)
         generated_at = datetime.now(timezone.utc).isoformat()
         payload = {
             "schema_version": 1,
             "generated_at": generated_at,
-            "refresh_interval_seconds": refresh_interval_seconds,
+            "watch_interval_seconds": watch_interval_seconds,
             "paper_count": len(self.papers),
             "papers": [
                 item.to_dict()

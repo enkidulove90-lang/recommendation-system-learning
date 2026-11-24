@@ -1,0 +1,8 @@
+# Single authority for scheduled paper discovery and intake.
+enabled: true
+time: "11:00"
+timezone: "Asia/Shanghai"
+working_dir: "D:/recommendation-system-learning"
+python: "C:/ProgramData/miniconda3/python.exe"
+entrypoint: "scripts/daily_paper_ingest.py"
+log_file: "data/logs/ingest.log"

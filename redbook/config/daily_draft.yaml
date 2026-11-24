@@ -1,7 +1,6 @@
 # Single configuration surface for the daily paper-to-Xiaohongshu-draft job.
 mode: draft_only
 timezone: Asia/Shanghai
-run_time: "08:00"
 max_posts_per_day: 1
 candidate_organizations:
   companies: [OpenAI, Google DeepMind, Meta, Alibaba, Tencent]

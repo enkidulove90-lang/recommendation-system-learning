@@ -19,6 +19,7 @@ from typing import Any, Callable
 from redbook.orchestration.queue import QueueBackend, QueueFullError
 from .paper_pool import PaperPool, load_exclusions
 from .probes import Probe, ProbeResult, run_sweep, write_probe_log
+from .schedule import configured_time
 
 
 class SentinelRunner:
@@ -32,7 +33,7 @@ class SentinelRunner:
         self.probes = probes or []
         self.log_dir = Path(log_dir or (config.get("log_dir") or "data/logs"))
         self.probe_min_interval_seconds = float(config.get("probe_min_interval_seconds", 900))
-        self.retrieval_time = str(config.get("retrieval_schedule", "11:00"))
+        self.retrieval_time = configured_time()
         self.retrieval_timezone = ZoneInfo(str(config.get("timezone", "UTC")))
         configured_exclusions = str(config.get("exclusions_path", "")).strip()
         self.exclusions_path = Path(configured_exclusions) if configured_exclusions else None

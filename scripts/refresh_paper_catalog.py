@@ -21,6 +21,7 @@ from paper_intake.catalog_identity import source_version
 DEFAULT_CONFIG = ROOT / "config" / "paper_catalog_sources.json"
 DEFAULT_OUTPUT = ROOT / "data" / "paper_catalog" / "papers.json"
 DEFAULT_DB = ROOT / "data" / "paper_catalog" / "catalog.sqlite3"
+DEFAULT_WATCH_INTERVAL_SECONDS = 1800
 
 
 def refresh_once(
@@ -29,7 +30,7 @@ def refresh_once(
     auto_enqueue: bool = False,
 ) -> int:
     config = load_catalog_config(config_path)
-    interval = int(interval_seconds or config.get("refresh_interval_seconds", 1800))
+    interval = int(interval_seconds or DEFAULT_WATCH_INTERVAL_SECONDS)
     catalog = refresh_from_config(config, cache_dir=output_path.parent / "cache")
     if dry_run:
         print(json.dumps({"status": "dry_run", "candidate_count": len(catalog.papers), "auto_delivery": False}, ensure_ascii=False))
@@ -67,7 +68,7 @@ def refresh_once(
             for canonical_id in sorted(candidates):
                 repository.queue_candidate(canonical_id)
                 queued += 1
-        snapshot = export_snapshot(repository, output_path, refresh_interval_seconds=interval)
+        snapshot = export_snapshot(repository, output_path, watch_interval_seconds=interval)
         summary = repository.reconcile()
     finally:
         repository.close()
@@ -105,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"status": "failed", "error": type(exc).__name__, "message": str(exc)}, ensure_ascii=False), file=sys.stderr)
             if not args.watch:
                 return 1
-            interval = int(args.interval or 1800)
+            interval = int(args.interval or DEFAULT_WATCH_INTERVAL_SECONDS)
         if not args.watch:
             return 0
         time.sleep(max(interval, 60))
