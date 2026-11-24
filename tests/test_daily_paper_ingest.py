@@ -6,6 +6,9 @@ from pathlib import Path
 
 from paper_intake.models import JobStatus, StepName, StepStatus
 from paper_intake.repository import JobRepository
+from paper_intake.catalog import PaperRecord
+from paper_intake.catalog_admission import AdmissionDecision
+from paper_intake.catalog_store import CatalogRepository
 from scripts import consume_catalog_outbox
 from scripts import daily_paper_ingest
 
@@ -156,3 +159,39 @@ s1_timeout_seconds: 600
     ) == 0
     assert calls[0]["cwd"] == ROOT
     assert calls[0]["env"]["PAPER_INTAKE_DB_PATH"] == str(daily_paper_ingest.UNIFIED_CATALOG_DB)
+
+
+def test_catalog_event_fixture_creates_a_received_url_job_through_s3(tmp_path: Path) -> None:
+    database = tmp_path / "catalog.sqlite3"
+    catalog = CatalogRepository(database)
+    canonical_id = catalog.upsert_candidate(PaperRecord(
+        publication_year=2026,
+        venue_type="preprint",
+        venue_name="arXiv",
+        title="Catalog delivery fixture",
+        paper_url="https://arxiv.org/abs/2601.00001",
+        source="arxiv",
+        source_id="2601.00001v1",
+        arxiv_id="2601.00001",
+    ))
+    catalog_job_id = catalog.queue_candidate(canonical_id)
+    assert catalog.complete_governance(
+        catalog_job_id,
+        AdmissionDecision(
+            status="admitted",
+            reason_code="fixture",
+            pdf_url="https://arxiv.org/pdf/2601.00001.pdf",
+        ),
+        budget_week="2026-W01",
+        domain="all",
+        quota=1,
+    ) == "published_to_catalog"
+    catalog.close()
+
+    assert consume_catalog_outbox.main(["--db", str(database), "--max", "1000"]) == 0
+    repository = JobRepository(database)
+    received = repository.list_received_jobs()
+    assert len(received) == 1
+    assert received[0].source_type == "url"
+    assert received[0].source_url == "https://arxiv.org/pdf/2601.00001.pdf"
+    repository.close()
