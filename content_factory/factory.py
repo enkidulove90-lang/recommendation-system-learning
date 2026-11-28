@@ -1,7 +1,6 @@
 """内容工厂编排器（Stage 1→3→6 → 发布审核包）。
-
 把叙事引擎 / 标题工厂 / 平台适配串成一条流水线，产出与 redbook
-PublicationPackage 同构的 JSON，写入 publish_queue/<content_hash[:32]>/<platform>.json
+PublicationPackage 同构的 JSON，写入 publish_queue>/<content_hash[:32]>/<platform>.json
 （review_status=pending），现有 XhsPublisher / WeChatPublisher 可直接读取。
 """
 
@@ -49,20 +48,43 @@ def write_package(root: Path, package: dict[str, Any]) -> dict[str, Any]:
     return {"ok": True, "status": "staged", "path": str(path), "staged_id": content_hash}
 
 
-def _arxiv_links(paper_id: str) -> dict[str, str]:
+def _arxiv_links(paper_id: str, code_url: str = "") -> dict[str, str]:
+    """构建论文链接；如果 paper_id 是 ACM/ACL DOI，生成相应链接。code_url 可选，否则注入。"""
+    if paper_id.startswith("10.") and "/" in paper_id:
+        return {
+            "paper": f"https://doi.org/{paper_id}",
+            "pdf": f"https://doi.org/pdf/{paper_id}",
+            "code": code_url,
+        }
+    if paper_id.startswith("20") and "." in paper_id and "acl" in paper_id.lower():
+        return {
+            "paper": f"https://aclanthology.org/{paper_id}",
+            "pdf": f"https://aclanthology.org/{paper_id}.pdf",
+            "code": code_url,
+        }
     return {
         "paper": f"https://arxiv.org/abs/{paper_id}",
         "pdf": f"https://arxiv.org/pdf/{paper_id}",
-        "code": "",
+        "code": code_url,
     }
 
 
 def _figure_images(parsed_dir: Path) -> list[str]:
-    """尽量从 data/parsed/<id>/ 取论文原图作为配图（小红书发布需要 ≥1 张）。"""
-    if not parsed_dir.is_dir():
-        return []
-    imgs = [str(p) for p in parsed_dir.glob("*.jpg")] + [str(p) for p in parsed_dir.glob("*.png")]
-    return sorted(imgs)[:9]
+    """取论文原图作为配图（小红书发布需要 ≥1 张）。"""
+    folders: list[Path] = []
+    if parsed_dir.is_dir():
+        folders.append(parsed_dir)
+    parent = parsed_dir.parent
+    if parent.is_dir():
+        folders.extend(
+            folder for folder in sorted(parent.iterdir())
+            if folder.is_dir() and folder.name.startswith(f"{parsed_dir.name}_")
+        )
+    imgs: list[str] = []
+    for folder in folders:
+        for pattern in ("*.jpg", "*.png", "images/*.jpg", "images/*.png"):
+            imgs.extend(str(p) for p in folder.glob(pattern))
+    return sorted(set(imgs))[:9]
 
 
 class ContentFactory:
@@ -84,6 +106,69 @@ class ContentFactory:
             else PlatformAdapter({})
         )
 
+    def compile_shared(self, inputs) -> dict[str, dict[str, Any]]:
+        """Compile local review artifacts; never call a platform delivery method."""
+        from paper_intake.note_compiler import compile_note
+        from paper_intake.wechat_compiler import compile_wechat_package
+        from paper_intake.notion_compiler import compile_notion_package
+
+        result: dict[str, dict[str, Any]] = {}
+        common = {
+            "canonical_id": inputs.canonical_id,
+            "parsed_dir": inputs.markdown_path.parent,
+            "pdf_path": inputs.pdf_path,
+            "figure_manifest_path": inputs.figure_manifest_path,
+            "paper_url": inputs.paper_url,
+            "pdf_url": inputs.pdf_url,
+            "code_url": inputs.code_url,
+        }
+        if not inputs.fact_pack_path or not inputs.figure_manifest_path:
+            reason = "FactPack and selected figure manifest are required"
+            return {platform: {"status": "blocked", "reason": reason, "drafted": False}
+                    for platform in ("xhs", "wechat", "notion")}
+        if not inputs.paper_url or not inputs.pdf_url:
+            reason = "paper and PDF URLs are required; do not guess them"
+            return {platform: {"status": "blocked", "reason": reason, "drafted": False}
+                    for platform in ("xhs", "wechat", "notion")}
+        try:
+            with Path(inputs.pdf_path).open("rb") as source_pdf:
+                if source_pdf.read(5) != b"%PDF-":
+                    raise ValueError("source PDF has an invalid header")
+        except (OSError, TypeError, ValueError) as error:
+            return {platform: {"status": "blocked", "reason": f"source PDF unavailable: {error}", "drafted": False}
+                    for platform in ("xhs", "wechat", "notion")}
+        try:
+            pack = json.loads(Path(inputs.fact_pack_path).read_text(encoding="utf-8"))
+            if not isinstance(pack, dict) or pack.get("canonical_id") != inputs.canonical_id:
+                raise ValueError("FactPack identity does not match producing job")
+            source_hash = str(pack.get("source_hash") or "")
+            if source_hash and hashlib.sha256(Path(inputs.markdown_path).read_bytes()).hexdigest() != source_hash:
+                raise ValueError("FactPack source hash does not match parsed Markdown")
+        except (OSError, ValueError, TypeError) as error:
+            return {platform: {"status": "blocked", "reason": str(error), "drafted": False}
+                    for platform in ("xhs", "wechat", "notion")}
+        try:
+            note = compile_note(inputs.fact_pack_path, notes_dir=self.root / "redbook" / "notes", **common)
+            result["xhs"] = {"status": "compiled", "path": str(note), "drafted": False}
+        except Exception as error:
+            result["xhs"] = {"status": "failed", "reason": str(error), "drafted": False}
+        try:
+            from redbook.automation.paper_to_wechat import render_shared_article_html
+            path, staged_id = compile_wechat_package(
+                inputs.fact_pack_path, queue_dir=self.root / "publish_queue",
+                html_renderer=render_shared_article_html, **common)
+            result["wechat"] = {"status": "compiled", "path": str(path),
+                                "staged_id": staged_id, "drafted": False}
+        except Exception as error:
+            result["wechat"] = {"status": "failed", "reason": str(error), "drafted": False}
+        try:
+            notion = compile_notion_package(inputs, output_dir=self.root / "publish_queue" / "notion")
+            result["notion"] = {"status": "compiled", "path": str(notion.path),
+                                "blog_compatibility": notion.blog_compatibility, "drafted": False}
+        except Exception as error:
+            result["notion"] = {"status": "failed", "reason": str(error), "drafted": False}
+        return result
+
     def run(
         self,
         paper_id: str,
@@ -96,13 +181,15 @@ class ContentFactory:
         experiment: str | None = None,
     ) -> FactoryResult:
         summary, _ = load_summary(paper_id, self.summaries_dir)
-        story = NarrativeEngine(polish=self.use_llm).build(summary, paper_id)
+        story = NarrativeEngine(
+            polish=self.use_llm, canonical_id=paper_id
+        ).build(summary, paper_id)
         titles = TitleFactory().generate(summary, n=5, use_llm=self.use_llm)
         chosen = titles[0].text if titles else summary.title_zh
         experiment_id = experiment or f"cf_title_ab_{paper_id}"
 
         images = _figure_images(self.parsed_dir / paper_id)
-        links = _arxiv_links(paper_id)
+        links = _arxiv_links(paper_id, code_url=summary.raw.get("code_url", ""))
         packages: list[dict[str, Any]] = []
 
         for plat in platforms:
@@ -138,7 +225,6 @@ class ContentFactory:
             paper_id=paper_id, story=story, titles=titles, chosen_title=chosen, packages=packages
         )
 
-        # Stage 4/5/7/8 按需构建（默认关，避免无谓开销）
         if viz:
             result.visuals = [v.to_dict() for v in build_viz(summary, story)]
         if interaction:
@@ -201,7 +287,5 @@ class ContentFactory:
     @staticmethod
     def _body_for(plat: str, story: Any, title: str) -> str:
         if plat == "xhs":
-            # 小红书：结论前置 + 封面文案，复用故事四段式浓缩
             return f"{title}\n\n{story.hook}\n\n{story.climax_section}\n\n{story.ending_section}"
-        # 公众号 / 其他：完整四段式长文
         return story.full_text

@@ -17,13 +17,14 @@ def test_backfill_registers_each_pdf_once_and_records_download_step(tmp_path: Pa
     database = tmp_path / "catalog.sqlite3"
 
     options = {"expected_database": database}
-    assert backfill(papers, database, dry_run=True, **options)["created"] == ["2611.17921"]
-    assert backfill(papers, database, dry_run=False, **options)["created"] == ["2611.17921"]
+    canonical = "arxiv:2611.17921"
+    assert backfill(papers, database, dry_run=True, **options)["created"] == [canonical]
+    assert backfill(papers, database, dry_run=False, **options)["created"] == [canonical]
     assert backfill(papers, database, dry_run=False, **options)["created"] == []
 
     repository = JobRepository(database)
     try:
-        job = repository.find_duplicate(canonical_id="2611.17921")
+        job = repository.find_duplicate(canonical_id=canonical)
         assert job is not None
         assert job.source_sha256 == hashlib.sha256(pdf.read_bytes()).hexdigest()
         assert repository.get_step(job.job_id, StepName.DOWNLOAD_PDF).status == StepStatus.SUCCEEDED

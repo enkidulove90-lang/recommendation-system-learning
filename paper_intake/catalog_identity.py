@@ -42,6 +42,45 @@ def first_author_surname(authors: list[str]) -> str:
     return normalize_title(authors[0]).split(" ")[-1] if authors else ""
 
 
+def canonical_id(record) -> str:
+    """Single canonical identity for a discovery record.
+
+    Prefix rules mirror ``decide_identity``'s new-record branch so that the
+    in-memory catalog key and the persisted ``papers.canonical_id`` agree:
+    ``doi:<normalized>`` > ``arxiv:<normalized>`` > ``source:<source>:<source_id>``.
+    A title-only fallback is deliberately not used here: title strings are not
+    stable identities and would reintroduce the split the unified index removes.
+    """
+    doi = normalize_doi(getattr(record, "doi", "") or "")
+    if doi:
+        return "doi:" + doi
+    arxiv = normalize_arxiv_id(getattr(record, "arxiv_id", "") or "")
+    if arxiv:
+        return "arxiv:" + arxiv
+    source = str(getattr(record, "source", "") or "")
+    source_id = str(getattr(record, "source_id", "") or "")
+    return f"source:{source}:{source_id}"
+
+
+def canonical_id_from_bare(value: str) -> str:
+    """Canonicalize a legacy bare identifier without a PaperRecord.
+
+    Used by the one-off backfill migration: arXiv-shaped ids become
+    ``arxiv:`` prefixed; ACL-shaped ids become ``source:acl_anthology:``.
+    Values already carrying a canonical prefix are returned unchanged.
+    """
+    candidate = str(value or "").strip()
+    if not candidate:
+        return ""
+    if candidate.split(":", 1)[0] in {"doi", "arxiv", "source", "title"}:
+        return candidate
+    if re.fullmatch(r"\d{4}\.\d{4,5}(?:v\d+)?", candidate, re.I):
+        return "arxiv:" + normalize_arxiv_id(candidate)
+    if re.fullmatch(r"\d{4}\.[a-z0-9-]+\.\d+", candidate, re.I):
+        return "source:acl_anthology:" + candidate.casefold()
+    return ""
+
+
 def source_version(record) -> str:
     """Stable upstream revision; excludes local retrieval time."""
     evidence = {

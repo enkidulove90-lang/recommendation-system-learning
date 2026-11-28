@@ -13,6 +13,16 @@ platforms:
     emoji: forbid
     statement_only: true
     topics_max: 0
+  notion:                    # Notion：长文，支持公式和引用
+    max_title_len: 100
+    tone: formal
+    emoji: forbid
+    statement_only: true
+    format: markdown
+    include_mathjax: true
+    include_links: true
+    include_citations: true
+    topics_max: 0
   zhihu_answer:              # 知乎：先说结论，陈述句
     max_title_len: 50
     tone: formal

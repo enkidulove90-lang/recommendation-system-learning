@@ -480,6 +480,9 @@ def build_remote_worker(gateway: RemoteGatewayClient) -> RemoteWorker:
         required["NOTION_TOKEN"],
         required["NOTION_DATABASE_ID"],
         proxy_url=os.getenv("PAPER_INTAKE_NOTION_PROXY_URL", ""),
+        # P2: explicit opt-in keeps this legacy remote pipeline writable while
+        # the Gateway is read-only by default everywhere else.
+        allow_write=True,
     )
     deepseek = DeepSeekArticleAdapter(
         api_key=required["DEEPSEEK_API_KEY"],

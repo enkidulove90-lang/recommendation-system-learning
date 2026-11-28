@@ -171,9 +171,14 @@ class MinerUAdapter:
 
     def parse(self, pdf_path: str | Path, *, canonical_id: str, title: str = "") -> ParseResult:
         path = Path(pdf_path)
+        # MinerU uses arxiv_id as part of an on-disk bundle directory name;
+        # a prefixed canonical id ("arxiv:2605.14853") contains ":" which is
+        # illegal in Windows filenames.  Pass the bare id, as _target_pdf_path
+        # already does for the downloaded PDF.
+        bare_id = canonical_id.rsplit(":", 1)[-1] or canonical_id
         try:
             result = request_with_retry(lambda: self.parser.execute(
-                pdf_path=str(path), arxiv_id=canonical_id, title=title,
+                pdf_path=str(path), arxiv_id=bare_id, title=title,
                 trace_id=current_trace_id(),
             ))
         except Exception as exc:
@@ -407,10 +412,17 @@ class NotionGateway:
         transport=None,
         max_retries: int = 4,
         proxy_url: str = "",
+        allow_write: bool = False,
     ):
         if not token or not database_id:
             raise ValueError("Notion token and database ID are required")
         self.database_id = database_id
+        # P2 write convergence: the Gateway is read-only by default. The
+        # canonical write path is publish_article() in the blog repo; writing
+        # through this legacy Gateway requires an explicit opt-in so a second
+        # writer cannot silently overwrite pages.
+        self.allow_write = bool(allow_write)
+        self.last_overwrite_snapshot: str = ""
         self.transport = transport or _RequestsTransport(
             base_url=NOTION_API,
             headers={
@@ -599,6 +611,25 @@ class NotionGateway:
             )
         self._update_page(page_id, properties)
 
+    def _require_write(self) -> None:
+        """P2: refuse writes unless this legacy writer was explicitly enabled."""
+        if not self.allow_write:
+            raise RuntimeError(
+                "NotionGateway is read-only by default; the canonical write path "
+                "is publish_article(). Pass allow_write=True to opt in to this "
+                "legacy writer."
+            )
+
+    def _guard_overwrite(self, existing_body: str, *, allow_overwrite: bool) -> None:
+        """P2 overwrite red line: never silently clear a page that has content."""
+        self.last_overwrite_snapshot = existing_body
+        if existing_body.strip() and not allow_overwrite:
+            raise RuntimeError(
+                "refusing to overwrite an existing Notion page with non-empty "
+                "body; pass allow_overwrite=True (snapshot is available in "
+                "last_overwrite_snapshot) to clear and replace it"
+            )
+
     def _snapshot_markdown(self, page_id: str) -> str:
         result = self._request("GET", f"/pages/{page_id}/markdown")
         return str(result.get("markdown") or result.get("content") or "")
@@ -676,7 +707,8 @@ class NotionGateway:
             )
         return blocks
 
-    def upsert_draft(self, draft: NotionDraft) -> NotionPage:
+    def upsert_draft(self, draft: NotionDraft, *, allow_overwrite: bool = False) -> NotionPage:
+        self._require_write()
         self.preflight_schema()
         existing = self._find_by_arxiv(draft.arxiv_id)
         properties = self._properties(
@@ -697,6 +729,7 @@ class NotionGateway:
             page_id = existing["id"]
             page_url = existing.get("url", "")
             before = self._snapshot_markdown(page_id)
+            self._guard_overwrite(before, allow_overwrite=allow_overwrite)
             self._update_page(page_id, properties)
         else:
             created = self._create_page(properties)
@@ -713,7 +746,8 @@ class NotionGateway:
             )
         return NotionPage(page_id, page_url, "Draft", before)
 
-    def upsert_published(self, draft: NotionDraft) -> NotionPage:
+    def upsert_published(self, draft: NotionDraft, *, allow_overwrite: bool = False) -> NotionPage:
+        self._require_write()
         self.preflight_schema()
         existing = self._find_by_arxiv(draft.arxiv_id)
         properties = self._properties(
@@ -734,6 +768,7 @@ class NotionGateway:
             page_id = existing["id"]
             page_url = existing.get("url", "")
             before = self._snapshot_markdown(page_id)
+            self._guard_overwrite(before, allow_overwrite=allow_overwrite)
             self._update_page(page_id, properties)
         else:
             created = self._create_page(properties)
@@ -751,6 +786,7 @@ class NotionGateway:
         return NotionPage(page_id, page_url, "Published", before)
 
     def publish(self, page_id: str, *, title: str, slug: str, arxiv_id: str) -> NotionPage:
+        self._require_write()
         properties = self._properties(
             title=title,
             slug=slug,
@@ -769,7 +805,11 @@ class NotionGateway:
         title: str,
         slug: str,
         arxiv_id: str,
+        allow_overwrite: bool = False,
     ) -> NotionPage:
+        self._require_write()
+        before = self._snapshot_markdown(page_id)
+        self._guard_overwrite(before, allow_overwrite=allow_overwrite)
         properties = self._properties(
             title=title,
             slug=slug,

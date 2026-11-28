@@ -3,12 +3,16 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from datetime import datetime, timezone
+import hashlib
+import json
 from pathlib import Path
 from typing import Any
 
 from redbook.domain.media import WorkflowCheckpoint, WorkflowStage
 from redbook.services.arxiv_source import ArxivSourceImageExtractor
-from redbook.services.figure_retrieval import FigureRetrievalService, HighDpiPdfFigureExtractor
+from redbook.services.figure_retrieval import (
+    FigureRetrievalService, HighDpiPdfFigureExtractor, build_selected_figure_manifest,
+)
 from redbook.automation.common import read_json, write_json
 
 
@@ -77,6 +81,16 @@ class PaperCreationWorkflow:
             source_dir = image_dir
         if not selected:
             return self._advance(checkpoint, WorkflowStage.BLOCKED, figure_error="No figure passed quality gate", candidate_count=len(candidates))
+        figure_manifest = build_selected_figure_manifest(paper_id, image_dir.parent, selected)
+        manifest_bytes = json.dumps(figure_manifest, ensure_ascii=False, sort_keys=True, indent=2).encode("utf-8")
+        manifest_hash = hashlib.sha256(manifest_bytes).hexdigest()
+        manifest_path = image_dir.parent / f"selected_figures-{manifest_hash[:16]}.json"
+        try:
+            with manifest_path.open("xb") as handle:
+                handle.write(manifest_bytes)
+        except FileExistsError:
+            if manifest_path.read_bytes() != manifest_bytes:
+                raise ValueError(f"figure manifest hash collision: {manifest_path}")
         vision_error = ""
         if self.figures.reviewer:
             vision_error = self.figures.reviewer.last_error
@@ -84,6 +98,8 @@ class PaperCreationWorkflow:
             checkpoint, WorkflowStage.FIGURES_READY,
             figure_source=str(source_dir), arxiv_source=source_artifact,
             selected_figures=[candidate.as_dict() for candidate in selected],
+            figure_manifest_path=str(manifest_path),
+            figure_manifest_sha256=manifest_hash,
             rejected_figures=[candidate.as_dict() for candidate in candidates if not candidate.eligible],
             vision_reviews={path: asdict(review) for path, review in reviews.items()},
             vision_warning=vision_error,

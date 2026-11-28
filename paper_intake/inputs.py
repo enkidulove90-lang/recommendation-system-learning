@@ -46,7 +46,10 @@ _ARXIV_PATH = re.compile(
 )
 _ARXIV_BARE = re.compile(r"^(\d{4}\.\d{4,5})(?:v(\d+))?(?:\.pdf)?$", re.IGNORECASE)
 _ACL_PDF_PATH = re.compile(r"^/(\d{4}\.[a-z0-9-]+\.\d+)\.pdf$", re.IGNORECASE)
+_ACL_PDF_NO_EXT = re.compile(r"^/(\d{4}\.[a-z0-9-]+\.\d+)$", re.IGNORECASE)
 _UNSAFE_FILENAME = re.compile(r"[^A-Za-z0-9._-]")
+# 匹配 ACM DOI URL，路径格式：/doi/10.xxxx/xxxx 或 /doi/pdf/10.xxxx/xxxx
+_ACLMDOI_PATH = re.compile(r"^/doi(?:/pdf)?/(10\.\d+/.+)$", re.IGNORECASE)
 
 
 def canonicalize_url(raw_url: str) -> CanonicalSource:
@@ -77,6 +80,15 @@ def canonicalize_url(raw_url: str) -> CanonicalSource:
     acl_match = _ACL_PDF_PATH.fullmatch(parsed.path)
     if host == "aclanthology.org" and acl_match:
         return CanonicalSource(normalized_url=f"https://aclanthology.org/{acl_match.group(1)}.pdf", canonical_id=acl_match.group(1))
+
+    # 处理 ACM DOI URL
+    acmdoi_match = _ACLMDOI_PATH.fullmatch(parsed.path)
+    if host in {"dl.acm.org", "www.dl.acm.org"} and acmdoi_match:
+        doi = acmdoi_match.group(1)
+        return CanonicalSource(
+            normalized_url=f"https://dl.acm.org/doi/{doi}",
+            canonical_id=doi,
+        )
 
     if parsed.username or parsed.password:
         raise InputValidationError("url_userinfo_forbidden", "Paper URLs must not contain user credentials.")

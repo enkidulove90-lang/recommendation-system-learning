@@ -24,8 +24,12 @@ def published_payload(canonical_id: str, title: str, pdf_url: str, admission_dec
         raise ValueError("canonical_id and title are required")
     if admission_decision not in {"admitted", "admitted_with_conflict_flag"}:
         raise ValueError("unsupported admission decision")
-    if parsed.scheme != "https" or parsed.hostname not in {"arxiv.org", "aclanthology.org"} or not parsed.path.endswith(".pdf"):
-        raise ValueError("verified scholarly PDF URL required")
+    # 允许 ACM DOI URL 和 PDF URL
+    allowed_hosts = {"arxiv.org", "aclanthology.org", "dl.acm.org", "www.dl.acm.org"}
+    if parsed.scheme != "https" or parsed.hostname not in allowed_hosts or not parsed.path.endswith(".pdf") and parsed.hostname == "dl.acm.org":
+        # 对于 ACM DOI URL，允许 /doi/10.xxxx，路径不一定以 .pdf 结尾
+        if not (parsed.path.endswith(".pdf") or parsed.hostname in {"dl.acm.org", "www.dl.acm.org"} and "doi" in parsed.path):
+            raise ValueError("verified scholarly PDF URL required")
     return json.dumps({
         "canonical_id": canonical_id,
         "admission_decision": admission_decision,

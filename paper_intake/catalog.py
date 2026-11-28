@@ -405,11 +405,8 @@ class PaperCatalog:
 
     @staticmethod
     def _key(record: PaperRecord) -> str:
-        if record.doi:
-            return "doi:" + record.doi.casefold()
-        if record.arxiv_id:
-            return "arxiv:" + record.arxiv_id.casefold()
-        return "title:" + _normalized_title(record.title)
+        from .catalog_identity import canonical_id
+        return canonical_id(record)
 
     def add(self, record: PaperRecord) -> None:
         self.raw_records.append(record)
@@ -455,6 +452,7 @@ def refresh_from_config(
     *,
     transport: CatalogTransport | None = None,
     cache_dir: str | Path | None = None,
+    on_source_event: Callable[[dict[str, Any]], None] | None = None,
 ) -> PaperCatalog:
     client = transport or RequestsCatalogTransport(
         rate_limit_seconds_by_host={
@@ -475,48 +473,89 @@ def refresh_from_config(
         }
         url = "https://export.arxiv.org/api/query?" + urlencode(params)
         source_key = "arxiv:" + str(source.get("name") or source["query"])
+        started = time.monotonic()
+        phase = "request"
+        produced = 0
+        if on_source_event:
+            on_source_event({"event": "start", "source": source_key})
         try:
             xml_text = (
                 cache.get_text(client, url, key=source_key,
                                ttl_seconds=int(source.get("cache_ttl_seconds", 86400)))
                 if cache else client.get_text(url)
             )
-            catalog.extend(parse_arxiv_feed(xml_text, retrieved_at=now))
-            catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
-        except Exception as exc:
-            catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
-    for source in config.get("acl_events", []):
-        url = source["url"]
-        source_key = "acl:" + str(source["venue_name"])
-        try:
-            html = (
-                cache.get_text(client, url, key=source_key,
-                               ttl_seconds=int(source.get("cache_ttl_seconds", 1800)))
-                if cache else client.get_text(url)
-            )
-            records = parse_acl_event(html, event_url=url, venue_name=source["venue_name"], retrieved_at=now)
-            prefixes = [str(value) for value in source.get("include_id_prefixes", []) if value]
-            if prefixes:
-                records = [record for record in records if any(record.source_id.startswith(prefix) for prefix in prefixes)]
+            phase = "parse"
+            records = parse_arxiv_feed(xml_text, retrieved_at=now)
+            produced = len(records)
             catalog.extend(records)
             catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
         except Exception as exc:
             catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
-    for source in config.get("recsys_pages", []):
+        finally:
+            if on_source_event:
+                on_source_event({"event": "end", "source": source_key,
+                                 "duration_ms": int((time.monotonic() - started) * 1000),
+                                 "candidates": produced, "phase": phase,
+                                 **catalog.source_runs[source_key]})
+    for source in config.get("acl_events", []):
         url = source["url"]
-        source_key = "recsys:" + url
+        source_key = "acl:" + str(source["venue_name"])
+        started = time.monotonic()
+        phase = "request"
+        produced = 0
+        if on_source_event:
+            on_source_event({"event": "start", "source": source_key})
         try:
             html = (
                 cache.get_text(client, url, key=source_key,
                                ttl_seconds=int(source.get("cache_ttl_seconds", 1800)))
                 if cache else client.get_text(url)
             )
-            catalog.extend(parse_recsys_program_page(
-                html, page_url=url, publication_year=int(source["publication_year"]), retrieved_at=now,
-            ))
+            phase = "parse"
+            records = parse_acl_event(html, event_url=url, venue_name=source["venue_name"], retrieved_at=now)
+            prefixes = [str(value) for value in source.get("include_id_prefixes", []) if value]
+            if prefixes:
+                records = [record for record in records if any(record.source_id.startswith(prefix) for prefix in prefixes)]
+            produced = len(records)
+            catalog.extend(records)
             catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
         except Exception as exc:
             catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
+        finally:
+            if on_source_event:
+                on_source_event({"event": "end", "source": source_key,
+                                 "duration_ms": int((time.monotonic() - started) * 1000),
+                                 "candidates": produced, "phase": phase,
+                                 **catalog.source_runs[source_key]})
+    for source in config.get("recsys_pages", []):
+        url = source["url"]
+        source_key = "recsys:" + url
+        started = time.monotonic()
+        phase = "request"
+        produced = 0
+        if on_source_event:
+            on_source_event({"event": "start", "source": source_key})
+        try:
+            html = (
+                cache.get_text(client, url, key=source_key,
+                               ttl_seconds=int(source.get("cache_ttl_seconds", 1800)))
+                if cache else client.get_text(url)
+            )
+            phase = "parse"
+            records = parse_recsys_program_page(
+                html, page_url=url, publication_year=int(source["publication_year"]), retrieved_at=now,
+            )
+            produced = len(records)
+            catalog.extend(records)
+            catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
+        except Exception as exc:
+            catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
+        finally:
+            if on_source_event:
+                on_source_event({"event": "end", "source": source_key,
+                                 "duration_ms": int((time.monotonic() - started) * 1000),
+                                 "candidates": produced, "phase": phase,
+                                 **catalog.source_runs[source_key]})
     enrichment = config.get("openalex_enrichment") or {}
     if enrichment.get("enabled"):
         enricher = OpenAlexEnricher(client, mailto=str(enrichment.get("mailto") or ""))

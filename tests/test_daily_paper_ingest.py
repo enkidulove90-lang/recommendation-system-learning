@@ -18,6 +18,21 @@ from scripts import daily_paper_ingest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_append_run_uses_unified_run_log_schema(tmp_path: Path) -> None:
+    from redbook.infrastructure import run_log
+
+    log_path = tmp_path / "runs.jsonl"
+    daily_paper_ingest.append_run(
+        log_path, stage="s1", status="ok", detail={"paper_count": 2}, duration_ms=12,
+    )
+    rows = run_log.read_events(log_path)
+    assert len(rows) == 1
+    assert rows[0]["event"] == "paper_ingest_stage"
+    assert rows[0]["stage"] == "s1"
+    assert rows[0]["status"] == "ok"
+    assert "paper_ingest_stage" in run_log.summarize(rows)
+
+
 def test_dry_run_lists_all_four_stages_without_creating_runtime_artifacts() -> None:
     result = subprocess.run(
         [sys.executable, "scripts/daily_paper_ingest.py", "--dry-run"],
@@ -29,9 +44,21 @@ def test_dry_run_lists_all_four_stages_without_creating_runtime_artifacts() -> N
     ]
 
 
-def test_s4_consumes_each_received_url_job_and_registers_the_local_pdf(tmp_path: Path) -> None:
+def test_s4_consumes_each_received_url_job_and_registers_the_local_pdf(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(daily_paper_ingest, "DEFAULT_RUN_LOG", tmp_path / "unexpected-default.jsonl")
     database = tmp_path / "catalog.sqlite3"
+    from paper_intake.catalog_store import CatalogRepository
+    CatalogRepository(database).close()
     repository = JobRepository(database)
+    for index in (1, 2):
+        repository._connection.execute(
+            """INSERT INTO papers (canonical_id, status, title, normalized_title,
+               publication_year, venue_type, venue_name, paper_url, doi, arxiv_id,
+               authors_json, last_upstream_updated_at, source_version, created_at, updated_at)
+               VALUES (?, 'discovered', ?, ?, 2026, 'preprint', 'arXiv', '', '', ?, '[]', '', 'v', '', '')""",
+            (f"arxiv:2601.0000{index}", f"Paper {index}", f"paper {index}", f"2601.0000{index}"),
+        )
+    repository._connection.commit()
     job_ids = []
     for index in (1, 2):
         job = repository.create_job(
@@ -73,7 +100,8 @@ def test_s4_consumes_each_received_url_job_and_registers_the_local_pdf(tmp_path:
         pipeline_factory=lambda repo: FakePipeline(repo, tmp_path / "source"),
     )
 
-    assert result == {"processed": 2, "failed": 0, "jobs": job_ids}
+    assert result == {"processed": 2, "failed": 0, "blocked": 0, "jobs": job_ids}
+    assert '"step": "mineru_parse"' in (tmp_path / "runs.jsonl").read_text(encoding="utf-8")
     for job_id in job_ids:
         job = repository.get_job(job_id)
         assert job is not None

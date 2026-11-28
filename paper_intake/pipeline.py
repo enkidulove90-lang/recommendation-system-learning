@@ -4,6 +4,8 @@ import hashlib
 import httpx
 import json
 import shutil
+import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
@@ -25,6 +27,62 @@ from .models import JobRecord, JobStatus, StepName, StepStatus
 from .metadata_refresh import refresh_metadata_file
 from .repository import JobRepository
 from .remote import LeaseLost
+
+
+def normalize_acm_id(source_url: str | None, doi: str | None) -> str:
+    """
+    规范化 ACM 论文 ID，统一为 DOI 格式 (10.xxxx/xxxx)。
+    优先级: doi > source_url
+    """
+    if doi:
+        doi = doi.removeprefix("https://doi.org/").removeprefix("doi:").strip("/").lower()
+        return doi
+
+    if source_url:
+        parsed = urlsplit(source_url)
+        if parsed.hostname in {"dl.acm.org", "www.dl.acm.org"}:
+            path_parts = parsed.path.strip("/").split("/")
+            if "doi" in path_parts:
+                doi_idx = path_parts.index("doi") + 1
+                if doi_idx < len(path_parts) and path_parts[doi_idx].lower() == "pdf":
+                    doi_idx += 1
+                if doi_idx < len(path_parts):
+                    # 取从doi索引开始之后的所有部分作为DOI
+                    return "/".join(path_parts[doi_idx:]).strip("/").lower()
+
+    return ""
+
+
+def is_acm_source(source_type: str | None, source_url: str | None) -> bool:
+    if source_type == "recsys_program":
+        return True
+    if not source_url:
+        return False
+    parsed = urlsplit(source_url)
+    return parsed.hostname in {"dl.acm.org", "www.dl.acm.org"}
+
+
+def validate_pdf_file(path: Path) -> tuple[bool, str | None]:
+    """验证 PDF 文件。返回 (is_valid, error_message)"""
+    if not path.is_file():
+        return False, f"File not found: {path}"
+
+    try:
+        with path.open("rb") as f:
+            header = f.read(4)
+            if header != b"%PDF":
+                return False, f"Invalid PDF header: {header!r}"
+
+            size = path.stat().st_size
+            if size < 1024:
+                return False, f"PDF file too small: {size} bytes"
+            if size > 100 * 1024 * 1024:  # 100MB
+                return False, f"PDF file too large: {size} bytes"
+
+    except Exception as e:
+        return False, f"Error reading file: {e}"
+
+    return True, None
 
 
 class PipelineFailure(RuntimeError):
@@ -258,7 +316,45 @@ class PaperPipeline:
 
     def _step_download_pdf(self, job_id: str) -> dict[str, Any]:
         job = self._job(job_id)
-        if job.source_type == "url":
+
+        # 处理 ACM 源
+        if is_acm_source(job.source_type, job.source_url):
+            # 规范化 ACM ID
+            doi = normalize_acm_id(job.source_url, job.canonical_id)
+            if not doi:
+                raise PipelineFailure("acm_doi_missing", "ACM 论文缺少 DOI")
+
+            output_dir = self._bundle(job_id) / "acm_fetch"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            pdf_path = output_dir / "pdf.pdf"
+
+            result = subprocess.run(
+                [sys.executable, "-m", "redbook.infrastructure.paper_sources.acm_dl", "fetch", doi, str(pdf_path)],
+                capture_output=True, text=True, timeout=300
+            )
+
+            if result.returncode != 0:
+                # 从 stdout 和 stderr 综合解析错误
+                error_msg = (result.stderr or "")[:500]
+                stdout_msg = (result.stdout or "")[:200]
+                if "cloudflare_challenge_not_passed" in (result.stdout + result.stderr).lower():
+                    raise PipelineFailure("acm_cloudflare_blocked", f"Cloudflare 挑战未通过\nStderr: {error_msg}\nStdout: {stdout_msg}")
+                elif "no such file" in (result.stdout + result.stderr).lower():
+                    raise PipelineFailure("acm_file_not_found", f"文件不存在\nStderr: {error_msg}\nStdout: {stdout_msg}")
+                elif "timeout" in (result.stdout + result.stderr).lower():
+                    raise PipelineFailure("acm_download_timeout", f"下载超时\nStderr: {error_msg}\nStdout: {stdout_msg}")
+                else:
+                    raise PipelineFailure("acm_fetch_failed", f"下载失败\nStderr: {error_msg}\nStdout: {stdout_msg}")
+
+            # 验证 PDF 文件
+            is_valid, error = validate_pdf_file(pdf_path)
+            if not is_valid:
+                raise PipelineFailure("acm_pdf_invalid", f"PDF 验证失败: {error}")
+
+            # 计算 SHA256
+            digest = sha256_file(pdf_path)
+
+        elif job.source_type == "url":
             download_url = job.source_url
             source = canonicalize_url(job.source_url)
             if source.canonical_id and urlsplit(source.normalized_url).hostname == "arxiv.org":
@@ -284,6 +380,7 @@ class PaperPipeline:
         else:
             pdf_path = Path(job.upload_path)
             digest = job.source_sha256 or sha256_file(pdf_path)
+
         canonical_id = job.canonical_id or f"pdf-{digest[:12]}"
         duplicate = self.repository.find_duplicate(
             canonical_id=canonical_id,
@@ -427,7 +524,11 @@ class PaperPipeline:
                 published=str(metadata.get("published") or ""),
                 venue_type=article.classification.venue_type,
                 venue_name=article.classification.venue_name,
-            )
+            ),
+            # P2: this chronicle pipeline is explicitly authorized to replace
+            # its own previously-published pages; the pre-overwrite body is
+            # snapshotted below (notion-before.md) for rollback.
+            allow_overwrite=True,
         )
         (bundle / "notion-before.md").write_text(page.before_markdown, encoding="utf-8")
         (bundle / "notion-after.md").write_text(markdown, encoding="utf-8")

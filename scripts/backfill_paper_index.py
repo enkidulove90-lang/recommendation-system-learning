@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from paper_intake.catalog_identity import canonical_id_from_bare
 from paper_intake.models import JobStatus, StepName
 from paper_intake.repository import JobRepository
 
@@ -33,8 +34,11 @@ def sha256_file(path: Path) -> str:
 
 
 def paper_id_from_path(path: Path) -> str:
+    """Return the canonical (prefixed) identity for a locally stored PDF."""
     match = ARXIV_ID.search(path.stem)
-    return match.group(1) if match else ""
+    if match:
+        return canonical_id_from_bare(match.group(1))
+    return canonical_id_from_bare(path.stem)
 
 
 def assert_unified_database(database: Path, *, expected_database: Path = DEFAULT_DB) -> Path:

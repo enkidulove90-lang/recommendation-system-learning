@@ -25,8 +25,17 @@ $log = Join-Path $workingDir $values.log_file
 if (-not (Test-Path -LiteralPath $entry)) { throw "Entrypoint does not exist: $entry" }
 if (-not (Test-Path -LiteralPath $values.python)) { throw "Python does not exist: $($values.python)" }
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $log) | Out-Null
-# The entrypoint exports this itself; retain the task-level value as a redundant safeguard.
-$taskCommand = "cmd.exe /c cd /d `"$workingDir`" && set PAPER_INTAKE_DB_PATH=$workingDir\data\paper_catalog\catalog.sqlite3 && `"$($values.python)`" $($values.entrypoint) >> `"$log`" 2>&1"
+# schtasks /TR rejects values longer than 261 chars, so the full command lives
+# in a generated wrapper batch file and the task only references it by path.
+$wrapper = Join-Path $PSScriptRoot 'run_paper_ingest.cmd'
+$wrapperLines = @(
+    '@echo off',
+    "cd /d `"$workingDir`"",
+    "set PAPER_INTAKE_DB_PATH=$workingDir\data\paper_catalog\catalog.sqlite3",
+    "`"$($values.python)`" $($values.entrypoint) >> `"$log`" 2>&1"
+)
+[System.IO.File]::WriteAllLines($wrapper, $wrapperLines)
+$taskCommand = "cmd.exe /c `"$wrapper`""
 $arguments = @('/Create','/TN','PaperDailyIngest','/SC','DAILY','/ST',$values.time,'/F','/TR',$taskCommand)
 if ($WhatIf) { [pscustomobject]@{ TaskName='PaperDailyIngest'; Arguments=$arguments; Command=$taskCommand } | ConvertTo-Json -Compress; exit 0 }
 & schtasks.exe @arguments

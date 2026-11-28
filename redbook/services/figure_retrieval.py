@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -18,6 +19,31 @@ from redbook.infrastructure.modelscope_vision import ModelScopeVisionReviewer
 CAPTION = re.compile(r"(?:Figure|Fig\.)\s*(\d+[\w.-]*)\s*[:.]?\s*(.+)", re.IGNORECASE)
 IMAGE = re.compile(r"!\[.*?\]\(([^)]+)\)")
 PDF_CAPTION = re.compile(r"(?:Figure|Fig\.)\s*(\d+[\w.-]*)\s*[:.]?\s*([^\n]+)", re.IGNORECASE)
+
+
+def build_selected_figure_manifest(canonical_id: str, parsed_dir: Path,
+                                   figures: list[FigureCandidate]) -> dict:
+    """Describe already-selected figures without claiming visual review."""
+    root = Path(parsed_dir).resolve()
+    entries = []
+    for figure in figures:
+        path = Path(figure.path).resolve()
+        try:
+            relative = path.relative_to(root).as_posix()
+        except ValueError as error:
+            raise ValueError(f"selected figure is outside parsed directory: {path}") from error
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                digest.update(chunk)
+        entries.append({
+            "figure_id": figure.figure_id, "path": relative, "caption": figure.caption,
+            "source_type": figure.source, "width": figure.width, "height": figure.height,
+            "sha256": digest.hexdigest(), "role": figure.role, "selected": True,
+            "visual_review": {"status": "pending", "reviewer": "", "note": ""},
+        })
+    return {"schema_version": "figure-manifest/v1", "canonical_id": canonical_id,
+            "figures": entries}
 
 
 def _role(caption: str, section: str) -> str:

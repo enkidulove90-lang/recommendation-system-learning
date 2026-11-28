@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 
@@ -39,6 +40,22 @@ class StepName(StrEnum):
     APPROVE = "approve"
     TRIGGER_PAGES = "trigger_pages"
     VERIFY_PUBLICATION = "verify_publication"
+
+
+@dataclass(frozen=True, slots=True)
+class CompilationInputs:
+    """Identity-bound S4 artifacts; platform delivery is a separate step."""
+
+    canonical_id: str
+    catalog_canonical_id: str
+    job_id: str
+    markdown_path: Path
+    pdf_path: Path
+    fact_pack_path: Path | None = None
+    figure_manifest_path: Path | None = None
+    paper_url: str = ""
+    pdf_url: str = ""
+    code_url: str = ""
 
 
 @dataclass(frozen=True, slots=True)

@@ -175,6 +175,22 @@ class CatalogRepository:
                 error_code TEXT NOT NULL DEFAULT '',
                 occurred_at TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS content_assets (
+                canonical_id TEXT NOT NULL,
+                asset_kind TEXT NOT NULL,
+                asset_key TEXT NOT NULL,
+                relative_path TEXT NOT NULL,
+                content_hash TEXT NOT NULL,
+                producer TEXT NOT NULL,
+                prompt_version TEXT NOT NULL DEFAULT '',
+                model_id TEXT NOT NULL DEFAULT '',
+                source_hash TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY (canonical_id, asset_kind, asset_key)
+            );
+            CREATE INDEX IF NOT EXISTS ix_content_assets_hash
+                ON content_assets(canonical_id, asset_kind, source_hash);
             CREATE VIEW IF NOT EXISTS v_paper_lifecycle AS
             SELECT p.canonical_id, p.status AS catalog_status, p.created_at AS catalog_created_at,
                    (SELECT state FROM catalog_jobs cj WHERE cj.canonical_id=p.canonical_id
