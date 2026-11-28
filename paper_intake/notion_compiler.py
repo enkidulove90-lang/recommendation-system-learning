@@ -101,10 +101,10 @@ def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, f
 
     background = _clean(facts.get("background") or facts.get("problem"))
     if background:
-        blocks += ["## 1 研究背景与问题", background]
+        blocks += ["## 研究背景与问题", background]
 
     method_summary = _clean(facts.get("method_summary"))
-    method_heading = f"## 2 方法：{method_summary}" if method_summary else "## 2 方法"
+    method_heading = f"## 方法：{method_summary}" if method_summary else "## 方法"
     method_blocks: list[str] = []
     overview = _clean(facts.get("method_overview") or facts.get("method"))
     if overview:
@@ -125,7 +125,7 @@ def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, f
         if not (heading or detail):
             continue
         if heading:
-            method_blocks += [f"### 2.{index} {heading}", detail]
+            method_blocks += [f"### {heading}", detail]
         else:
             method_blocks.append(detail)
     method_figures, result_figures = _split_figures(figures, figure_notes, image_id)
@@ -135,16 +135,16 @@ def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, f
         blocks.extend(method_blocks)
 
     experiment_highlight = _clean(facts.get("experiment_highlight"))
-    experiment_heading = (f"## 3 实验：{experiment_highlight}" if experiment_highlight
-                          else "## 3 实验")
+    experiment_heading = (f"## 实验：{experiment_highlight}" if experiment_highlight
+                          else "## 实验")
     experiment_blocks: list[str] = []
     datasets = [str(item).strip() for item in (facts.get("datasets") or []) if str(item).strip()]
     if datasets:
-        experiment_blocks += ["### 3.1 数据集与 Benchmark",
+        experiment_blocks += ["### 数据集与 Benchmark",
                               "\n".join(f"- {item}" for item in datasets)]
     protocol = _clean(facts.get("experiment_protocol"))
     if protocol:
-        experiment_blocks += ["### 3.2 实验方法", protocol]
+        experiment_blocks += ["### 实验方法", protocol]
     metrics = [str(item).strip() for item in (facts.get("metrics") or []) if str(item).strip()]
     hyper = _clean(facts.get("hyperparameters"))
     if metrics or hyper:
@@ -153,7 +153,7 @@ def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, f
             lines.append("**评测指标**：" + "；".join(metrics))
         if hyper:
             lines.append(f"**参数设置**：{hyper}")
-        experiment_blocks += ["### 3.3 实验指标与参数设置", "\n\n".join(lines)]
+        experiment_blocks += ["### 实验指标与参数设置", "\n\n".join(lines)]
     legacy_results = facts.get("experiments") or []
     legacy_text = ("\n".join(f"- {item}" for item in legacy_results)
                    if isinstance(legacy_results, list) else "")
@@ -161,15 +161,15 @@ def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, f
     ablation = _clean(facts.get("ablation"))
     if analysis or ablation:
         section = [part for part in (analysis, ablation) if part]
-        experiment_blocks += ["### 3.4 实验结果与分析", "\n\n".join(section)]
+        experiment_blocks += ["### 实验结果与分析", "\n\n".join(section)]
     experiment_blocks.extend(result_figures)
     if experiment_blocks:
         blocks.append(experiment_heading)
         blocks.extend(experiment_blocks)
 
     summary_highlight = _clean(facts.get("summary_highlight"))
-    summary_heading = (f"## 4 论文总结：{summary_highlight}" if summary_highlight
-                       else "## 4 论文总结")
+    summary_heading = (f"## 论文总结：{summary_highlight}" if summary_highlight
+                       else "## 论文总结")
     # 总结可以退回到 takeaway / 导语：只要这一节还能说出一句人话就渲染它。
     summary = _clean(facts.get("takeaway") or homepage.get("summary_para")
                      or homepage.get("summary_1line"))
@@ -178,7 +178,7 @@ def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, f
 
     rendered_refs = [line for line in (_render_reference(item) for item in references) if line]
     if rendered_refs:
-        blocks.append("## 5 References")
+        blocks.append("## References")
         blocks.extend(rendered_refs)
 
     return "\n\n".join(block for block in blocks if block).strip() + "\n", unplaced

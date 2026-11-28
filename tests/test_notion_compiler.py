@@ -420,12 +420,14 @@ def test_manuscript_follows_the_five_section_site_spec(tmp_path):
     md = package["article_input"]["markdown"]
 
     assert not md.lstrip().startswith("# "), "正文不应重复标题"
-    for heading in ("## 1 研究背景与问题", "## 2 方法：", "## 3 实验：",
-                    "## 4 论文总结：", "## 5 References"):
+    # 标题不带编号：侧栏目录由主题按位置自动编号（1 / 2.1 / 3.4），
+    # 标题里再写一遍就会变成「1. 1 研究背景与问题」。
+    for heading in ("## 研究背景与问题", "## 方法：", "## 实验：",
+                    "## 论文总结：", "## References"):
         assert heading in md, heading
     assert "待核验" not in md
     assert "图示解释" not in md
-    assert "## 论文总结" not in md.replace("## 4 论文总结", "")
+    assert "## 论文总结" in md
     # 图后必须跟一段可读说明，而不是 caption 原文
     assert "该图展示整体流程" in md
 

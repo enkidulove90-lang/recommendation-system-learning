@@ -118,14 +118,10 @@ class HighDpiPdfFigureExtractor:
         try:
             for page_index, page_info in enumerate(pages):
                 page = document[page_index]
-                for block in page_info.get("preproc_blocks", []):
-                    # Tables count: ACL-style papers often print their only
-                    # quantitative visual as a table, and dropping them is why a
-                    # paper could yield a single figure. Ranking demotes tables
-                    # below real figures; it never drops them here.
-                    if block.get("type") not in {"image", "chart", "table"}:
-                        continue
-                    left, top, right, bottom = block.get("bbox", [0, 0, 0, 0])
+                page_number = page_index + 1
+                page_caption = captions.get(page_number, {}) or {}
+                for region in _figure_regions(page_info.get("preproc_blocks", []), page_caption):
+                    left, top, right, bottom = region["bbox"]
                     if right <= left or bottom <= top:
                         continue
                     # MinerU boxes are in a 600-ish rendered coordinate system.
@@ -133,16 +129,17 @@ class HighDpiPdfFigureExtractor:
                     height_scale = page.rect.height / 840
                     clip = fitz.Rect(left * width_scale, top * height_scale, right * width_scale, bottom * height_scale)
                     pixmap = page.get_pixmap(matrix=fitz.Matrix(scale, scale), clip=clip, alpha=False)
-                    target = output_dir / f"p{page_index + 1:02d}_{block.get('type')}_{block.get('index', 0):02d}.png"
+                    target = output_dir / f"p{page_number:02d}_{region['type']}_{region['index']:02d}.png"
                     pixmap.save(target)
                     created.append(target)
                     page_number = page_index + 1
                     manifest.append({
                         "path": target.name,
                         "page": page_number,
-                        "block_type": block.get("type"),
+                        "block_type": region["type"],
                         "bbox": [left, top, right, bottom],
-                        **captions.get(page_number, {}),
+                        "merged_blocks": region["merged"],
+                        **page_caption,
                     })
         finally:
             document.close()
@@ -150,6 +147,52 @@ class HighDpiPdfFigureExtractor:
             json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         return created
+
+
+def _figure_regions(blocks: list[dict], page_caption: dict) -> list[dict]:
+    """Turn MinerU blocks into renderable regions, merging one figure's panels.
+
+    MinerU splits a multi-panel figure into a handful of 400x400 ``chart``
+    blocks (panel a/b/c...). Each fragment is far below the quality gate, so a
+    paper with one big figure still yielded a single usable image. When a page
+    carries exactly one figure caption, every image/chart block on that page
+    belongs to that figure and their union is the region a reader actually sees.
+
+    Tables are never merged into a figure: they are separate, usually short,
+    regions and merging would fabricate a layout the paper never printed.
+    """
+    figure_blocks = [block for block in blocks if block.get("type") in {"image", "chart"}]
+    table_blocks = [block for block in blocks if block.get("type") == "table"]
+    regions: list[dict] = []
+
+    def box(block):
+        left, top, right, bottom = block.get("bbox", [0, 0, 0, 0])
+        return [float(left), float(top), float(right), float(bottom)]
+
+    if len(figure_blocks) > 1 and page_caption.get("figure_id"):
+        boxes = [box(block) for block in figure_blocks if box(block)[2] > box(block)[0]]
+        if boxes:
+            regions.append({
+                "type": "figure",
+                "index": 0,
+                "bbox": [min(b[0] for b in boxes), min(b[1] for b in boxes),
+                         max(b[2] for b in boxes), max(b[3] for b in boxes)],
+                "merged": len(boxes),
+            })
+    else:
+        for block in figure_blocks:
+            left, top, right, bottom = box(block)
+            if right <= left or bottom <= top:
+                continue
+            regions.append({"type": block.get("type"), "index": block.get("index", 0),
+                            "bbox": [left, top, right, bottom], "merged": 1})
+    for block in table_blocks:
+        left, top, right, bottom = box(block)
+        if right <= left or bottom <= top:
+            continue
+        regions.append({"type": "table", "index": block.get("index", 0),
+                        "bbox": [left, top, right, bottom], "merged": 1})
+    return regions
 
 
 class FigureQualityGate:
