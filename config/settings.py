@@ -48,6 +48,19 @@ class Settings:
     def MINERU_POLL_MAX_RETRIES(self) -> int:
         return int(os.getenv("MINERU_POLL_MAX_RETRIES", "100"))
 
+    # ---- SHUSHENG (书生·端砚) ----
+    @property
+    def SHUSHENG_API_KEY(self) -> str:
+        return os.getenv("SHUSHENG_API_KEY", "")
+
+    @property
+    def SHUSHENG_API_BASE(self) -> str:
+        return os.getenv("SHUSHENG_API_BASE", "https://discovery-api.intern-ai.org.cn/v1")
+
+    @property
+    def SHUSHENG_MODEL(self) -> str:
+        return os.getenv("SHUSHENG_MODEL", "Agents-A1")
+
     # ---- DeepSeek ----
     @property
     def DEEPSEEK_API_KEY(self) -> str:

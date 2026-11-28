@@ -32,6 +32,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
+import uuid as uuid_module
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_LOG_PATH = PROJECT_ROOT / "data" / "logs" / "runs.jsonl"
@@ -86,6 +87,80 @@ def read_events(
                 continue
             events.append(row)
     return events[-limit:] if limit else events
+
+
+def log_paper_event(
+    event: str,
+    *,
+    paper_id: str | None = None,
+    canonical_id: str | None = None,
+    job_id: str | None = None,
+    stage: str | None = None,
+    status: str | None = None,
+    detail: dict | None = None,
+    duration_ms: int | None = None,
+    tracing_id: str | None = None,
+    path: Path | str | None = None,
+    **fields,
+) -> dict[str, Any]:
+    """
+    增强的论文事件记录，携带论文 ID 和追踪 ID。
+
+    Args:
+        event: 事件类型，如 "pipeline"、"mineru_parse"、"draft"、"publish" 等
+        paper_id: 论文 ID（可以是 bare ID 或 full ID）
+        canonical_id: 规范化论文 ID
+        job_id: 作业 ID
+        stage: 处理阶段（S1-S5）
+        status: 状态（ok、failed、start、end 等）
+        detail: 详细消息
+        duration_ms: 历时（毫秒）
+        tracing_id: 全链路追踪 ID
+        path: 日志路径
+        **fields: 附加字段
+
+    Returns:
+        实际写入的记录
+    """
+    record: dict[str, Any] = {
+        "ts": datetime.now().isoformat(timespec="seconds"),
+        "event": event,
+    }
+
+    # 携带论文信息
+    if paper_id:
+        record["paper_id"] = paper_id
+    if canonical_id:
+        record["canonical_id"] = canonical_id
+    if job_id:
+        record["job_id"] = job_id
+    if tracing_id:
+        record["tracing_id"] = tracing_id
+
+    # 携带阶段状态信息
+    if stage:
+        record["stage"] = stage
+    if status:
+        record["status"] = status
+    if duration_ms is not None:
+        record["duration_ms"] = duration_ms
+
+    if detail:
+        record["detail"] = detail
+
+    record.update(fields)
+
+    target = Path(path) if path is not None else DEFAULT_LOG_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(record, ensure_ascii=False, default=str) + "\n"
+    with _LOCK, target.open("a", encoding="utf-8") as handle:
+        handle.write(line)
+    return record
+
+
+def generate_tracing_id() -> str:
+    """生成全链路追踪 ID，用于追踪一篇论文在 S1-S5 中的完整生命周期。"""
+    return uuid_module.uuid4().hex[:12]
 
 
 def summarize(events: Iterable[dict[str, Any]], *, tail: int = 10) -> str:
@@ -158,9 +233,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--tail", type=int, default=10, help="rows shown in the summary")
     parser.add_argument("--json", action="store_true", help="dump matching events as JSON instead")
     parser.add_argument("--limit", type=int, help="only read the last N matching events")
+    parser.add_argument("--paper-id", dest="paper_id", help="filter by paper_id")
+    parser.add_argument("--tracing-id", dest="tracing_id", help="filter by tracing_id")
     args = parser.parse_args(argv)
 
     events = read_events(args.path, event=args.event, command=args.command, limit=args.limit)
+
+    # 按 paper_id 过滤
+    if args.paper_id:
+        events = [e for e in events if e.get("paper_id") == args.paper_id]
+
+    # 按 tracing_id 过滤
+    if args.tracing_id:
+        events = [e for e in events if e.get("tracing_id") == args.tracing_id]
+
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     except AttributeError:  # pragma: no cover - non-CPython / redirected streams

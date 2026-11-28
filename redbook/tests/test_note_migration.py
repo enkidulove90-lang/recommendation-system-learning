@@ -53,11 +53,13 @@ def _constants(path: Path) -> dict:
     return result
 
 
-def test_all_14_specs_load_and_list():
+def test_migrated_specs_load_and_list():
     files = sorted(path for path in NOTES_DIR.glob("*.yaml") if not path.name.startswith("_"))
-    assert len(files) == 14
+    expected_slugs = set(LEGACY_BUILDS.values()) | {"3773078.3831765"}
+    assert expected_slugs <= {path.stem for path in files}
     rows = list_notes()
-    assert len(rows) == 14
+    assert len(rows) == len(files)
+    assert len(rows) >= len(expected_slugs)
     assert all(not row.get("error") for row in rows)
     assert all(row["figures"] >= 1 for row in rows)
     for path in files:
@@ -65,7 +67,7 @@ def test_all_14_specs_load_and_list():
         assert spec.slug == path.stem
         assert spec.title and spec.body and spec.topics and spec.links["paper"]
         assert spec.visual_review.strip()
-        assert spec.parsed_dir.startswith("data/parsed")
+        assert spec.parsed_dir.startswith(("data/parsed", "data/evidence"))
 
 
 def test_every_legacy_script_is_deprecated_and_mapped():

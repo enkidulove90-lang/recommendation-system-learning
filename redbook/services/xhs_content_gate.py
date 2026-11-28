@@ -93,9 +93,14 @@ def validate_visual_review(metadata: Mapping[str, Any] | None = None,
     return []
 
 
-def validate_xhs_post(post: Mapping[str, Any], *, require_visual_review: bool = True,
+def validate_xhs_post(post: Mapping[str, Any], *, require_visual_review: bool = False,
                       rules: Mapping[str, Any] | None = None) -> list[str]:
-    """完整准入检查（标题/正文/话题/图片数/目检标记），供 render_post 使用。"""
+    """完整准入检查（标题/正文/话题/图片数）。
+
+    ``require_visual_review`` 默认 ``False``：按 2026-11-28 决定，逐张人工目检
+    是**建议项**而非发布阻断项；只要字段齐全（标题/正文/话题/图片数）即可投递。
+    需要旧行为时显式传 ``True``。
+    """
     spec = dict(rules or load_rules())
     errors: list[str] = []
     title = str(post.get("title", ""))

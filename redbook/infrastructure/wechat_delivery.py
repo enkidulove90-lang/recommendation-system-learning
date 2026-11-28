@@ -84,6 +84,8 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 #: will render.  ``data:`` and ``http(s)://`` sources are already public and are
 #: skipped.
 _LOCAL_IMG_RE = re.compile(r"<img\b[^>]*?\ssrc=([\"'])(.*?)\1", re.I | re.S)
+#: Any <img ...> tag, regardless of src, for counting body images.
+_IMG_TAG_RE = re.compile(r"<img\b", re.I)
 
 
 def _run(command: list[str]) -> subprocess.CompletedProcess[str]:
@@ -129,6 +131,8 @@ class DeliveryReceipt:
     cover_applied: bool
     body_chars: int
     saved: bool
+    draft_id: str | None = None
+    reopened_verified: bool = False
 
 
 class WeChatDraftDelivery:
@@ -152,7 +156,11 @@ class WeChatDraftDelivery:
         return opencli_runtime.resolve_runtime().command(*parts)
 
     def _browser(self, *parts: str) -> subprocess.CompletedProcess[str]:
-        return self.runner(self._command("browser", self.session, *parts))
+        # OpenCLI CLI expects `--session <name>` as a flag; the older
+        # `browser <session> <command>` positional form now fails with
+        # "unknown command '<session>'".
+        return self.runner(
+            self._command("browser", *parts, "--session", self.session))
 
     def _must(self, label: str, result: subprocess.CompletedProcess[str]) -> subprocess.CompletedProcess[str]:
         if result.returncode:
@@ -160,15 +168,38 @@ class WeChatDraftDelivery:
             raise DeliveryError(f"{label} failed: {detail[:400]}")
         return result
 
+    @staticmethod
+    def _unpack(raw: str) -> dict:
+        """Unwrap OpenCLI's `{"ok":true,"data":...}` envelope.
+
+        Newer CLI versions wrap every command result in `data` (a dict or a
+        JSON string).  Older ones returned the payload at top level.  Callers
+        always receive the inner payload dict.
+        """
+        try:
+            envelope = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return {"raw": str(raw).strip()}
+        if not isinstance(envelope, dict):
+            return {"raw": str(envelope)}
+        data = envelope.get("data")
+        if isinstance(data, str):
+            try:
+                decoded = json.loads(data)
+                if isinstance(decoded, dict):
+                    return decoded
+            except json.JSONDecodeError:
+                pass
+        elif isinstance(data, dict):
+            return data
+        return envelope
+
     def _eval(self, js: str, label: str) -> dict:
         """Run page-eval JS and parse its JSON envelope."""
         result = self._browser("eval", js)
         if result.returncode:
             raise DeliveryError(f"{label} failed: {(result.stderr or result.stdout or '').strip()[:400]}")
-        try:
-            return json.loads(result.stdout)
-        except json.JSONDecodeError:
-            return {"raw": result.stdout.strip()}
+        return self._unpack(result.stdout)
 
     def _click_by_label(self, label: str) -> dict:
         """Click the first visible element whose text matches ``label``."""
@@ -186,8 +217,15 @@ class WeChatDraftDelivery:
         """
         self._must("open mp.weixin.qq.com",
                    self._browser("open", self.home_url, "--window", "foreground"))
-        self._browser("wait", "time", "3")
-        token = self._eval(_EXTRACT_TOKEN_JS, "extract token").get("value", "")
+        # Poll for the token instead of a fixed sleep: the redirect from
+        # mp.weixin.qq.com to /cgi-bin/home?...token=... can take 3-8s on a
+        # cold tab, and a single 3s wait used to fail spuriously.
+        token = ""
+        for _ in range(6):
+            self._browser("wait", "time", "2")
+            token = self._eval(_EXTRACT_TOKEN_JS, "extract token").get("value", "")
+            if token:
+                break
         if not token:
             raise DeliveryError(
                 "could not extract session token — Chrome is not logged in to mp.weixin.qq.com")
@@ -209,10 +247,7 @@ class WeChatDraftDelivery:
         result = self._browser("fill", TITLE_SELECTOR, title)
         if result.returncode:
             raise DeliveryError(f"fill title failed: {(result.stderr or result.stdout or '').strip()[:400]}")
-        try:
-            envelope = json.loads(result.stdout)
-        except json.JSONDecodeError as exc:
-            raise DeliveryError(f"fill title returned non-JSON: {result.stdout[:200]}") from exc
+        envelope = self._unpack(result.stdout)
         if not envelope.get("filled") or not envelope.get("verified"):
             raise DeliveryError(
                 f"title fill not verified: actual={envelope.get('actual')!r}, "
@@ -263,38 +298,40 @@ class WeChatDraftDelivery:
     def _upload_cover(self, cover_path: Path) -> bool:
         """Insert the cover image into the body, then promote it to cover.
 
-        Returns True when the cover area ends up with a WeChat-CDN background,
-        matching ``selectCoverFromContent`` in create-draft.js.  Non-fatal: a
-        draft without a cover is still savable.
+        Throws DeliveryError on any failure; returns True when the cover area
+        ends up with a WeChat-CDN background, matching ``selectCoverFromContent``
+        in create-draft.js.
         """
         # 1. Click the image-menu trigger
         trigger_result = self._eval(_CLICK_JS(COVER_IMAGE_TRIGGER), "open image menu")
         if not trigger_result.get("ok"):
-            return False
+            raise DeliveryError("failed to open image menu for cover")
         self._browser("wait", "time", "1")
 
         # 2. Click the first dropdown item (the "从电脑选择" entry)
         first_item = self._eval(_CLICK_FIRST_DROPDOWN_JS, "click first dropdown item")
         if not first_item.get("ok"):
-            return False
+            raise DeliveryError("failed to click '从电脑选择' for cover")
         self._browser("wait", "time", "1")
 
         # 3. Upload the file via the file input that just appeared
         upload = self._browser("upload", COVER_FILE_INPUT, str(cover_path))
         if upload.returncode:
-            return False
+            raise DeliveryError(f"cover file upload failed: {upload.stderr[:400]}")
         # Wait for CDN — the image src flips to mmbiz.qpic.cn
         for _ in range(8):
             self._browser("wait", "time", "1")
             if self._eval(_WAIT_CDN_JS, "wait CDN upload").get("ok"):
                 break
+        else:
+            raise DeliveryError("cover CDN upload timed out")
 
         # 4. Open the cover picker, pick "从正文选择", select first image, confirm
         if not self._eval(_CLICK_JS(".js_cover_btn_area"), "open cover picker").get("ok"):
-            return False
+            raise DeliveryError("failed to open cover picker")
         self._browser("wait", "time", "1")
         if not self._eval(_CLICK_PICK_FROM_CONTENT_JS, "click 从正文选择").get("ok"):
-            return False
+            raise DeliveryError("failed to click '从正文选择' in cover picker")
         self._browser("wait", "time", "2")
         self._eval(_CLICK_FIRST_PICKER_IMG_JS, "click first content image")
 
@@ -304,11 +341,15 @@ class WeChatDraftDelivery:
             self._browser("wait", "time", "2")
             if self._eval(_CONFIRM_READY_JS, "wait 确认 enabled").get("ok"):
                 break
+        else:
+            raise DeliveryError("cover 确认 button did not enable in time")
         self._click_by_label("确认")
         self._browser("wait", "time", "2")
-        return bool(self._eval(_COVER_PRESENT_JS, "verify cover").get("ok"))
+        if not self._eval(_COVER_PRESENT_JS, "verify cover").get("ok"):
+            raise DeliveryError("cover verification failed: no CDN background in cover area")
+        return True
 
-    def _upload_inline_image(self, img_path: Path) -> str | None:
+    def _upload_inline_image(self, img_path: Path) -> str:
         """Upload one image through the editor's image menu and return its CDN url.
 
         The image-insert flow is identical to the cover flow up to the upload
@@ -316,22 +357,24 @@ class WeChatDraftDelivery:
         WeChat pushes the file to its CDN and rewrites the ``<img>`` ``src`` to
         ``mmbiz.qpic.cn``; we read that url back so the final body HTML can point
         at the public CDN instead of the local disk path (which WeChat blocks).
+
+        Throws DeliveryError on any failure.
         """
         if not self._eval(_CLICK_JS(COVER_IMAGE_TRIGGER), "open image menu").get("ok"):
-            return None
+            raise DeliveryError(f"failed to open image menu for {img_path}")
         self._browser("wait", "time", "1")
         if not self._eval(_CLICK_FIRST_DROPDOWN_JS, "click first dropdown item").get("ok"):
-            return None
+            raise DeliveryError(f"failed to click '从电脑选择' for {img_path}")
         self._browser("wait", "time", "1")
         upload = self._browser("upload", COVER_FILE_INPUT, str(img_path))
         if upload.returncode:
-            return None
+            raise DeliveryError(f"image file upload failed for {img_path}: {upload.stderr[:400]}")
         for _ in range(12):
             self._browser("wait", "time", "1")
             src = self._eval(_GET_LAST_BODY_IMG_SRC_JS, "read uploaded img src").get("src")
             if src:
                 return src
-        return None
+        raise DeliveryError(f"image CDN upload timed out for {img_path}")
 
     def _fill_summary(self, summary: str) -> None:
         if not summary:
@@ -343,14 +386,109 @@ class WeChatDraftDelivery:
             return
 
     def _save_draft(self) -> bool:
-        """Click 保存为草稿 and verify the success marker."""
+        """Click 保存为草稿 and verify the save actually happened.
+
+        WeChat's "已保存" toast is inconsistent across editor builds (a real
+        draft was observed in the draft box while the marker never showed).
+        So a save counts as confirmed if ANY of these hold within the poll
+        window: the success element/text appears, OR the editor URL now carries
+        a ``draft_id`` (proof the draft entity exists).
+        """
         if not self._click_by_label(SAVE_DRAFT_LABEL).get("ok"):
             raise DeliveryError(f"could not find '{SAVE_DRAFT_LABEL}' button")
         for _ in range(8):
             self._browser("wait", "time", "2")
             if self._eval(_SAVE_SUCCESS_JS, "verify save").get("ok"):
                 return True
+            # URL draft_id is a reliable positive signal the draft persisted.
+            if self._extract_draft_id():
+                return True
         return False
+
+    def _extract_draft_id(self) -> str | None:
+        """Extract draft ID from current page URL or success message after saving."""
+        try:
+            # Check URL pattern: /cgi-bin/appmsg?t=...</各地
+            result = self._eval(
+                "(function(){"
+                "var value = new URL(window.location.href).searchParams.get('draft_id');"
+                "return JSON.stringify({value:value || null});"
+                "})()",
+                "extract draft ID from URL"
+            )
+            if result.get("value"):
+                return result["value"]
+        except Exception:
+            pass
+        # Fallback: look for draft_id in success message
+        try:
+            result = self._eval(
+                "(function(){"
+                "var text = document.body.innerText || '';"
+                "var match = text.match(/草稿 ID:?(\\d+)/);"
+                "if(match && match[1])return JSON.stringify({value:match[1]});"
+                "return JSON.stringify({value:null});"
+                "})()",
+                "extract draft ID from success message"
+            )
+            if result.get("value"):
+                return result["value"]
+        except Exception:
+            pass
+        return None
+
+    def _verify_draft_reopened(
+        self,
+        draft_id: str | None,
+        payload: "WeChatDraftPayload | None" = None,
+        *,
+        expected_images: int | None = None,
+    ) -> bool:
+        """Reopen the saved draft and confirm it holds the intended content.
+
+        The old check only proved "a title textarea exists". This version reads
+        the reopened editor and verifies three things match what we filled:
+          1. the title text contains the payload title (first 12 chars anchor),
+          2. the body editor text contains an anchor phrase from the payload,
+          3. the body's <img> count equals ``expected_images`` (body images only,
+             cover copy already stripped by the delivery flow).
+
+        With no payload (legacy callers) it degrades to "title control present
+        and non-empty" so it never regresses to always-false.
+        """
+        if not draft_id:
+            return False
+        try:
+            editor_url = (
+                "https://mp.weixin.qq.com/cgi-bin/appmsg?"
+                f"t=media/appmsg_edit&draft_id={draft_id}"
+            )
+            self._browser("open", editor_url, "--window", "foreground")
+            self._browser("wait", "time", "3")
+            result = self._eval(_REOPEN_SNAPSHOT_JS, "snapshot reopened draft")
+            self._browser("close")
+        except Exception:
+            return False
+
+        if not result.get("ok"):
+            return False
+        if payload is None:
+            return bool(str(result.get("title", "")).strip())
+
+        title_dom = str(result.get("title", ""))
+        body_dom = str(result.get("body_text", ""))
+        image_count = int(result.get("image_count", -1))
+
+        title_anchor = payload.title.strip()[:12]
+        body_source = payload.body_html or payload.body_text
+        body_anchor = _body_anchor_text(body_source)
+        if title_anchor and title_anchor not in title_dom:
+            return False
+        if body_anchor and body_anchor not in body_dom:
+            return False
+        if expected_images is not None and image_count != expected_images:
+            return False
+        return True
 
     def _close(self) -> None:
         # Close is best-effort — even if it fails we don't want to fail delivery.
@@ -366,6 +504,8 @@ class WeChatDraftDelivery:
         payload.validate()
         cover_applied = False
         saved = False
+        draft_id = None
+        reopened_verified = False
         try:
             self._open_editor()
             self._fill_title(payload.title)
@@ -378,10 +518,9 @@ class WeChatDraftDelivery:
                     for src in local_imgs:
                         disk = _resolve_image_path(src)
                         if disk is None:
-                            continue
+                            raise DeliveryError(f"local image not found: {src}")
                         url = self._upload_inline_image(disk)
-                        if url:
-                            src_to_url[src] = url
+                        src_to_url[src] = url
                     if src_to_url:
                         # The uploads above left placeholder <img>s in the body;
                         # clear them, then inject the rewritten HTML that points
@@ -398,6 +537,15 @@ class WeChatDraftDelivery:
                 self._eval(_REMOVE_LAST_BODY_IMG_JS, "drop cover copy from body")
             self._fill_summary(payload.summary)
             saved = self._save_draft()
+            if saved:
+                draft_id = self._extract_draft_id()
+                # Body images as rendered: count <img> in the final body html
+                # (cover copy was removed above, so this is illustrations only).
+                expected_images = len(_IMG_TAG_RE.findall(body_html)) if body_html else 0
+                reopened_verified = self._verify_draft_reopened(
+                    draft_id, payload, expected_images=expected_images)
+        except DeliveryError:
+            raise
         finally:
             self._close()
         return DeliveryReceipt(
@@ -405,6 +553,8 @@ class WeChatDraftDelivery:
             cover_applied=cover_applied,
             body_chars=len(payload.body_text),
             saved=saved,
+            draft_id=draft_id,
+            reopened_verified=reopened_verified,
         )
 
 
@@ -600,11 +750,47 @@ _SAVE_SUCCESS_JS = (
     "(function(){"
     "var el=document.querySelector('#js_save_success');"
     "if(el&&window.getComputedStyle(el).display!=='none')return JSON.stringify({ok:true,via:'element'});"
-    "if((document.body.innerText||'').indexOf('已保存')>=0)"
+    "var t=(document.body.innerText||'');"
+    "if(t.indexOf('已保存')>=0||t.indexOf('保存成功')>=0||t.indexOf('已保存到草稿箱')>=0)"
     "return JSON.stringify({ok:true,via:'text'});"
     "return JSON.stringify({ok:false});"
     "})()"
 )
+
+
+#: Snapshot a reopened draft's editable fields so delivery can prove the draft
+#: it reopened is the one it filled: title text, body text, body image count.
+#: Reads the body from the UEditor iframe when present, else the top document.
+_REOPEN_SNAPSHOT_JS = (
+    "(function(){"
+    "var titleEl=document.querySelector('textarea#title');"
+    "var ifr=document.querySelector('#ueditor_0');"
+    "var ctx=(ifr&&ifr.contentDocument)?ifr.contentDocument:document;"
+    "var body=ctx.querySelector('div[contenteditable=\"true\"]')||ctx.body;"
+    "var title=titleEl?titleEl.value:'';"
+    "var bodyText=body?(body.innerText||''):'';"
+    "var imgs=body?body.querySelectorAll('img').length:0;"
+    "var ok=!!titleEl;"
+    "return JSON.stringify({ok:ok,title:title,body_text:bodyText,image_count:imgs});"
+    "})()"
+)
+
+
+def _body_anchor_text(body_source: str) -> str:
+    """Pick a stable anchor phrase from the payload body for reopen matching.
+
+    Strips tags to plain text, then takes the first run of ~20 contiguous
+    non-space characters after leading punctuation. Returns "" when the body
+    is too short to anchor on (so verification skips the body check).
+    """
+    import re as _re
+
+    text = _re.sub(r"<[^>]+>", "", body_source or "")
+    text = _re.sub(r"\s+", "", text)
+    text = text.lstrip("　#*>-·•　")
+    if len(text) < 12:
+        return ""
+    return text[:20]
 
 
 #: Resolve the live editing context: WeChat's body rich-editor lives inside the

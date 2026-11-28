@@ -153,6 +153,9 @@ python -m pytest \
 - 只存草稿，不公开发布；`state = saved_draft_only`。
 - 同一个未保存的编辑器会话内完成：图 → 标题 → 正文 → 话题 → PDF → **最后**才存草稿。
 - 严禁「先存草稿再回草稿箱补附件」，CDP 上下文会丢失。
+- PDF 上传完成不能以“页面出现文件名”为判据：保存前必须等待附件卡无 loading/error，并监听上传
+  请求结果；保存后按 ASCII `draft_id` 重开草稿，同时核验附件卡与 IndexedDB `fileRelate` 的
+  `docId/文件名/大小`。核验失败时删除本次新建的残缺草稿并返回失败，不得伪造成功回执。
 - 话题必须绑定成平台真实实体，不靠正文里的 `#文本`。
 - 发布不幂等：同一 `staged_id` 重复 `publish` 会多建一条草稿；改内容要重新 stage（新 hash）。
 - 核验用 ASCII `draft_id` 子串匹配，不要用返回里的中文标题（PowerShell 5.1 按 GBK 解码会不可逆乱码）。

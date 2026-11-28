@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 import hashlib
 import json
 import os
+import time
 from pathlib import Path
 import re
-from typing import Any, Iterable, Protocol
-from urllib.parse import quote, urlencode, urljoin
+from typing import Any, Callable, Iterable, Protocol
+from urllib.parse import quote, urlencode, urljoin, urlsplit
 import xml.etree.ElementTree as ET
 
 from bs4 import BeautifulSoup, Tag
@@ -40,8 +41,17 @@ class CatalogTransport(Protocol):
 
 
 class RequestsCatalogTransport:
-    def __init__(self, *, timeout: float = 30.0) -> None:
+    def __init__(
+        self, *, timeout: float = 30.0,
+        rate_limit_seconds_by_host: dict[str, float] | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
         self.timeout = timeout
+        self.rate_limit_seconds_by_host = rate_limit_seconds_by_host or {}
+        self._last_request_at: dict[str, float] = {}
+        self._clock = clock
+        self._sleep = sleep
         self.session = requests.Session()
         self.session.trust_env = False
         proxy = os.getenv("PAPER_CATALOG_HTTP_PROXY", "").strip()
@@ -52,17 +62,31 @@ class RequestsCatalogTransport:
         )
 
     def get_text(self, url: str) -> str:
+        self._pace(url)
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         return response.text
 
     def get_json(self, url: str) -> dict[str, Any]:
+        self._pace(url)
         response = self.session.get(url, timeout=self.timeout)
         response.raise_for_status()
         payload = response.json()
         if not isinstance(payload, dict):
             raise ValueError("catalog provider returned a non-object JSON response")
         return payload
+
+    def _pace(self, url: str) -> None:
+        host = urlsplit(url).hostname or ""
+        interval = float(self.rate_limit_seconds_by_host.get(host, 0))
+        if interval <= 0:
+            return
+        previous = self._last_request_at.get(host)
+        if previous is not None:
+            remaining = interval - (self._clock() - previous)
+            if remaining > 0:
+                self._sleep(remaining)
+        self._last_request_at[host] = self._clock()
 
 
 class CatalogCache:
@@ -71,6 +95,7 @@ class CatalogCache:
     def __init__(self, root: str | Path) -> None:
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
+        self.last_status: dict[str, str] = {}
 
     def _paths(self, key: str) -> tuple[Path, Path]:
         digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
@@ -100,6 +125,7 @@ class CatalogCache:
                 fetched_at = float(json.loads(metadata_path.read_text(encoding="utf-8"))["fetched_at"])
                 age = datetime.now(timezone.utc).timestamp() - fetched_at
                 if age < max(ttl_seconds, 0):
+                    self.last_status[key] = "cached"
                     return content_path.read_text(encoding="utf-8")
             except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
                 pass
@@ -107,9 +133,11 @@ class CatalogCache:
             text = transport.get_text(url)
         except Exception:
             if content_path.is_file():
+                self.last_status[key] = "stale"
                 return content_path.read_text(encoding="utf-8")
             raise
         self.store(key, text)
+        self.last_status[key] = "fetched"
         return text
 
 
@@ -370,23 +398,24 @@ class OpenAlexEnricher:
 class PaperCatalog:
     def __init__(self, papers: Iterable[PaperRecord] = ()) -> None:
         self.papers: list[PaperRecord] = []
+        self.raw_records: list[PaperRecord] = []
+        self.source_runs: dict[str, dict[str, str]] = {}
         self._index: dict[str, PaperRecord] = {}
         self.extend(papers)
 
     @staticmethod
     def _key(record: PaperRecord) -> str:
-        if record.doi:
-            return "doi:" + record.doi.casefold()
-        if record.arxiv_id:
-            return "arxiv:" + record.arxiv_id.casefold()
-        return "title:" + _normalized_title(record.title)
+        from .catalog_identity import canonical_id
+        return canonical_id(record)
 
     def add(self, record: PaperRecord) -> None:
+        self.raw_records.append(record)
         key = self._key(record)
         existing = self._index.get(key)
         if existing is None:
-            self._index[key] = record
-            self.papers.append(record)
+            projection = replace(record, topics=list(record.topics), authors=list(record.authors))
+            self._index[key] = projection
+            self.papers.append(projection)
             return
         existing.topics = list(dict.fromkeys([*existing.topics, *record.topics]))
         if existing.topic_source == "unavailable" and record.topic_source != "unavailable":
@@ -399,14 +428,14 @@ class PaperCatalog:
         for paper in papers:
             self.add(paper)
 
-    def write_json(self, path: str | Path, *, refresh_interval_seconds: int) -> None:
+    def write_json(self, path: str | Path, *, watch_interval_seconds: int) -> None:
         destination = Path(path)
         destination.parent.mkdir(parents=True, exist_ok=True)
         generated_at = datetime.now(timezone.utc).isoformat()
         payload = {
             "schema_version": 1,
             "generated_at": generated_at,
-            "refresh_interval_seconds": refresh_interval_seconds,
+            "watch_interval_seconds": watch_interval_seconds,
             "paper_count": len(self.papers),
             "papers": [
                 item.to_dict()
@@ -423,8 +452,14 @@ def refresh_from_config(
     *,
     transport: CatalogTransport | None = None,
     cache_dir: str | Path | None = None,
+    on_source_event: Callable[[dict[str, Any]], None] | None = None,
 ) -> PaperCatalog:
-    client = transport or RequestsCatalogTransport()
+    client = transport or RequestsCatalogTransport(
+        rate_limit_seconds_by_host={
+            str(host): float(seconds)
+            for host, seconds in (config.get("source_rate_limits_seconds") or {}).items()
+        }
+    )
     cache = CatalogCache(cache_dir) if cache_dir is not None else None
     now = datetime.now(timezone.utc).isoformat()
     catalog = PaperCatalog()
@@ -437,59 +472,90 @@ def refresh_from_config(
             "sortOrder": source.get("sort_order", "descending"),
         }
         url = "https://export.arxiv.org/api/query?" + urlencode(params)
-        xml_text = (
-            cache.get_text(
-                client,
-                url,
-                key="arxiv:" + str(source.get("name") or source["query"]),
-                ttl_seconds=int(source.get("cache_ttl_seconds", 86400)),
+        source_key = "arxiv:" + str(source.get("name") or source["query"])
+        started = time.monotonic()
+        phase = "request"
+        produced = 0
+        if on_source_event:
+            on_source_event({"event": "start", "source": source_key})
+        try:
+            xml_text = (
+                cache.get_text(client, url, key=source_key,
+                               ttl_seconds=int(source.get("cache_ttl_seconds", 86400)))
+                if cache else client.get_text(url)
             )
-            if cache
-            else client.get_text(url)
-        )
-        catalog.extend(parse_arxiv_feed(xml_text, retrieved_at=now))
+            phase = "parse"
+            records = parse_arxiv_feed(xml_text, retrieved_at=now)
+            produced = len(records)
+            catalog.extend(records)
+            catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
+        except Exception as exc:
+            catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
+        finally:
+            if on_source_event:
+                on_source_event({"event": "end", "source": source_key,
+                                 "duration_ms": int((time.monotonic() - started) * 1000),
+                                 "candidates": produced, "phase": phase,
+                                 **catalog.source_runs[source_key]})
     for source in config.get("acl_events", []):
         url = source["url"]
-        html = (
-            cache.get_text(
-                client,
-                url,
-                key="acl:" + str(source["venue_name"]),
-                ttl_seconds=int(source.get("cache_ttl_seconds", 1800)),
+        source_key = "acl:" + str(source["venue_name"])
+        started = time.monotonic()
+        phase = "request"
+        produced = 0
+        if on_source_event:
+            on_source_event({"event": "start", "source": source_key})
+        try:
+            html = (
+                cache.get_text(client, url, key=source_key,
+                               ttl_seconds=int(source.get("cache_ttl_seconds", 1800)))
+                if cache else client.get_text(url)
             )
-            if cache
-            else client.get_text(url)
-        )
-        records = parse_acl_event(
-            html,
-            event_url=url,
-            venue_name=source["venue_name"],
-            retrieved_at=now,
-        )
-        prefixes = [str(value) for value in source.get("include_id_prefixes", []) if value]
-        if prefixes:
-            records = [record for record in records if any(record.source_id.startswith(prefix) for prefix in prefixes)]
-        catalog.extend(records)
+            phase = "parse"
+            records = parse_acl_event(html, event_url=url, venue_name=source["venue_name"], retrieved_at=now)
+            prefixes = [str(value) for value in source.get("include_id_prefixes", []) if value]
+            if prefixes:
+                records = [record for record in records if any(record.source_id.startswith(prefix) for prefix in prefixes)]
+            produced = len(records)
+            catalog.extend(records)
+            catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
+        except Exception as exc:
+            catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
+        finally:
+            if on_source_event:
+                on_source_event({"event": "end", "source": source_key,
+                                 "duration_ms": int((time.monotonic() - started) * 1000),
+                                 "candidates": produced, "phase": phase,
+                                 **catalog.source_runs[source_key]})
     for source in config.get("recsys_pages", []):
         url = source["url"]
-        html = (
-            cache.get_text(
-                client,
-                url,
-                key="recsys:" + url,
-                ttl_seconds=int(source.get("cache_ttl_seconds", 1800)),
+        source_key = "recsys:" + url
+        started = time.monotonic()
+        phase = "request"
+        produced = 0
+        if on_source_event:
+            on_source_event({"event": "start", "source": source_key})
+        try:
+            html = (
+                cache.get_text(client, url, key=source_key,
+                               ttl_seconds=int(source.get("cache_ttl_seconds", 1800)))
+                if cache else client.get_text(url)
             )
-            if cache
-            else client.get_text(url)
-        )
-        catalog.extend(
-            parse_recsys_program_page(
-                html,
-                page_url=url,
-                publication_year=int(source["publication_year"]),
-                retrieved_at=now,
+            phase = "parse"
+            records = parse_recsys_program_page(
+                html, page_url=url, publication_year=int(source["publication_year"]), retrieved_at=now,
             )
-        )
+            produced = len(records)
+            catalog.extend(records)
+            catalog.source_runs[source_key] = {"status": cache.last_status.get(source_key, "ok") if cache else "ok", "error_code": ""}
+        except Exception as exc:
+            catalog.source_runs[source_key] = {"status": "failed", "error_code": type(exc).__name__}
+        finally:
+            if on_source_event:
+                on_source_event({"event": "end", "source": source_key,
+                                 "duration_ms": int((time.monotonic() - started) * 1000),
+                                 "candidates": produced, "phase": phase,
+                                 **catalog.source_runs[source_key]})
     enrichment = config.get("openalex_enrichment") or {}
     if enrichment.get("enabled"):
         enricher = OpenAlexEnricher(client, mailto=str(enrichment.get("mailto") or ""))

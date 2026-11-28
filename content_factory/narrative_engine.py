@@ -7,7 +7,9 @@ LLM 层（可选）：仅润色表达，不引入原文外数字；缺 key 时�
 
 from __future__ import annotations
 
+import json
 import os
+from pathlib import Path
 from string import Template
 from typing import Callable, Optional
 
@@ -35,11 +37,46 @@ _ENDING_TPL = Template(
 
 
 class NarrativeEngine:
-    def __init__(self, polish: bool = False, llm_callable: Optional[Callable[[str, str], str]] = None) -> None:
+    def __init__(
+        self,
+        polish: bool = False,
+        llm_callable: Optional[Callable[[str, str], str]] = None,
+        canonical_id: str = "",
+    ) -> None:
         self.polish = polish
         self._llm = llm_callable
+        self.canonical_id = canonical_id
+        self._fact_hints: dict = {}
+
+    def _load_fact_hints(self, paper_id: str) -> None:
+        """Prefer an existing fact_pack so plugin/LLM polish is not repeated.
+
+        Looks for ``data/summaries/<safe id>_fact_pack.json`` using the same
+        file-name mapping as the gateway.  Missing/invalid files are ignored
+        (fallback to the original LLM path), never fatal.
+        """
+        if self._fact_hints:
+            return
+        identifier = self.canonical_id or paper_id
+        if not identifier:
+            return
+        try:
+            from paper_intake.model_gateway import artifact_basename
+
+            root = Path(__file__).resolve().parents[1]
+            path = root / "data" / "summaries" / f"{artifact_basename(identifier, 'fact_pack')}.json"
+            if not path.is_file():
+                return
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            hints = payload.get("platform_hints", {})
+            xhs = hints.get("xhs", {}) if isinstance(hints, dict) else {}
+            if isinstance(xhs, dict) and xhs.get("hook"):
+                self._fact_hints = xhs
+        except (OSError, ValueError, TypeError):
+            return
 
     def build(self, s: PaperSummary, paper_id: str = "") -> StoryDraft:
+        self._load_fact_hints(paper_id)
         known = self._sentence(s.method) or s.title_zh
         paradox = self._paradox_sentence(s)
         method_short = self._short(s.method, 24)
@@ -64,7 +101,11 @@ class NarrativeEngine:
             "ending_section": self._sources(s, ["limitations"]) or self._sources(s, ["method"]),
         }
 
-        if self.polish and (self._llm or os.getenv("DEEPSEEK_API_KEY")):
+        if self._fact_hints:
+            # fact_pack already came from one model call; reuse its hook and
+            # skip every polish LLM call (the biggest repeated-API source).
+            hook = str(self._fact_hints.get("hook") or hook)
+        elif self.polish and (self._llm or os.getenv("DEEPSEEK_API_KEY")):
             hook = self._polish(hook, "钩子段落，勿增数字")
             method_section = self._polish(method_section, "方法段落，勿增数字")
             climax = self._polish(climax, "反直觉发现段落，可通俗类比但勿增数字")

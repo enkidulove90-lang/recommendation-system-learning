@@ -73,7 +73,7 @@ def _adopt_post(platform: str, body: str, figures: Sequence[Any] | None, *,
         "images": _as_image_paths(figures),
         "metadata": post_metadata,
     }
-    errors = validate_xhs_post(post, require_visual_review=True, rules=rules)
+    errors = validate_xhs_post(post, require_visual_review=False, rules=rules)
     if errors:
         raise ContentSpecError("xhs content gate failed: " + "; ".join(errors))
     return post

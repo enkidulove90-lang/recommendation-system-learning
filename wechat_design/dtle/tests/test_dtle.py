@@ -22,7 +22,15 @@ from wechat_design.dtle.renderers.chart import render_svg  # noqa: E402
 from wechat_design.dtle.tokens import build_all, derive_tokens, list_themes  # noqa: E402
 from wechat_design.dtle.validation.gate import assert_mobile_layout, full_check  # noqa: E402
 
-EXAMPLE = os.path.join(os.path.dirname(__file__), "..", "examples", "loopsbench_dtle.json")
+# Inline Markdown keeps renderer tests independent of the absent generated HTML/JSON artifact.
+EXAMPLE = (
+    "# LightGCL\n"
+    "## Method\n"
+    "> \u4e00\u53e5\u8bdd\u7ed3\u8bba\n"
+    "\u63d0\u51fa SVD \u56fe\u589e\u5f3a\u65b9\u6cd5\uff0c\u63d0\u53d6\u5168\u5c40\u534f\u540c\u4fe1\u53f7\u3002\n"
+    "## Results\n"
+    "Yelp Recall@20 = 0.0793\n"
+)
 
 
 class TestTokens(unittest.TestCase):

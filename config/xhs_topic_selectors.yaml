@@ -1,0 +1,39 @@
+# 小红书话题实体绑定选择器（单一事实源）
+#
+# 平台 DOM 频繁变化：2026-08 是 searchable dropdown，2026-11 变成推荐 chip，
+# 且不同账号/会话看到的结构不一致。把选择器外置成候选列表，DOM 再变时只改
+# 本文件、不改 Python 代码。运行时按顺序尝试每个 strategy，命中即止；
+# 每次尝试写 xhs_topic_probe 日志（含实际看到的候选），失败可离线诊断。
+schema_version: 1
+
+# strategy 顺序：先无副作用的 chip 路径，再会往正文插入 #text 的 dropdown 路径。
+strategies:
+  - name: recommended_chip
+    # 打开话题面板的按钮候选（逐个试，第一个存在的点击）
+    panel_buttons:
+      - 'button#topicBtn'
+      - 'button:has-text("话题")'
+      - '[class*="topic-btn"]'
+      - '[class*="topicBtn"]'
+    # 面板内可点击的推荐标签候选
+    chip_selectors:
+      - '.tag-group .tag'
+      - '.tag-group-popover-container .tag'
+      - '[class*="topic-panel"] [class*="tag"]'
+      - '[class*="topic"] [class*="chip"]'
+    exact_match: true        # 只点文本完全一致的 chip，不用 items[0] 兜底
+
+  - name: search_dropdown
+    # 往正文输入 #topic 后出现的搜索下拉（legacy 路径）
+    trigger: 'body_typing_hash'
+    dropdown_selectors:
+      - 'div.items div.item'
+      - '[class*="topic-item"]'
+      - '[class*="hashtag-item"]'
+      - '[class*="suggest-item"]'
+    exact_match: true
+
+# 诊断开关：写 xhs_topic_probe 日志（含 DOM 快照前 20 个候选）
+diagnostics:
+  log_dom_candidates: true
+  max_dom_candidates: 20

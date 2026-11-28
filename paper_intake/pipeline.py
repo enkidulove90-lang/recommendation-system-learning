@@ -1,0 +1,565 @@
+from __future__ import annotations
+
+import hashlib
+import httpx
+import json
+import shutil
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any, Callable
+from urllib.parse import urlsplit
+
+from PIL import Image, UnidentifiedImageError
+
+from .adapters import ExternalServiceError, NotionDraft, read_verified_utf8
+from .article import (
+    PaperArticle,
+    normalize_classification,
+    publication_year,
+    render_article_markdown,
+    validate_article,
+)
+from .references import link_reference_titles
+from .inputs import InputValidationError, PaperInputStore, canonicalize_url, redact_url, sha256_file
+from .models import JobRecord, JobStatus, StepName, StepStatus
+from .metadata_refresh import refresh_metadata_file
+from .repository import JobRepository
+from .remote import LeaseLost
+
+
+def normalize_acm_id(source_url: str | None, doi: str | None) -> str:
+    """
+    规范化 ACM 论文 ID，统一为 DOI 格式 (10.xxxx/xxxx)。
+    优先级: doi > source_url
+    """
+    if doi:
+        doi = doi.removeprefix("https://doi.org/").removeprefix("doi:").strip("/").lower()
+        return doi
+
+    if source_url:
+        parsed = urlsplit(source_url)
+        if parsed.hostname in {"dl.acm.org", "www.dl.acm.org"}:
+            path_parts = parsed.path.strip("/").split("/")
+            if "doi" in path_parts:
+                doi_idx = path_parts.index("doi") + 1
+                if doi_idx < len(path_parts) and path_parts[doi_idx].lower() == "pdf":
+                    doi_idx += 1
+                if doi_idx < len(path_parts):
+                    # 取从doi索引开始之后的所有部分作为DOI
+                    return "/".join(path_parts[doi_idx:]).strip("/").lower()
+
+    return ""
+
+
+def is_acm_source(source_type: str | None, source_url: str | None) -> bool:
+    if source_type == "recsys_program":
+        return True
+    if not source_url:
+        return False
+    parsed = urlsplit(source_url)
+    return parsed.hostname in {"dl.acm.org", "www.dl.acm.org"}
+
+
+def validate_pdf_file(path: Path) -> tuple[bool, str | None]:
+    """验证 PDF 文件。返回 (is_valid, error_message)"""
+    if not path.is_file():
+        return False, f"File not found: {path}"
+
+    try:
+        with path.open("rb") as f:
+            header = f.read(4)
+            if header != b"%PDF":
+                return False, f"Invalid PDF header: {header!r}"
+
+            size = path.stat().st_size
+            if size < 1024:
+                return False, f"PDF file too small: {size} bytes"
+            if size > 100 * 1024 * 1024:  # 100MB
+                return False, f"PDF file too large: {size} bytes"
+
+    except Exception as e:
+        return False, f"Error reading file: {e}"
+
+    return True, None
+
+
+class PipelineFailure(RuntimeError):
+    def __init__(self, code: str, message: str):
+        super().__init__(message)
+        self.code = code
+
+
+class PaperPipeline:
+    """Checkpointed single-paper pipeline publishing only after quality success."""
+
+    PROCESSING_STEPS = (
+        StepName.VALIDATE_INPUT,
+        StepName.RESOLVE_METADATA,
+        StepName.DOWNLOAD_PDF,
+        StepName.MINERU_PARSE,
+        StepName.DEEPSEEK_GENERATE,
+        StepName.CLASSIFY,
+        StepName.QUALITY_CHECK,
+        StepName.WRITE_NOTION_PUBLISHED,
+    )
+
+    def __init__(
+        self,
+        *,
+        repository: JobRepository,
+        input_store: PaperInputStore,
+        mineru,
+        deepseek,
+        notion,
+        workflow_root: str | Path,
+        metadata_resolver: Callable[[str, str], dict[str, Any]] | None = None,
+    ):
+        self.repository = repository
+        self.input_store = input_store
+        self.mineru = mineru
+        self.deepseek = deepseek
+        self.notion = notion
+        self.workflow_root = Path(workflow_root)
+        self.metadata_resolver = metadata_resolver or self._fallback_metadata
+
+    def run(
+        self,
+        job_id: str,
+        *,
+        before_step: Callable[[StepName], None] | None = None,
+        on_step_completed: Callable[[StepName, dict[str, Any]], None] | None = None,
+    ) -> JobRecord:
+        try:
+            for step_name in self.PROCESSING_STEPS:
+                if self._job(job_id).status == JobStatus.CANCELLED:
+                    break
+                if before_step is not None:
+                    before_step(step_name)
+                output = self._run_step(job_id, step_name)
+                if on_step_completed is not None:
+                    on_step_completed(step_name, output)
+                if step_name == StepName.QUALITY_CHECK and output.get("issue_codes"):
+                    self.repository.update_job(
+                        job_id,
+                        status=JobStatus.FAILED,
+                        error_code="quality_gate_failed",
+                        error_message="Article quality checks failed.",
+                    )
+                    break
+            else:
+                self.repository.update_job(
+                    job_id,
+                    status=JobStatus.PUBLISHING,
+                    current_step="",
+                    error_code="",
+                    error_message="",
+                )
+        except LeaseLost:
+            # Losing distributed ownership is not a paper-processing failure.
+            # The remote ledger may already have assigned this job elsewhere.
+            raise
+        except Exception:
+            # _run_step persists the safe failure state. Returning the job keeps the
+            # web worker alive and lets the user retry from the same checkpoint.
+            pass
+        job = self.repository.get_job(job_id)
+        if job is None:
+            raise KeyError(f"Unknown job: {job_id}")
+        return job
+
+    def retry(self, job_id: str) -> JobRecord:
+        job = self.repository.get_job(job_id)
+        if job is None:
+            raise KeyError(f"Unknown job: {job_id}")
+        if job.status not in {JobStatus.FAILED, JobStatus.BLOCKED, JobStatus.RATE_LIMITED_MANUAL_RETRY}:
+            raise ValueError(f"Job {job_id} is not retryable from {job.status.value}")
+        if job.status == JobStatus.RATE_LIMITED_MANUAL_RETRY:
+            manifest_path = self._bundle(job_id) / "download_manifest.json"
+            if not manifest_path.is_file():
+                manifest_path = self._bundle(job_id) / "metadata_failure.json"
+            if not manifest_path.is_file():
+                raise ValueError("Manual retry cooldown evidence is missing.")
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            not_before = manifest.get("retry_not_before")
+            if not not_before or datetime.fromisoformat(not_before.replace("Z", "+00:00")) > datetime.now(timezone.utc):
+                raise ValueError("Manual retry cooldown has not elapsed.")
+        if job.error_code in {"pdf_http_404", "arxiv_id_invalid", "arxiv_version_mismatch"}:
+            raise ValueError(f"Job {job_id} has a permanent failure: {job.error_code}")
+        return self.run(job_id)
+
+    def _run_step(self, job_id: str, step_name: StepName) -> dict[str, Any]:
+        existing = self.repository.get_step(job_id, step_name)
+        if existing and existing.status == StepStatus.SUCCEEDED:
+            return existing.output
+        handler = getattr(self, f"_step_{step_name.value}")
+        self.repository.start_step(job_id, step_name)
+        try:
+            output = handler(job_id) or {}
+        except Exception as exc:
+            code, message = self._safe_error(exc)
+            self.repository.fail_step(
+                job_id,
+                step_name,
+                error_code=code,
+                error_message=message,
+            )
+            raise
+        self.repository.complete_step(job_id, step_name, output=output)
+        return output
+
+    def _bundle(self, job_id: str) -> Path:
+        path = self.workflow_root / job_id
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
+    def _job(self, job_id: str) -> JobRecord:
+        job = self.repository.get_job(job_id)
+        if job is None:
+            raise KeyError(f"Unknown job: {job_id}")
+        return job
+
+    def _step_validate_input(self, job_id: str) -> dict[str, Any]:
+        job = self._job(job_id)
+        canonical_id = job.canonical_id
+        source_url = job.source_url
+        if job.source_type == "url":
+            source = canonicalize_url(job.source_url)
+            canonical_id = source.canonical_id
+            source_url = source.normalized_url
+            if source.canonical_id and source.version and urlsplit(source_url).hostname == "arxiv.org":
+                source_url = f"https://arxiv.org/pdf/{source.canonical_id}v{source.version}"
+            duplicate = self.repository.find_duplicate(
+                canonical_id=canonical_id,
+                source_url=source_url,
+                exclude_job_id=job_id,
+            )
+            if duplicate:
+                raise PipelineFailure("duplicate_paper", f"Paper already exists in job {duplicate.job_id}.")
+            self.repository.update_job(
+                job_id,
+                canonical_id=canonical_id,
+                source_url=source_url,
+            )
+            return {"canonical_id": canonical_id, "source_url": source_url}
+
+        pdf_path = Path(job.upload_path)
+        if not pdf_path.is_file():
+            raise InputValidationError("pdf_missing", "Uploaded PDF no longer exists.")
+        digest = sha256_file(pdf_path)
+        duplicate = self.repository.find_duplicate(
+            canonical_id=canonical_id,
+            source_sha256=digest,
+            exclude_job_id=job_id,
+        )
+        if duplicate:
+            raise PipelineFailure("duplicate_paper", f"Paper already exists in job {duplicate.job_id}.")
+        canonical_id = canonical_id or f"pdf-{digest[:12]}"
+        self.repository.update_job(
+            job_id,
+            canonical_id=canonical_id,
+            source_sha256=digest,
+        )
+        return {
+            "canonical_id": canonical_id,
+            "pdf_path": str(pdf_path),
+            "sha256": digest,
+        }
+
+    def _step_resolve_metadata(self, job_id: str) -> dict[str, Any]:
+        job = self._job(job_id)
+        try:
+            metadata = self.metadata_resolver(job.canonical_id, job.source_url) or {}
+        except ExternalServiceError as exc:
+            if exc.service == "arxiv":
+                safe_input = redact_url(job.source_url)
+                wait = exc.retry_after_seconds
+                not_before = (
+                    (datetime.now(timezone.utc) + timedelta(seconds=wait)).isoformat().replace("+00:00", "Z")
+                    if wait is not None else ""
+                )
+                (self._bundle(job_id) / "metadata_failure.json").write_text(
+                    json.dumps({"input": safe_input, "metadata_source_domain": "export.arxiv.org",
+                                "api_status_code": exc.http_status, "error_code": exc.code,
+                                "retry_after_seconds": wait, "retry_not_before": not_before,
+                                "manual_retry_endpoint": f"/api/jobs/{job_id}/retry" if wait is not None else ""},
+                               indent=2), encoding="utf-8",
+                )
+            raise
+        source = canonicalize_url(job.source_url) if job.source_type == "url" else None
+        if source and source.canonical_id and urlsplit(source.normalized_url).hostname == "arxiv.org":
+            required = (
+                "arxiv_id", "version", "title", "authors", "published", "updated",
+                "primary_category", "canonical_pdf_url", "fetched_at", "api_status_code",
+            )
+            if (metadata.get("metadata_source_domain") != "export.arxiv.org"
+                    or metadata.get("api_status_code") != 200
+                    or any(not metadata.get(name) for name in required)
+                    or metadata.get("arxiv_id") != source.canonical_id
+                    or (source.version and metadata.get("version") != source.version)
+                    or metadata.get("canonical_pdf_url") != f"https://arxiv.org/pdf/{source.canonical_id}v{metadata.get('version')}"):
+                raise PipelineFailure("arxiv_metadata_invalid", "Authoritative arXiv metadata is incomplete or mismatched.")
+            snapshot = {name: metadata[name] for name in required}
+            snapshot["metadata_source_domain"] = metadata["metadata_source_domain"]
+            (self._bundle(job_id) / "metadata_snapshot.json").write_text(
+                json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8",
+            )
+        metadata.setdefault("canonical_id", job.canonical_id)
+        metadata.setdefault("title", job.title or Path(job.upload_path or "paper.pdf").stem)
+        metadata.setdefault("authors", [])
+        metadata.setdefault("paper_url", job.source_url or f"local://{job.canonical_id}")
+        metadata_path = self._bundle(job_id) / "metadata.json"
+        metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.repository.update_job(job_id, title=str(metadata["title"]))
+        return {"metadata_path": str(metadata_path), "metadata": metadata}
+
+    def _step_download_pdf(self, job_id: str) -> dict[str, Any]:
+        job = self._job(job_id)
+
+        # 处理 ACM 源
+        if is_acm_source(job.source_type, job.source_url):
+            # 规范化 ACM ID
+            doi = normalize_acm_id(job.source_url, job.canonical_id)
+            if not doi:
+                raise PipelineFailure("acm_doi_missing", "ACM 论文缺少 DOI")
+
+            output_dir = self._bundle(job_id) / "acm_fetch"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            pdf_path = output_dir / "pdf.pdf"
+
+            result = subprocess.run(
+                [sys.executable, "-m", "redbook.infrastructure.paper_sources.acm_dl", "fetch", doi, str(pdf_path)],
+                capture_output=True, text=True, timeout=300
+            )
+
+            if result.returncode != 0:
+                # 从 stdout 和 stderr 综合解析错误
+                error_msg = (result.stderr or "")[:500]
+                stdout_msg = (result.stdout or "")[:200]
+                if "cloudflare_challenge_not_passed" in (result.stdout + result.stderr).lower():
+                    raise PipelineFailure("acm_cloudflare_blocked", f"Cloudflare 挑战未通过\nStderr: {error_msg}\nStdout: {stdout_msg}")
+                elif "no such file" in (result.stdout + result.stderr).lower():
+                    raise PipelineFailure("acm_file_not_found", f"文件不存在\nStderr: {error_msg}\nStdout: {stdout_msg}")
+                elif "timeout" in (result.stdout + result.stderr).lower():
+                    raise PipelineFailure("acm_download_timeout", f"下载超时\nStderr: {error_msg}\nStdout: {stdout_msg}")
+                else:
+                    raise PipelineFailure("acm_fetch_failed", f"下载失败\nStderr: {error_msg}\nStdout: {stdout_msg}")
+
+            # 验证 PDF 文件
+            is_valid, error = validate_pdf_file(pdf_path)
+            if not is_valid:
+                raise PipelineFailure("acm_pdf_invalid", f"PDF 验证失败: {error}")
+
+            # 计算 SHA256
+            digest = sha256_file(pdf_path)
+
+        elif job.source_type == "url":
+            download_url = job.source_url
+            source = canonicalize_url(job.source_url)
+            if source.canonical_id and urlsplit(source.normalized_url).hostname == "arxiv.org":
+                snapshot_path = self._bundle(job_id) / "metadata_snapshot.json"
+                if not snapshot_path.is_file():
+                    raise PipelineFailure("arxiv_metadata_missing", "Authoritative arXiv metadata snapshot is missing.")
+                snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+                download_url = snapshot["canonical_pdf_url"]
+            try:
+                saved = self.input_store.download_url(job_id, download_url)
+            finally:
+                attempt_manifest = self.input_store.root / job_id / "download_manifest.json"
+                if attempt_manifest.is_file():
+                    shutil.copy2(attempt_manifest, self._bundle(job_id) / "download_manifest.json")
+            pdf_path = saved.path
+            digest = saved.sha256
+            if source.canonical_id:
+                metadata = json.loads((self._bundle(job_id) / "metadata.json").read_text(encoding="utf-8"))
+                expected_hash = metadata.get("pdf_sha256")
+                if expected_hash and expected_hash != digest:
+                    pdf_path.unlink(missing_ok=True)
+                    raise PipelineFailure("pdf_hash_mismatch", "Downloaded PDF hash does not match authoritative metadata.")
+        else:
+            pdf_path = Path(job.upload_path)
+            digest = job.source_sha256 or sha256_file(pdf_path)
+
+        canonical_id = job.canonical_id or f"pdf-{digest[:12]}"
+        duplicate = self.repository.find_duplicate(
+            canonical_id=canonical_id,
+            source_sha256=digest,
+            source_url=job.source_url,
+            exclude_job_id=job_id,
+        )
+        if duplicate:
+            raise PipelineFailure("duplicate_paper", f"Paper already exists in job {duplicate.job_id}.")
+        self.repository.update_job(
+            job_id,
+            upload_path=str(pdf_path),
+            source_sha256=digest,
+            canonical_id=canonical_id,
+        )
+        metadata_path = self._bundle(job_id) / "metadata.json"
+        if metadata_path.is_file():
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            metadata["canonical_id"] = canonical_id
+            if str(metadata.get("paper_url", "")).startswith("local://") and job.source_url:
+                metadata["paper_url"] = job.source_url
+            metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
+        return {"pdf_path": str(pdf_path), "sha256": digest, "canonical_id": canonical_id}
+
+    def _step_mineru_parse(self, job_id: str) -> dict[str, Any]:
+        job = self._job(job_id)
+        result = self.mineru.parse(
+            job.upload_path,
+            canonical_id=job.canonical_id,
+            title=job.title,
+        )
+        image_dir = self._bundle(job_id) / "images"
+        image_dir.mkdir(parents=True, exist_ok=True)
+        figures: list[dict[str, str]] = []
+        used_names: set[str] = set()
+        for index, source in enumerate(result.image_paths, 1):
+            name = source.name
+            if name in used_names:
+                name = f"{source.stem}-{index}{source.suffix}"
+            used_names.add(name)
+            destination = image_dir / name
+            shutil.copy2(source, destination)
+            figure: dict[str, Any] = {
+                "path": destination.relative_to(self._bundle(job_id)).as_posix(),
+                "sha256": sha256_file(destination),
+            }
+            try:
+                with Image.open(destination) as image:
+                    figure["width"], figure["height"] = image.size
+            except (UnidentifiedImageError, OSError):
+                figure["width"], figure["height"] = 0, 0
+            figures.append(figure)
+        return {
+            "markdown_path": str(result.markdown_path),
+            "figures": figures,
+        }
+
+    def _step_deepseek_generate(self, job_id: str) -> dict[str, Any]:
+        bundle = self._bundle(job_id)
+        metadata_path = bundle / "metadata.json"
+        job = self._job(job_id)
+        refresh = refresh_metadata_file(
+            metadata_path,
+            canonical_id=job.canonical_id,
+            source_url=job.source_url,
+            resolver=self.metadata_resolver,
+        )
+        metadata = refresh.metadata
+        if refresh.changed:
+            self.repository.update_job(job_id, title=str(metadata["title"]))
+        parse_step = self.repository.get_step(job_id, StepName.MINERU_PARSE)
+        if parse_step is None or parse_step.status != StepStatus.SUCCEEDED:
+            raise PipelineFailure("mineru_output_missing", "MinerU output is not available.")
+        markdown = read_verified_utf8(parse_step.output["markdown_path"])
+        article = self.deepseek.generate(
+            markdown=markdown,
+            metadata=metadata,
+            figures=list(parse_step.output.get("figures") or []),
+            failure_path=bundle / "diagnostics" / "deepseek-invalid-response.json",
+        )
+        article = article.model_copy(
+            update={
+                "article": article.article.model_copy(
+                    update={
+                        "references": link_reference_titles(
+                            article.article.references,
+                            markdown,
+                        )
+                    }
+                )
+            }
+        )
+        article_path = bundle / "article.json"
+        article_path.write_text(article.model_dump_json(indent=2), encoding="utf-8")
+        return {"article_path": str(article_path), "metadata": metadata}
+
+    def _load_article(self, job_id: str) -> PaperArticle:
+        path = self._bundle(job_id) / "article.json"
+        if not path.is_file():
+            raise PipelineFailure("article_missing", "Generated article JSON is missing.")
+        return PaperArticle.model_validate_json(path.read_text(encoding="utf-8"))
+
+    def _step_classify(self, job_id: str) -> dict[str, Any]:
+        article = self._load_article(job_id)
+        normalized, warnings = normalize_classification(article.classification)
+        article = article.model_copy(update={"classification": normalized})
+        article_path = self._bundle(job_id) / "article.json"
+        article_path.write_text(article.model_dump_json(indent=2), encoding="utf-8")
+        return {"article_path": str(article_path), "warnings": warnings}
+
+    def _step_quality_check(self, job_id: str) -> dict[str, Any]:
+        bundle = self._bundle(job_id)
+        article = self._load_article(job_id)
+        result = validate_article(article, artifact_root=bundle)
+        article_md = bundle / "article.md"
+        article_md.write_text(render_article_markdown(article), encoding="utf-8")
+        return {
+            "publishable": result.publishable,
+            "issue_codes": result.issue_codes,
+            "issues": [issue.message for issue in result.issues],
+            "article_path": str(article_md),
+        }
+
+    def _step_write_notion_published(self, job_id: str) -> dict[str, Any]:
+        bundle = self._bundle(job_id)
+        article = self._load_article(job_id)
+        metadata = json.loads((bundle / "metadata.json").read_text(encoding="utf-8"))
+        markdown = (bundle / "article.md").read_text(encoding="utf-8")
+        figure_paths = tuple((bundle / figure.path).resolve() for figure in article.figures)
+        page = self.notion.upsert_published(
+            NotionDraft(
+                arxiv_id=article.paper.canonical_id,
+                title=article.paper.chinese_title or article.paper.title,
+                slug=f"paper-{article.paper.canonical_id}",
+                summary=article.article.introduction[:500],
+                markdown=markdown,
+                figure_paths=figure_paths,
+                categories=tuple(article.classification.categories),
+                tags=tuple(article.classification.tags),
+                year=publication_year(article),
+                published=str(metadata.get("published") or ""),
+                venue_type=article.classification.venue_type,
+                venue_name=article.classification.venue_name,
+            ),
+            # P2: this chronicle pipeline is explicitly authorized to replace
+            # its own previously-published pages; the pre-overwrite body is
+            # snapshotted below (notion-before.md) for rollback.
+            allow_overwrite=True,
+        )
+        (bundle / "notion-before.md").write_text(page.before_markdown, encoding="utf-8")
+        (bundle / "notion-after.md").write_text(markdown, encoding="utf-8")
+        self.repository.update_job(
+            job_id,
+            notion_page_id=page.page_id,
+            notion_url=page.url,
+        )
+        return {
+            "page_id": page.page_id,
+            "url": page.url,
+            "status": page.status,
+            "before_path": str(bundle / "notion-before.md"),
+            "after_path": str(bundle / "notion-after.md"),
+        }
+
+    @staticmethod
+    def _fallback_metadata(canonical_id: str, source_url: str) -> dict[str, Any]:
+        return {
+            "canonical_id": canonical_id,
+            "title": canonical_id or "Uploaded paper",
+            "authors": [],
+            "paper_url": source_url or f"local://{canonical_id}",
+        }
+
+    @staticmethod
+    def _safe_error(exc: Exception) -> tuple[str, str]:
+        if isinstance(exc, (ExternalServiceError, InputValidationError, PipelineFailure)):
+            return exc.code, str(exc)[:500]
+        if isinstance(exc, httpx.TransportError):
+            return "network_unreachable", "The paper source could not be reached."
+        if isinstance(exc, FileNotFoundError):
+            return "file_missing", "A required local artifact is missing."
+        return "unexpected_error", "The paper pipeline failed unexpectedly."

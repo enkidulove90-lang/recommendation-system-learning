@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ast
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +13,7 @@ from paper_intake.catalog import (
     parse_acl_event,
     parse_arxiv_feed,
     parse_recsys_program_page,
+    refresh_from_config,
 )
 
 
@@ -105,11 +108,11 @@ class PaperCatalogParsingTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temporary:
             output = Path(temporary) / "paper_catalog.json"
-            catalog.write_json(output, refresh_interval_seconds=1800)
+            catalog.write_json(output, watch_interval_seconds=1800)
             payload = json.loads(output.read_text(encoding="utf-8"))
 
         self.assertEqual(payload["schema_version"], 1)
-        self.assertEqual(payload["refresh_interval_seconds"], 1800)
+        self.assertEqual(payload["watch_interval_seconds"], 1800)
         self.assertEqual(payload["paper_count"], 1)
         self.assertEqual(payload["papers"][0]["publication_year"], 2026)
         self.assertEqual(payload["papers"][0]["title"], "OPD-Evolver: Cultivating Holistic Agent Evolver")
@@ -131,6 +134,71 @@ class PaperCatalogParsingTests(unittest.TestCase):
             )
 
         self.assertEqual(text, "cached-feed")
+
+    def test_source_observation_reports_counts_without_changing_results(self) -> None:
+        class Transport:
+            def get_text(self, url: str) -> str:
+                return ARXIV_FEED if "export.arxiv.org" in url else RECSYS_PAGE
+
+        config = {
+            "arxiv": [{"name": "test", "query": "cat:cs.IR"}],
+            "recsys_pages": [{"url": "https://recsys.acm.org/recsys26/session-1/", "publication_year": 2026}],
+        }
+        events: list[dict] = []
+        observed = refresh_from_config(config, transport=Transport(), on_source_event=events.append)
+        unobserved = refresh_from_config(config, transport=Transport())
+
+        self.assertEqual(len(observed.raw_records), len(unobserved.raw_records))
+        self.assertEqual([event["event"] for event in events], ["start", "end", "start", "end"])
+        self.assertEqual([event["candidates"] for event in events if event["event"] == "end"], [1, 2])
+
+
+class RepositoryArchitectureTests(unittest.TestCase):
+    def test_paper_intake_does_not_import_redbook(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        package = root / "paper_intake"
+        violations: list[str] = []
+        for source in sorted(package.rglob("*.py")):
+            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    names = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    names = [node.module or ""]
+                else:
+                    continue
+                if any(name == "redbook" or name.startswith("redbook.") for name in names):
+                    violations.append(f"{source.relative_to(root)}:{node.lineno}")
+        self.assertEqual(violations, [], "paper_intake must not depend on redbook")
+
+    def test_release_fixtures_are_git_tracked(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        required = [
+            "config/venue_alias.json",
+            "content_factory/tests/fixtures/sample_summary.json",
+            "content_factory/tests/fixtures/sample_11dim.json",
+            "content_events/tests/fixtures/publish_queue/8f2b75543dd92825dde3c746116c911b/state.json",
+            "content_events/tests/fixtures/publish_queue/8f2b75543dd92825dde3c746116c911b/wechat.json",
+            "content_events/tests/fixtures/publish_queue/9922d0c4da185748dd4c9f095cd603af/state.json",
+            "content_events/tests/fixtures/publish_queue/9922d0c4da185748dd4c9f095cd603af/xhs.json",
+        ]
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", *required],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+def test_acm_pdf_and_landing_urls_normalize_to_same_doi():
+    from paper_intake.pipeline import normalize_acm_id
+
+    doi = "10.1145/3774904.3792523"
+    assert normalize_acm_id("https://dl.acm.org/doi/" + doi, None) == doi
+    assert normalize_acm_id("https://dl.acm.org/doi/pdf/" + doi, None) == doi
 
 
 if __name__ == "__main__":

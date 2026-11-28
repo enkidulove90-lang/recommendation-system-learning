@@ -60,10 +60,19 @@ def wait_for_cloudflare(session: str = "acm", rounds: int = 8, gap: float = 8.0,
     rt = runtime or resolve_runtime()
     history: list[dict[str, Any]] = []
     for index in range(rounds):
-        result = rt.run("browser", session, "eval", READY_JS, timeout=120)
+        result = rt.run("browser", "eval", READY_JS,
+                        "--session", session, timeout=120)
         raw = (result.stdout or "").strip()
-        passed = "challenge" not in raw.lower() and "just a moment" not in raw.lower()
-        history.append({"round": index + 1, "rc": result.returncode, "output": raw[:260], "passed": passed})
+        low = raw.lower()
+        # Cloudflare shows localized challenge pages ("正在进行安全验证",
+        # "请稍候…").  Only an English 'challenge' check let these pass before,
+        # so the downloader fired fetch() while the challenge was still up.
+        blocked_markers = ("challenge", "just a moment", "安全验证", "请稍候",
+                           "checking your browser", "verify you are human")
+        passed = (result.returncode == 0
+                  and not any(marker in low for marker in blocked_markers))
+        history.append({"round": index + 1, "rc": result.returncode,
+                        "output": raw[:260], "passed": passed})
         if passed and len(raw) > 60:
             return {"ok": True, "rounds": index + 1, "history": history}
         time.sleep(gap)
@@ -81,6 +90,12 @@ def fetch_acm_pdf(doi: str, output: str | Path, session: str = "acm", *,
         skip_open = os.environ.get("SKIP_OPEN") == "1"
 
     def run(*parts, timeout: int = 180):
+        # OpenCLI CLI changed: `browser <session> <cmd>` is now
+        # `browser <cmd> --session <session>`.  Rewrite here so every call
+        # in this function stays compatible.
+        parts = list(parts)
+        if len(parts) >= 3 and parts[0] == "browser" and parts[1] == session:
+            parts = ["browser", parts[2], *parts[3:], "--session", session]
         result = rt.run(*parts, timeout=timeout)
         return (result.stdout or "").strip(), result.returncode
 
@@ -90,6 +105,18 @@ def fetch_acm_pdf(doi: str, output: str | Path, session: str = "acm", *,
         steps.append({"step": "open", "rc": rc, "output": out[:200]})
     out, rc = run("browser", session, "eval", PROBE_JS, timeout=120)
     steps.append({"step": "probe", "rc": rc, "output": out[:500]})
+    # Cloudflare challenge pages need a human click in the real Chrome window.
+    # Poll until it clears (default 8 rounds x 8s) so the human has time to
+    # pass the check before we fire fetch().
+    probe_text = (out or "").lower()
+    if any(m in probe_text for m in ("安全验证", "请稍候", "just a moment", "challenge")):
+        probe = wait_for_cloudflare(session, runtime=rt)
+        steps.append({"step": "cloudflare_wait", "rc": 0,
+                      "output": json.dumps({"ok": probe["ok"], "rounds": probe["rounds"]})})
+        if not probe["ok"]:
+            return {"ok": False, "error": "cloudflare_challenge_not_passed",
+                    "hint": "在 Chrome 的 acm session 窗口手动通过安全验证后重试",
+                    "steps": steps}
 
     out, rc = run("browser", session, "eval", STORE_JS.replace("PDFURL", json.dumps(pdf_url)), timeout=300)
     try:

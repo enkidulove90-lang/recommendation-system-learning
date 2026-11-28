@@ -62,7 +62,7 @@ def test_mcp_tools_list_includes_note_tools():
 def test_mcp_list_and_validate_note_specs():
     listed = mcp_server.call_tool("list_note_specs", {})
     assert listed["ok"] is True
-    assert len(listed["notes"]) == 14
+    assert len(listed["notes"]) >= 14
     validated = mcp_server.call_tool("validate_note_spec", {"slug": "2601.21452"})
     assert validated["ok"] is True, validated
     assert validated["body_chars"] == 999

@@ -1,0 +1,18 @@
+# Single authority for scheduled paper discovery and intake.
+enabled: true
+time: "11:00"
+timezone: "Asia/Shanghai"
+working_dir: "."
+python: "C:/ProgramData/miniconda3/python.exe"
+entrypoint: "scripts/daily_paper_ingest.py"
+log_file: "data/logs/runs.jsonl"
+# 13 arXiv queries plus 12 RecSys pages: real-world evidence (2026-11-25 run)
+# shows the network fetch phase alone exceeds 600s, so the window is 30 minutes.
+# s1 (catalog refresh) and s5 (content_bridge, first fact_pack via DeepSeek)
+# both share this window; s2/s3/s4 use the 120s default.
+s1_timeout_seconds: 1800
+# Stages, in order: s1 refresh -> s2 process -> s3 consume outbox ->
+# s4 download+MinerU (emits ParseCompleted) -> s5 content_bridge
+# (fact_pack -> paper_pool staged -> publish_queue). s5 is network-bound on
+# first generation; --stage s5 runs it alone for manual verification.
+stages: [s1, s2, s3, s4, s5]
