@@ -350,7 +350,9 @@ def select_figures_with_fallback(markdown_path: Path, pdf_path) -> tuple[list, P
     for _count, _source, folder, picked in ranked:
         if source_dir is None:
             source_dir = folder
-        for candidate in picked:
+        # Real figures first; rerendered tables only top up the remaining slots.
+        ordered = sorted(picked, key=lambda item: "_table_" in str(getattr(item, "path", "")))
+        for candidate in ordered:
             # The same figure exists twice once two tiers cover it (a PDF
             # rerender and MinerU's crop of it). Figure id is the stable key;
             # page is the fallback for crops that were never captioned.

@@ -18,6 +18,7 @@ from PIL import Image, UnidentifiedImageError
 
 from .fact_pack import (
     FactFormula,
+    extract_references,
     locate_formula,
     parse_fact_pack_response,
     stamp_location_verification,
@@ -75,51 +76,176 @@ def _hash_file(path: Path) -> str:
 def _review_markdown(title: str, paper_url: str, code_url: str, image_id: str, facts: dict[str, Any],
                      homepage: dict[str, Any], references: list[dict[str, Any]],
                      figures: list[dict[str, Any]], *, formulae: list[FactFormula] | None = None,
-                     source_markdown: str = "") -> tuple[str, list[dict[str, Any]]]:
-    missing = "原文或 FactPack 未提供，待核验。"
-    experiments = facts.get("experiments") or []
-    result = "\n".join(str(item) for item in experiments) if isinstance(experiments, list) else ""
-    paragraphs = [
-        f"# {title}", str(homepage.get("summary_para") or homepage.get("summary_1line") or ""),
-        "## 研究问题", str(facts.get("problem") or missing),
-        "## 方法：核心思路与整体框架", str(facts.get("method") or missing),
-    ]
-    unplaced = []
+                     source_markdown: str = "",
+                     figure_notes: dict[str, str] | None = None) -> tuple[str, list[dict[str, Any]]]:
+    """Render the homepage manuscript: five numbered sections, nothing else.
+
+    Site spec (2026-11-28): the body never repeats the title, never prints a
+    "not provided" placeholder, and drops any section it has no content for.
+    Every figure carries a readable note instead of a "图示解释：" caption stub.
+    """
+    figure_notes = {str(key): str(value) for key, value in (figure_notes or {}).items() if value}
+    lead = _clean(homepage.get("summary_para") or homepage.get("summary_1line"))
+    blocks: list[str] = []
+
+    # 论文自身的链接放在导语下一行，不占用 References 的位置。
+    links = []
+    if _is_http(paper_url):
+        links.append(f"[论文]({paper_url})")
+    if _is_http(code_url):
+        links.append(f"[代码]({code_url})")
+    if lead:
+        blocks.append(lead)
+    if links:
+        blocks.append("> " + "　".join(links))
+
+    background = _clean(facts.get("background") or facts.get("problem"))
+    if background:
+        blocks += ["## 1 研究背景与问题", background]
+
+    method_summary = _clean(facts.get("method_summary"))
+    method_heading = f"## 2 方法：{method_summary}" if method_summary else "## 2 方法"
+    method_blocks: list[str] = []
+    overview = _clean(facts.get("method_overview") or facts.get("method"))
+    if overview:
+        method_blocks.append(overview)
+    unplaced: list[dict[str, Any]] = []
     for formula in formulae or []:
         position = locate_formula(source_markdown, formula)
         if position is None:
-            unplaced.append({**formula.model_dump(), "status": "pending_review", "reason": "source_not_uniquely_located"})
+            unplaced.append({**formula.model_dump(), "status": "pending_review",
+                             "reason": "source_not_uniquely_located"})
             continue
         latex = source_markdown[position[0]:position[1]]
-        paragraphs.append(f"原文公式（来源章节：{formula.source_location}，待审核）：")
-        paragraphs.append(f"$$\n{latex}\n$$" if formula.display_mode == "block" else f"${latex}$")
+        method_blocks.append(f"$$\n{latex}\n$$" if formula.display_mode == "block" else f"${latex}$")
+    methods = [item for item in (facts.get("methods") or []) if isinstance(item, dict)]
+    for index, item in enumerate(methods, 1):
+        heading = _clean(item.get("heading"))
+        detail = _clean(item.get("detail"))
+        if not (heading or detail):
+            continue
+        if heading:
+            method_blocks += [f"### 2.{index} {heading}", detail]
+        else:
+            method_blocks.append(detail)
+    method_figures, result_figures = _split_figures(figures, figure_notes, image_id)
+    method_blocks.extend(method_figures)
+    if method_blocks:
+        blocks.append(method_heading)
+        blocks.extend(method_blocks)
+
+    experiment_highlight = _clean(facts.get("experiment_highlight"))
+    experiment_heading = (f"## 3 实验：{experiment_highlight}" if experiment_highlight
+                          else "## 3 实验")
+    experiment_blocks: list[str] = []
+    datasets = [str(item).strip() for item in (facts.get("datasets") or []) if str(item).strip()]
+    if datasets:
+        experiment_blocks += ["### 3.1 数据集与 Benchmark",
+                              "\n".join(f"- {item}" for item in datasets)]
+    protocol = _clean(facts.get("experiment_protocol"))
+    if protocol:
+        experiment_blocks += ["### 3.2 实验方法", protocol]
+    metrics = [str(item).strip() for item in (facts.get("metrics") or []) if str(item).strip()]
+    hyper = _clean(facts.get("hyperparameters"))
+    if metrics or hyper:
+        lines = []
+        if metrics:
+            lines.append("**评测指标**：" + "；".join(metrics))
+        if hyper:
+            lines.append(f"**参数设置**：{hyper}")
+        experiment_blocks += ["### 3.3 实验指标与参数设置", "\n\n".join(lines)]
+    legacy_results = facts.get("experiments") or []
+    legacy_text = ("\n".join(f"- {item}" for item in legacy_results)
+                   if isinstance(legacy_results, list) else "")
+    analysis = _clean(facts.get("results_analysis")) or legacy_text
+    ablation = _clean(facts.get("ablation"))
+    if analysis or ablation:
+        section = [part for part in (analysis, ablation) if part]
+        experiment_blocks += ["### 3.4 实验结果与分析", "\n\n".join(section)]
+    experiment_blocks.extend(result_figures)
+    if experiment_blocks:
+        blocks.append(experiment_heading)
+        blocks.extend(experiment_blocks)
+
+    summary_highlight = _clean(facts.get("summary_highlight"))
+    summary_heading = (f"## 4 论文总结：{summary_highlight}" if summary_highlight
+                       else "## 4 论文总结")
+    # 总结可以退回到 takeaway / 导语：只要这一节还能说出一句人话就渲染它。
+    summary = _clean(facts.get("takeaway") or homepage.get("summary_para")
+                     or homepage.get("summary_1line"))
+    if summary:
+        blocks += [summary_heading, summary]
+
+    rendered_refs = [line for line in (_render_reference(item) for item in references) if line]
+    if rendered_refs:
+        blocks.append("## 5 References")
+        blocks.extend(rendered_refs)
+
+    return "\n\n".join(block for block in blocks if block).strip() + "\n", unplaced
+
+
+def _clean(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def _is_http(url: str) -> bool:
+    parsed = urlsplit(str(url or ""))
+    return parsed.scheme in {"http", "https"} and bool(parsed.hostname)
+
+
+_FIGURE_METHOD_HINTS = ("framework", "architecture", "overview", "pipeline", "workflow",
+                        "整体", "框架", "架构", "流程", "总览")
+
+
+def _figure_block(figure: dict[str, Any], note: str, image_id: str) -> list[str]:
+    caption = _clean(figure.get("caption"))
+    alt = (note or caption).replace("[", "\\[").replace("]", "\\]")
+    block = [f"![{alt}](/images/papers/{image_id}/{Path(figure['path']).name})"]
+    if note:
+        block.append(note)
+    elif caption:
+        block.append(caption)
+    return block
+
+
+def _split_figures(figures: list[dict[str, Any]], notes: dict[str, str],
+                   image_id: str) -> tuple[list[str], list[str]]:
+    """Method figures sit under section 2, everything else under 3.4."""
+    method_blocks: list[str] = []
+    result_blocks: list[str] = []
     for figure in figures:
-        caption = str(figure.get("caption") or "")
-        paragraphs.append(f"![{caption}](/images/papers/{image_id}/{Path(figure['path']).name})")
-        if caption:
-            paragraphs.append(f"图示解释：{caption}")
-    paragraphs.extend([
-        "## 创新点", str(facts.get("novelty") or missing),
-        "## 实验：数据、基线与结果", "### 数据集与设置", missing,
-        "### Benchmark 与结果", result or missing, "### 消融实验", missing,
-        "## 总结", str(facts.get("takeaway") or missing), "## References",
-        f"- [论文]({paper_url})",
-    ])
-    if code_url:
-        paragraphs.append(f"- [代码]({code_url})")
-    for reference in references:
-        title = str(reference.get("title") or "未提供标题")
-        link = str(reference.get("paper_url") or "")
-        code = str(reference.get("code_url") or "")
-        parsed_link = urlsplit(link)
-        parsed_code = urlsplit(code)
-        safe_title = title.replace("[", "\\[").replace("]", "\\]")
-        entry = (f"[{safe_title}]({link})" if parsed_link.scheme in {"http", "https"}
-                 and parsed_link.hostname else f"{safe_title}：链接待核验")
-        if parsed_code.scheme in {"http", "https"} and parsed_code.hostname:
-            entry += f"；[代码]({code})"
-        paragraphs.append(f"- {entry}")
-    return "\n\n".join(part for part in paragraphs if part).strip() + "\n", unplaced
+        figure_id = _clean(figure.get("figure_id"))
+        note = notes.get(figure_id, "")
+        caption = _clean(figure.get("caption"))
+        haystack = f"{figure_id} {caption} {note}".casefold()
+        target = method_blocks if any(hint in haystack for hint in _FIGURE_METHOD_HINTS) else result_blocks
+        target.extend(_figure_block(figure, note, image_id))
+    return method_blocks, result_blocks
+
+
+def _render_reference(reference: dict[str, Any]) -> str:
+    """One bibliography line: Authors. Year. **Title**(link). Venue. （代码：url）"""
+    title = _clean(reference.get("title")).replace("[", "\\[").replace("]", "\\]")
+    if not title:
+        return ""
+    link = str(reference.get("paper_url") or "")
+    code = str(reference.get("code_url") or "")
+    authors = [str(name).strip() for name in (reference.get("authors") or []) if str(name).strip()]
+    year = _clean(reference.get("year"))
+    venue = _clean(reference.get("venue"))
+    head = ""
+    if authors:
+        head = ", ".join(authors[:-1]) + (f", and {authors[-1]}" if len(authors) > 1 else authors[0])
+        head += ". "
+    if year:
+        head += f"{year}. "
+    body = f"**[{title}]({link})**" if _is_http(link) else f"**{title}**"
+    line = f"{head}{body}."
+    if venue:
+        line += f" {venue}."
+    if _is_http(code):
+        line += f" （代码：{code}）"
+    return line
 
 
 def compile_notion_package(inputs: CompilationInputs, *, output_dir: Path) -> NotionCompilationResult:
@@ -172,14 +298,22 @@ def compile_notion_package(inputs: CompilationInputs, *, output_dir: Path) -> No
     safe_id = re.sub(r"[^A-Za-z0-9._-]+", "-", inputs.canonical_id).strip(".-")[:70] or "paper"
     slug = f"paper-{safe_id}-{hashlib.sha256(inputs.canonical_id.encode('utf-8')).hexdigest()[:8]}"
     title = str(facts.get("paper_title") or facts.get("one_line") or inputs.canonical_id)
-    references = pack.get("references") or []
+    # The paper's own bibliography is the faithful source for a reference list:
+    # it is printed in the PDF, so authors/year/venue need no model guess. Model
+    # supplied references stay as a fallback for papers whose section is missing.
+    references = [item.model_dump() for item in extract_references(source_text)] or (pack.get("references") or [])
     formulae = pack.get("formulae") or []
     location = pack.get("location")
     fact_provenance = pack.get("fact_provenance")
+    figure_notes = {
+        str(item.get("figure_id") or ""): str(item.get("explanation") or "")
+        for item in (pack.get("figures") or []) if isinstance(item, dict)
+    }
     review_md, unplaced_formulae = _review_markdown(
         title, inputs.paper_url, inputs.code_url, arxiv_id or safe_id,
         facts, homepage, references, figures,
-        formulae=[FactFormula.model_validate(item) for item in formulae], source_markdown=source_text)
+        formulae=[FactFormula.model_validate(item) for item in formulae], source_markdown=source_text,
+        figure_notes=figure_notes)
     missing = []
     if not facts.get("paper_title"):
         missing.append("paper_title")

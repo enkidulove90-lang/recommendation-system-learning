@@ -31,12 +31,26 @@ def _inputs(tmp_path: Path, canonical_id: str, paper_url: str) -> CompilationInp
         "source_hash": hashlib.sha256(markdown.read_bytes()).hexdigest(),
         "platform_hints": {},
         "facts": {"paper_title": "Paper title", "problem": "Problem", "method": "Method",
-                  "experiments": ["result 12%"], "authors": [{"name": "Author"}]},
+                  "experiments": ["result 12%"], "authors": [{"name": "Author"}],
+                  "background": "Background paragraph.",
+                  "method_summary": "统一编码",
+                  "method_overview": "Overview paragraph.",
+                  "methods": [{"heading": "像素空间统一", "detail": "Detail paragraph."}],
+                  "experiment_highlight": "跨语言一致",
+                  "datasets": ["CVSS-C"],
+                  "experiment_protocol": "Protocol paragraph.",
+                  "metrics": ["BLEU"],
+                  "hyperparameters": "lr=2e-6",
+                  "results_analysis": "Analysis paragraph.",
+                  "summary_highlight": "像素空间统一编码"},
         "homepage_draft": {"summary_1line": "Summary"},
         "location": {"venue_city": "Vienna", "affil_city": ["Beijing"]},
         "references": [{"title": "Prior", "paper_url": "https://example.org/prior",
                         "code_url": "https://github.com/example/prior"}],
         "formulae": [{"latex": "x^2", "display_mode": "block", "source_location": "p1"}],
+        # 图注由事实包提供：站点要求图片后面跟一段可读描述，而不是 "图示解释：" 前缀。
+        "figures": [{"figure_id": "Figure 1",
+                     "explanation": "该图展示整体流程：输入先进入编码器，再经统一空间对齐后输出。"}],
     }), encoding="utf-8")
     return CompilationInputs(canonical_id, canonical_id, "job-1", markdown, pdf,
         fact_pack_path=pack, figure_manifest_path=manifest, paper_url=paper_url,
@@ -394,3 +408,51 @@ def test_s5_consume_event_creates_notion_review_package(tmp_path, monkeypatch):
     logs = (tmp_path / "logs" / "runs.jsonl").read_text(encoding="utf-8")
     assert "platform_compilation" in logs and "compiled" in logs
 
+
+
+def test_manuscript_follows_the_five_section_site_spec(tmp_path):
+    """No H1, five numbered sections, no stub text, references in ACL style."""
+    from paper_intake.notion_compiler import compile_notion_package
+
+    inputs = _inputs(tmp_path, "arxiv:2601.00001", "https://arxiv.org/abs/2601.00001")
+    result = compile_notion_package(inputs, output_dir=tmp_path / "queue")
+    package = json.loads(result.path.read_text(encoding="utf-8"))
+    md = package["article_input"]["markdown"]
+
+    assert not md.lstrip().startswith("# "), "正文不应重复标题"
+    for heading in ("## 1 研究背景与问题", "## 2 方法：", "## 3 实验：",
+                    "## 4 论文总结：", "## 5 References"):
+        assert heading in md, heading
+    assert "待核验" not in md
+    assert "图示解释" not in md
+    assert "## 论文总结" not in md.replace("## 4 论文总结", "")
+    # 图后必须跟一段可读说明，而不是 caption 原文
+    assert "该图展示整体流程" in md
+
+
+def test_reference_line_matches_the_requested_academic_format():
+    from paper_intake.notion_compiler import _render_reference
+
+    line = _render_reference({
+        "authors": ["Yueqi Wang", "Julian McAuley"],
+        "year": "2026",
+        "title": "OpticalRec: Unified Optical Vision-Language Representation",
+        "paper_url": "https://arxiv.org/abs/2610.05432",
+        "venue": "arXiv preprint arXiv:2610.05432",
+        "code_url": "https://github.com/rlqja1107/SToP",
+    })
+    assert line == (
+        "Yueqi Wang, and Julian McAuley. 2026. "
+        "**[OpticalRec: Unified Optical Vision-Language Representation]"
+        "(https://arxiv.org/abs/2610.05432)**. arXiv preprint arXiv:2610.05432. "
+        "（代码：https://github.com/rlqja1107/SToP）"
+    )
+
+
+def test_reference_without_a_link_keeps_the_title_bold_but_plain():
+    from paper_intake.notion_compiler import _render_reference
+
+    line = _render_reference({"authors": ["OpenAI"], "year": "2026",
+                              "title": "OpenAI gpt-5 system card",
+                              "venue": "Preprint, arXiv:2601.03267"})
+    assert line == "OpenAI. 2026. **OpenAI gpt-5 system card**. Preprint, arXiv:2601.03267."

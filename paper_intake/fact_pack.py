@@ -281,6 +281,23 @@ class FactFacts(BaseModel):
     source: str = ""      # 来源（arxiv, acm, ieee 等）
     verification_status: str = ""  # "verified" / "unverified" / "missing"
 
+    # --- Homepage article structure (site spec 2026-11-28) -------------------
+    # The site renders five numbered sections; each field below feeds exactly
+    # one of them. Empty fields are dropped at render time, never filled with
+    # a "not provided" placeholder.
+    background: str = ""            # 1. 研究背景与问题：背景、痛点、为什么重要
+    method_summary: str = ""        # 2. 方法：<=20 字的学术总结
+    method_overview: str = ""       # 2. 方法总述（与分点互补）
+    methods: list[dict] = Field(default_factory=list)   # [{"heading": "<=20字", "detail": ">=80字"}]
+    experiment_highlight: str = ""  # 3. 实验：本文实验最大特点
+    datasets: list[str] = Field(default_factory=list)   # 3.1 数据集与 benchmark
+    experiment_protocol: str = ""   # 3.2 实验方法（主实验/消融/提示词）
+    metrics: list[str] = Field(default_factory=list)    # 3.3 指标
+    hyperparameters: str = ""       # 3.3 参数设置
+    results_analysis: str = ""      # 3.4 结果与分析
+    ablation: str = ""              # 3.4 消融（并入结果与分析）
+    summary_highlight: str = ""     # 4. 论文总结：<=15 字的核心创新与阅读价值
+
 
 class XhsDraft(BaseModel):
     """Publish-ready Xiaohongshu manuscript, generated in one model call."""
@@ -329,6 +346,11 @@ class FactReference(BaseModel):
     title: str = ""
     paper_url: str = ""
     code_url: str = ""
+    # Bibliographic parts of the printed entry, kept so the site can render
+    # "Authors. Year. Title. Venue." instead of a bare link.
+    authors: list[str] = Field(default_factory=list)
+    year: str = ""
+    venue: str = ""
     source: str = ""
     verification_status: str = "unverified"
     evidence: str = ""
@@ -390,10 +412,14 @@ def extract_references(markdown_text: str) -> list[FactReference]:
         year_mark = re.search(r"\b(?:19|20)\d{2}[a-z]?\.\s+", flat)
         if year_mark:
             tail = flat[year_mark.end():]
+            authors = _split_reference_authors(flat[: year_mark.start()])
+            year = re.match(r"((?:19|20)\d{2}[a-z]?)", flat[year_mark.start():]).group(1)
         else:
             tail = flat
+            authors, year = [], ""
         title = re.split(r"\.\s+(?:arXiv|In |Advances|Proceedings|Journal|IEEE|ACM|Biomedical|JAMA|Science|[A-Z][a-z]+,\s*\d)", tail)[0]
         title = title.strip().rstrip(".").strip()
+        venue = tail[len(title):].strip().strip(".").strip() if title and tail.startswith(title) else ""
         if not title or len(title) < 8:
             continue
         if arxiv:
@@ -415,6 +441,9 @@ def extract_references(markdown_text: str) -> list[FactReference]:
             title=title,
             paper_url=paper_url,
             code_url=code.group(0) if code else "",
+            authors=authors,
+            year=year,
+            venue=venue,
             source=source,
             verification_status=status,
             evidence=evidence,
@@ -422,10 +451,22 @@ def extract_references(markdown_text: str) -> list[FactReference]:
     return refs
 
 
+def _split_reference_authors(value: str) -> list[str]:
+    """Split an ACL-style author list into names, keeping "et al." as one token."""
+    text = value.strip().rstrip(".")
+    if not text:
+        return []
+    parts = re.split(r",\s*(?:and\s+)?|\s+and\s+", text)
+    return [part.strip().rstrip(".") for part in parts if part.strip()]
+
+
 class FactFigure(BaseModel):
     figure_id: str = ""
     path: str = ""
     caption: str = ""
+    # 2-3 sentence reading aid used under the image on the site, instead of the
+    # "图示解释：{caption}" placeholder. Grounded in the paper, never invented.
+    explanation: str = ""
     source_type: str = ""
     width: int | None = None
     height: int | None = None
@@ -520,7 +561,7 @@ class FactPack(BaseModel):
 
 # IMPORTANT: bump when the prompt/schema changes, otherwise cached v1 packs
 # keep being reused and never pick up the new manuscript fields.
-FACT_PACK_PROMPT_VERSION = "fact-pack-2.5"  # location: 3-way type + city derivation
+FACT_PACK_PROMPT_VERSION = "fact-pack-2.6"  # homepage five-section manuscript fields
 
 # Deterministic section headings; the compiler uses these verbatim.  The model
 # is told to write CONTENT only; it never invents headings, so the body always
@@ -568,7 +609,19 @@ def build_fact_pack_prompt(markdown_path: Path) -> str:
         '    "published_date": "publication date if present, otherwise empty",\n'
         '    "authors": [{"name": "author name", "affiliations": [{"institution": "", "city": "", "country": "", "latitude": null, "longitude": null}]}],\n'
         '    "source": "source (arxiv, acm, ieee, ...)",\n'
-        '    "verification_status": "verified/unverified/missing"\n'
+        '    "verification_status": "verified/unverified/missing",\n'
+        '    "background": "章节1：研究背景与问题，300-500字，讲清领域现状、具体痛点、为什么现在值得做",\n'
+        '    "method_summary": "章节2标题用的一句话方法总结，<=20字",\n'
+        '    "method_overview": "方法总述，150-250字，交代输入输出与整体流程",\n'
+        '    "methods": [{"heading": "方法点标题，<=20字，含关键词", "detail": "该方法的机制说明，>=120字"}],\n'
+        '    "experiment_highlight": "章节3标题用的一句话，点出本文实验最大特点，<=20字",\n'
+        '    "datasets": ["3.1 数据集/benchmark，含规模与语言或领域，一条一项"],\n'
+        '    "experiment_protocol": "3.2 实验方法与设置，>=200字：主实验、消融、对比基线怎么跑，含关键提示词或训练配置",\n'
+        '    "metrics": ["3.3 评测指标，一项一条，带简短解释"],\n'
+        '    "hyperparameters": "3.3 参数设置：学习率、batch、轮数、序列长度等，论文写了才写",\n'
+        '    "results_analysis": "3.4 实验结果与分析，>=250字：主结果、相对最强基线提升多少、为什么",\n'
+        '    "ablation": "3.4 消融实验结论，>=100字；论文没有消融就留空",\n'
+        '    "summary_highlight": "章节4标题用的一句话，核心创新与阅读价值，<=15字"\n'
         "  },\n"
         '  "platform_hints": {\n'
         '    "xhs": {"hook": "short hook", "topic_candidates": ["论文分享"]},\n'
@@ -623,7 +676,7 @@ def build_fact_pack_prompt(markdown_path: Path) -> str:
         '  "formulae": [{"latex": "", "display_mode": "inline or block", '
         '"source_location": "exact Markdown section heading::one-based ordinal", '
         '"verification_status": "unverified"}],\n'
-        '  "figures": []\n'
+        '  "figures": [{"figure_id": "Figure 1", "explanation": "2-3句图注，说明这张图在讲什么、对比了什么、读者该看哪里"}],\n'
         "}\n"
         "HARD RULES:\n"
         "- answer in Chinese; every claim MUST be grounded in the paper, never invent numbers;\n"
@@ -650,8 +703,14 @@ def build_fact_pack_prompt(markdown_path: Path) -> str:
         "- Model-extracted metadata, locations and references remain unverified until "
         "independently checked; use empty lists or null for unavailable data. "
         "Never guess URLs, cities or coordinates.\n"
-        "- figures must be an empty list: local paths, hashes, dimensions and visual reviews "
-        "come from the asset pipeline, not the language model.\n"
+        "- figures: for every figure you can identify in the Markdown, give its figure_id "
+        "(e.g. 'Figure 3') and a 2-3 sentence explanation of what the reader should look at; "
+        "local paths, hashes, dimensions and visual reviews come from the asset pipeline, "
+        "not the language model. Never invent a figure that is not in the paper.\n"
+        "- The five manuscript sections are graded on density, not length: background >=300 "
+        "Chinese chars, every methods[].detail >=120, experiment_protocol >=200, "
+        "results_analysis >=250. If the paper truly has no content for a field (e.g. no "
+        "ablation), leave that field EMPTY instead of writing 'not provided'.\n"
         "- Preserve original LaTeX in formulae. source_location must be the exact Markdown "
         "heading without #, then :: and the 1-based ordinal among formulas of the same "
         "display mode in that section; leave it empty if uncertain. Never claim verification."

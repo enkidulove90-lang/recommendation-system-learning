@@ -119,7 +119,11 @@ class HighDpiPdfFigureExtractor:
             for page_index, page_info in enumerate(pages):
                 page = document[page_index]
                 for block in page_info.get("preproc_blocks", []):
-                    if block.get("type") not in {"image", "chart"}:
+                    # Tables count: ACL-style papers often print their only
+                    # quantitative visual as a table, and dropping them is why a
+                    # paper could yield a single figure. Ranking demotes tables
+                    # below real figures; it never drops them here.
+                    if block.get("type") not in {"image", "chart", "table"}:
                         continue
                     left, top, right, bottom = block.get("bbox", [0, 0, 0, 0])
                     if right <= left or bottom <= top:

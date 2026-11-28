@@ -77,15 +77,14 @@ def test_formula_delimiters_inside_code_fences_are_not_paper_math():
     assert source[slice(*locate_formula(source, inline))] == "x"
 
 
-def test_empty_formulae_preserves_legacy_markdown_exactly():
-    expected = ("# Title\n\n原文或 FactPack 未提供，待核验。\n\n## 研究问题\n\n原文或 FactPack 未提供，待核验。\n\n"
-                "## 方法：核心思路与整体框架\n\n原文或 FactPack 未提供，待核验。\n\n## 创新点\n\n原文或 FactPack 未提供，待核验。\n\n"
-                "## 实验：数据、基线与结果\n\n### 数据集与设置\n\n原文或 FactPack 未提供，待核验。\n\n"
-                "### Benchmark 与结果\n\n原文或 FactPack 未提供，待核验。\n\n### 消融实验\n\n原文或 FactPack 未提供，待核验。\n\n"
-                "## 总结\n\n原文或 FactPack 未提供，待核验。\n\n## References\n\n- [论文](https://example.org/paper)\n")
-    # Empty homepage summary was omitted by the pre-existing renderer.
-    expected = expected.replace("# Title\n\n原文或 FactPack 未提供，待核验。\n\n## 研究问题", "# Title\n\n## 研究问题", 1)
-    assert render("# Original\n")[0] == expected
+def test_empty_fact_pack_renders_no_placeholders_and_no_title_heading():
+    """Site spec 2026-11-28: nothing to say means nothing is rendered."""
+    output, unplaced = render("# Original\n")
+    assert unplaced == []
+    assert "待核验" not in output
+    assert not output.lstrip().startswith("# Title"), "正文不得重复标题"
+    # 唯一还能渲染的是论文自身链接提示行。
+    assert output.strip() == "> [论文](https://example.org/paper)"
 
 
 def test_old_formula_without_verification_remains_compatible():
